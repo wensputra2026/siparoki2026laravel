@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class ProfilParoki extends Model
+{
+    protected $table = 'profil_paroki';
+
+    protected $fillable = [
+        'nama_paroki',
+        'keuskupan',
+        'alamat',
+        'telepon',
+        'email',
+        'website',
+        'pastor_paroki',
+        'pastor_email',
+    ];
+}
