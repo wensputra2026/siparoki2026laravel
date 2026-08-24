@@ -12,10 +12,10 @@
             <link rel="shortcut icon" href="{{ $globalLogo }}">
         @endif
 
-        <!-- Offline Poppins Fonts Preload -->
-        <link rel="preload" href="/fonts/poppins/poppins-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-        <link rel="preload" href="/fonts/poppins/poppins-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
-        <link rel="preload" href="/fonts/poppins/poppins-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+        <!-- Google Fonts Poppins (Same as Frontend) -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
 
         <!-- Offline Poppins Fonts Direct Embed -->
         <style>
@@ -69,8 +69,24 @@
                 src: url('/fonts/poppins/poppins-latin-900-normal.woff2') format('woff2');
             }
 
-            body, html {
-                font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            :root {
+                --font-sans: 'Poppins', sans-serif !important;
+                --default-font-family: 'Poppins', sans-serif !important;
+            }
+
+            body, html, .font-sans, p, h1, h2, h3, h4, h5, h6, span, a, button, input, select, textarea, div, label, td, th {
+                font-family: 'Poppins', sans-serif !important;
+            }
+
+            /* Icon fonts MUST NEVER be overridden by Poppins */
+            .fa, .fas, .far, .fab, .fa-solid, .fa-regular, .fa-brands, [class^="fa-"], [class*=" fa-"], i.fa, i.fas, i.far, i.fab, i.fa-solid, i.fa-regular, i.fa-brands {
+                font-family: "Font Awesome 7 Free" !important;
+            }
+            .fab, .fa-brands, i.fab, i.fa-brands {
+                font-family: "Font Awesome 7 Brands" !important;
+            }
+            .bi, [class^="bi-"], [class*=" bi-"] {
+                font-family: "bootstrap-icons" !important;
             }
         </style>
 
