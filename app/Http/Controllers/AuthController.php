@@ -18,11 +18,11 @@ use Inertia\Response;
 class AuthController extends Controller
 {
     /**
-     * Show modern Inertia Vue 3 Login page.
+     * Show login page.
      */
-    public function showLogin(): Response
+    public function showLogin()
     {
-        return Inertia::render('Auth/Login', [
+        return view('pages.auth.login', [
             'status' => session('status'),
         ]);
     }
@@ -68,7 +68,7 @@ class AuthController extends Controller
                 return redirect('/penulis')->with('success', 'Selamat datang di Panel Redaksi / Komsos!');
             }
 
-            return redirect('/v2/dashboard')->with('success', 'Selamat datang kembali di SIPAROKI!');
+            return redirect('/dashboard')->with('success', 'Selamat datang kembali di SIPAROKI!');
         }
 
         return back()->withErrors([
@@ -77,9 +77,9 @@ class AuthController extends Controller
     }
 
     /**
-     * Show modern Inertia Vue 3 Register page.
+     * Show Register page.
      */
-    public function showRegister(): Response
+    public function showRegister()
     {
         $wilayahs = collect();
         $lingkungans = collect();
@@ -97,7 +97,7 @@ class AuthController extends Controller
             $kubs = DB::table('kub')->orderBy('nama_kub')->get(['id', 'nama_kub', 'lingkungan_id']);
         } catch (\Throwable $e) {}
 
-        return Inertia::render('Auth/Register', [
+        return view('pages.auth.register', [
             'wilayahs' => $wilayahs,
             'lingkungans' => $lingkungans,
             'kubs' => $kubs,
@@ -163,11 +163,11 @@ class AuthController extends Controller
     }
 
     /**
-     * Show modern Inertia Vue 3 Forgot Password page.
+     * Show Forgot Password page.
      */
-    public function showForgotPassword(): Response
+    public function showForgotPassword()
     {
-        return Inertia::render('Auth/ForgotPassword', [
+        return view('pages.auth.lupa-password', [
             'status' => session('status'),
         ]);
     }

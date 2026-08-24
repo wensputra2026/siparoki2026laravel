@@ -9,15 +9,27 @@
     @else
         <link rel="icon" type="image/jpeg" href="/assets/uploads/profil/logo_paroki_1787370466.jpeg">
     @endif
-    @php
-        $authViteManifest = public_path('build/manifest.json');
-        $authViteCss = file_exists($authViteManifest)
-            ? (json_decode(file_get_contents($authViteManifest), true)['resources/css/app.css']['file'] ?? null)
-            : null;
-    @endphp
-    @if($authViteCss)
-        <link rel="stylesheet" href="/build/{{ $authViteCss }}">
-    @endif
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['selector', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0c4a6e',
+                        accent: '#0284c7',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body class="bg-slate-100 dark:bg-[#090e1a] text-slate-900 dark:text-white min-h-screen flex items-center justify-center p-4">
 
