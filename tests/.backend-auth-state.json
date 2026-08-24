@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "XSRF-TOKEN",
+      "value": "eyJpdiI6IkdYRVJnMCtQTXVXakVqc0VVZUd5U3c9PSIsInZhbHVlIjoia1NBbklDQ3hLV2ZyV2g5RlIyOFBtOEtlQ0lvanZ5RkVxcFRmN29nWHB6RC9HbmR5cG80dHRDQXpWV0sxY0V5OE9pZExvZW5JN2Flb0RMUnRvUDZXZHN6aDNWUHlCbkdlMEQ2SVZrSkRYZFB1WnA5RFhWT0c0S1BtQ1VlMCs0YUsiLCJtYWMiOiJmOTc0MjQxYjVkY2ZlNWI0NGRjMWFkYTk5ODExZjk5Y2RmMWI5MGU2ZmU1ZTRiYzZhMTZhYWJmZWZkNjgwZjEzIiwidGFnIjoiIn0%3D",
+      "domain": "127.0.0.1",
+      "path": "/",
+      "expires": 1787561223.068671,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "siparoki-session",
+      "value": "eyJpdiI6IjlrSmNFWEtmNzEzeUMwancrTlU3SHc9PSIsInZhbHVlIjoiSzQvVThZeFVmY1NRUTR3ZjF5NEhiRkZxSm9kdjVLY1c3TUUwRzFkQzIraFplVXp2VUhlMzBTQS95ckJXVnE2V1hWdHFEYkNQOXJ5YUJZSTlER2pUdzV4Z00ydEswbXJpdVczTzU5NkVydHNZcWVqdHdOeHlabjNlcGJoYkJZNUIiLCJtYWMiOiIwYzA3MDc1NDQxOTI0NDFhNTFjNzQ0YTcxODRjODZjYzg0MDY4NjgxODc4Yzc5ODgzMTI4NjU0MDljNzNiNjIwIiwidGFnIjoiIn0%3D",
+      "domain": "127.0.0.1",
+      "path": "/",
+      "expires": 1787561223.068744,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

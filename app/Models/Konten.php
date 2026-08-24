@@ -17,6 +17,9 @@ class Konten extends Model
         'excerpt',
         'gambar',
         'file_pdf',
+        'arsip_id',
+        'arsip_digital_id',
+        'embed_pdf',
         'tags',
         'tipe',
         'status_publish',
@@ -33,6 +36,7 @@ class Konten extends Model
     {
         return [
             'is_featured' => 'boolean',
+            'embed_pdf' => 'boolean',
             'tanggal_publish' => 'datetime',
             'views' => 'integer',
             'is_deleted' => 'boolean',

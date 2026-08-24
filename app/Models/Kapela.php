@@ -9,6 +9,7 @@ class Kapela extends Model
     protected $table = 'kapela';
 
     protected $fillable = [
+        'paroki_id',
         'kode_kapela',
         'nama_kapela',
         'lokasi',
@@ -27,8 +28,23 @@ class Kapela extends Model
         ];
     }
 
+    public function paroki()
+    {
+        return $this->belongsTo(Paroki::class, 'paroki_id', 'id_paroki');
+    }
+
+    public function wilayahs()
+    {
+        return $this->hasMany(Wilayah::class, 'kapela_id');
+    }
+
+    public function kubs()
+    {
+        return $this->hasMany(Kub::class, 'kapela_id');
+    }
+
     public function lingkungan()
     {
-        return $this->hasMany(Lingkungan::class);
+        return $this->hasMany(Lingkungan::class, 'kapela_id');
     }
 }

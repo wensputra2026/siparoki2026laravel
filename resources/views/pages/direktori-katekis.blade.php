@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Direktori Katekis - Kristus Raja Katedral / Bonipoi')
+@section('title', 'Direktori Katekis - ' . ($globalNamaParoki ?? 'SIPAROKI'))
 @section('content')
 <div class="py-12 bg-slate-100 dark:bg-[#090e1a]">
     <div class="max-w-4xl mx-auto px-4">

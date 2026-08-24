@@ -1,0 +1,1412 @@
+/*
+  SIPAROKI public interface.
+  Custom Blade/Tailwind skin for parish-facing pages.
+*/
+
+@font-face {
+    font-family: "Poppins";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/fonts/poppins/poppins-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Poppins";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("/fonts/poppins/poppins-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Poppins";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("/fonts/poppins/poppins-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Poppins";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("/fonts/poppins/poppins-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Poppins";
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url("/fonts/poppins/poppins-latin-800-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Poppins";
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url("/fonts/poppins/poppins-latin-900-normal.woff2") format("woff2");
+}
+
+:root {
+    --sp-font-display: "Poppins", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --sp-font-body: "Poppins", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --sp-bg: #f4faf9;
+    --sp-bg-soft: #eaf7f4;
+    --sp-surface: #ffffff;
+    --sp-surface-soft: #f8fcfb;
+    --sp-line: #dbe8e7;
+    --sp-line-strong: #bfd4d2;
+    --sp-ink: #102033;
+    --sp-muted: #62748a;
+    --sp-faint: #8da0b5;
+    --sp-primary: #063b5b;
+    --sp-primary-2: #075985;
+    --sp-teal: #0f9f94;
+    --sp-teal-dark: #08756f;
+    --sp-gold: #d89a19;
+    --sp-gold-soft: #fff4d8;
+    --sp-radius: 18px;
+    --sp-radius-sm: 12px;
+    --sp-container: 1180px;
+    --sp-header-container: 1500px;
+    --sp-shadow: 0 20px 55px rgba(18, 45, 70, 0.1);
+    --sp-shadow-soft: 0 10px 28px rgba(18, 45, 70, 0.08);
+}
+
+[data-theme="dark"] {
+    --sp-bg: #07131f;
+    --sp-bg-soft: #0b1f2f;
+    --sp-surface: #0f2030;
+    --sp-surface-soft: #13283a;
+    --sp-line: #223b50;
+    --sp-line-strong: #35566d;
+    --sp-ink: #eef6fb;
+    --sp-muted: #b6c6d6;
+    --sp-faint: #7890a7;
+    --sp-primary: #d9f1ff;
+    --sp-primary-2: #8dd5ff;
+    --sp-teal: #33c7ba;
+    --sp-teal-dark: #1aa79e;
+    --sp-gold: #f0bd4d;
+    --sp-gold-soft: rgba(240, 189, 77, 0.14);
+}
+
+html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+html body.public-portal {
+    min-height: 100vh;
+    margin: 0 !important;
+    background: var(--sp-bg) !important;
+    color: var(--sp-ink) !important;
+    font-family: var(--sp-font-body) !important;
+    letter-spacing: 0 !important;
+    overflow-x: hidden !important;
+}
+
+body.public-portal .container,
+body.public-portal .header-inner,
+body.public-portal .footer-grid,
+body.public-portal .footer-bottom,
+body.public-portal main > div > [class*="max-w-"],
+body.public-portal main > section > [class*="max-w-"] {
+    width: min(var(--sp-container), calc(100% - 40px)) !important;
+    max-width: var(--sp-container) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+body.public-portal main {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
+body.public-portal main svg {
+    max-width: 100% !important;
+}
+
+body.public-portal main svg.w-4,
+body.public-portal main svg.w-5,
+body.public-portal main svg.w-6 {
+    flex: 0 0 auto !important;
+}
+
+body.public-portal main svg.w-4 {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+body.public-portal main svg.w-5 {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+body.public-portal main svg.w-6 {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+}
+
+/* Header */
+body.public-portal .header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 1000 !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(6, 59, 91, 0.1) !important;
+    box-shadow: 0 10px 34px rgba(6, 59, 91, 0.08) !important;
+    backdrop-filter: blur(16px) saturate(1.35) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(1.35) !important;
+}
+
+body.public-portal {
+    padding-top: 81px !important;
+}
+
+[data-theme="dark"] body.public-portal .header {
+    background: rgba(7, 19, 31, 0.92) !important;
+    border-bottom-color: rgba(141, 213, 255, 0.15) !important;
+}
+
+body.public-portal .header::after {
+    content: "";
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, var(--sp-teal), var(--sp-gold), var(--sp-primary-2));
+}
+
+body.public-portal .header-inner {
+    width: min(var(--sp-header-container), calc(100% - 44px)) !important;
+    max-width: var(--sp-header-container) !important;
+    height: 78px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    padding: 0 !important;
+}
+
+body.public-portal .logo.paroki-logo {
+    display: inline-flex !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    color: var(--sp-primary) !important;
+    text-decoration: none !important;
+    overflow: visible !important;
+}
+
+body.public-portal .logo.paroki-logo .church-logo-img,
+body.public-portal .logo.paroki-logo .church-icon-box {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    border-radius: 999px !important;
+    background: #fff !important;
+    border: 2px solid rgba(15, 159, 148, 0.2) !important;
+    box-shadow: 0 10px 24px rgba(6, 59, 91, 0.16) !important;
+}
+
+body.public-portal .logo.paroki-logo .church-icon-box {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--sp-teal) !important;
+}
+
+body.public-portal .logo.paroki-logo span {
+    display: block !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    color: var(--sp-primary) !important;
+    font-family: var(--sp-font-display) !important;
+    font-size: clamp(0.92rem, 1vw, 1.16rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+}
+
+[data-theme="dark"] body.public-portal .logo.paroki-logo span {
+    color: var(--sp-ink) !important;
+}
+
+body.public-portal .header .nav {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 2px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+body.public-portal .header .nav > a,
+body.public-portal .header .nav-dd-btn,
+body.public-portal .header .nav-login-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 42px !important;
+    padding: 9px 11px !important;
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    color: var(--sp-muted) !important;
+    font-family: var(--sp-font-display) !important;
+    font-size: 0.8rem !important;
+    font-weight: 650 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease !important;
+}
+
+body.public-portal .header .nav > a:hover,
+body.public-portal .header .nav-dd-btn:hover,
+body.public-portal .header .nav > a.active,
+body.public-portal .header .nav-dd-btn.active {
+    color: var(--sp-primary) !important;
+    background: rgba(15, 159, 148, 0.1) !important;
+    border-color: rgba(15, 159, 148, 0.12) !important;
+}
+
+body.public-portal .header .nav-dd-btn i {
+    margin-left: 7px !important;
+    font-size: 0.64rem !important;
+    color: currentColor !important;
+}
+
+body.public-portal .header .nav-dropdown {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+body.public-portal .header .nav-dd-menu {
+    position: absolute !important;
+    top: calc(100% + 12px) !important;
+    left: 50% !important;
+    z-index: 1010 !important;
+    min-width: 230px !important;
+    padding: 10px !important;
+    background: var(--sp-surface) !important;
+    border: 1px solid var(--sp-line) !important;
+    border-radius: 18px !important;
+    box-shadow: var(--sp-shadow) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translate(-50%, -4px) !important;
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease !important;
+}
+
+body.public-portal .header .nav-dropdown:hover .nav-dd-menu,
+body.public-portal .header .nav-dropdown.active .nav-dd-menu {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: translate(-50%, 0) !important;
+}
+
+body.public-portal .header .nav-dd-menu a {
+    display: block !important;
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+    color: var(--sp-muted) !important;
+    font-size: 0.86rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+}
+
+body.public-portal .header .nav-dd-menu a:hover {
+    color: var(--sp-primary) !important;
+    background: var(--sp-bg-soft) !important;
+}
+
+body.public-portal .header .nav-login-btn,
+body.public-portal .header .nav-spmb {
+    background: var(--sp-primary) !important;
+    color: #ffffff !important;
+    border-color: var(--sp-primary) !important;
+    box-shadow: 0 12px 26px rgba(6, 59, 91, 0.18) !important;
+}
+
+body.public-portal .header .nav-login-btn:hover,
+body.public-portal .header .nav-spmb:hover {
+    background: var(--sp-teal-dark) !important;
+    border-color: var(--sp-teal-dark) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+}
+
+body.public-portal .header-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex: 0 0 auto !important;
+}
+
+body.public-portal .dark-toggle,
+body.public-portal .nav-toggle {
+    width: 44px !important;
+    height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(15, 159, 148, 0.18) !important;
+    background: rgba(15, 159, 148, 0.1) !important;
+    color: var(--sp-teal-dark) !important;
+    box-shadow: none !important;
+}
+
+body.public-portal .nav-toggle {
+    display: none !important;
+}
+
+/* Page rhythm */
+body.public-portal .section,
+body.public-portal .cbt-section,
+body.public-portal main > div[class*="py-12"],
+body.public-portal main > div[class*="py-16"],
+body.public-portal main > section[class*="py-12"],
+body.public-portal main > section[class*="py-16"] {
+    padding-top: 76px !important;
+    padding-bottom: 76px !important;
+}
+
+body.public-portal .page-banner,
+body.public-portal main > .page-hero:not(.page-banner),
+body.public-portal main > div.page-hero:not(.page-banner),
+body.public-portal main > section.page-hero:not(.page-banner) {
+    position: relative !important;
+    min-height: 285px !important;
+    padding: 84px 0 74px !important;
+    overflow: hidden !important;
+    background:
+        radial-gradient(circle at 16% 0%, rgba(216, 154, 25, 0.2), transparent 26%),
+        linear-gradient(135deg, #06283e 0%, #074c70 52%, #0f827a 100%) !important;
+    color: #ffffff !important;
+}
+
+body.public-portal .page-banner::after,
+body.public-portal main > .page-hero:not(.page-banner)::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: auto 0 0 0 !important;
+    height: 5px !important;
+    background: linear-gradient(90deg, var(--sp-gold), var(--sp-teal), var(--sp-primary-2)) !important;
+}
+
+body.public-portal .page-banner-shape {
+    position: absolute !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    pointer-events: none !important;
+}
+
+body.public-portal .page-banner-shape--1 {
+    width: 360px !important;
+    height: 360px !important;
+    left: -130px !important;
+    top: -160px !important;
+}
+
+body.public-portal .page-banner-shape--2 {
+    width: 260px !important;
+    height: 260px !important;
+    right: -70px !important;
+    bottom: -130px !important;
+}
+
+body.public-portal .page-banner-content {
+    position: relative !important;
+    z-index: 1 !important;
+    text-align: left !important;
+}
+
+body.public-portal .page-banner-badge,
+body.public-portal .cbt-eyebrow,
+body.public-portal .st-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: max-content !important;
+    padding: 7px 14px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    color: #fef3c7 !important;
+    font-family: var(--sp-font-display) !important;
+    font-size: 0.76rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+}
+
+body.public-portal .page-banner-content h1,
+body.public-portal main > .page-hero h1,
+body.public-portal main > .page-hero h2 {
+    max-width: 860px !important;
+    margin: 16px 0 12px !important;
+    color: #ffffff !important;
+    font-family: var(--sp-font-display) !important;
+    font-size: clamp(2rem, 4.8vw, 3.9rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.08 !important;
+    letter-spacing: 0 !important;
+}
+
+body.public-portal .page-banner-content p,
+body.public-portal main > .page-hero p {
+    max-width: 680px !important;
+    margin: 0 !important;
+    color: rgba(255, 255, 255, 0.78) !important;
+    font-size: clamp(1rem, 1.5vw, 1.18rem) !important;
+    line-height: 1.7 !important;
+}
+
+body.public-portal .text-gradient {
+    background: none !important;
+    -webkit-text-fill-color: currentColor !important;
+    color: #f7c85a !important;
+}
+
+/* Cards and content primitives */
+body.public-portal main .bg-white,
+body.public-portal main [class*="bg-white"],
+body.public-portal main [class*="bg-slate-50"],
+body.public-portal main [class*="dark:bg"],
+body.public-portal .cbt-card,
+body.public-portal .jm-card,
+body.public-portal main article,
+body.public-portal main [class*="rounded"][class*="border"] {
+    background: var(--sp-surface) !important;
+    color: var(--sp-ink) !important;
+}
+
+body.public-portal main [class*="rounded-xl"],
+body.public-portal main [class*="rounded-2xl"],
+body.public-portal main [class*="rounded-3xl"],
+body.public-portal .cbt-card,
+body.public-portal .jm-card,
+body.public-portal main article,
+body.public-portal main [class*="rounded"][class*="border"] {
+    border-radius: var(--sp-radius) !important;
+}
+
+body.public-portal main [class*="border"],
+body.public-portal main article,
+body.public-portal main .cbt-card,
+body.public-portal main .jm-card {
+    border-color: var(--sp-line) !important;
+}
+
+body.public-portal main [class*="shadow"],
+body.public-portal main article,
+body.public-portal .cbt-card,
+body.public-portal .jm-card {
+    box-shadow: var(--sp-shadow-soft) !important;
+}
+
+body.public-portal main article:hover,
+body.public-portal main .cbt-card:hover,
+body.public-portal main .jm-card:hover,
+body.public-portal main [class*="rounded"][class*="border"]:hover {
+    transform: translateY(-3px) !important;
+    border-color: rgba(15, 159, 148, 0.4) !important;
+    box-shadow: var(--sp-shadow) !important;
+}
+
+body.public-portal .section-title,
+body.public-portal .cbt-head-center {
+    max-width: 760px !important;
+    margin: 0 auto 42px !important;
+    text-align: center !important;
+}
+
+body.public-portal .section-title .st-badge {
+    background: var(--sp-gold-soft) !important;
+    color: var(--sp-primary) !important;
+    border-color: rgba(216, 154, 25, 0.24) !important;
+}
+
+body.public-portal main .st-badge {
+    background: rgba(15, 159, 148, 0.1) !important;
+    border-color: rgba(15, 159, 148, 0.24) !important;
+    color: var(--sp-primary) !important;
+}
+
+body.public-portal main .page-hero .st-badge,
+body.public-portal main .page-banner .st-badge {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    color: #fef3c7 !important;
+}
+
+body.public-portal .section-title h2,
+body.public-portal .cbt-title,
+body.public-portal main h2,
+body.public-portal main h3 {
+    color: var(--sp-primary) !important;
+    font-family: var(--sp-font-display) !important;
+    letter-spacing: 0 !important;
+}
+
+body.public-portal .section-title p,
+body.public-portal .cbt-subtitle,
+body.public-portal main p {
+    color: var(--sp-muted);
+}
+
+body.public-portal main a[class*="bg-sky"],
+body.public-portal main button[class*="bg-sky"],
+body.public-portal main a[class*="bg-amber"],
+body.public-portal main button[class*="bg-amber"],
+body.public-portal .nf-btn.active {
+    background: var(--sp-teal) !important;
+    color: #ffffff !important;
+    border-color: var(--sp-teal) !important;
+}
+
+body.public-portal main a[class*="text-sky"],
+body.public-portal main a[class*="text-amber"],
+body.public-portal main [class*="text-sky-"],
+body.public-portal main [class*="text-amber-"] {
+    color: var(--sp-teal-dark) !important;
+}
+
+body.public-portal input,
+body.public-portal select,
+body.public-portal textarea {
+    min-height: 48px;
+    border: 1px solid var(--sp-line) !important;
+    border-radius: 14px !important;
+    background: var(--sp-surface) !important;
+    color: var(--sp-ink) !important;
+    outline: none !important;
+}
+
+body.public-portal input:focus,
+body.public-portal select:focus,
+body.public-portal textarea:focus {
+    border-color: var(--sp-teal) !important;
+    box-shadow: 0 0 0 4px rgba(15, 159, 148, 0.12) !important;
+}
+
+body.public-portal .prose {
+    color: var(--sp-muted) !important;
+    line-height: 1.85 !important;
+}
+
+body.public-portal .prose h1,
+body.public-portal .prose h2,
+body.public-portal .prose h3,
+body.public-portal .prose strong {
+    color: var(--sp-primary) !important;
+}
+
+/* News */
+body.public-portal .news-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 320px !important;
+    gap: 30px !important;
+    align-items: start !important;
+}
+
+body.public-portal .news-filter {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    margin-bottom: 26px !important;
+}
+
+body.public-portal .nf-btn,
+body.public-portal .ns-tags a,
+body.public-portal .download-group-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 38px !important;
+    padding: 8px 16px !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--sp-line) !important;
+    background: var(--sp-surface) !important;
+    color: var(--sp-muted) !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+}
+
+body.public-portal .nf-btn:hover,
+body.public-portal .ns-tags a:hover {
+    color: var(--sp-teal-dark) !important;
+    border-color: rgba(15, 159, 148, 0.35) !important;
+}
+
+body.public-portal .news-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 22px !important;
+}
+
+body.public-portal .news-card,
+body.public-portal .ns-widget,
+body.public-portal .news-empty,
+body.public-portal .download-card,
+body.public-portal .download-empty {
+    border: 1px solid var(--sp-line) !important;
+    border-radius: var(--sp-radius) !important;
+    background: var(--sp-surface) !important;
+    box-shadow: var(--sp-shadow-soft) !important;
+    overflow: hidden !important;
+}
+
+body.public-portal .bc-img {
+    position: relative !important;
+    height: 235px !important;
+    background: linear-gradient(135deg, var(--sp-primary), var(--sp-teal-dark)) !important;
+    overflow: hidden !important;
+}
+
+body.public-portal .bc-img img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+body.public-portal .bc-cat {
+    position: absolute !important;
+    left: 16px !important;
+    bottom: 16px !important;
+    padding: 7px 12px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    color: var(--sp-primary) !important;
+    font-size: 0.74rem !important;
+    font-weight: 800 !important;
+}
+
+body.public-portal .bc-body {
+    padding: 20px !important;
+}
+
+body.public-portal .bc-meta,
+body.public-portal .bc-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    color: var(--sp-faint) !important;
+    font-size: 0.82rem !important;
+}
+
+body.public-portal .bc-body h3 {
+    margin: 12px 0 10px !important;
+    font-size: 1.08rem !important;
+    line-height: 1.45 !important;
+}
+
+body.public-portal .bc-link {
+    color: var(--sp-teal-dark) !important;
+    font-weight: 800 !important;
+    text-decoration: none !important;
+}
+
+body.public-portal .news-sidebar {
+    display: grid !important;
+    gap: 18px !important;
+}
+
+body.public-portal .ns-widget {
+    padding: 22px !important;
+}
+
+body.public-portal .ns-widget h3 {
+    margin: 0 0 16px !important;
+    font-size: 1.08rem !important;
+}
+
+body.public-portal .ns-pastor-widget {
+    background:
+        linear-gradient(135deg, rgba(15, 77, 103, 0.96), rgba(15, 159, 148, 0.9)),
+        var(--sp-primary) !important;
+    color: #ffffff !important;
+    border-color: rgba(15, 159, 148, 0.32) !important;
+}
+
+body.public-portal .ns-pastor-widget h3 {
+    color: #ffffff !important;
+    margin-bottom: 10px !important;
+}
+
+body.public-portal .ns-pastor-widget p {
+    margin: 0 0 16px !important;
+    color: rgba(255, 255, 255, 0.84) !important;
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+}
+
+body.public-portal .ns-widget-kicker {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    margin-bottom: 12px !important;
+    color: #f7c85a !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+}
+
+body.public-portal .ns-pastor-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    color: #ffffff !important;
+    font-size: 0.86rem !important;
+    font-weight: 900 !important;
+    text-decoration: none !important;
+}
+
+body.public-portal .ns-search {
+    display: flex !important;
+    gap: 8px !important;
+}
+
+body.public-portal .ns-search input {
+    width: 100% !important;
+}
+
+body.public-portal .ns-search button {
+    width: 48px !important;
+    height: 48px !important;
+    flex: 0 0 48px !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    background: var(--sp-primary) !important;
+    color: #ffffff !important;
+}
+
+body.public-portal .ns-categories,
+body.public-portal .ns-archive,
+body.public-portal .ns-recent {
+    display: grid !important;
+    gap: 10px !important;
+}
+
+body.public-portal .ns-categories a,
+body.public-portal .ns-archive a,
+body.public-portal .nsr-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 10px 0 !important;
+    color: var(--sp-muted) !important;
+    text-decoration: none !important;
+    border-bottom: 1px solid var(--sp-line) !important;
+}
+
+body.public-portal .nsr-item img {
+    width: 56px !important;
+    height: 56px !important;
+    flex: 0 0 56px !important;
+    object-fit: cover !important;
+    border-radius: 12px !important;
+}
+
+body.public-portal .nsr-item h4 {
+    margin: 0 !important;
+    color: var(--sp-primary) !important;
+    font-size: 0.88rem !important;
+    line-height: 1.35 !important;
+}
+
+body.public-portal .ns-muted {
+    margin: 0 !important;
+    color: var(--sp-faint) !important;
+}
+
+/* Downloads */
+body.public-portal .download-group {
+    margin-bottom: 52px !important;
+}
+
+body.public-portal .download-group-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin-bottom: 18px !important;
+    padding-bottom: 14px !important;
+    border-bottom: 1px solid var(--sp-line) !important;
+}
+
+body.public-portal .download-group-header i {
+    color: var(--sp-teal) !important;
+    font-size: 1.35rem !important;
+}
+
+body.public-portal .download-group-header h2 {
+    margin: 0 !important;
+    flex: 1 1 auto !important;
+    font-size: 1.35rem !important;
+}
+
+body.public-portal .download-list {
+    display: grid !important;
+    gap: 12px !important;
+}
+
+body.public-portal .download-card {
+    display: grid !important;
+    grid-template-columns: 58px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 18px !important;
+    padding: 18px !important;
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+body.public-portal .dc-icon {
+    width: 58px !important;
+    height: 58px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 16px !important;
+    background: rgba(15, 159, 148, 0.12) !important;
+    color: var(--sp-teal-dark) !important;
+    font-size: 1.35rem !important;
+}
+
+body.public-portal .dc-body h3 {
+    margin: 0 0 5px !important;
+    font-size: 1rem !important;
+}
+
+body.public-portal .dc-body p {
+    margin: 0 !important;
+    font-size: 0.9rem !important;
+}
+
+body.public-portal .dc-meta {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+body.public-portal .dc-size,
+body.public-portal .dc-download {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    border-radius: 999px !important;
+    background: var(--sp-bg-soft) !important;
+    color: var(--sp-muted) !important;
+    font-weight: 800 !important;
+}
+
+body.public-portal .dc-download {
+    width: 42px !important;
+    padding: 0 !important;
+    background: var(--sp-primary) !important;
+    color: #ffffff !important;
+}
+
+body.public-portal .download-empty,
+body.public-portal .news-empty,
+body.public-portal .gallery-empty {
+    min-height: 230px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    padding: 34px !important;
+    color: var(--sp-faint) !important;
+    text-align: center !important;
+}
+
+body.public-portal .download-empty i,
+body.public-portal .news-empty i,
+body.public-portal .gallery-empty i {
+    font-size: 2rem !important;
+    color: var(--sp-line-strong) !important;
+}
+
+/* Gallery */
+body.public-portal .gallery-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 18px !important;
+}
+
+body.public-portal .gallery-item {
+    position: relative !important;
+    min-height: 260px !important;
+    border-radius: var(--sp-radius) !important;
+    overflow: hidden !important;
+    background: var(--sp-primary) !important;
+    box-shadow: var(--sp-shadow-soft) !important;
+}
+
+body.public-portal .gallery-item img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+/* Tables */
+body.public-portal main table {
+    width: 100% !important;
+    overflow: hidden !important;
+    border: 1px solid var(--sp-line) !important;
+    border-radius: var(--sp-radius) !important;
+    background: var(--sp-surface) !important;
+}
+
+body.public-portal .offline-map,
+body.public-portal .leaflet-container {
+    background:
+        linear-gradient(rgba(15, 159, 148, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 159, 148, 0.12) 1px, transparent 1px),
+        radial-gradient(circle at 28% 24%, rgba(216, 154, 25, 0.18), transparent 32%),
+        linear-gradient(135deg, var(--sp-bg-soft), var(--sp-surface)) !important;
+    background-size: 44px 44px, 44px 44px, auto, auto !important;
+}
+
+body.public-portal .online-map,
+body.public-portal .leaflet-container,
+body.public-portal iframe {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+body.public-portal .contact-page,
+body.public-portal .contact-page * {
+    box-sizing: border-box !important;
+}
+
+body.public-portal .contact-page {
+    overflow-x: hidden !important;
+}
+
+body.public-portal .contact-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(380px, 0.85fr) !important;
+    gap: 24px !important;
+    align-items: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+body.public-portal .contact-main,
+body.public-portal .contact-side,
+body.public-portal .contact-map-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+body.public-portal .contact-map-card {
+    position: relative !important;
+}
+
+body.public-portal .contact-map-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+    word-break: break-word !important;
+}
+
+body.public-portal .offline-map .leaflet-control-attribution {
+    font-size: 10px !important;
+    color: var(--sp-muted) !important;
+}
+
+body.public-portal main th {
+    background: var(--sp-bg-soft) !important;
+    color: var(--sp-primary) !important;
+}
+
+body.public-portal main th,
+body.public-portal main td {
+    padding: 12px 14px !important;
+    border-bottom: 1px solid var(--sp-line) !important;
+}
+
+/* Footer */
+body.public-portal .footer {
+    position: relative !important;
+    margin-top: 0 !important;
+    padding: 70px 0 0 !important;
+    overflow: hidden !important;
+    background: #07131f !important;
+    color: #d7e5f2 !important;
+    border-top: 4px solid var(--sp-gold) !important;
+}
+
+body.public-portal .footer::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background:
+        radial-gradient(circle at 15% 10%, rgba(15, 159, 148, 0.22), transparent 28%),
+        radial-gradient(circle at 82% 0%, rgba(216, 154, 25, 0.13), transparent 25%) !important;
+    pointer-events: none !important;
+}
+
+body.public-portal .footer-grid {
+    position: relative !important;
+    z-index: 1 !important;
+    display: grid !important;
+    grid-template-columns: 1.5fr repeat(3, minmax(0, 1fr)) !important;
+    gap: 34px !important;
+}
+
+body.public-portal .footer .logo.paroki-logo {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+body.public-portal .footer .logo.paroki-logo span {
+    white-space: normal !important;
+    color: #ffffff !important;
+}
+
+body.public-portal .footer p {
+    color: #9fb1c3 !important;
+}
+
+body.public-portal .footer-col h4 {
+    margin: 0 0 16px !important;
+    color: #ffffff !important;
+    font-size: 0.92rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+}
+
+body.public-portal .footer-col a {
+    display: block !important;
+    margin: 0 0 11px !important;
+    color: #9fb1c3 !important;
+    text-decoration: none !important;
+}
+
+body.public-portal .footer-col a:hover {
+    color: #ffffff !important;
+}
+
+body.public-portal .footer-bottom {
+    position: relative !important;
+    z-index: 1 !important;
+    margin-top: 48px !important;
+    padding: 18px 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body.public-portal .footer-bottom p {
+    margin: 0 !important;
+    color: #8fa4b9 !important;
+    font-size: 0.86rem !important;
+}
+
+/* Mobile */
+@media (max-width: 1180px) {
+    body.public-portal .header-inner {
+        width: calc(100% - 28px) !important;
+    }
+
+    body.public-portal .header .nav > a,
+    body.public-portal .header .nav-dd-btn,
+    body.public-portal .header .nav-login-btn {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        font-size: 0.78rem !important;
+    }
+
+    body.public-portal .logo.paroki-logo span {
+        font-size: 0.96rem !important;
+    }
+
+    body.public-portal .contact-layout {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 991px) {
+    body.public-portal .header-inner {
+        height: 70px !important;
+    }
+
+    body.public-portal {
+        padding-top: 73px !important;
+    }
+
+    body.public-portal .logo.paroki-logo {
+        min-width: 0 !important;
+    }
+
+    body.public-portal .logo.paroki-logo span {
+        white-space: normal !important;
+        max-width: calc(100vw - 190px) !important;
+        font-size: 0.9rem !important;
+    }
+
+    body.public-portal .nav-toggle {
+        display: inline-flex !important;
+    }
+
+    body.public-portal .header .nav {
+        position: fixed !important;
+        top: 73px !important;
+        left: 14px !important;
+        right: 14px !important;
+        display: none !important;
+        max-height: calc(100vh - 95px) !important;
+        overflow-y: auto !important;
+        padding: 14px !important;
+        border: 1px solid var(--sp-line) !important;
+        border-radius: 20px !important;
+        background: var(--sp-surface) !important;
+        box-shadow: var(--sp-shadow) !important;
+    }
+
+    body.public-portal .header .nav.active {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+    }
+
+    body.public-portal .header .nav > a,
+    body.public-portal .header .nav-dd-btn,
+    body.public-portal .header .nav-login-btn {
+        justify-content: space-between !important;
+        width: 100% !important;
+        min-height: 44px !important;
+        padding: 12px 14px !important;
+        font-size: 0.9rem !important;
+    }
+
+    body.public-portal .header .nav-dropdown {
+        position: relative !important;
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.public-portal .header .nav-dd-menu {
+        position: static !important;
+        inset: auto !important;
+        top: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: auto !important;
+        display: none !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 6px 0 10px !important;
+        box-sizing: border-box !important;
+        box-shadow: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transform: none !important;
+        translate: none !important;
+    }
+
+    body.public-portal .header .nav-dropdown.active .nav-dd-menu {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        position: static !important;
+        inset: auto !important;
+        left: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 10px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        box-sizing: border-box !important;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-left: 4px solid #0284c7 !important;
+        border-radius: 14px !important;
+        transform: none !important;
+        translate: none !important;
+    }
+
+    body.public-portal .header .nav-dropdown.active .nav-dd-menu a,
+    body.public-portal .header .nav-dropdown .nav-dd-menu a {
+        position: relative !important;
+        left: auto !important;
+        right: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        min-height: 42px !important;
+        padding: 10px 14px !important;
+        box-sizing: border-box !important;
+        color: #0f172a !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        font-size: 0.88rem !important;
+        font-weight: 700 !important;
+        text-decoration: none !important;
+        text-align: left !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        transform: none !important;
+        translate: none !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    body.public-portal .header .nav-dropdown.active .nav-dd-menu a:hover,
+    body.public-portal .header .nav-dropdown.active .nav-dd-menu a:focus-visible {
+        color: #0284c7 !important;
+        background: #f0f9ff !important;
+        border-color: #bae6fd !important;
+        transform: translateX(3px) !important;
+    }
+
+    html[data-theme="dark"] body.public-portal .header .nav-dropdown.active .nav-dd-menu {
+        background: #0f172a !important;
+        border-color: #334155 !important;
+        border-left-color: #38bdf8 !important;
+    }
+
+    html[data-theme="dark"] body.public-portal .header .nav-dropdown.active .nav-dd-menu a,
+    html[data-theme="dark"] body.public-portal .header .nav-dropdown .nav-dd-menu a {
+        color: #f8fafc !important;
+        background: #1e293b !important;
+        border-color: #334155 !important;
+    }
+
+    html[data-theme="dark"] body.public-portal .header .nav-dropdown.active .nav-dd-menu a:hover {
+        color: #38bdf8 !important;
+        background: #0c4a6e !important;
+        border-color: #0284c7 !important;
+    }
+
+    body.public-portal .news-layout,
+    body.public-portal .footer-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 480px) {
+    body.public-portal .header-inner {
+        width: calc(100% - 18px) !important;
+        gap: 6px !important;
+    }
+
+    body.public-portal .logo.paroki-logo {
+        gap: 8px !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    body.public-portal .logo.paroki-logo .church-logo-img,
+    body.public-portal .logo.paroki-logo .church-icon-box {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+    }
+
+    body.public-portal .logo.paroki-logo span {
+        max-width: none !important;
+        min-width: 0 !important;
+        font-size: 0.78rem !important;
+        line-height: 1.18 !important;
+    }
+
+    body.public-portal .header-actions {
+        gap: 6px !important;
+        flex: 0 0 auto !important;
+    }
+
+    body.public-portal .dark-toggle,
+    body.public-portal .nav-toggle {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        border-radius: 12px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.public-portal .container,
+    body.public-portal .footer-grid,
+    body.public-portal .footer-bottom {
+        width: min(100% - 28px, var(--sp-container)) !important;
+    }
+
+    body.public-portal .page-banner,
+    body.public-portal main > .page-hero:not(.page-banner) {
+        min-height: 230px !important;
+        padding: 58px 0 54px !important;
+    }
+
+    body.public-portal .section,
+    body.public-portal .cbt-section,
+    body.public-portal main > div[class*="py-12"],
+    body.public-portal main > div[class*="py-16"],
+    body.public-portal main > section[class*="py-12"],
+    body.public-portal main > section[class*="py-16"] {
+        padding-top: 48px !important;
+        padding-bottom: 48px !important;
+    }
+
+    body.public-portal .news-grid,
+    body.public-portal .gallery-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    body.public-portal .download-card {
+        grid-template-columns: 48px minmax(0, 1fr) !important;
+        align-items: start !important;
+    }
+
+    body.public-portal .dc-meta {
+        grid-column: 2 !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+
+    body.public-portal .download-group-header {
+        align-items: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+}

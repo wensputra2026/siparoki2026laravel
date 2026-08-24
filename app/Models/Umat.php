@@ -19,6 +19,8 @@ class Umat extends Model
         'nama_baptis',
         'nama_lahir',
         'nama_marga',
+        'kode_anggota',
+        'suku_etnis',
         'jenis_kelamin',
         'suku',
         'tanggal_lahir',
@@ -26,15 +28,44 @@ class Umat extends Model
         'hubungan_keluarga',
         'anak_ke',
         'agama_saat_ini',
+        'agama_asal',
         'agama_sebelum_katolik',
         'status_menikah',
+        'status_perkawinan',
+        'status_perkawinan_kanonik',
         'kewarganegaraan',
         'status_tinggal',
         'handphone',
         'email',
+        'pendidikan',
         'pendidikan_saat_ini',
         'pekerjaan',
         'golongan_darah',
+        'talenta',
+        'disabilitas',
+        'status_baptis',
+        'jenis_penerimaan_baptis',
+        'tgl_baptis',
+        'paroki_baptis',
+        'pastor_baptis',
+        'wali_baptis',
+        'buku_baptis_vol',
+        'buku_baptis_hal',
+        'buku_baptis_no',
+        'tgl_komuni_1',
+        'paroki_komuni_1',
+        'tgl_krisma',
+        'paroki_krisma',
+        'tgl_perkawinan',
+        'paroki_perkawinan',
+        'nama_pasangan',
+        'peristiwa_lain',
+        'no_surat_peristiwa',
+        'status_panggilan',
+        'nama_ordo_kongregasi',
+        'tahap_panggilan',
+        'tempat_tugas_biara',
+        'tgl_tahbisan_kaul',
         'status_aktif',
         'status_umat',
         'pasangan_umat_id',
@@ -55,6 +86,20 @@ class Umat extends Model
     protected $hidden = [
         'is_deleted',
     ];
+
+    protected $appends = [
+        'usia',
+    ];
+
+    public function getUsiaAttribute(): ?int
+    {
+        if (!$this->tanggal_lahir) return null;
+        try {
+            return \Carbon\Carbon::parse($this->tanggal_lahir)->age;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
 
     public function getMaskedNikAttribute(): ?string
     {

@@ -1,0 +1,1569 @@
+=== LARAVEL KEUSKUPAN COLUMNS ===
+[
+    "id_keuskupan",
+    "kode_keuskupan",
+    "nama_keuskupan",
+    "nama_latin",
+    "nama_uskup",
+    "alamat",
+    "provinsi_id",
+    "kabupaten_id",
+    "kecamatan_id",
+    "desa_id",
+    "telepon",
+    "email",
+    "website",
+    "logo",
+    "keterangan",
+    "status",
+    "created_by",
+    "updated_by",
+    "created_at",
+    "updated_at",
+    "deleted_at",
+    "deleted_by",
+    "delete_reason",
+    "is_deleted"
+]
+
+==============================
+=== INDEX_VIEW: C:/laragon/www/katedral/application/views/backend/keuskupan/index.php ===
+==============================
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+
+<div class="card mb-4">
+    <div class="card-header border-bottom py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="fw-bold text-primary d-flex align-items-center">
+            <i class="me-2" data-feather="shield" style="width: 16px; height: 16px;"></i>
+            <span>Daftar Keuskupan Terdaftar</span>
+        </div>
+        <div class="d-flex align-items-center flex-wrap gap-1">
+            <button type="button" id="btn-bulk-delete" class="btn btn-sm btn-danger d-none shadow-sm" onclick="bulkDelete()">
+                <i class="me-1" data-feather="trash-2"></i>
+                Hapus Terpilih (<span id="selected-count">0</span>)
+            </button>
+            <a class="btn btn-sm btn-primary shadow-sm" href="<?= site_url('admin/keuskupan/create'); ?>">
+                <i class="me-1" data-feather="plus"></i>
+                Tambah Keuskupan
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modal-import-keuskupan">
+                <i class="me-1" data-feather="upload"></i>
+                Impor
+            </button>
+            <a class="btn btn-sm btn-outline-info" href="<?= site_url('admin/keuskupan/export_excel'); ?>">
+                <i class="me-1" data-feather="download"></i>
+                Ekspor
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" href="<?= site_url('admin/keuskupan/cetak'); ?>" target="_blank">
+                <i class="me-1" data-feather="printer"></i>
+                Cetak / PDF
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="dataTable" class="table table-bordered table-hover table-striped mb-0 text-nowrap align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="text-center no-sort" data-orderable="false" style="width: 40px;">
+                            <input type="checkbox" id="check-all" class="form-check-input" title="Pilih Semua">
+                        </th>
+                        <th class="text-center no-sort" data-orderable="false" style="width: 50px;">No</th>
+                        <th class="text-center no-sort" data-orderable="false" style="width: 60px;">Logo</th>
+                        <th class="text-center no-sort" data-orderable="false" style="width: 110px;">Aksi</th>
+                        <th>Identitas Keuskupan</th>
+                        <th>Kode</th>
+                        <th>Status</th>
+                        <th class="text-center">Dekenat</th>
+                        <th>Uskup / Wilayah</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $no = 1; if(!empty($keuskupan)): foreach ($keuskupan as $k): ?>
+                    <tr>
+                        <td class="text-center align-middle">
+                            <input type="checkbox" name="ids[]" value="<?= encrypt_url($k->id_keuskupan) ?>" class="form-check-input check-item">
+                        </td>
+                        <td class="text-center align-middle"><?= $no++ ?></td>
+                        <td class="text-center align-middle">
+                            <?php if (!empty($k->logo) && file_exists(FCPATH . $k->logo)): ?>
+                                <img src="<?= base_url($k->logo) ?>" alt="Logo" class="avatar avatar-sm rounded-circle p-0 border shadow-none" style="width: 26px; height: 26px; object-fit: contain; background: #fff;">
+                            <?php else: ?>
+                                <div class="avatar avatar-sm bg-primary-soft text-primary rounded-circle d-inline-flex align-items-center justify-content-center shadow-none" style="width: 26px; height: 26px;">
+                                    <i data-feather="home" style="width: 13px; height: 13px;"></i>
+                                </div>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-center align-middle">
+                            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark me-1" title="Detail Keuskupan" onclick="showDetailModal('<?= encrypt_url($k->id_keuskupan) ?>')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <a href="<?= site_url('admin/keuskupan/edit/' . encrypt_url($k->id_keuskupan)); ?>" class="btn btn-datatable btn-icon btn-transparent-dark me-1" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark js-confirm-delete" title="Hapus" onclick="konfirmasiHapus('<?= site_url('admin/keuskupan/delete/' . encrypt_url($k->id_keuskupan)) ?>', '<?= htmlspecialchars($k->nama_keuskupan) ?>')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                        <td class="align-middle fw-bold">
+                            <a href="javascript:void(0);" onclick="showDetailModal('<?= encrypt_url($k->id_keuskupan) ?>')" class="text-dark text-decoration-none fw-bold">
+                                <?= htmlspecialchars($k->nama_keuskupan ?? '') ?>
+                            </a>
+                            <?php if(!empty($k->nama_latin)): ?>
+                                <div class="small text-muted fw-normal"><em><?= htmlspecialchars($k->nama_latin) ?></em></div>
+                            <?php endif; ?>
+                        </td>
+                        <td class="align-middle">
+                            <span class="badge bg-primary-soft text-primary rounded-pill"><?= htmlspecialchars($k->kode_keuskupan ?: 'K-' . str_pad($no - 1, 3, '0', STR_PAD_LEFT)) ?></span>
+                        </td>
+                        <td class="align-middle">
+                            <?php if (strtolower($k->status ?? '') === 'aktif'): ?>
+                                <span class="badge bg-success-soft text-success rounded-pill">Aktif</span>
+                            <?php else: ?>
+                                <span class="badge bg-warning-soft text-warning rounded-pill">Nonaktif</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-center align-middle">
+                            <a href="<?= site_url('admin/dekenat?keuskupan_id=' . $k->id_keuskupan) ?>" class="badge bg-info-soft text-info rounded-pill text-decoration-none">
+                                <?= (int)($k->total_dekenat ?? 0) ?> Dekenat
+                            </a>
+                        </td>
+                        <td class="align-middle small">
+                            <div class="text-muted">
+                                <?php if(!empty($k->nama_uskup)): ?>
+                                    <div><i class="me-1" data-feather="user"></i> <?= htmlspecialchars($k->nama_uskup) ?></div>
+                                <?php endif; ?>
+                                <?php if(!empty($k->nama_provinsi)): ?>
+                                    <div><i class="me-1" data-feather="map-pin"></i> Prov. <?= htmlspecialchars($k->nama_provinsi) ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detail Keuskupan -->
+<div class="modal fade" id="modal-detail-keuskupan" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <!-- Content loaded dynamically via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal Import Excel (Bimkat2 Standard) -->
+<div class="modal fade" id="modal-import-keuskupan" tabindex="-1" aria-labelledby="modalImportLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-success text-white py-3">
+                <h5 class="modal-title fw-bold" id="modalImportLabel">
+                    <i class="fas fa-file-upload me-2"></i> Import Data Keuskupan
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <?= form_open_multipart('admin/keuskupan/import_excel') ?>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-3">
+                        Unggah file Excel atau CSV sesuai format template.
+                    </p>
+                    <div class="mb-3">
+                        <label class="small fw-bold mb-1">File Excel / CSV</label>
+                        <input type="file" class="form-control form-control-sm" id="file_excel_keuskupan" name="file_excel" accept=".xlsx, .xls, .csv" required>
+                    </div>
+                    <div class="text-end">
+                        <a href="<?= site_url('admin/keuskupan/download_template') ?>" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-download me-1"></i> Download Template CSV
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-file-upload me-1"></i> Unggah & Import</button>
+                </div>
+            <?= form_close() ?>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function () {
+    if ($.fn.DataTable.isDataTable('#dataTable')) {
+        $('#dataTable').DataTable().destroy();
+    }
+    var table = $("#dataTable").DataTable({
+        "pageLength": 10,
+        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+        "columnDefs": [
+            { "orderable": false, "targets": [0, 2, 3] }
+        ],
+        "order": [[1, 'asc']],
+        "language": {
+            "search": "",
+            "searchPlaceholder": "Search...",
+            "lengthMenu": "_MENU_ entries per page",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "infoEmpty": "Showing 0 to 0 of 0 entries",
+            "infoFiltered": "(filtered from _MAX_ total entries)",
+            "zeroRecords": "No matching records found",
+            "paginate": {
+                "first": '«',
+                "last": '»',
+                "previous": '‹',
+                "next": '›'
+            }
+        },
+        "drawCallback": function() {
+            try {
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
+                }
+            } catch(e) {}
+            updateBulkDeleteState();
+        }
+    });
+
+    // Check All Checkbox Handler
+    $('#check-all').on('change', function() {
+        var checked = $(this).prop('checked');
+        $('.check-item').prop('checked', checked);
+        updateBulkDeleteState();
+    });
+
+    // Individual Checkbox Handler
+    $(document).on('change', '.check-item', function() {
+        var allChecked = $('.check-item').length > 0 && $('.check-item:checked').length === $('.check-item').length;
+        $('#check-all').prop('checked', allChecked);
+        updateBulkDeleteState();
+    });
+});
+
+function updateBulkDeleteState() {
+    var count = $('.check-item:checked').length;
+    $('#selected-count').text(count);
+    if (count > 0) {
+        $('#btn-bulk-delete').removeClass('d-none');
+    } else {
+        $('#btn-bulk-delete').addClass('d-none');
+    }
+}
+
+function bulkDelete() {
+    var selectedIds = [];
+    $('.check-item:checked').each(function() {
+        selectedIds.push($(this).val());
+    });
+
+    if (selectedIds.length === 0) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire('Perhatian', 'Pilih minimal satu data keuskupan untuk dihapus.', 'info');
+        } else {
+            alert('Pilih minimal satu data keuskupan untuk dihapus.');
+        }
+        return;
+    }
+
+    var doDelete = function() {
+        var csrfName = $('meta[name="csrf-name"]').attr('content') || '<?= $this->security->get_csrf_token_name(); ?>';
+        var csrfHash = $('meta[name="csrf-token"]').attr('content') || '<?= $this->security->get_csrf_hash(); ?>';
+        var postData = { ids: selectedIds };
+        postData[csrfName] = csrfHash;
+
+        $.ajax({
+            url: '<?= site_url("admin/keuskupan/bulk_delete") ?>',
+            type: 'POST',
+            data: postData,
+            dataType: 'json',
+            success: function(res) {
+                if (res.csrf_hash) {
+                    $('meta[name="csrf-token"]').attr('content', res.csrf_hash);
+                }
+                if (res.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: res.message,
+                            icon: 'success',
+                            confirmButtonColor: '#0061f2'
+                        }).then(function() {
+                            window.location.reload();
+                        });
+                    } else {
+                        alert(res.message);
+                        window.location.reload();
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Gagal!', res.message, 'error');
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            },
+            error: function() {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Gagal!', 'Terjadi kesalahan sistem saat menghapus data massal.', 'error');
+                } else {
+                    alert('Terjadi kesalahan sistem.');
+                }
+            }
+        });
+    };
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Hapus ' + selectedIds.length + ' Keuskupan?',
+            text: 'Apakah Anda yakin ingin menghapus ' + selectedIds.length + ' data keuskupan yang dipilih? Tindakan ini tidak dapat dibatalkan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e81500',
+            cancelButtonColor: '#69707a',
+            confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Ya, Hapus ' + selectedIds.length + ' Data',
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'shadow-lg rounded-3',
+                confirmButton: 'btn btn-danger px-4',
+                cancelButton: 'btn btn-secondary px-4'
+            },
+            buttonsStyling: false
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                doDelete();
+            }
+        });
+    } else {
+        if (confirm('Apakah Anda yakin ingin menghapus ' + selectedIds.length + ' data keuskupan terpilih?')) {
+            doDelete();
+        }
+    }
+}
+
+function showDetailModal(encryptedId) {
+    $('#modal-detail-keuskupan .modal-content').html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted mb-0">Memuat data detail keuskupan...</p></div>');
+    var modalEl = document.getElementById('modal-detail-keuskupan');
+    if (window.bootstrap && bootstrap.Modal) {
+        var myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        myModal.show();
+    } else {
+        $('#modal-detail-keuskupan').modal('show');
+    }
+    
+    $.ajax({
+        url: '<?= site_url("admin/keuskupan/detail_ajax") ?>/' + encryptedId,
+        type: 'GET',
+        success: function(response) {
+            $('#modal-detail-keuskupan .modal-content').html(response);
+            try {
+                if (typeof feather !== 'undefined') feather.replace();
+            } catch(e) {}
+        },
+        error: function() {
+            $('#modal-detail-keuskupan .modal-content').html('<div class="modal-body p-4 text-center text-danger"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p class="mb-0">Gagal memuat detail data keuskupan.</p></div>');
+        }
+    });
+}
+
+function konfirmasiHapus(url, nama) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Hapus Keuskupan?',
+            text: 'Apakah Anda yakin ingin menghapus data keuskupan "' + nama + '"? Tindakan ini tidak dapat dibatalkan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e81500',
+            cancelButtonColor: '#69707a',
+            confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Ya, Hapus',
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'shadow-lg rounded-3',
+                confirmButton: 'btn btn-danger px-4',
+                cancelButton: 'btn btn-secondary px-4'
+            },
+            buttonsStyling: false
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        });
+    } else {
+        if (confirm('Apakah Anda yakin ingin menghapus keuskupan ' + nama + '?')) {
+            window.location.href = url;
+        }
+    }
+}
+</script>
+
+
+==============================
+=== CREATE_VIEW: C:/laragon/www/katedral/application/views/backend/keuskupan/create.php ===
+==============================
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+
+<?php if (validation_errors()): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="oi oi-warning me-2"></i><strong>Terjadi kesalahan input:</strong>
+        <?= validation_errors('<div class="mt-1">&bull; ', '</div>') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<div class="card mb-4">
+    <div class="card-header border-bottom">
+        <h3 class="card-title fw-bold mt-1">
+            <i class="oi oi-plus text-primary me-2"></i>Form Tambah Keuskupan
+        </h3>
+    </div>
+    <?= form_open_multipart('admin/keuskupan/create') ?>
+        <div class="card-body">
+            
+            <!-- Row 1: Kode, Nama & Nama Latin -->
+            <div class="row">
+                <div class="mb-3 col-md-4">
+                    <label for="kode_keuskupan" class="form-label">Kode Keuskupan <span class="text-danger">*</span></label>
+                    <input type="text" id="kode_keuskupan" name="kode_keuskupan" class="form-control" value="<?= set_value('kode_keuskupan') ?>" placeholder="Contoh: K-KUPANG" required>
+                </div>
+                <div class="mb-3 col-md-4">
+                    <label for="nama_keuskupan" class="form-label">Nama Keuskupan <span class="text-danger">*</span></label>
+                    <input type="text" id="nama_keuskupan" name="nama_keuskupan" class="form-control" value="<?= set_value('nama_keuskupan') ?>" placeholder="Contoh: Keuskupan Agung Kupang" required>
+                </div>
+                <div class="mb-3 col-md-4">
+                    <label for="nama_latin" class="form-label">Nama Latin Keuskupan</label>
+                    <input type="text" id="nama_latin" name="nama_latin" class="form-control" value="<?= set_value('nama_latin') ?>" placeholder="Contoh: Archidioecesis Kupangensis">
+                </div>
+            </div>
+
+            <!-- Row 2: Uskup & Status -->
+            <div class="row">
+                <div class="mb-3 col-md-6">
+                    <label for="nama_uskup" class="form-label">Nama Uskup</label>
+                    <input type="text" id="nama_uskup" name="nama_uskup" class="form-control" value="<?= set_value('nama_uskup') ?>" placeholder="Nama Uskup yang menjabat">
+                </div>
+                <div class="mb-3 col-md-6">
+                    <label for="status" class="form-label">Status</label>
+                    <select id="status" name="status" class="form-select select2">
+                        <option value="Aktif" <?= (set_value('status') == 'Aktif') ? 'selected' : '' ?>>Aktif</option>
+                        <option value="Tidak Aktif" <?= (set_value('status') == 'Tidak Aktif') ? 'selected' : '' ?>>Tidak Aktif</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 3: Alamat -->
+            <div class="mb-3">
+                <label for="alamat" class="form-label">Alamat Lengkap</label>
+                <textarea id="alamat" name="alamat" class="form-control" rows="2" placeholder="Alamat kantor Keuskupan"><?= set_value('alamat') ?></textarea>
+            </div>
+
+            <hr class="my-4">
+            <h6 class="fw-bold text-secondary mb-3"><i class="oi oi-map-marker me-2 text-danger"></i>Wilayah Administratif</h6>
+
+            <?php
+            if (empty($provinsi)) {
+                $CI =& get_instance();
+                if (isset($CI->Provinsi_model)) {
+                    $provinsi = $CI->Provinsi_model->get_all();
+                }
+                if (empty($provinsi)) {
+                    $provinsi = $CI->db->get('provinsi')->result();
+                }
+                if (empty($provinsi)) {
+                    $provinsi = [
+                        (object)['id_provinsi' => '53', 'nama_provinsi' => 'Nusa Tenggara Timur'],
+                        (object)['id_provinsi' => '51', 'nama_provinsi' => 'Bali'],
+                        (object)['id_provinsi' => '52', 'nama_provinsi' => 'Nusa Tenggara Barat'],
+                        (object)['id_provinsi' => '31', 'nama_provinsi' => 'DKI Jakarta'],
+                        (object)['id_provinsi' => '32', 'nama_provinsi' => 'Jawa Barat'],
+                        (object)['id_provinsi' => '33', 'nama_provinsi' => 'Jawa Tengah'],
+                        (object)['id_provinsi' => '34', 'nama_provinsi' => 'DI Yogyakarta'],
+                        (object)['id_provinsi' => '35', 'nama_provinsi' => 'Jawa Timur']
+                    ];
+                }
+            }
+            ?>
+            <!-- Row 4: Provinsi, Kabupaten, Kecamatan, Kelurahan -->
+            <div class="row">
+                <div class="mb-3 col-md-3">
+                    <label for="provinsi_id" class="form-label">Provinsi</label>
+                    <select name="provinsi_id" id="provinsi_id" class="form-select select2">
+                        <option value="">-- Pilih Provinsi --</option>
+                        <?php if(!empty($provinsi)): ?>
+                            <?php foreach ($provinsi as $p): ?>
+                                <?php 
+                                    if (is_array($p)) {
+                                        $p_id   = $p['id_provinsi'] ?? $p['id'] ?? '';
+                                        $p_name = $p['nama_provinsi'] ?? $p['nama'] ?? '';
+                                    } else {
+                                        $p_id   = $p->id_provinsi ?? $p->id ?? '';
+                                        $p_name = $p->nama_provinsi ?? $p->nama ?? '';
+                                    }
+                                ?>
+                                <option value="<?= $p_id ?>" <?= set_select('provinsi_id', $p_id) ?>><?= e($p_name) ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                <div class="mb-3 col-md-3">
+                    <label for="kabupaten_id" class="form-label">Kabupaten / Kota</label>
+                    <select name="kabupaten_id" id="kabupaten_id" class="form-select select2">
+                        <option value="">-- Pilih Kabupaten --</option>
+                    </select>
+                </div>
+                <div class="mb-3 col-md-3">
+                    <label for="kecamatan_id" class="form-label">Kecamatan</label>
+                    <select name="kecamatan_id" id="kecamatan_id" class="form-select select2">
+                        <option value="">-- Pilih Kecamatan --</option>
+                    </select>
+                </div>
+                <div class="mb-3 col-md-3">
+                    <label for="kelurahan_id" class="form-label">Kelurahan / Desa</label>
+                    <select name="kelurahan_id" id="kelurahan_id" class="form-select select2">
+                        <option value="">-- Pilih Kelurahan/Desa --</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="my-4">
+            <h6 class="fw-bold text-secondary mb-3"><i class="oi oi-info me-2 text-primary"></i>Kontak & Informasi Tambahan</h6>
+
+            <!-- Row 5: Kontak & Website -->
+            <div class="row">
+                <div class="mb-3 col-md-4">
+                    <label for="telepon" class="form-label">Telepon</label>
+                    <input type="text" id="telepon" name="telepon" class="form-control" value="<?= set_value('telepon') ?>" placeholder="Nomor telepon kantor">
+                </div>
+                <div class="mb-3 col-md-4">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" value="<?= set_value('email') ?>" placeholder="Email keuskupan">
+                </div>
+                <div class="mb-3 col-md-4">
+                    <label for="website" class="form-label">Website</label>
+                    <input type="url" id="website" name="website" class="form-control" value="<?= set_value('website') ?>" placeholder="Contoh: https://keuskupanagungkupang.org">
+                </div>
+            </div>
+
+            <!-- Row 6: Keterangan & Logo -->
+            <div class="row">
+                <div class="mb-3 col-md-8">
+                    <label for="keterangan" class="form-label">Keterangan</label>
+                    <textarea id="keterangan" name="keterangan" class="form-control" rows="2" placeholder="Keterangan tambahan..."><?= set_value('keterangan') ?></textarea>
+                </div>
+                <div class="mb-3 col-md-4">
+                    <label for="logo" class="form-label">Logo Keuskupan</label>
+                    <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                    <small class="form-text text-muted">Format: JPG, PNG, GIF, SVG, WEBP. Maksimal 2MB</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer text-end">
+            <button type="reset" class="btn btn-secondary me-2"><i class="oi oi-action-undo me-1"></i> Reset</button>
+            <button type="submit" class="btn btn-primary"><i class="oi oi-check me-1"></i> Simpan Keuskupan</button>
+        </div>
+    <?= form_close() ?>
+</div>
+
+<script>
+$(document).ready(function() {
+
+    var baseUrl = '<?= site_url() ?>';
+    if (!baseUrl.endsWith('/')) baseUrl += '/';
+
+    $('#provinsi_id').on('change', function() {
+        var provId = $(this).val();
+        $('#kabupaten_id').html('<option value="">-- Pilih Kabupaten --</option>').trigger('change.select2');
+        $('#kecamatan_id').html('<option value="">-- Pilih Kecamatan --</option>').trigger('change.select2');
+        $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').trigger('change.select2');
+        if (provId) {
+            $.getJSON(baseUrl + 'dropdown/get_kabupaten/' + provId, function(data) {
+                var options = '<option value="">-- Pilih Kabupaten --</option>';
+                if (data && data.length > 0) {
+                    $.each(data, function(i, item) {
+                        var pId = item.id_kabupaten || item.id;
+                        var pName = item.nama_kabupaten || item.nama;
+                        options += '<option value="' + pId + '">' + pName + '</option>';
+                    });
+                }
+                $('#kabupaten_id').html(options).trigger('change.select2');
+            });
+        }
+    });
+
+    $('#kabupaten_id').on('change', function() {
+        var kabId = $(this).val();
+        $('#kecamatan_id').html('<option value="">-- Pilih Kecamatan --</option>').trigger('change.select2');
+        $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').trigger('change.select2');
+        if (kabId) {
+            $.getJSON(baseUrl + 'dropdown/get_kecamatan/' + kabId, function(data) {
+                var options = '<option value="">-- Pilih Kecamatan --</option>';
+                if (data && data.length > 0) {
+                    $.each(data, function(i, item) {
+                        var pId = item.id_kecamatan || item.id;
+                        var pName = item.nama_kecamatan || item.nama;
+                        options += '<option value="' + pId + '">' + pName + '</option>';
+                    });
+                }
+                $('#kecamatan_id').html(options).trigger('change.select2');
+            });
+        }
+    });
+
+    $('#kecamatan_id').on('change', function() {
+        var kecId = $(this).val();
+        $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').trigger('change.select2');
+        if (kecId) {
+            $.getJSON(baseUrl + 'dropdown/get_desa/' + kecId, function(data) {
+                var options = '<option value="">-- Pilih Kelurahan/Desa --</option>';
+                if (data && data.length > 0) {
+                    $.each(data, function(i, item) {
+                        var idVal = item.id_desa || item.id_desa_kelurahan || item.id;
+                        var nameVal = item.nama_desa || item.nama_desa_kelurahan || item.nama;
+                        options += '<option value="' + idVal + '">' + nameVal + '</option>';
+                    });
+                }
+                $('#kelurahan_id').html(options).trigger('change.select2');
+            });
+        }
+    });
+
+    function updateAlamatOtomatis(force) {
+        var kel  = $('#kelurahan_id option:selected').text().replace(/--.*--/, '').trim();
+        var kec  = $('#kecamatan_id option:selected').text().replace(/--.*--/, '').trim();
+        var kab  = $('#kabupaten_id option:selected').text().replace(/--.*--/, '').trim();
+        var prov = $('#provinsi_id option:selected').text().replace(/--.*--/, '').trim();
+
+        var parts = [];
+        if (kel && !kel.includes('--') && kel !== '') parts.push(kel);
+        if (kec && !kec.includes('--') && kec !== '') parts.push(kec.toLowerCase().includes('kec') ? kec : 'Kec. ' + kec);
+        if (kab && !kab.includes('--') && kab !== '') parts.push(kab);
+        if (prov && !prov.includes('--') && prov !== '') parts.push(prov.toLowerCase().includes('prov') ? prov : 'Prov. ' + prov);
+
+        if (parts.length > 0) {
+            var autoAlamat = parts.join(', ');
+            var $alamat = $('#alamat');
+            var currentAlamat = $alamat.val().trim();
+            if (force || currentAlamat === '' || $alamat.data('autofilled') === true || currentAlamat === 'Alamat kantor Keuskupan') {
+                $alamat.val(autoAlamat).data('autofilled', true);
+            }
+        }
+    }
+
+    $('#alamat').on('input', function() {
+        if ($(this).val().trim() !== '') {
+            $(this).data('autofilled', false);
+        }
+    });
+
+    $(document).on('change', '#provinsi_id, #kabupaten_id, #kecamatan_id, #kelurahan_id', function() {
+        setTimeout(function() { updateAlamatOtomatis(false); }, 150);
+    });
+
+    setTimeout(function() { updateAlamatOtomatis(false); }, 300);
+});
+</script>
+
+
+==============================
+=== EDIT_VIEW: C:/laragon/www/katedral/application/views/backend/keuskupan/edit.php ===
+==============================
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+
+<?php if (validation_errors()): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle mr-2"></i><strong>Terjadi kesalahan input:</strong>
+        <?= validation_errors('<div class="mt-1">&bull; ', '</div>') ?>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+<?php endif; ?>
+
+<!-- Card 1: Form Edit Keuskupan -->
+<div class="card card-outline card-primary shadow-sm mb-4">
+    <div class="card-header">
+        <h3 class="card-title font-weight-bold">
+            <i class="fas fa-edit text-warning mr-1"></i> Form Edit Keuskupan: <?= htmlspecialchars($keuskupan->nama_keuskupan) ?>
+        </h3>
+    </div>
+    <?= form_open_multipart('admin/keuskupan/edit/' . encrypt_url($keuskupan->id_keuskupan)) ?>
+        <div class="card-body">
+            
+            <!-- Row 1: Kode, Nama & Nama Latin -->
+            <div class="row">
+                <div class="form-group col-md-4 mb-3">
+                    <label for="kode_keuskupan" class="small font-weight-bold mb-1">Kode Keuskupan <span class="text-danger">*</span></label>
+                    <input type="text" id="kode_keuskupan" name="kode_keuskupan" class="form-control form-control-sm" value="<?= set_value('kode_keuskupan', $keuskupan->kode_keuskupan) ?>" required>
+                </div>
+                <div class="form-group col-md-4 mb-3">
+                    <label for="nama_keuskupan" class="small font-weight-bold mb-1">Nama Keuskupan <span class="text-danger">*</span></label>
+                    <input type="text" id="nama_keuskupan" name="nama_keuskupan" class="form-control form-control-sm" value="<?= set_value('nama_keuskupan', $keuskupan->nama_keuskupan) ?>" required>
+                </div>
+                <div class="form-group col-md-4 mb-3">
+                    <label for="nama_latin" class="small font-weight-bold mb-1">Nama Latin Keuskupan</label>
+                    <input type="text" id="nama_latin" name="nama_latin" class="form-control form-control-sm" value="<?= set_value('nama_latin', $keuskupan->nama_latin) ?>">
+                </div>
+            </div>
+
+            <!-- Row 2: Uskup & Status -->
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="nama_uskup" class="small font-weight-bold mb-1">Nama Uskup</label>
+                    <input type="text" id="nama_uskup" name="nama_uskup" class="form-control form-control-sm" value="<?= set_value('nama_uskup', $keuskupan->nama_uskup) ?>" placeholder="Nama Uskup yang menjabat">
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="status" class="small font-weight-bold mb-1">Status</label>
+                    <select id="status" name="status" class="form-control form-control-sm select2" style="width: 100%;">
+                        <option value="Aktif" <?= (set_value('status', $keuskupan->status) == 'Aktif') ? 'selected' : '' ?>>Aktif</option>
+                        <option value="Tidak Aktif" <?= (set_value('status', $keuskupan->status) == 'Tidak Aktif') ? 'selected' : '' ?>>Tidak Aktif</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 3: Alamat -->
+            <div class="form-group mb-3">
+                <label for="alamat" class="small font-weight-bold mb-1">Alamat Lengkap</label>
+                <textarea id="alamat" name="alamat" class="form-control form-control-sm" rows="2" placeholder="Alamat kantor Keuskupan"><?= set_value('alamat', $keuskupan->alamat) ?></textarea>
+            </div>
+
+            <hr class="my-3">
+            <h6 class="font-weight-bold text-secondary mb-3"><i class="fas fa-map-marker-alt mr-2 text-danger"></i>Wilayah Administratif</h6>
+
+            <?php
+            if (empty($provinsi)) {
+                $CI =& get_instance();
+                if (isset($CI->Provinsi_model)) {
+                    $provinsi = $CI->Provinsi_model->get_all();
+                }
+                if (empty($provinsi)) {
+                    $provinsi = $CI->db->get('provinsi')->result();
+                }
+                if (empty($provinsi)) {
+                    $provinsi = [
+                        (object)['id_provinsi' => '53', 'nama_provinsi' => 'Nusa Tenggara Timur'],
+                        (object)['id_provinsi' => '51', 'nama_provinsi' => 'Bali'],
+                        (object)['id_provinsi' => '52', 'nama_provinsi' => 'Nusa Tenggara Barat'],
+                        (object)['id_provinsi' => '31', 'nama_provinsi' => 'DKI Jakarta'],
+                        (object)['id_provinsi' => '32', 'nama_provinsi' => 'Jawa Barat'],
+                        (object)['id_provinsi' => '33', 'nama_provinsi' => 'Jawa Tengah'],
+                        (object)['id_provinsi' => '34', 'nama_provinsi' => 'DI Yogyakarta'],
+                        (object)['id_provinsi' => '35', 'nama_provinsi' => 'Jawa Timur']
+                    ];
+                }
+            }
+            ?>
+            <!-- Row 4: Provinsi, Kabupaten, Kecamatan, Kelurahan -->
+            <div class="row">
+                <div class="form-group col-md-3 mb-3">
+                    <label for="provinsi_id" class="small font-weight-bold mb-1">Provinsi</label>
+                    <select name="provinsi_id" id="provinsi_id" class="form-control form-control-sm select2" style="width: 100%;">
+                        <option value="">-- Pilih Provinsi --</option>
+                        <?php if(!empty($provinsi)): ?>
+                            <?php foreach ($provinsi as $p): ?>
+                                <?php 
+                                    if (is_array($p)) {
+                                        $p_id   = $p['id_provinsi'] ?? $p['id'] ?? '';
+                                        $p_name = $p['nama_provinsi'] ?? $p['nama'] ?? '';
+                                    } else {
+                                        $p_id   = $p->id_provinsi ?? $p->id ?? '';
+                                        $p_name = $p->nama_provinsi ?? $p->nama ?? '';
+                                    }
+                                    $selected = (!empty($keuskupan->provinsi_id) && $keuskupan->provinsi_id == $p_id) ? 'selected' : '';
+                                ?>
+                                <option value="<?= $p_id ?>" <?= $selected ?>><?= htmlspecialchars($p_name) ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                <div class="form-group col-md-3 mb-3">
+                    <label for="kabupaten_id" class="small font-weight-bold mb-1">Kabupaten / Kota</label>
+                    <select name="kabupaten_id" id="kabupaten_id" class="form-control form-control-sm select2" style="width: 100%;">
+                        <option value="">-- Pilih Kabupaten/Kota --</option>
+                        <?php if(!empty($kabupaten)): ?>
+                            <?php foreach ($kabupaten as $kb): ?>
+                                <?php 
+                                    if (is_array($kb)) {
+                                        $kb_id   = $kb['id_kabupaten'] ?? $kb['id'] ?? '';
+                                        $kb_name = $kb['nama_kabupaten'] ?? $kb['nama'] ?? '';
+                                    } else {
+                                        $kb_id   = $kb->id_kabupaten ?? $kb->id ?? '';
+                                        $kb_name = $kb->nama_kabupaten ?? $kb->nama ?? '';
+                                    }
+                                    $selected = (!empty($keuskupan->kabupaten_id) && $keuskupan->kabupaten_id == $kb_id) ? 'selected' : '';
+                                ?>
+                                <option value="<?= $kb_id ?>" <?= $selected ?>><?= htmlspecialchars($kb_name) ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                <div class="form-group col-md-3 mb-3">
+                    <label for="kecamatan_id" class="small font-weight-bold mb-1">Kecamatan</label>
+                    <select name="kecamatan_id" id="kecamatan_id" class="form-control form-control-sm select2" style="width: 100%;">
+                        <option value="">-- Pilih Kecamatan --</option>
+                        <?php if(!empty($kecamatan)): ?>
+                            <?php foreach ($kecamatan as $kc): ?>
+                                <?php 
+                                    if (is_array($kc)) {
+                                        $kc_id   = $kc['id_kecamatan'] ?? $kc['id'] ?? '';
+                                        $kc_name = $kc['nama_kecamatan'] ?? $kc['nama'] ?? '';
+                                    } else {
+                                        $kc_id   = $kc->id_kecamatan ?? $kc->id ?? '';
+                                        $kc_name = $kc->nama_kecamatan ?? $kc->nama ?? '';
+                                    }
+                                    $selected = (!empty($keuskupan->kecamatan_id) && $keuskupan->kecamatan_id == $kc_id) ? 'selected' : '';
+                                ?>
+                                <option value="<?= $kc_id ?>" <?= $selected ?>><?= htmlspecialchars($kc_name) ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                <div class="form-group col-md-3 mb-3">
+                    <label for="kelurahan_id" class="small font-weight-bold mb-1">Kelurahan / Desa</label>
+                    <select name="kelurahan_id" id="kelurahan_id" class="form-control form-control-sm select2" style="width: 100%;">
+                        <option value="">-- Pilih Kelurahan/Desa --</option>
+                        <?php if(!empty($kelurahan)): ?>
+                            <?php foreach ($kelurahan as $kl): ?>
+                                <?php 
+                                    if (is_array($kl)) {
+                                        $kl_id   = $kl['id_desa'] ?? $kl['id_desa_kelurahan'] ?? $kl['id'] ?? '';
+                                        $kl_name = $kl['nama_desa'] ?? $kl['nama_desa_kelurahan'] ?? $kl['nama'] ?? '';
+                                    } else {
+                                        $kl_id   = $kl->id_desa ?? $kl->id_desa_kelurahan ?? $kl->id ?? '';
+                                        $kl_name = $kl->nama_desa ?? $kl->nama_desa_kelurahan ?? $kl->nama ?? '';
+                                    }
+                                    $saved_kl = $keuskupan->desa_id ?? $keuskupan->kelurahan_id ?? '';
+                                    $selected = (!empty($saved_kl) && $saved_kl == $kl_id) ? 'selected' : '';
+                                ?>
+                                <option value="<?= $kl_id ?>" <?= $selected ?>><?= htmlspecialchars($kl_name) ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="my-3">
+            <h6 class="font-weight-bold text-secondary mb-3"><i class="fas fa-info-circle mr-2 text-primary"></i>Kontak & Informasi Tambahan</h6>
+
+            <!-- Row 5: Kontak & Website -->
+            <div class="row">
+                <div class="form-group col-md-4 mb-3">
+                    <label for="telepon" class="small font-weight-bold mb-1">Telepon</label>
+                    <input type="text" id="telepon" name="telepon" class="form-control form-control-sm" value="<?= set_value('telepon', $keuskupan->telepon) ?>" placeholder="Nomor telepon kantor">
+                </div>
+                <div class="form-group col-md-4 mb-3">
+                    <label for="email" class="small font-weight-bold mb-1">Email</label>
+                    <input type="email" id="email" name="email" class="form-control form-control-sm" value="<?= set_value('email', $keuskupan->email) ?>" placeholder="Email keuskupan">
+                </div>
+                <div class="form-group col-md-4 mb-3">
+                    <label for="website" class="small font-weight-bold mb-1">Website</label>
+                    <input type="url" id="website" name="website" class="form-control form-control-sm" value="<?= set_value('website', isset($keuskupan->website) ? $keuskupan->website : '') ?>" placeholder="Contoh: https://keuskupanagungkupang.org">
+                </div>
+            </div>
+
+            <!-- Row 6: Keterangan & Logo -->
+            <div class="row">
+                <div class="form-group col-md-8 mb-3">
+                    <label for="keterangan" class="small font-weight-bold mb-1">Keterangan</label>
+                    <textarea id="keterangan" name="keterangan" class="form-control form-control-sm" rows="2" placeholder="Keterangan tambahan..."><?= set_value('keterangan', isset($keuskupan->keterangan) ? $keuskupan->keterangan : '') ?></textarea>
+                </div>
+                <div class="form-group col-md-4 mb-3">
+                    <label for="logo" class="small font-weight-bold mb-1">Logo Keuskupan</label>
+                    <?php if (!empty($keuskupan->logo) && file_exists(FCPATH . $keuskupan->logo)): ?>
+                        <div class="mb-2 d-flex align-items-center">
+                            <img src="<?= base_url($keuskupan->logo) ?>" alt="Logo Saat Ini" class="img-thumbnail mr-2" style="max-height: 40px;">
+                            <small class="text-muted">Logo saat ini</small>
+                        </div>
+                    <?php endif; ?>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="logo" name="logo" accept="image/*">
+                        <label class="custom-file-label" for="logo">Pilih logo...</label>
+                    </div>
+                    <small class="form-text text-muted">Format: JPG, PNG, GIF, WEBP. Maks 2MB.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-light d-flex justify-content-between">
+            <a href="<?= site_url('admin/keuskupan') ?>" class="btn btn-sm btn-secondary"><i class="fas fa-times mr-1"></i> Batal</a>
+            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save mr-1"></i> Simpan Perubahan</button>
+        </div>
+    <?= form_close() ?>
+</div>
+
+<!-- Card 2: Sub-Table Daftar Kevikepan / Dekenat under Keuskupan -->
+<div class="card card-outline card-info shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title font-weight-bold">
+            <i class="fas fa-sitemap text-info mr-1"></i> Daftar Kevikepan / Dekenat
+        </h3>
+        <div class="card-tools">
+            <span class="badge badge-primary px-2 py-1 font-weight-bold">
+                <?= count($dekenat ?? []) ?> Kevikepan
+            </span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover align-middle text-nowrap mb-0 w-100">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;" class="text-center">NO.</th>
+                        <th>NAMA KEVIKEPAN</th>
+                        <th>VIKEP</th>
+                        <th class="text-center">PAROKI</th>
+                        <th style="width: 10%;" class="text-center">STATUS</th>
+                        <th style="width: 10%;" class="text-center">AKSI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($dekenat)): ?>
+                        <?php foreach ($dekenat as $idx => $d): ?>
+                            <tr>
+                                <td class="text-center align-middle font-weight-bold"><?= $idx + 1 ?></td>
+                                <td class="align-middle font-weight-bold text-primary"><?= htmlspecialchars($d->nama_dekenat) ?></td>
+                                <td class="align-middle"><?= htmlspecialchars($d->deken ?: '-') ?></td>
+                                <td class="text-center align-middle">
+                                    <span class="badge badge-info px-2 py-1"><?= (int)($d->total_paroki ?? 0) ?> Paroki</span>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <?php if ($d->status === 'Aktif'): ?>
+                                        <span class="badge badge-success px-2 py-1">AKTIF</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-secondary px-2 py-1">NONAKTIF</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <a href="<?= site_url('admin/dekenat/edit/' . encrypt_url($d->id_dekenat)) ?>" 
+                                       class="btn btn-warning btn-xs shadow-sm" data-toggle="tooltip" title="Edit Kevikepan">
+                                        <i class="fas fa-edit mr-1"></i> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="fas fa-sitemap fa-2x mb-2 d-block text-muted"></i>
+                                Belum ada Kevikepan / Dekenat terdaftar untuk keuskupan ini.
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+
+    var baseUrl = '<?= site_url() ?>';
+    if (!baseUrl.endsWith('/')) baseUrl += '/';
+
+    var initialProv = '<?= set_value('provinsi_id', $keuskupan->provinsi_id ?? '') ?>';
+    var initialKab  = '<?= set_value('kabupaten_id', $keuskupan->kabupaten_id ?? '') ?>';
+    var initialKec  = '<?= set_value('kecamatan_id', $keuskupan->kecamatan_id ?? '') ?>';
+    var initialDesa = '<?= set_value('kelurahan_id', $keuskupan->desa_id ?? $keuskupan->kelurahan_id ?? '') ?>';
+
+    function reloadKabupaten(provId, selectId) {
+        if (!provId) return;
+        $.getJSON(baseUrl + 'dropdown/get_kabupaten/' + provId, function(data) {
+            var options = '<option value="">-- Pilih Kabupaten/Kota --</option>';
+            if (data && data.length > 0) {
+                $.each(data, function(i, item) {
+                    var pId = item.id_kabupaten || item.id;
+                    var pName = item.nama_kabupaten || item.nama;
+                    var sel = (selectId && pId == selectId) ? 'selected' : '';
+                    options += '<option value="' + pId + '" ' + sel + '>' + pName + '</option>';
+                });
+            }
+            $('#kabupaten_id').html(options).trigger('change.select2');
+            if (selectId && initialKec) {
+                reloadKecamatan(selectId, initialKec);
+            }
+        });
+    }
+
+    function reloadKecamatan(kabId, selectId) {
+        if (!kabId) return;
+        $.getJSON(baseUrl + 'dropdown/get_kecamatan/' + kabId, function(data) {
+            var options = '<option value="">-- Pilih Kecamatan --</option>';
+            if (data && data.length > 0) {
+                $.each(data, function(i, item) {
+                    var pId = item.id_kecamatan || item.id;
+                    var pName = item.nama_kecamatan || item.nama;
+                    var sel = (selectId && pId == selectId) ? 'selected' : '';
+                    options += '<option value="' + pId + '" ' + sel + '>' + pName + '</option>';
+                });
+            }
+            $('#kecamatan_id').html(options).trigger('change.select2');
+            if (selectId && initialDesa) {
+                reloadDesa(selectId, initialDesa);
+            }
+        });
+    }
+
+    function reloadDesa(kecId, selectId) {
+        if (!kecId) return;
+        $.getJSON(baseUrl + 'dropdown/get_desa/' + kecId, function(data) {
+            var options = '<option value="">-- Pilih Kelurahan/Desa --</option>';
+            if (data && data.length > 0) {
+                $.each(data, function(i, item) {
+                    var idVal = item.id_desa || item.id_desa_kelurahan || item.id;
+                    var nameVal = item.nama_desa || item.nama_desa_kelurahan || item.nama;
+                    var sel = (selectId && idVal == selectId) ? 'selected' : '';
+                    options += '<option value="' + idVal + '" ' + sel + '>' + nameVal + '</option>';
+                });
+            }
+            $('#kelurahan_id').html(options).trigger('change.select2');
+            setTimeout(function() { updateAlamatOtomatis(false); }, 150);
+        });
+    }
+
+    if (initialProv && $('#kabupaten_id option').length <= 1) {
+        reloadKabupaten(initialProv, initialKab);
+    }
+
+    $('#provinsi_id').on('change', function() {
+        var provId = $(this).val();
+        $('#kabupaten_id').html('<option value="">-- Pilih Kabupaten --</option>').trigger('change.select2');
+        $('#kecamatan_id').html('<option value="">-- Pilih Kecamatan --</option>').trigger('change.select2');
+        $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').trigger('change.select2');
+        if (provId) reloadKabupaten(provId, null);
+        setTimeout(function() { updateAlamatOtomatis(false); }, 150);
+    });
+
+    $('#kabupaten_id').on('change', function() {
+        var kabId = $(this).val();
+        $('#kecamatan_id').html('<option value="">-- Pilih Kecamatan --</option>').trigger('change.select2');
+        $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').trigger('change.select2');
+        if (kabId) reloadKecamatan(kabId, null);
+        setTimeout(function() { updateAlamatOtomatis(false); }, 150);
+    });
+
+    $('#kecamatan_id').on('change', function() {
+        var kecId = $(this).val();
+        $('#kelurahan_id').html('<option value="">-- Pilih Kelurahan/Desa --</option>').trigger('change.select2');
+        if (kecId) reloadDesa(kecId, null);
+        setTimeout(function() { updateAlamatOtomatis(false); }, 150);
+    });
+
+    function updateAlamatOtomatis(force) {
+        var kel  = $('#kelurahan_id option:selected').text().replace(/--.*--/, '').trim();
+        var kec  = $('#kecamatan_id option:selected').text().replace(/--.*--/, '').trim();
+        var kab  = $('#kabupaten_id option:selected').text().replace(/--.*--/, '').trim();
+        var prov = $('#provinsi_id option:selected').text().replace(/--.*--/, '').trim();
+
+        var parts = [];
+        if (kel && !kel.includes('--') && kel !== '') parts.push(kel);
+        if (kec && !kec.includes('--') && kec !== '') parts.push(kec.toLowerCase().includes('kec') ? kec : 'Kec. ' + kec);
+        if (kab && !kab.includes('--') && kab !== '') parts.push(kab);
+        if (prov && !prov.includes('--') && prov !== '') parts.push(prov.toLowerCase().includes('prov') ? prov : 'Prov. ' + prov);
+
+        if (parts.length > 0) {
+            var autoAlamat = parts.join(', ');
+            var $alamat = $('#alamat');
+            var currentAlamat = $alamat.val().trim();
+            if (force || currentAlamat === '' || $alamat.data('autofilled') === true || currentAlamat === 'Alamat kantor Keuskupan') {
+                $alamat.val(autoAlamat).data('autofilled', true);
+            }
+        }
+    }
+
+    $('#alamat').on('input', function() {
+        if ($(this).val().trim() !== '') {
+            $(this).data('autofilled', false);
+        }
+    });
+
+    $(document).on('change', '#provinsi_id, #kabupaten_id, #kecamatan_id, #kelurahan_id', function() {
+        setTimeout(function() { updateAlamatOtomatis(false); }, 150);
+    });
+
+    setTimeout(function() { updateAlamatOtomatis(false); }, 300);
+    setTimeout(function() { updateAlamatOtomatis(false); }, 700);
+});
+</script>
+
+
+==============================
+=== DETAIL_VIEW: C:/laragon/www/katedral/application/views/backend/keuskupan/detail.php ===
+==============================
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+
+<!-- Card 1: Profil Keuskupan -->
+<div class="card mb-3">
+    <div class="card-header border-bottom">
+        <h3 class="card-title fw-bold mt-1">
+            <i class="oi oi-home text-primary me-2"></i>Informasi Keuskupan
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="row align-items-center">
+            <!-- Logo Section -->
+            <div class="col-md-3 text-center mb-3 mb-md-0 border-right">
+                <?php if (!empty($keuskupan->logo) && file_exists(FCPATH . $keuskupan->logo)): ?>
+                    <img src="<?= base_url($keuskupan->logo) ?>" alt="Logo <?= e($keuskupan->nama_keuskupan) ?>" class="img-thumbnail p-2 shadow-sm" style="max-height: 160px; max-width: 160px; object-fit: contain;">
+                <?php else: ?>
+                    <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle text-muted p-4 shadow-sm" style="width: 130px; height: 130px;">
+                        <i class="oi oi-home text-secondary"></i>
+                    </div>
+                <?php endif; ?>
+                <h5 class="fw-bold text-dark mt-3 mb-0"><?= e($keuskupan->nama_keuskupan) ?></h5>
+                <small class="text-muted"><em><?= e($keuskupan->nama_latin ?: 'Archidioecesis') ?></em></small>
+                <div class="mt-2">
+                    <?php if ($keuskupan->status === 'Aktif'): ?>
+                        <span class="badge text-bg-success px-3 py-1"><i class="oi oi-check-circled me-1"></i>AKTIF</span>
+                    <?php else: ?>
+                        <span class="badge text-bg-secondary px-3 py-1"><i class="oi oi-x-circled me-1"></i>NONAKTIF</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Profile Details Table -->
+            <div class="col-md-9 ps-md-4">
+                <div class="table-responsive">
+                    <table class="table table-borderless table-sm align-middle mb-0" style="font-size: 14px;">
+                        <tbody>
+                            <tr>
+                                <th width="25%" class="text-muted"><i class="oi oi-ios-barcode me-2 text-primary"></i>Kode Keuskupan</th>
+                                <td width="75%" class="fw-bold text-dark"><span class="badge text-bg-secondary px-2 py-1"><?= e($keuskupan->kode_keuskupan) ?></span></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted"><i class="oi oi-person me-2 text-success"></i>Nama Uskup</th>
+                                <td class="fw-bold text-dark"><?= e($keuskupan->nama_uskup ?: '-') ?></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted"><i class="oi oi-map-marker me-2 text-danger"></i>Alamat Kantor</th>
+                                <td><?= e($keuskupan->alamat ?: '-') ?></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted"><i class="oi oi-phone me-2 text-info"></i>Telepon</th>
+                                <td><?= e($keuskupan->telepon ?: '-') ?></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted"><i class="oi oi-envelope-closed me-2 text-warning"></i>Email</th>
+                                <td>
+                                    <?php if (!empty($keuskupan->email)): ?>
+                                        <a href="mailto:<?= e($keuskupan->email) ?>" class="text-primary"><?= e($keuskupan->email) ?></a>
+                                    <?php else: ?>
+                                        <span class="text-muted">-</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted"><i class="oi oi-globe me-2 text-primary"></i>Website</th>
+                                <td>
+                                    <?php if (!empty($keuskupan->website)): ?>
+                                        <a href="<?= e($keuskupan->website) ?>" target="_blank" class="text-primary fw-bold"><?= e($keuskupan->website) ?> <i class="oi oi-android-open small ms-1"></i></a>
+                                    <?php else: ?>
+                                        <span class="text-muted">-</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted"><i class="oi oi-info me-2 text-secondary"></i>Keterangan</th>
+                                <td><?= e($keuskupan->keterangan ?: '-') ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Card 2: Sub-Table Daftar Kevikepan / Dekenat di Dalamnya -->
+<div class="card mb-4">
+    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+        <h3 class="card-title fw-bold mt-1 mb-0">
+            <i class="oi oi-share text-primary me-2"></i>Daftar Kevikepan / Dekenat di <?= e($keuskupan->nama_keuskupan) ?>
+        </h3>
+        <span class="badge text-bg-primary px-3 py-1 fw-bold" style="font-size: 13px;">
+            <?= count($dekenat ?? []) ?> Kevikepan
+        </span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-bordered table-hover align-middle text-nowrap mb-0" style="font-size: 13px;">
+                <thead class="bg-light">
+                    <tr>
+                        <th width="5%" class="text-center">NO.</th>
+                        <th>NAMA KEVIKEPAN / DEKENAT</th>
+                        <th>VIKEP (DEKEN)</th>
+                        <th class="text-center">JUMLAH PAROKI</th>
+                        <th width="10%" class="text-center">STATUS</th>
+                        <th width="10%" class="text-center">AKSI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($dekenat)): ?>
+                        <?php foreach ($dekenat as $idx => $d): ?>
+                            <tr>
+                                <td class="text-center align-middle"><?= $idx + 1 ?></td>
+                                <td class="align-middle fw-bold text-primary"><?= e($d->nama_dekenat) ?></td>
+                                <td class="align-middle">
+                                    <?php if(!empty($d->deken)): ?>
+                                        <i class="oi oi-person text-success me-1"></i><?= e($d->deken) ?>
+                                    <?php else: ?>
+                                        <span class="text-muted">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <a href="<?= site_url('admin/paroki?dekenat_id=' . $d->id_dekenat . '&dekenat=' . urlencode($d->nama_dekenat)) ?>" class="badge text-bg-info px-2 py-1 text-decoration-none shadow-sm" title="Lihat Paroki di <?= htmlspecialchars($d->nama_dekenat) ?>">
+                                        <i class="fas fa-church me-1"></i><?= (int)($d->total_paroki ?? 0) ?> Paroki
+                                    </a>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <?php if ($d->status === 'Aktif'): ?>
+                                        <span class="badge text-bg-success px-2 py-1">AKTIF</span>
+                                    <?php else: ?>
+                                        <span class="badge text-bg-secondary px-2 py-1">NONAKTIF</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="<?= site_url('admin/dekenat?keuskupan_id=' . $keuskupan->id_keuskupan . '&keuskupan=' . urlencode($keuskupan->nama_keuskupan)) ?>" 
+                                           class="btn btn-info btn-sm shadow-sm text-white" data-bs-toggle="tooltip" title="Kelola di Halaman Dekenat">
+                                            <i class="oi oi-eye"></i>
+                                        </a>
+                                        <a href="<?= site_url('admin/dekenat/edit/' . encrypt_url($d->id_dekenat)) ?>" 
+                                           class="btn btn-warning btn-sm shadow-sm" data-bs-toggle="tooltip" title="Edit Kevikepan">
+                                            <i class="oi oi-pencil"></i> Edit
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="oi oi-share mb-2 d-block text-muted"></i>
+                                Belum ada Kevikepan / Dekenat yang terdaftar pada keuskupan ini.
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+==============================
+=== CONTROLLER: C:/laragon/www/katedral/application/controllers/admin/Keuskupan.php ===
+==============================
+NOT FOUND
+
+==============================
+=== MODEL: C:/laragon/www/katedral/application/models/Keuskupan_model.php ===
+==============================
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class Keuskupan_model extends CI_Model
+{
+    protected $table = 'keuskupan';
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->ensure_table_schema();
+        $this->auto_seed_keuskupan_if_empty();
+    }
+
+    /**
+     * Memastikan skema tabel keuskupan dan kolom-kolom yang diperlukan tersedia
+     */
+    public function ensure_table_schema()
+    {
+        static $schema_checked = false;
+        if ($schema_checked) return;
+        $schema_checked = true;
+
+        if (!$this->db->table_exists($this->table)) {
+            $this->db->query("CREATE TABLE IF NOT EXISTS `{$this->table}` (
+                `id_keuskupan` INT AUTO_INCREMENT PRIMARY KEY,
+                `kode_keuskupan` VARCHAR(50) NULL,
+                `nama_keuskupan` VARCHAR(150) NOT NULL,
+                `nama_latin` VARCHAR(150) NULL,
+                `nama_uskup` VARCHAR(150) NULL,
+                `alamat` TEXT NULL,
+                `provinsi_id` INT NULL DEFAULT NULL,
+                `kabupaten_id` INT NULL DEFAULT NULL,
+                `kecamatan_id` INT NULL DEFAULT NULL,
+                `desa_id` INT NULL DEFAULT NULL,
+                `telepon` VARCHAR(50) NULL,
+                `email` VARCHAR(100) NULL,
+                `website` VARCHAR(150) NULL,
+                `logo` VARCHAR(255) NULL,
+                `foto` VARCHAR(255) NULL,
+                `luas_wilayah` VARCHAR(100) NULL,
+                `jumlah_umat` INT NULL DEFAULT NULL,
+                `status` VARCHAR(20) NOT NULL DEFAULT 'Aktif',
+                `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+                `deleted_at` DATETIME NULL,
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+        } else {
+            if (!$this->db->field_exists('id_keuskupan', $this->table)) {
+                if ($this->db->field_exists('id', $this->table)) {
+                    @$this->db->query("ALTER TABLE `{$this->table}` CHANGE COLUMN `id` `id_keuskupan` INT AUTO_INCREMENT");
+                } else {
+                    @$this->db->query("ALTER TABLE `{$this->table}` ADD COLUMN `id_keuskupan` INT AUTO_INCREMENT PRIMARY KEY FIRST");
+                }
+            }
+            if (!$this->db->field_exists('kode_keuskupan', $this->table)) {
+                @$this->db->query("ALTER TABLE `{$this->table}` ADD COLUMN `kode_keuskupan` VARCHAR(50) NULL AFTER `id_keuskupan`");
+            }
+            if (!$this->db->field_exists('nama_keuskupan', $this->table)) {
+                @$this->db->query("ALTER TABLE `{$this->table}` ADD COLUMN `nama_keuskupan` VARCHAR(150) NOT NULL AFTER `kode_keuskupan`");
+            }
+            if (!$this->db->field_exists('nama_latin', $this->table)) {
+                @$this->db->query("ALTER TABLE `{$this->table}` ADD COLUMN `nama_latin` VARCHAR(150) NULL AFTER `nama_keuskupan`");
+            }
+            if (!$this->db->field_exists('nama_uskup', $this->table)) {
+                @$this->db->query("ALTER TABLE `{$this->table}` ADD COLUMN `nama_uskup` VARCHAR(150) NULL AFTER `nama_latin`");
+            }
+            if (!$this->db->field_exists('status', $this->table)) {
+                @$this->db->query("ALTER TABLE `{$this->table}` ADD COLUMN `status` VARCHAR(20) NOT NULL DEFAULT 'Aktif'");
+            }
+            if (!$this->db->field_exists('is_deleted', $this->table)) {
+                @$this->db->query("ALTER TABLE `{$this->table}` ADD COLUMN `is_deleted` TINYINT(1) NOT NULL DEFAULT 0");
+            }
+            if (!$this->db->field_exists('deleted_at', $this->table)) {
+                @$this->db->query("ALTER TABLE `{$this->table}` ADD COLUMN `deleted_at` DATETIME NULL");
+            }
+        }
+    }
+
+    /**
+     * Otomatis mengisi data master keuskupan jika tabel masih kosong
+     */
+    public function get_default_keuskupan_names()
+    {
+        return [
+            'Keuskupan Agats',
+            'Keuskupan Agung Dili',
+            'Keuskupan Agung Ende',
+            'Keuskupan Agung Jakarta',
+            'Keuskupan Agung Kupang',
+            'Keuskupan Agung Makassar',
+            'Keuskupan Agung Medan',
+            'Keuskupan Agung Merauke',
+            'Keuskupan Agung Palembang',
+            'Keuskupan Agung Pontianak',
+            'Keuskupan Agung Samarinda',
+            'Keuskupan Agung Semarang',
+            'Keuskupan Amboina',
+            'Keuskupan Atambua',
+            'Keuskupan Bandung',
+            'Keuskupan Banjarmasin',
+            'Keuskupan Baucau',
+            'Keuskupan Bogor',
+            'Keuskupan Denpasar',
+            'Keuskupan Jayapura',
+            'Keuskupan Ketapang',
+            'Keuskupan Labuan Bajo',
+            'Keuskupan Larantuka',
+            'Keuskupan Malang',
+            'Keuskupan Maliana',
+            'Keuskupan Manado',
+            'Keuskupan Manokwari-Sorong',
+            'Keuskupan Maumere',
+            'Keuskupan Padang',
+            'Keuskupan Palangka Raya',
+            'Keuskupan Pangkalpinang',
+            'Keuskupan Purwokerto',
+            'Keuskupan Ruteng',
+            'Keuskupan Sanggau',
+            'Keuskupan Sibolga',
+            'Keuskupan Sintang',
+            'Keuskupan Surabaya',
+            'Keuskupan Tanjungkarang',
+            'Keuskupan Tanjung Selor',
+            'Keuskupan Timika',
+            'Keuskupan Weetebula'
+        ];
+    }
+
+    public function auto_seed_keuskupan_if_empty()
+    {
+        if (!$this->db->table_exists($this->table)) return;
+
+        $has_is_deleted = $this->db->field_exists('is_deleted', $this->table);
+        $has_status     = $this->db->field_exists('status', $this->table);
+        $has_created_at = $this->db->field_exists('created_at', $this->table);
+
+        $default_list = $this->get_default_keuskupan_names();
+
+        // Ambil nama-nama yang sudah ada di database
+        $existing_names = [];
+        $query = $this->db->select('nama_keuskupan')->get($this->table);
+        if ($query && $query->num_rows() > 0) {
+            foreach ($query->result() as $row) {
+                if (!empty($row->nama_keuskupan)) {
+                    $existing_names[strtolower(trim($row->nama_keuskupan))] = true;
+                }
+            }
+        }
+
+        // Insert keuskupan yang belum ada
+        foreach ($default_list as $nama) {
+            if (!isset($existing_names[strtolower(trim($nama))])) {
+                $insert = ['nama_keuskupan' => $nama];
+                if ($has_status)     $insert['status'] = 'Aktif';
+                if ($has_is_deleted) $insert['is_deleted'] = 0;
+                if ($has_created_at) $insert['created_at'] = date('Y-m-d H:i:s');
+                $this->db->insert($this->table, $insert);
+                $existing_names[strtolower(trim($nama))] = true;
+            }
+        }
+    }
+
+    public function get_all()
+    {
+        $this->ensure_table_schema();
+        $this->auto_seed_keuskupan_if_empty();
+
+        $has_is_deleted = $this->db->field_exists('is_deleted', $this->table);
+        $this->db->from($this->table);
+        if ($has_is_deleted) {
+            $this->db->group_start()
+                     ->where('is_deleted', 0)
+                     ->or_where('is_deleted IS NULL', NULL, FALSE)
+                     ->group_end();
+        }
+        $this->db->order_by('nama_keuskupan', 'ASC');
+        $res = $this->db->get()->result();
+
+        if (empty($res)) {
+            $res = [];
+            foreach ($this->get_default_keuskupan_names() as $idx => $nama) {
+                $obj = new stdClass();
+                $obj->id_keuskupan = $idx + 1;
+                $obj->id = $idx + 1;
+                $obj->nama_keuskupan = $nama;
+                $obj->status = 'Aktif';
+                $res[] = $obj;
+            }
+        }
+
+        return $res;
+    }
+
+    public function get_by_id($id)
+    {
+        $this->ensure_table_schema();
+        $this->auto_seed_keuskupan_if_empty();
+
+        $has_is_deleted = $this->db->field_exists('is_deleted', $this->table);
+        $has_provinsi   = $this->db->table_exists('provinsi');
+        $has_kabupaten  = $this->db->table_exists('kabupaten');
+        $has_kecamatan  = $this->db->table_exists('kecamatan');
+        $has_desa       = $this->db->table_exists('desa_kelurahan');
+
+        $select = ['keuskupan.*'];
+
+        if ($has_provinsi) {
+            $select[] = 'provinsi.nama_provinsi';
+        }
+        if ($has_kabupaten) {
+            $select[] = 'kabupaten.nama_kabupaten';
+        }
+        if ($has_kecamatan) {
+            $select[] = 'kecamatan.nama_kecamatan';
+        }
+        if ($has_desa) {
+            $desa_col = $this->db->field_exists('nama_desa', 'desa_kelurahan') ? 'nama_desa' : ($this->db->field_exists('nama_desa_kelurahan', 'desa_kelurahan') ? 'nama_desa_kelurahan' : 'nama');
+            $select[] = "desa_kelurahan.{$desa_col} AS nama_desa";
+        }
+
+        $this->db->select(implode(', ', $select));
+        $this->db->from($this->table);
+
+        if ($has_provinsi && $this->db->field_exists('provinsi_id', $this->table)) {
+            $prov_pk = $this->db->field_exists('id_provinsi', 'provinsi') ? 'id_provinsi' : 'id';
+            $this->db->join('provinsi', "provinsi.{$prov_pk} = keuskupan.provinsi_id", 'left');
+        }
+        if ($has_kabupaten && $this->db->field_exists('kabupaten_id', $this->table)) {
+            $kab_pk = $this->db->field_exists('id_kabupaten', 'kabupaten') ? 'id_kabupaten' : 'id';
+            $this->db->join('kabupaten', "kabupaten.{$kab_pk} = keuskupan.kabupaten_id", 'left');
+        }
+        if ($has_kecamatan && $this->db->field_exists('kecamatan_id', $this->table)) {
+            $kec_pk = $this->db->field_exists('id_kecamatan', 'kecamatan') ? 'id_kecamatan' : 'id';
+            $this->db->join('kecamatan', "kecamatan.{$kec_pk} = keuskupan.kecamatan_id", 'left');
+        }
+        if ($has_desa && $this->db->field_exists('desa_id', $this->table)) {
+            $desa_pk = $this->db->field_exists('id_desa', 'desa_kelurahan') ? 'id_desa' : ($this->db->field_exists('id_desa_kelurahan', 'desa_kelurahan') ? 'id_desa_kelurahan' : 'id');
+            $this->db->join('desa_kelurahan', "desa_kelurahan.{$desa_pk} = keuskupan.desa_id", 'left');
+        }
+
+        $pk = $this->db->field_exists('id_keuskupan', $this->table) ? 'keuskupan.id_keuskupan' : 'keuskupan.id';
+        $this->db->where($pk, $id);
+
+        if ($has_is_deleted) {
+            $this->db->group_start()
+                     ->where('keuskupan.is_deleted', 0)
+                     ->or_where('keuskupan.is_deleted IS NULL', NULL, FALSE)
+                     ->group_end();
+        }
+
+        $row = $this->db->get()->row();
+
+        if (!$row) {
+            $this->db->from($this->table);
+            $this->db->where($pk, $id);
+            if ($has_is_deleted) {
+                $this->db->group_start()
+                         ->where('is_deleted', 0)
+                         ->or_where('is_deleted IS NULL', NULL, FALSE)
+                         ->group_end();
+            }
+            $row = $this->db->get()->row();
+        }
+
+        return $row;
+    }
+
+    public function insert($data)
+    {
+        $this->ensure_table_schema();
+        return $this->db->insert($this->table, $data);
+    }
+
+    public function update($id, $data)
+    {
+        $this->ensure_table_schema();
+        $pk = $this->db->field_exists('id_keuskupan', $this->table) ? 'id_keuskupan' : 'id';
+        $this->db->where($pk, $id);
+        return $this->db->update($this->table, $data);
+    }
+
+    public function delete($id)
+    {
+        $this->ensure_table_schema();
+        $pk = $this->db->field_exists('id_keuskupan', $this->table) ? 'id_keuskupan' : 'id';
+        $this->db->where($pk, $id);
+        return $this->db->update($this->table, ['is_deleted' => 1, 'deleted_at' => date('Y-m-d H:i:s')]);
+    }
+
+    public function delete_many($ids)
+    {
+        $this->ensure_table_schema();
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array) $ids))));
+        if (empty($ids)) {
+            return false;
+        }
+
+        $pk = $this->db->field_exists('id_keuskupan', $this->table) ? 'id_keuskupan' : 'id';
+        $this->db->where_in($pk, $ids);
+        return $this->db->update($this->table, [
+            'is_deleted' => 1,
+            'deleted_at' => date('Y-m-d H:i:s'),
+        ]);
+    }
+}
+
+

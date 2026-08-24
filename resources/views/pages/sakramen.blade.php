@@ -4,10 +4,10 @@
 @section('description', 'Formulir pendaftaran dan pengajuan sakramen online Paroki')
 
 @section('content')
-<div class="bg-amber-600 py-12">
+<div class="page-hero py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 class="text-3xl font-bold text-white">Pengajuan Sakramen</h1>
-        <p class="text-amber-100 mt-2">Ajukan permohonan sakramen secara online</p>
+        <p class="text-sky-100 mt-2">Ajukan permohonan sakramen secara online</p>
     </div>
 </div>
 

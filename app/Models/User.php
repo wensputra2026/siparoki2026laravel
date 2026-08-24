@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Models\Contracts\HasName;
-use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements FilamentUser, HasName
+class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
@@ -47,37 +44,24 @@ class User extends Authenticatable implements FilamentUser, HasName
         ];
     }
 
-    public function canAccessPanel(Panel $panel): bool
+    public function getRememberToken()
     {
-        if (!($this->status ?? true)) {
-            return false;
-        }
-
-        $panelId = $panel->getId();
-
-        return match ($panelId) {
-            'admin' => $this->hasRole(['superadmin', 'admin', 'administrator']),
-            'pastor' => $this->hasRole(['pastor-paroki', 'pastor', 'superadmin', 'admin']),
-            'sekretariat' => $this->hasRole(['sekretariat', 'tata-usaha', 'sekretaris', 'superadmin', 'admin', 'pastor-paroki']),
-            'bendahara' => $this->hasRole(['bendahara', 'keuangan', 'kasir', 'superadmin', 'admin', 'pastor-paroki']),
-            'umat' => true,
-            default => true,
-        };
+        return null;
     }
 
-    public function getFilamentName(): string
+    public function setRememberToken($value)
     {
-        return $this->nama_lengkap ?? $this->username ?? $this->email;
+        // No-op for legacy schema without remember_token column
     }
 
-    public function getFilamentAvatarUrl(): ?string
+    public function getRememberTokenName()
     {
-        return $this->foto ? asset('storage/' . $this->foto) : null;
+        return '';
     }
 
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class, 'role_id');
     }
 
     public function wilayah()
@@ -90,6 +74,11 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->belongsTo(Kapela::class);
     }
 
+    public function kub()
+    {
+        return $this->belongsTo(Kub::class);
+    }
+
     public function umat()
     {
         return $this->belongsTo(Umat::class);
@@ -100,23 +89,27 @@ class User extends Authenticatable implements FilamentUser, HasName
      */
     public function hasRole(string|array $roles): bool
     {
-        if (!$this->role) {
-            return true; // Default allow all if no role assigned
-        }
-
-        $currentSlug = strtolower(trim($this->role->slug ?? $this->role->nama_role ?? ''));
-
-        // Superadmin and Pastor Paroki always have full access
-        if (in_array($currentSlug, ['superadmin', 'admin', 'pastor-paroki', 'administrator', 'pastor'])) {
+        if ($this->role_id == 1 || $this->id == 1) {
             return true;
         }
 
-        if (is_array($roles)) {
-            $normalized = array_map(fn ($r) => strtolower(trim($r)), $roles);
-            return in_array($currentSlug, $normalized);
+        $rawSlug = strtolower(trim($this->role?->slug ?? $this->role?->nama_role ?? ''));
+        $cleanSlug = str_replace(['_', '-', ' '], '', $rawSlug);
+
+        // Superadmin and Pastor Paroki always have full access
+        if (in_array($cleanSlug, ['superadmin', 'superadministrator', 'admin', 'administrator', 'pastor', 'pastorparoki'])) {
+            return true;
         }
 
-        return $currentSlug === strtolower(trim($roles));
+        $targetRoles = is_array($roles) ? $roles : [$roles];
+        foreach ($targetRoles as $target) {
+            $cleanTarget = str_replace(['_', '-', ' '], '', strtolower(trim($target)));
+            if ($cleanSlug === $cleanTarget || str_contains($cleanSlug, $cleanTarget) || str_contains($cleanTarget, $cleanSlug)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function isSuperAdmin(): bool

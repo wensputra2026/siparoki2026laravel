@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Daftar Layanan Sakramen & Pastoral - Kristus Raja Katedral')
+@section('title', 'Daftar Layanan Sakramen & Pastoral - ' . ($globalNamaParoki ?? 'SIPAROKI'))
 @section('content')
 <div class="py-12 bg-slate-100 dark:bg-[#090e1a]">
     <div class="max-w-5xl mx-auto px-4">
@@ -39,10 +39,11 @@
             </div>
         </div>
         <div class="text-center mt-10">
-            <a href="/sakramen" wire:navigate class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold px-8 py-3.5 rounded-2xl text-sm transition shadow-lg shadow-sky-600/20">
+            <a href="/sakramen" class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold px-8 py-3.5 rounded-2xl text-sm transition shadow-lg shadow-sky-600/20">
                 <i class="fa-solid fa-file-pen"></i> <span>Formulir Pengajuan Sakramen Online</span>
             </a>
         </div>
     </div>
 </div>
 @endsection
+

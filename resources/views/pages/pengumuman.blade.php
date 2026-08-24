@@ -3,10 +3,10 @@
 @section('title', 'Pengumuman - SIPAROKI')
 
 @section('content')
-<div class="bg-amber-600 py-12">
+<div class="page-hero py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 class="text-3xl font-bold text-white">Pengumuman</h1>
-        <p class="text-amber-100 mt-2">Informasi dan pengumuman terbaru dari paroki</p>
+        <p class="text-sky-100 mt-2">Informasi dan pengumuman terbaru dari paroki</p>
     </div>
 </div>
 

@@ -46,4 +46,64 @@ class Paroki extends Model
             'is_deleted' => 'boolean',
         ];
     }
+
+    public function keuskupan()
+    {
+        return $this->belongsTo(Keuskupan::class, 'keuskupan_id', 'id_keuskupan');
+    }
+
+    public function dekenat()
+    {
+        return $this->belongsTo(Dekenat::class, 'dekenat_id', 'id');
+    }
+
+    public function kevikepan()
+    {
+        return $this->belongsTo(Kevikepan::class, 'dekenat_id', 'id');
+    }
+
+    public function provinsi()
+    {
+        return $this->belongsTo(Provinsi::class, 'provinsi_id', 'id_provinsi');
+    }
+
+    public function kabupaten()
+    {
+        return $this->belongsTo(Kabupaten::class, 'kabupaten_id', 'id_kabupaten');
+    }
+
+    public function kecamatan()
+    {
+        return $this->belongsTo(Kecamatan::class, 'kecamatan_id', 'id_kecamatan');
+    }
+
+    public function desa()
+    {
+        return $this->belongsTo(DesaKelurahan::class, 'desa_id', 'id_desa');
+    }
+
+    public function kapelas()
+    {
+        return $this->hasMany(Kapela::class, 'paroki_id');
+    }
+
+    public function stasis()
+    {
+        return $this->hasMany(Kapela::class, 'paroki_id');
+    }
+
+    public function wilayahs()
+    {
+        return $this->hasMany(Wilayah::class, 'paroki_id');
+    }
+
+    public function kubs()
+    {
+        return $this->hasMany(Kub::class, 'paroki_id');
+    }
+
+    public function kuasiParokis()
+    {
+        return $this->hasMany(KuasiParoki::class, 'paroki_id');
+    }
 }

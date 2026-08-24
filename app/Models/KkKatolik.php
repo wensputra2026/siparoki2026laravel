@@ -17,12 +17,21 @@ class KkKatolik extends Model
         'wilayah_id',
         'kapela_id',
         'lingkungan_id',
+        'kub_id',
         'nama_baptis_pemilik',
         'nama_lahir_pemilik',
         'nama_pasangan',
         'alamat_sekarang',
+        'status_kepemilikan_rumah',
+        'kategori_ekonomi',
+        'bantuan_pastoral',
+        'pekerjaan',
+        'pendidikan',
+        'golongan_darah',
+        'penghasilan',
         'rt',
         'rw',
+        'provinsi',
         'desa_kelurahan',
         'kecamatan',
         'kota_kabupaten',
@@ -41,6 +50,19 @@ class KkKatolik extends Model
         ];
     }
 
+    protected $hidden = [
+        'is_deleted',
+    ];
+
+    public function getMaskedNikAttribute(): ?string
+    {
+        $nik = $this->nik_pemilik;
+        if (!$nik) return null;
+        $len = strlen($nik);
+        if ($len <= 8) return str_repeat('*', $len);
+        return substr($nik, 0, 4) . str_repeat('*', max(0, $len - 8)) . substr($nik, -4);
+    }
+
     public function wilayah()
     {
         return $this->belongsTo(Wilayah::class);
@@ -49,6 +71,11 @@ class KkKatolik extends Model
     public function kapela()
     {
         return $this->belongsTo(Kapela::class);
+    }
+
+    public function kub()
+    {
+        return $this->belongsTo(Kub::class);
     }
 
     public function lingkungan()

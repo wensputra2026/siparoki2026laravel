@@ -1,0 +1,5496 @@
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
+import RichTextEditor from '@/Components/RichTextEditor.vue';
+
+const page = usePage();
+
+// Compute base URL prefix (e.g. /superadmin) from current URL
+const basePrefix = computed(() => {
+    const parts = page.url.split('?')[0].split('/').filter(Boolean);
+    return parts.length > 0 ? '/' + parts[0] : '';
+});
+
+const getModuleLink = (moduleSlug) => `${basePrefix.value}/${moduleSlug}`;
+
+const props = defineProps({
+    title: {
+        type: String,
+        required: true,
+    },
+    moduleKey: {
+        type: String,
+        required: true,
+    },
+    items: {
+        type: Object,
+        default: () => ({ data: [], links: [] }),
+    },
+    columns: {
+        type: Array,
+        default: () => [],
+    },
+    keuskupanList: {
+        type: Array,
+        default: () => [],
+    },
+    dekenatList: {
+        type: Array,
+        default: () => [],
+    },
+    parokiList: {
+        type: Array,
+        default: () => [],
+    },
+    defaultParokiId: {
+        type: [String, Number],
+        default: '',
+    },
+    defaultParoki: {
+        type: Object,
+        default: null,
+    },
+    provinsiList: {
+        type: Array,
+        default: () => [],
+    },
+    kabupatenList: {
+        type: Array,
+        default: () => [],
+    },
+    kecamatanList: {
+        type: Array,
+        default: () => [],
+    },
+    desaList: {
+        type: Array,
+        default: () => [],
+    },
+    pastorList: {
+        type: Array,
+        default: () => [],
+    },
+    roleList: {
+        type: Array,
+        default: () => [],
+    },
+    wilayahList: {
+        type: Array,
+        default: () => [],
+    },
+    kapelaList: {
+        type: Array,
+        default: () => [],
+    },
+    kubList: {
+        type: Array,
+        default: () => [],
+    },
+    kategoriKontenList: {
+        type: Array,
+        default: () => [],
+    },
+    penulisList: {
+        type: Array,
+        default: () => [],
+    },
+    filters: {
+        type: Object,
+        default: () => ({ search: '' }),
+    },
+});
+
+const search = ref(props.filters.search || '');
+const perPage = ref(props.filters.per_page || 10);
+const keuskupanFilter = ref(props.filters.keuskupan_id || '');
+const dekenatFilter = ref(props.filters.dekenat_id || '');
+const provinsiFilter = ref(props.filters.provinsi_id || '');
+const kabupatenFilter = ref(props.filters.kabupaten_id || '');
+const kecamatanFilter = ref(props.filters.kecamatan_id || '');
+const wilayahFilter = ref(props.filters.wilayah_id || '');
+const kubFilter = ref(props.filters.kub_id || '');
+const kapelaFilter = ref(props.filters.kapela_id || '');
+const statusFilter = ref(props.filters.status || props.filters.status_verifikasi || '');
+const tipeFilter = ref(props.filters.tipe || '');
+const roleFilter = ref(props.filters.role_id || '');
+const pastorRekanSearch = ref('');
+const isCustomKategori = ref(false);
+const importFileInput = ref(null);
+let debounce = null;
+
+const statusOptions = [
+    { value: '', label: 'Semua Status' },
+    { value: 'Aktif', label: 'Aktif / Terverifikasi' },
+    { value: 'Nonaktif', label: 'Nonaktif / Diblokir' },
+    { value: 'Pending', label: 'Pending Verifikasi' },
+];
+
+const filteredWilayahsForFilter = computed(() => {
+    let list = props.wilayahList || [];
+    if (kapelaFilter.value) {
+        const relevantWilayahIds = (props.kubList || [])
+            .filter(k => String(k.kapela_id || k.id_kapela) === String(kapelaFilter.value) && (k.wilayah_id || k.id_wilayah))
+            .map(k => String(k.wilayah_id || k.id_wilayah));
+        if (relevantWilayahIds.length > 0) {
+            const filtered = list.filter(w => relevantWilayahIds.includes(String(w.id || w.id_wilayah)) || String(w.kapela_id) === String(kapelaFilter.value));
+            if (filtered.length > 0) return filtered;
+        }
+    }
+    return list;
+});
+
+const filteredKapelasForFilter = computed(() => {
+    let list = props.kapelaList || [];
+    if (wilayahFilter.value) {
+        const relevantKapelaIds = (props.kubList || [])
+            .filter(k => String(k.wilayah_id || k.id_wilayah) === String(wilayahFilter.value) && (k.kapela_id || k.id_kapela))
+            .map(k => String(k.kapela_id || k.id_kapela));
+        if (relevantKapelaIds.length > 0) {
+            const filtered = list.filter(kp => relevantKapelaIds.includes(String(kp.id || kp.id_kapela)));
+            if (filtered.length > 0) return filtered;
+        }
+    }
+    return list;
+});
+
+const filteredKubsForFilter = computed(() => {
+    let list = props.kubList || [];
+    if (wilayahFilter.value && kapelaFilter.value) {
+        const matchBoth = list.filter(k => 
+            String(k.wilayah_id || k.id_wilayah) === String(wilayahFilter.value) && 
+            String(k.kapela_id || k.id_kapela) === String(kapelaFilter.value)
+        );
+        if (matchBoth.length > 0) return matchBoth;
+        return list.filter(k => 
+            String(k.wilayah_id || k.id_wilayah) === String(wilayahFilter.value) || 
+            String(k.kapela_id || k.id_kapela) === String(kapelaFilter.value)
+        );
+    }
+    if (wilayahFilter.value) {
+        return list.filter(k => String(k.wilayah_id || k.id_wilayah) === String(wilayahFilter.value));
+    }
+    if (kapelaFilter.value) {
+        return list.filter(k => String(k.kapela_id || k.id_kapela) === String(kapelaFilter.value));
+    }
+    return list;
+});
+
+const accountStatusOptions = [
+    { value: 1, label: 'Aktif' },
+    { value: 0, label: 'Nonaktif' },
+];
+
+const maintenanceOptions = [
+    { value: 'Tidak', label: 'Tidak' },
+    { value: 'Ya', label: 'Ya (Akses Maintenance Penuh)' },
+];
+
+// Modal & Form state must exist before computed/watchers that read formData.
+const showFormModal = ref(false);
+const showDetailModal = ref(false);
+const showDeleteModal = ref(false);
+const selectedItem = ref(null);
+const modalMode = ref('create'); // 'create' | 'edit'
+const formData = ref({});
+const uploadedFile = ref(null);
+const previewImage = ref(null);
+const isSubmitting = ref(false);
+const showPassword = ref(false);
+
+const filteredFormKubs = computed(() => {
+    let list = props.kubList || [];
+    if (formData.value?.wilayah_id) {
+        return list.filter(k => String(k.wilayah_id || k.id_wilayah) === String(formData.value.wilayah_id));
+    }
+    if (formData.value?.kapela_id) {
+        return list.filter(k => String(k.kapela_id || k.id_kapela) === String(formData.value.kapela_id));
+    }
+    return list;
+});
+
+const activeProfileParoki = computed(() => {
+    if (props.defaultParoki) return props.defaultParoki;
+    if (!props.defaultParokiId) return props.parokiList?.[0] || null;
+    return props.parokiList.find((paroki) => String(paroki.id_paroki || paroki.id) === String(props.defaultParokiId)) || props.parokiList?.[0] || null;
+});
+
+const activeProfileParokiId = computed(() => {
+    const paroki = activeProfileParoki.value;
+    return paroki ? (paroki.id_paroki || paroki.id) : '';
+});
+
+const tipeKontenList = computed(() => {
+    const fromKategori = (props.kategoriKontenList || []).map(item => item.tipe).filter(Boolean);
+    return Array.from(new Set(['Berita', 'Artikel', 'Renungan', 'Pengumuman', ...fromKategori]));
+});
+
+const permissionGroups = [
+    {
+        title: 'Dashboard & Panduan',
+        icon: 'fa-gauge-high',
+        items: [
+            { key: 'dashboard', label: 'Dashboard' },
+            { key: 'panduan', label: 'Panduan' },
+        ]
+    },
+    {
+        title: 'Wilayah & Referensi (Gerejawi)',
+        icon: 'fa-church',
+        items: [
+            { key: 'keuskupan', label: 'Keuskupan' },
+            { key: 'dekenat', label: 'Dekenat' },
+            { key: 'paroki', label: 'Paroki' },
+            { key: 'kuasi_paroki', label: 'Kuasi Paroki' },
+            { key: 'kapela', label: 'Stasi / Kapela' },
+            { key: 'wilayah', label: 'Wilayah' },
+            { key: 'lingkungan', label: 'Lingkungan' },
+            { key: 'kub', label: 'KUB' },
+            { key: 'master_referensi', label: 'Data Referensi' },
+        ]
+    },
+    {
+        title: 'Wilayah Sipil',
+        icon: 'fa-map-location-dot',
+        items: [
+            { key: 'provinsi', label: 'Provinsi' },
+            { key: 'kabupaten', label: 'Kabupaten / Kota' },
+            { key: 'kecamatan', label: 'Kecamatan' },
+            { key: 'desa', label: 'Desa / Kelurahan' },
+        ]
+    },
+    {
+        title: 'Umat & Pelayanan Paroki',
+        icon: 'fa-users',
+        items: [
+            { key: 'direktori_dpp', label: 'Direktori DPP' },
+            { key: 'direktori_katekis', label: 'Direktori Katekis' },
+            { key: 'direktori_misdinar', label: 'Direktori Misdinar' },
+            { key: 'master_pastor', label: 'Riwayat Pastor' },
+            { key: 'kronik', label: 'Kronik Paroki' },
+            { key: 'peran_kategorial', label: 'Peran Kategorial' },
+            { key: 'anggota_kategorial', label: 'Anggota Kategorial' },
+            { key: 'jadwal_misa', label: 'Jadwal Misa' },
+            { key: 'kk_katolik', label: 'KK Katolik' },
+            { key: 'data_keluarga', label: 'Data Keluarga' },
+            { key: 'data_umat', label: 'Data Umat / Jiwa' },
+            { key: 'statistik', label: 'Demografi & Statistik' },
+            { key: 'sakramen', label: 'Buku Besar Sakramen' },
+            { key: 'pemeriksaan_kanonikal', label: 'Pemeriksaan Kanonikal' },
+            { key: 'pengajuan_sakramen', label: 'Pengajuan Sakramen' },
+            { key: 'katekumen', label: 'Katekumen & Pembinaan' },
+            { key: 'lapak', label: 'Lapak & Toko Umat' },
+        ]
+    },
+    {
+        title: 'Sekretariat Paroki',
+        icon: 'fa-file-signature',
+        items: [
+            { key: 'surat_masuk', label: 'Surat Masuk' },
+            { key: 'surat_keluar', label: 'Surat Keluar' },
+            { key: 'arsip_digital', label: 'Arsip Digital Paroki' },
+            { key: 'rapat_notulen', label: 'Rapat & Notulen' },
+        ]
+    },
+    {
+        title: 'Keuangan & Aset',
+        icon: 'fa-coins',
+        items: [
+            { key: 'jenis_iuran', label: 'Jenis Iuran' },
+            { key: 'iuran_umat', label: 'Iuran Umat' },
+            { key: 'kolekte_misa', label: 'Kolekte Misa' },
+            { key: 'intensi_misa', label: 'Intensi Misa' },
+            { key: 'keuangan', label: 'Keuangan Paroki' },
+            { key: 'aset', label: 'Aset & Inventaris' },
+        ]
+    },
+    {
+        title: 'Website Paroki',
+        icon: 'fa-globe',
+        items: [
+            { key: 'kategori_konten', label: 'Kategori Konten' },
+            { key: 'berita_artikel', label: 'Berita & Artikel' },
+            { key: 'agenda_kegiatan', label: 'Agenda Kegiatan' },
+            { key: 'galeri_album', label: 'Galeri Album' },
+            { key: 'sambutan_pastor', label: 'Sambutan Pastor' },
+            { key: 'pusat_unduhan', label: 'Pusat Unduhan' },
+            { key: 'slider_banner', label: 'Slider / Banner' },
+            { key: 'menu_frontend', label: 'Menu Frontend' },
+            { key: 'seo_halaman', label: 'SEO Halaman' },
+            { key: 'widget_frontend', label: 'Widget Frontend' },
+            { key: 'pengaturan_web', label: 'Pengaturan Web' },
+        ]
+    },
+    {
+        title: 'Sistem & Keamanan',
+        icon: 'fa-shield-halved',
+        items: [
+            { key: 'profil_paroki', label: 'Profil Paroki' },
+            { key: 'view_users', label: 'View Users' },
+            { key: 'create_users', label: 'Create Users' },
+            { key: 'edit_users', label: 'Edit Users' },
+            { key: 'delete_users', label: 'Delete Users' },
+            { key: 'view_roles', label: 'View Roles' },
+            { key: 'create_roles', label: 'Create Roles' },
+            { key: 'edit_roles', label: 'Edit Roles' },
+            { key: 'delete_roles', label: 'Delete Roles' },
+            { key: 'security_center', label: 'Security Center' },
+            { key: 'backup_restore', label: 'Backup & Restore' },
+            { key: 'profil_saya', label: 'Profil Saya' },
+        ]
+    }
+];
+
+const toggleGroupPermissions = (group) => {
+    if (!Array.isArray(formData.value.permissions)) {
+        formData.value.permissions = [];
+    }
+    const groupKeys = group.items.map(i => i.key);
+    const allSelected = groupKeys.every(k => formData.value.permissions.includes(k));
+    if (allSelected) {
+        formData.value.permissions = formData.value.permissions.filter(k => !groupKeys.includes(k));
+    } else {
+        formData.value.permissions = Array.from(new Set([...formData.value.permissions, ...groupKeys]));
+    }
+};
+
+const isGroupAllSelected = (group) => {
+    if (!Array.isArray(formData.value.permissions)) return false;
+    return group.items.every(i => formData.value.permissions.includes(i.key));
+};
+
+const selectAllAllPermissions = () => {
+    const all = [];
+    permissionGroups.forEach(g => g.items.forEach(i => all.push(i.key)));
+    formData.value.permissions = all;
+};
+
+const clearAllPermissions = () => {
+    formData.value.permissions = [];
+};
+
+const applyFilters = () => {
+    router.get(
+        window.location.pathname,
+        {
+            search: search.value || undefined,
+            per_page: perPage.value,
+            keuskupan_id: keuskupanFilter.value || undefined,
+            dekenat_id: dekenatFilter.value || undefined,
+            provinsi_id: provinsiFilter.value || undefined,
+            kabupaten_id: kabupatenFilter.value || undefined,
+            kecamatan_id: kecamatanFilter.value || undefined,
+            wilayah_id: wilayahFilter.value || undefined,
+            kub_id: kubFilter.value || undefined,
+            kapela_id: kapelaFilter.value || undefined,
+            role_id: roleFilter.value || undefined,
+            status: statusFilter.value || undefined,
+            tipe: tipeFilter.value || undefined,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            only: ['items', 'filters'],
+        }
+    );
+};
+
+watch(search, () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(applyFilters, 500);
+});
+
+watch(kabupatenFilter, () => {
+    if (kecamatanFilter.value && !filteredKecamatansForFilter.value.some(k => String(k.id_kecamatan || k.id) === String(kecamatanFilter.value))) {
+        kecamatanFilter.value = '';
+    }
+});
+
+watch(wilayahFilter, (newWilayah) => {
+    if (newWilayah) {
+        kapelaFilter.value = '';
+    }
+    if (kubFilter.value && !filteredKubsForFilter.value.some(k => String(k.id || k.id_kub) === String(kubFilter.value))) {
+        kubFilter.value = '';
+    }
+});
+
+watch(kapelaFilter, (newKapela) => {
+    if (newKapela) {
+        wilayahFilter.value = '';
+    }
+    if (kubFilter.value && !filteredKubsForFilter.value.some(k => String(k.id || k.id_kub) === String(kubFilter.value))) {
+        kubFilter.value = '';
+    }
+});
+
+watch(() => formData.value?.wilayah_id, (newWilayah) => {
+    if (newWilayah && formData.value) {
+        formData.value.kapela_id = '';
+    }
+    if (formData.value?.kub_id && !filteredFormKubs.value.some(k => String(k.id || k.id_kub) === String(formData.value.kub_id))) {
+        formData.value.kub_id = '';
+    }
+});
+
+watch(() => formData.value?.kapela_id, (newKapela) => {
+    if (newKapela && formData.value) {
+        formData.value.wilayah_id = '';
+    }
+    if (formData.value?.kub_id && !filteredFormKubs.value.some(k => String(k.id || k.id_kub) === String(formData.value.kub_id))) {
+        formData.value.kub_id = '';
+    }
+});
+
+watch([perPage, keuskupanFilter, dekenatFilter, provinsiFilter, kabupatenFilter, kecamatanFilter, wilayahFilter, kubFilter, kapelaFilter, roleFilter, statusFilter], () => {
+    applyFilters();
+});
+
+const getRelationHref = (col, item) => {
+    const base = getModuleLink(col.linkTo || col.relation);
+    if (col.filterParam) {
+        const val = item.id_provinsi || item.id_kabupaten || item.id_kecamatan || item.id_keuskupan || item.id_dekenat || item.id_paroki || item.id;
+        return `${base}?${col.filterParam}=${val}`;
+    }
+    return base;
+};
+
+const importExportModuleKeys = [
+    'keuskupan',
+    'dekenat',
+    'kevikepan',
+    'paroki',
+    'kuasi-paroki',
+    'kapela',
+    'stasi',
+    'wilayah',
+    'kub',
+    'provinsi',
+    'kabupaten',
+    'kecamatan',
+    'desa-kelurahan',
+    'kk-katolik',
+    'kk',
+    'keluarga',
+];
+
+const hasImportExportActions = computed(() => importExportModuleKeys.includes(props.moduleKey));
+const currentUserId = computed(() => page.props.auth?.user?.id || null);
+
+const isSelfUser = (item) => props.moduleKey === 'user' && currentUserId.value && Number(item?.id) === Number(currentUserId.value);
+
+const roleBadgeClass = (role) => {
+    const slug = String(role?.slug || role?.nama_role || '').toLowerCase();
+    if (slug.includes('super')) return 'bg-rose-50 text-rose-700 border-rose-200';
+    if (slug.includes('pastor')) return 'bg-amber-50 text-amber-700 border-amber-200';
+    if (slug.includes('penulis') || slug.includes('redaksi')) return 'bg-purple-50 text-purple-700 border-purple-200';
+    if (slug.includes('wilayah')) return 'bg-blue-50 text-blue-700 border-blue-200';
+    if (slug.includes('kapela') || slug.includes('stasi')) return 'bg-slate-50 text-slate-700 border-slate-200';
+    if (slug.includes('kub')) return 'bg-cyan-50 text-cyan-700 border-cyan-200';
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+};
+
+const generatePassword = () => {
+    const suffix = Math.random().toString(36).slice(2, 8).toUpperCase();
+    formData.value.password = `SIP-${suffix}`;
+    showPassword.value = true;
+};
+
+// Cascading computed lists
+const availableDekenats = computed(() => {
+    if (!formData.value.keuskupan_id) return props.dekenatList;
+    return props.dekenatList.filter(d => String(d.keuskupan_id) === String(formData.value.keuskupan_id));
+});
+
+const availableKabupatens = computed(() => {
+    if (!formData.value.provinsi_id) return props.kabupatenList;
+    return props.kabupatenList.filter(k => String(k.provinsi_id) === String(formData.value.provinsi_id));
+});
+
+const availableKecamatans = computed(() => {
+    if (!formData.value.kabupaten_id) return props.kecamatanList;
+    return props.kecamatanList.filter(k => String(k.kabupaten_id) === String(formData.value.kabupaten_id));
+});
+
+const filteredKecamatansForFilter = computed(() => {
+    if (!kabupatenFilter.value) return props.kecamatanList;
+    return props.kecamatanList.filter(k => String(k.kabupaten_id) === String(kabupatenFilter.value));
+});
+
+const availableDesas = computed(() => {
+    if (!formData.value.kecamatan_id) return props.desaList || [];
+    return (props.desaList || []).filter(d => String(d.kecamatan_id) === String(formData.value.kecamatan_id));
+});
+
+const filteredPastorsForRekan = computed(() => {
+    if (!pastorRekanSearch.value.trim()) return props.pastorList;
+    const q = pastorRekanSearch.value.toLowerCase().trim();
+    return props.pastorList.filter(p => {
+        const name = typeof p === 'string' ? p : (p.nama_pastor || '');
+        return name.toLowerCase().includes(q);
+    });
+});
+
+const pastorParokiOptions = computed(() => {
+    return (props.pastorList || []).map((p) => {
+        const name = typeof p === 'string' ? p : (p.nama_pastor || '');
+        return {
+            id: name,
+            name: name,
+            value: name,
+            label: name,
+        };
+    });
+});
+
+const togglePastorRekan = (name) => {
+    if (!Array.isArray(formData.value.selected_pastor_rekan)) {
+        formData.value.selected_pastor_rekan = [];
+    }
+    const idx = formData.value.selected_pastor_rekan.indexOf(name);
+    if (idx > -1) {
+        formData.value.selected_pastor_rekan.splice(idx, 1);
+    } else {
+        formData.value.selected_pastor_rekan.push(name);
+    }
+};
+
+const isPastorRekanSelected = (name) => {
+    return Array.isArray(formData.value.selected_pastor_rekan) && formData.value.selected_pastor_rekan.includes(name);
+};
+
+const removePastorRekan = (name) => {
+    if (Array.isArray(formData.value.selected_pastor_rekan)) {
+        const idx = formData.value.selected_pastor_rekan.indexOf(name);
+        if (idx > -1) formData.value.selected_pastor_rekan.splice(idx, 1);
+    }
+};
+
+// Cascading watchers
+watch(() => formData.value.keuskupan_id, (newVal) => {
+    if (props.moduleKey === 'paroki') {
+        if (modalMode.value === 'create' && newVal) {
+            const keuskupan = props.keuskupanList.find(k => (k.id || k.id_keuskupan) == newVal);
+            const prefix = keuskupan ? (keuskupan.kode_keuskupan || 'PRK') : 'PRK';
+            const num = String(Math.floor(100 + Math.random() * 900));
+            formData.value.kode_paroki = `${prefix}-${num}`;
+        }
+        if (formData.value.dekenat_id) {
+            const isValid = availableDekenats.value.some(d => (d.id || d.id_kevikepan) == formData.value.dekenat_id);
+            if (!isValid) formData.value.dekenat_id = '';
+        }
+    }
+});
+
+watch(() => formData.value.provinsi_id, (newVal) => {
+    const prov = props.provinsiList.find(p => (p.id || p.id_provinsi) == newVal);
+    if (prov) formData.value.provinsi = prov.nama_provinsi;
+    if (formData.value.kabupaten_id && !availableKabupatens.value.some(k => (k.id || k.id_kabupaten) == formData.value.kabupaten_id)) {
+        formData.value.kabupaten_id = '';
+        formData.value.kecamatan_id = '';
+        formData.value.desa_id = '';
+        formData.value.kabupaten = '';
+        formData.value.kecamatan = '';
+        formData.value.desa = '';
+    }
+});
+
+watch(() => formData.value.kabupaten_id, (newVal) => {
+    const kab = props.kabupatenList.find(k => (k.id || k.id_kabupaten) == newVal);
+    if (kab) formData.value.kabupaten = kab.nama_kabupaten;
+    if (formData.value.kecamatan_id && !availableKecamatans.value.some(k => (k.id || k.id_kecamatan) == formData.value.kecamatan_id)) {
+        formData.value.kecamatan_id = '';
+        formData.value.desa_id = '';
+        formData.value.kecamatan = '';
+        formData.value.desa = '';
+    }
+});
+
+watch(() => formData.value.kecamatan_id, (newVal) => {
+    const kec = props.kecamatanList.find(k => (k.id || k.id_kecamatan) == newVal);
+    if (kec) formData.value.kecamatan = kec.nama_kecamatan;
+    if (formData.value.desa_id && !availableDesas.value.some(d => (d.id || d.id_desa) == formData.value.desa_id)) {
+        formData.value.desa_id = '';
+        formData.value.desa = '';
+    }
+});
+
+watch(() => formData.value.desa_id, (newVal) => {
+    const desa = (props.desaList || []).find(d => (d.id || d.id_desa) == newVal);
+    if (desa) {
+        formData.value.desa = desa.nama_desa;
+        if (props.moduleKey === 'keuskupan' && modalMode.value === 'create' && (!formData.value.alamat || formData.value.alamat.includes('Mgr. Sugiyopranoto'))) {
+            const desaName = desa.nama_desa;
+            const kecName = formData.value.kecamatan || 'Oebobo';
+            const kabName = formData.value.kabupaten || 'Kota Kupang';
+            const provName = formData.value.provinsi || 'Nusa Tenggara Timur';
+            formData.value.alamat = `Jl. Mgr. Sugiyopranoto No. 1, Kel. ${desaName}, Kec. ${kecName}, ${kabName}, ${provName}`;
+        }
+    }
+});
+
+const handleFileUpload = (event, key) => {
+    const file = event.target.files[0];
+    if (file) {
+        uploadedFile.value = file;
+        formData.value[key] = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImage.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+const slugifyText = (value) => String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const updateKontenSlug = () => {
+    if (props.moduleKey !== 'konten') return;
+    formData.value.slug = slugifyText(formData.value.judul);
+};
+
+const stripHtmlText = (value) => {
+    const div = document.createElement('div');
+    div.innerHTML = String(value || '');
+    return (div.textContent || div.innerText || '')
+        .replace(/\[[^\]]+\]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+};
+
+const generateKontenExcerpt = () => {
+    const cleanText = stripHtmlText(formData.value.isi);
+    if (!cleanText) return;
+    const limit = 180;
+    const trimmed = cleanText.length > limit ? cleanText.slice(0, limit) : cleanText;
+    const lastSpace = trimmed.lastIndexOf(' ');
+    formData.value.excerpt = cleanText.length > limit && lastSpace > 50
+        ? `${trimmed.slice(0, lastSpace)}...`
+        : (cleanText.length > limit ? `${trimmed}...` : trimmed);
+};
+
+const syncKontenKategori = () => {
+    const kategori = (props.kategoriKontenList || []).find(item => String(item.id) === String(formData.value.kategori_id));
+    if (kategori) {
+        formData.value.kategori = kategori.nama_kategori || '';
+        if (!formData.value.tipe && kategori.tipe) {
+            formData.value.tipe = kategori.tipe;
+        }
+    }
+};
+
+const addKontenTag = (tag) => {
+    const current = String(formData.value.tags || '')
+        .split(',')
+        .map(item => item.trim())
+        .filter(Boolean);
+    if (!current.includes(tag)) {
+        current.push(tag);
+        formData.value.tags = current.join(', ');
+    }
+};
+
+const openCreateModal = () => {
+    if (props.moduleKey === 'role' || props.moduleKey === 'roles') {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        router.visit(`/${prefix}/role/create`);
+        return;
+    }
+    if (props.moduleKey === 'umat' || props.moduleKey === 'data-umat') {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        router.visit(`/${prefix}/umat/create`);
+        return;
+    }
+    if (['master-pastor', 'pastor', 'master_pastor'].includes(props.moduleKey)) {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        router.visit(`/${prefix}/master-pastor/create`);
+        return;
+    }
+    if (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey)) {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        router.visit(`/${prefix}/kk-katolik/create`);
+        return;
+    }
+    if (props.moduleKey === 'konten') {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        router.visit(`/${prefix}/konten/create`);
+        return;
+    }
+    if (props.moduleKey === 'galeri') {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        router.visit(`/${prefix}/galeri/create`);
+        return;
+    }
+
+    modalMode.value = 'create';
+    pastorRekanSearch.value = '';
+    const initialKeuskupanId = props.keuskupanList?.[0]?.id_keuskupan || props.keuskupanList?.[0]?.id || '';
+    const initialKeuskupan = props.keuskupanList?.[0];
+    const initialKode = initialKeuskupan ? `${initialKeuskupan.kode_keuskupan || 'PRK'}-${Math.floor(100 + Math.random() * 900)}` : '';
+
+    let initProvId = '';
+    let initKabId = '';
+    let initKecId = '';
+    let initDesaId = '';
+    let initProvName = '';
+    let initKabName = '';
+    let initKecName = '';
+    let initDesaName = '';
+    let initAlamat = '';
+
+    if (props.moduleKey === 'keuskupan') {
+        const ntt = props.provinsiList.find(p => p.nama_provinsi?.toLowerCase().includes('nusa tenggara timur') || p.nama_provinsi?.toLowerCase().includes('ntt')) || props.provinsiList?.[0];
+        initProvId = ntt ? (ntt.id_provinsi || ntt.id) : '';
+        initProvName = ntt ? ntt.nama_provinsi : 'Nusa Tenggara Timur';
+
+        const kupang = props.kabupatenList.find(k => (String(k.provinsi_id) === String(initProvId)) && (k.nama_kabupaten?.toLowerCase().includes('kota kupang') || k.nama_kabupaten?.toLowerCase().includes('kupang'))) || props.kabupatenList.find(k => String(k.provinsi_id) === String(initProvId));
+        initKabId = kupang ? (kupang.id_kabupaten || kupang.id) : '';
+        initKabName = kupang ? kupang.nama_kabupaten : 'Kota Kupang';
+
+        const oebobo = props.kecamatanList.find(kc => (String(kc.kabupaten_id) === String(initKabId)) && kc.nama_kecamatan?.toLowerCase().includes('oebobo')) || props.kecamatanList.find(kc => String(kc.kabupaten_id) === String(initKabId));
+        initKecId = oebobo ? (oebobo.id_kecamatan || oebobo.id) : '';
+        initKecName = oebobo ? oebobo.nama_kecamatan : 'Oebobo';
+
+        const defDesa = (props.desaList || []).find(d => String(d.kecamatan_id) === String(initKecId));
+        initDesaId = defDesa ? (defDesa.id_desa || defDesa.id) : '';
+        initDesaName = defDesa ? defDesa.nama_desa : 'Oebobo';
+
+        initAlamat = `Jl. Mgr. Sugiyopranoto No. 1, Kel. ${initDesaName}, Kec. ${initKecName}, ${initKabName}, ${initProvName}`;
+    } else {
+        const defaultProv = props.provinsiList?.[0];
+        initProvId = defaultProv ? (defaultProv.id_provinsi || defaultProv.id) : '';
+        initProvName = defaultProv ? defaultProv.nama_provinsi : '';
+    }
+
+    formData.value = {
+        status: 'Aktif',
+        status_paroki: 'Mandiri',
+        keuskupan_id: initialKeuskupanId,
+        dekenat_id: '',
+        kode_keuskupan: '',
+        nama_keuskupan: '',
+        nama_latin: '',
+        uskup: '',
+        kode_kevikepan: '',
+        nama_kevikepan: '',
+        vikep: '',
+        kode_paroki: initialKode,
+        nama_paroki: '',
+        pelindung_paroki: '',
+        nama_pastor_paroki_aktif: '',
+        selected_pastor_rekan: [],
+        tanggal_berdiri: '',
+        alamat: initAlamat,
+        provinsi_id: initProvId,
+        kabupaten_id: initKabId,
+        kecamatan_id: initKecId,
+        desa_id: initDesaId,
+        provinsi: initProvName,
+        kabupaten: initKabName,
+        kecamatan: initKecName,
+        desa: initDesaName,
+        telepon: '',
+        no_telp: '',
+        whatsapp: '',
+        email: '',
+        website: '',
+        keterangan: '',
+        maps_url: '',
+        latitude: '',
+        longitude: '',
+        maps_embed: '',
+        logo: '',
+    };
+
+    if (props.moduleKey === 'kapela' || props.moduleKey === 'stasi') {
+        const profileParoki = activeProfileParoki.value;
+        const parokiId = activeProfileParokiId.value;
+        const parokiKode = profileParoki ? (profileParoki.kode_paroki || '012.014') : '012.014';
+        const randNum = String(Math.floor(1 + Math.random() * 99)).padStart(2, '0');
+
+        formData.value.paroki_id = parokiId;
+        formData.value.tipe = 'Stasi';
+        formData.value.tipe_kapela = 'Stasi';
+        formData.value.status = 'Aktif';
+        formData.value.kode_kapela = `ST-${parokiKode}-${randNum}`;
+        formData.value.nama_kapela = '';
+        formData.value.pelindung = '';
+        formData.value.pelindung_kapela = '';
+        formData.value.penanggung_jawab = '';
+        formData.value.alamat = initAlamat || 'Benlutu';
+        formData.value.lokasi = initAlamat || 'Benlutu';
+        formData.value.latitude = '-9.850000';
+        formData.value.longitude = '124.300000';
+        formData.value.warna_area = '#007bff';
+        formData.value.maps_url = 'https://maps.google.com/?q=-9.850000,124.300000';
+        formData.value.geojson = '';
+        formData.value.keterangan = '';
+        formData.value.sejarah = '';
+        formData.value.visi = '';
+        formData.value.misi = '';
+    }
+
+    if (props.moduleKey === 'direktori-dpp') {
+        formData.value.nama_lengkap = '';
+        formData.value.jabatan = 'Anggota Pleno';
+        formData.value.seksi = 'Bidang Liturgi & Peribadatan';
+        formData.value.periode = '2024 - 2027';
+        formData.value.no_hp = '';
+        formData.value.status = 'Aktif';
+        formData.value.urutan = 1;
+        formData.value.keterangan = '';
+        formData.value.foto = '';
+    }
+
+    if (props.moduleKey === 'kuasi-paroki') {
+        const firstParoki = props.parokiList?.[0];
+        const randCode = `KP-${String(Math.floor(1 + Math.random() * 99)).padStart(2, '0')}`;
+        formData.value.nama_kuasi = '';
+        formData.value.NamaKuasiParoki = '';
+        formData.value.kode_kuasi = randCode;
+        formData.value.KodeKuasiParoki = randCode;
+        formData.value.paroki_id = firstParoki ? (firstParoki.id_paroki || firstParoki.id) : '';
+        formData.value.dekenat_id = '';
+        formData.value.pastor_administrator = '';
+        formData.value.PastorKuasiParoki = '';
+        formData.value.pelindung = '';
+        formData.value.status = 'Aktif';
+        formData.value.lokasi = '';
+        formData.value.AlamatKuasiParoki = '';
+        formData.value.keterangan = '';
+    }
+
+    if (props.moduleKey === 'rapat' || props.moduleKey === 'rapat-notulen') {
+        const today = new Date().toISOString().split('T')[0];
+        formData.value = {
+            agenda: '',
+            tanggal: today,
+            waktu: '19:00',
+            lokasi: 'Aula Paroki',
+            notulen: '',
+            status: 'Aktif',
+        };
+    }
+
+    if (props.moduleKey === 'kegiatan') {
+        const today = new Date().toISOString().split('T')[0];
+        formData.value = {
+            nama_kegiatan: '',
+            judul: '',
+            kategori: 'Liturgi & Ibadah',
+            tanggal_mulai: today,
+            tanggal_selesai: today,
+            waktu: '09:00',
+            lokasi: 'Gereja Paroki',
+            penyelenggara: 'DPP Paroki',
+            status: 'Akan Datang',
+            deskripsi: '',
+            gambar: '',
+            foto: '',
+        };
+    }
+
+    if (props.moduleKey === 'lapak-produk') {
+        formData.value.nama_produk = '';
+        formData.value.kategori = 'Makanan & Minuman Olahan';
+        formData.value.harga = '';
+        formData.value.stok = 1;
+        formData.value.satuan = 'Pcs';
+        formData.value.penjual = '';
+        formData.value.no_wa = '';
+        formData.value.status_approval = 'Disetujui';
+        formData.value.deskripsi = '';
+        formData.value.foto = '';
+    }
+
+    if (props.moduleKey === 'konten') {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        formData.value = {
+            judul: '',
+            slug: '',
+            excerpt: '',
+            isi: '',
+            tipe: 'Berita',
+            kategori_id: '',
+            kategori: '',
+            gambar: '',
+            file_pdf: '',
+            arsip_id: '',
+            tags: '',
+            status_publish: 'Publish',
+            tanggal_publish: now.toISOString().slice(0, 16),
+            is_featured: 0,
+            embed_pdf: 1,
+            penulis: props.penulisList?.[0] || page.props.auth?.user?.nama_lengkap || page.props.auth?.user?.name || 'Administrator',
+        };
+    }
+
+    if (props.moduleKey === 'pengumuman') {
+        const today = new Date().toISOString().split('T')[0];
+        formData.value = {
+            judul: '',
+            tgl_tayang: today,
+            status: 'Aktif',
+            isi: '',
+        };
+    }
+
+    if (props.moduleKey === 'renungan') {
+        const today = new Date().toISOString().split('T')[0];
+        formData.value = {
+            judul: '',
+            tanggal: today,
+            bacaan_kitab_suci: '',
+            isi: '',
+        };
+    }
+
+    if (props.moduleKey === 'kronik') {
+        const today = new Date().toISOString().split('T')[0];
+        formData.value = {
+            judul_kronik: '',
+            tanggal_peristiwa: today,
+            kategori_kronik: 'Pastoral',
+            lokasi_peristiwa: 'Gereja Paroki',
+            penulis: page.props.auth?.user?.nama_lengkap || page.props.auth?.user?.name || 'Sekretariat Paroki',
+            status_publish: 'Publish',
+            deskripsi: '',
+        };
+    }
+
+    if (props.moduleKey === 'user') {
+        formData.value = {
+            nama_lengkap: '',
+            username: '',
+            email: '',
+            no_hp: '',
+            password: '',
+            role_id: props.roleList?.[0]?.id || '',
+            wilayah_id: '',
+            kapela_id: '',
+            kub_id: '',
+            umat_id: '',
+            status: 1,
+            maintenance_access: 'Tidak',
+            foto: '',
+        };
+        showPassword.value = false;
+    }
+
+    if (props.moduleKey === 'role' || props.moduleKey === 'roles') {
+        formData.value.nama_role = '';
+        formData.value.slug = '';
+        formData.value.deskripsi = '';
+        formData.value.status = 1;
+        formData.value.permissions = ['lihat_umat', 'lihat_sakramen', 'lihat_keuangan'];
+    }
+
+    uploadedFile.value = null;
+    previewImage.value = null;
+    props.columns.forEach((col) => {
+        if (formData.value[col.key] === undefined) {
+            formData.value[col.key] = '';
+        }
+    });
+    showFormModal.value = true;
+};
+
+const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                formData.value.latitude = pos.coords.latitude.toFixed(6);
+                formData.value.longitude = pos.coords.longitude.toFixed(6);
+                formData.value.maps_url = `https://maps.google.com/?q=${pos.coords.latitude.toFixed(6)},${pos.coords.longitude.toFixed(6)}`;
+            },
+            () => {}
+        );
+    }
+};
+
+const openEditModal = (item) => {
+    if (props.moduleKey === 'role' || props.moduleKey === 'roles') {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        const roleId = item.id || item.id_role;
+        router.visit(`/${prefix}/role/${roleId}/edit`);
+        return;
+    }
+    if (props.moduleKey === 'umat' || props.moduleKey === 'data-umat') {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        const umatId = item.id || item.id_umat;
+        router.visit(`/${prefix}/umat/${umatId}/edit`);
+        return;
+    }
+    if (['master-pastor', 'pastor', 'master_pastor'].includes(props.moduleKey)) {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        const pastorId = item.id || item.id_pastor;
+        router.visit(`/${prefix}/master-pastor/${pastorId}/edit`);
+        return;
+    }
+    if (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey)) {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        const kkId = item.id || item.id_keluarga;
+        router.visit(`/${prefix}/kk-katolik/${kkId}/edit`);
+        return;
+    }
+    if (props.moduleKey === 'konten') {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        const kontenId = item.id || item.id_konten;
+        router.visit(`/${prefix}/konten/${kontenId}/edit`);
+        return;
+    }
+    if (props.moduleKey === 'galeri') {
+        const prefix = window.location.pathname.split('/')[1] || 'superadmin';
+        const galeriId = item.id || item.id_galeri;
+        router.visit(`/${prefix}/galeri/${galeriId}/edit`);
+        return;
+    }
+
+    modalMode.value = 'edit';
+    pastorRekanSearch.value = '';
+    selectedItem.value = item;
+
+    let rekanList = [];
+    if (Array.isArray(item.nama_pastor_rekan)) {
+        rekanList = item.nama_pastor_rekan;
+    } else if (typeof item.nama_pastor_rekan === 'string' && item.nama_pastor_rekan.trim()) {
+        rekanList = item.nama_pastor_rekan.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    let provId = item.provinsi_id || (item.provinsi ? (item.provinsi.id_provinsi || item.provinsi.id) : '');
+    if (!provId && item.provinsi && typeof item.provinsi === 'string') {
+        const found = props.provinsiList.find(p => p.nama_provinsi?.toLowerCase() === item.provinsi.toLowerCase());
+        if (found) provId = found.id_provinsi || found.id;
+    }
+
+    let kabId = item.kabupaten_id || (item.kabupaten ? (item.kabupaten.id_kabupaten || item.kabupaten.id) : '');
+    if (!kabId && item.kabupaten && typeof item.kabupaten === 'string') {
+        const found = props.kabupatenList.find(k => k.nama_kabupaten?.toLowerCase() === item.kabupaten.toLowerCase());
+        if (found) kabId = found.id_kabupaten || found.id;
+    }
+
+    let kecId = item.kecamatan_id || (item.kecamatan ? (item.kecamatan.id_kecamatan || item.kecamatan.id) : '');
+    if (!kecId && item.kecamatan && typeof item.kecamatan === 'string') {
+        const found = props.kecamatanList.find(k => k.nama_kecamatan?.toLowerCase() === item.kecamatan.toLowerCase());
+        if (found) kecId = found.id_kecamatan || found.id;
+    }
+
+    let desaId = item.desa_id || (item.desa ? (item.desa.id_desa || item.desa.id) : '');
+    if (!desaId && item.desa && typeof item.desa === 'string') {
+        const found = (props.desaList || []).find(d => d.nama_desa?.toLowerCase() === item.desa.toLowerCase());
+        if (found) desaId = found.id_desa || found.id;
+    }
+
+    formData.value = {
+        ...item,
+        status: item.status || 'Aktif',
+        status_paroki: item.status_paroki || 'Mandiri',
+        keuskupan_id: item.keuskupan_id || (item.keuskupan ? (item.keuskupan.id_keuskupan || item.keuskupan.id) : (props.keuskupanList?.[0]?.id_keuskupan || '')),
+        dekenat_id: item.dekenat_id || (item.dekenat ? (item.dekenat.id_kevikepan || item.dekenat.id) : ''),
+        kode_keuskupan: item.kode_keuskupan || item.kode || '',
+        nama_keuskupan: item.nama_keuskupan || item.nama || '',
+        nama_latin: item.nama_latin || item.nama_keuskupan_latin || '',
+        uskup: item.uskup || item.nama_uskup || '',
+        kode_kevikepan: item.kode_kevikepan || item.kode_dekenat || item.kode || '',
+        nama_kevikepan: item.nama_kevikepan || item.nama_dekenat || item.nama || '',
+        vikep: item.vikep || item.nama_vikep || item.nama_deken || item.deken || '',
+        kode_paroki: item.kode_paroki || item.kode || '',
+        nama_paroki: item.nama_paroki || item.nama || '',
+        pelindung_paroki: item.pelindung_paroki || item.pelindung || '',
+        nama_pastor_paroki_aktif: item.nama_pastor_paroki_aktif || item.pastor_paroki || '',
+        selected_pastor_rekan: rekanList,
+        tanggal_berdiri: item.tanggal_berdiri ? String(item.tanggal_berdiri).substring(0, 10) : '',
+        provinsi_id: provId,
+        kabupaten_id: kabId,
+        kecamatan_id: kecId,
+        desa_id: desaId,
+        provinsi: typeof item.provinsi === 'string' ? item.provinsi : (item.provinsi?.nama_provinsi || ''),
+        kabupaten: typeof item.kabupaten === 'string' ? item.kabupaten : (item.kabupaten?.nama_kabupaten || ''),
+        kecamatan: typeof item.kecamatan === 'string' ? item.kecamatan : (item.kecamatan?.nama_kecamatan || ''),
+        desa: typeof item.desa === 'string' ? item.desa : (item.desa?.nama_desa || ''),
+        telepon: item.telepon || item.no_telp || '',
+        no_telp: item.no_telp || item.telepon || '',
+        whatsapp: item.whatsapp || '',
+        email: item.email || '',
+        website: item.website || '',
+        keterangan: item.keterangan || '',
+        maps_url: item.maps_url || '',
+        latitude: item.latitude || '-9.850000',
+        longitude: item.longitude || '124.300000',
+        maps_embed: item.maps_embed || '',
+        paroki_id: item.paroki_id || '',
+        tipe: item.tipe || item.tipe_kapela || 'Stasi',
+        tipe_kapela: item.tipe_kapela || item.tipe || 'Stasi',
+        kode_kapela: item.kode_kapela || item.kode || '',
+        nama_kapela: item.nama_kapela || item.nama || '',
+        pelindung_kapela: item.pelindung_kapela || item.pelindung || '',
+        lokasi: item.lokasi || item.alamat || '',
+        penanggung_jawab: item.penanggung_jawab || '',
+        warna_area: item.warna_area || '#007bff',
+        geojson: item.geojson || item.polygon || '',
+        sejarah: item.sejarah || item.deskripsi || '',
+        visi: item.visi || '',
+        misi: item.misi || '',
+        seksi: item.seksi || item.bidang || 'Bidang Liturgi & Peribadatan',
+        jabatan: item.jabatan || 'Anggota Pleno',
+        periode: item.periode || '2024 - 2027',
+        urutan: item.urutan !== undefined ? item.urutan : 1,
+        foto: item.foto || '',
+        nama_kuasi: item.nama_kuasi || item.NamaKuasiParoki || '',
+        NamaKuasiParoki: item.NamaKuasiParoki || item.nama_kuasi || '',
+        kode_kuasi: item.kode_kuasi || item.KodeKuasiParoki || '',
+        KodeKuasiParoki: item.KodeKuasiParoki || item.kode_kuasi || '',
+        pastor_administrator: item.pastor_administrator || item.PastorKuasiParoki || '',
+        PastorKuasiParoki: item.PastorKuasiParoki || item.pastor_administrator || '',
+        AlamatKuasiParoki: item.AlamatKuasiParoki || item.lokasi || item.alamat || '',
+        nama_produk: item.nama_produk || '',
+        kategori: item.kategori || 'Makanan & Minuman Olahan',
+        harga: item.harga || '',
+        stok: item.stok !== undefined ? item.stok : 1,
+        satuan: item.satuan || 'Pcs',
+        penjual: item.penjual || '',
+        no_wa: item.no_wa || item.kontak || '',
+        status_approval: item.status_approval || 'Disetujui',
+        deskripsi: item.deskripsi || '',
+        nama_role: item.nama_role || '',
+        slug: item.slug || '',
+        permissions: Array.isArray(item.permissions) ? item.permissions : (typeof item.permissions === 'string' ? JSON.parse(item.permissions || '[]') : []),
+    };
+    if (props.moduleKey === 'kapela' || props.moduleKey === 'stasi') {
+        formData.value.paroki_id = activeProfileParokiId.value;
+    }
+    if (props.moduleKey === 'rapat' || props.moduleKey === 'rapat-notulen') {
+        let tgl = item.tanggal || '';
+        if (tgl && tgl.includes('T')) {
+            tgl = tgl.split('T')[0];
+        }
+        formData.value = {
+            id: item.id || item.id_rapat,
+            agenda: item.agenda || '',
+            tanggal: tgl,
+            waktu: item.waktu || '19:00',
+            lokasi: item.lokasi || '',
+            notulen: item.notulen || '',
+            status: item.status || 'Aktif',
+        };
+    }
+    if (props.moduleKey === 'kegiatan') {
+        let tglMulai = item.tanggal_mulai || item.tanggal || '';
+        if (tglMulai && tglMulai.includes('T')) tglMulai = tglMulai.split('T')[0];
+        let tglSelesai = item.tanggal_selesai || '';
+        if (tglSelesai && tglSelesai.includes('T')) tglSelesai = tglSelesai.split('T')[0];
+        formData.value = {
+            id: item.id || item.id_kegiatan,
+            nama_kegiatan: item.nama_kegiatan || item.judul || '',
+            judul: item.judul || item.nama_kegiatan || '',
+            kategori: item.kategori || 'Liturgi & Ibadah',
+            tanggal_mulai: tglMulai,
+            tanggal_selesai: tglSelesai || tglMulai,
+            waktu: item.waktu || item.jam || '09:00',
+            lokasi: item.lokasi || '',
+            penyelenggara: item.penyelenggara || item.penanggung_jawab || '',
+            status: item.status || 'Akan Datang',
+            deskripsi: item.deskripsi || item.keterangan || '',
+            gambar: item.gambar || item.foto || item.poster || '',
+            foto: item.foto || item.gambar || '',
+        };
+        previewImage.value = item.gambar ? getImageUrl(item.gambar) : (item.foto ? getImageUrl(item.foto) : null);
+    }
+    if (props.moduleKey === 'konten') {
+        const publishDate = item.tanggal_publish
+            ? new Date(item.tanggal_publish)
+            : (item.created_at ? new Date(item.created_at) : null);
+        if (publishDate && !Number.isNaN(publishDate.getTime())) {
+            publishDate.setMinutes(publishDate.getMinutes() - publishDate.getTimezoneOffset());
+        }
+        formData.value = {
+            id: item.id,
+            judul: item.judul || '',
+            slug: item.slug || '',
+            excerpt: item.excerpt || '',
+            isi: item.isi || item.konten || '',
+            tipe: item.tipe || 'Berita',
+            kategori_id: item.kategori_id || '',
+            kategori: item.kategori || '',
+            gambar: item.gambar || '',
+            file_pdf: item.file_pdf || '',
+            arsip_id: item.arsip_id || item.arsip_digital_id || '',
+            tags: item.tags || '',
+            status_publish: item.status_publish || item.status || 'Publish',
+            tanggal_publish: publishDate && !Number.isNaN(publishDate.getTime()) ? publishDate.toISOString().slice(0, 16) : '',
+            is_featured: item.is_featured ? 1 : 0,
+            embed_pdf: item.embed_pdf === 0 || item.embed_pdf === false ? 0 : 1,
+            penulis: item.penulis || props.penulisList?.[0] || 'Administrator',
+        };
+    }
+    if (props.moduleKey === 'pengumuman') {
+        let tgl = item.tgl_tayang || item.tanggal || '';
+        if (tgl && tgl.includes('T')) tgl = tgl.split('T')[0];
+        formData.value = {
+            id: item.id || item.id_pengumuman,
+            judul: item.judul || item.judul_pengumuman || '',
+            tgl_tayang: tgl,
+            status: item.status || 'Aktif',
+            isi: item.isi || item.deskripsi || item.konten || '',
+        };
+    }
+    if (props.moduleKey === 'renungan') {
+        let tgl = item.tanggal || '';
+        if (tgl && tgl.includes('T')) tgl = tgl.split('T')[0];
+        formData.value = {
+            id: item.id || item.id_renungan,
+            judul: item.judul || '',
+            tanggal: tgl,
+            bacaan_kitab_suci: item.bacaan_kitab_suci || item.bacaan || '',
+            isi: item.isi || item.isi_renungan || item.renungan || '',
+        };
+    }
+    if (props.moduleKey === 'kronik') {
+        let tgl = item.tanggal_peristiwa || item.tanggal || '';
+        if (tgl && tgl.includes('T')) tgl = tgl.split('T')[0];
+        formData.value = {
+            id: item.id || item.id_kronik,
+            judul_kronik: item.judul_kronik || item.judul || '',
+            tanggal_peristiwa: tgl,
+            kategori_kronik: item.kategori_kronik || item.kategori || 'Pastoral',
+            lokasi_peristiwa: item.lokasi_peristiwa || item.lokasi || 'Gereja Paroki',
+            penulis: item.penulis || 'Sekretariat Paroki',
+            status_publish: item.status_publish || item.status || 'Publish',
+            deskripsi: item.deskripsi || item.isi || item.uraian || '',
+        };
+    }
+    if (props.moduleKey === 'user') {
+        formData.value = {
+            id: item.id,
+            nama_lengkap: item.nama_lengkap || item.name || '',
+            username: item.username || '',
+            email: item.email || '',
+            no_hp: item.no_hp || '',
+            password: '',
+            role_id: item.role_id || item.role?.id || '',
+            wilayah_id: item.wilayah_id || '',
+            kapela_id: item.kapela_id || '',
+            kub_id: item.kub_id || '',
+            umat_id: item.umat_id || '',
+            status: item.status ? 1 : 0,
+            maintenance_access: item.maintenance_access || 'Tidak',
+            foto: item.foto || '',
+        };
+        showPassword.value = false;
+    }
+    uploadedFile.value = null;
+    previewImage.value = item.logo ? getImageUrl(item.logo) : (item.foto ? getImageUrl(item.foto) : (item.gambar ? getImageUrl(item.gambar) : null));
+    showFormModal.value = true;
+};
+
+onMounted(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit_id') || urlParams.get('edit');
+    if (editId && props.items && props.items.data) {
+        const itemToEdit = props.items.data.find(
+            (i) => String(i.id_paroki || i.id || i.id_dpp || i.id_keuskupan || i.id_dekenat) === String(editId)
+        );
+        if (itemToEdit) {
+            openEditModal(itemToEdit);
+        }
+    }
+});
+
+const resolveEntityId = (item) => {
+    if (!item) return '';
+    if (item.id !== undefined && item.id !== null && item.id !== '') return item.id;
+    if (item.id_desa !== undefined && item.id_desa !== null && item.id_desa !== '') return item.id_desa;
+    if (item.id_kecamatan !== undefined && item.id_kecamatan !== null && item.id_kecamatan !== '') return item.id_kecamatan;
+    if (item.id_kabupaten !== undefined && item.id_kabupaten !== null && item.id_kabupaten !== '') return item.id_kabupaten;
+    if (item.id_provinsi !== undefined && item.id_provinsi !== null && item.id_provinsi !== '') return item.id_provinsi;
+    if (item.id_kub !== undefined && item.id_kub !== null && item.id_kub !== '') return item.id_kub;
+    if (item.id_wilayah !== undefined && item.id_wilayah !== null && item.id_wilayah !== '') return item.id_wilayah;
+    if (item.id_lingkungan !== undefined && item.id_lingkungan !== null && item.id_lingkungan !== '') return item.id_lingkungan;
+    if (item.id_kapela !== undefined && item.id_kapela !== null && item.id_kapela !== '') return item.id_kapela;
+    if (item.id_stasi !== undefined && item.id_stasi !== null && item.id_stasi !== '') return item.id_stasi;
+    if (item.id_paroki !== undefined && item.id_paroki !== null && item.id_paroki !== '') return item.id_paroki;
+    if (item.id_kuasi !== undefined && item.id_kuasi !== null && item.id_kuasi !== '') return item.id_kuasi;
+    if (item.id_kuasi_paroki !== undefined && item.id_kuasi_paroki !== null && item.id_kuasi_paroki !== '') return item.id_kuasi_paroki;
+    if (item.IdKuasiParoki !== undefined && item.IdKuasiParoki !== null && item.IdKuasiParoki !== '') return item.IdKuasiParoki;
+    if (item.id_dekenat !== undefined && item.id_dekenat !== null && item.id_dekenat !== '') return item.id_dekenat;
+    if (item.id_kevikepan !== undefined && item.id_kevikepan !== null && item.id_kevikepan !== '') return item.id_kevikepan;
+    if (item.id_keuskupan !== undefined && item.id_keuskupan !== null && item.id_keuskupan !== '') return item.id_keuskupan;
+    if (item.id_dpp !== undefined && item.id_dpp !== null && item.id_dpp !== '') return item.id_dpp;
+    if (item.id_role !== undefined && item.id_role !== null && item.id_role !== '') return item.id_role;
+    if (item.slug !== undefined && item.slug !== null && item.slug !== '') return item.slug;
+    for (const k of Object.keys(item)) {
+        if (k.startsWith('id_') || k.startsWith('Id') || k.endsWith('_id')) {
+            if (item[k] !== undefined && item[k] !== null && item[k] !== '') return item[k];
+        }
+    }
+    return '';
+};
+
+const submitForm = () => {
+    isSubmitting.value = true;
+    const currentPath = window.location.pathname.replace(/\/$/, '');
+    const itemId = resolveEntityId(selectedItem.value);
+    const url = modalMode.value === 'create' ? currentPath : `${currentPath}/${itemId}`;
+
+    const payload = new FormData();
+    Object.keys(formData.value).forEach((key) => {
+        if (formData.value[key] !== null && formData.value[key] !== undefined) {
+            if (key === 'selected_pastor_rekan') {
+                payload.append('nama_pastor_rekan', formData.value[key].join(', '));
+            } else if (Array.isArray(formData.value[key])) {
+                payload.append(key, formData.value[key].join(', '));
+            } else {
+                payload.append(key, formData.value[key]);
+            }
+        }
+    });
+
+    if (modalMode.value === 'edit') {
+        payload.append('_method', 'PUT');
+    }
+
+    router.post(url, payload, {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            showFormModal.value = false;
+            isSubmitting.value = false;
+        },
+        onError: () => {
+            isSubmitting.value = false;
+        }
+    });
+};
+
+const moduleBasePath = computed(() => window.location.pathname.replace(/\/$/, ''));
+
+const exportModuleUrl = (format) => {
+    const params = new URLSearchParams();
+    if (search.value) params.set('search', search.value);
+    return `${moduleBasePath.value}/export/${format}${params.toString() ? `?${params.toString()}` : ''}`;
+};
+
+const triggerImportFile = () => {
+    importFileInput.value?.click();
+};
+
+const handleImportFile = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const payload = new FormData();
+    payload.append('file', file);
+
+    router.post(`${moduleBasePath.value}/import`, payload, {
+        forceFormData: true,
+        preserveScroll: true,
+        onFinish: () => {
+            event.target.value = '';
+        },
+    });
+};
+
+const resetUserPassword = (item) => {
+    const newPassword = `SIP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    router.post(`${moduleBasePath.value}/${item.id}/reset-password`, { password: newPassword }, {
+        preserveScroll: true,
+    });
+};
+
+const toggleUserStatus = (item) => {
+    if (isSelfUser(item)) return;
+    router.post(`${moduleBasePath.value}/${item.id}/toggle-status`, {}, {
+        preserveScroll: true,
+    });
+};
+
+const confirmDelete = () => {
+    if (!selectedItem.value) return;
+    if (isSelfUser(selectedItem.value)) {
+        showDeleteModal.value = false;
+        return;
+    }
+    const currentPath = window.location.pathname.replace(/\/$/, '');
+    const itemId = resolveEntityId(selectedItem.value);
+    router.delete(`${currentPath}/${itemId}`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showDeleteModal.value = false;
+        }
+    });
+};
+
+const openDetailModal = (item) => {
+    selectedItem.value = item;
+    showDetailModal.value = true;
+};
+
+const openDeleteModal = (item) => {
+    selectedItem.value = item;
+    showDeleteModal.value = true;
+};
+
+const refreshData = () => {
+    router.reload({ preserveScroll: true });
+};
+
+const getImageUrl = (path) => {
+    if (!path || typeof path !== 'string') return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const clean = path.replace(/^\/?(public\/)?/, '').replace(/^\//, '');
+    // Bare filename (no directory, e.g. CI3 hashed photo like 195b6ba...jpg)
+    if (!clean.includes('/')) {
+        return `/foto-pastor/${clean}`;
+    }
+    return `/${clean}`;
+};
+
+const isImageField = (col, val) => {
+    if (col.isImage || col.key === 'logo' || col.key === 'foto') return true;
+    if (typeof val === 'string' && (val.endsWith('.png') || val.endsWith('.jpg') || val.endsWith('.jpeg') || val.endsWith('.svg') || val.endsWith('.webp') || val.includes('uploads/'))) {
+        return true;
+    }
+    return false;
+};
+
+const formatIndonesianDate = (val) => {
+    if (!val || typeof val !== 'string') return val;
+    try {
+        const clean = val.includes('T') ? val.split('T')[0] : val;
+        if (/^\d{4}-\d{2}-\d{2}/.test(clean)) {
+            const [y, m, d] = clean.split('-');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const monthName = months[parseInt(m, 10) - 1] || m;
+            return `${parseInt(d, 10)} ${monthName} ${y}`;
+        }
+    } catch {
+        return val;
+    }
+    return val;
+};
+
+const getFieldValue = (item, col) => {
+    if (!item) return '—';
+    let val = '—';
+    if (col.relation && item[col.relation]) {
+        val = item[col.relation][col.relationKey] || (col.altRelationKey ? item[col.relation][col.altRelationKey] : null) || '—';
+    } else if (item[col.key] !== null && item[col.key] !== undefined && item[col.key] !== '') {
+        val = item[col.key];
+    } else if (col.altKey && item[col.altKey] !== null && item[col.altKey] !== undefined && item[col.altKey] !== '') {
+        val = item[col.altKey];
+    }
+    if (val !== '—' && (col.isDate || col.key.includes('tanggal') || col.key.includes('tgl'))) {
+        return formatIndonesianDate(String(val));
+    }
+    return val;
+};
+const isPromotedKuasi = (item) => {
+    return props.moduleKey === 'kuasi-paroki' && String(item?.status || '').toLowerCase().includes('paroki');
+};
+
+const isInactiveStatus = (item) => {
+    return item?.status === 'Nonaktif' || item?.status === 'Tidak Aktif' || item?.status === 0 || item?.status === '0' || item?.status === false;
+};
+
+const statusBadgeClass = (item) => {
+    if (isPromotedKuasi(item)) return 'bg-blue-50 text-blue-700 border-blue-200';
+    return isInactiveStatus(item)
+        ? 'bg-rose-50 text-rose-700 border-rose-200'
+        : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+};
+
+const statusDotClass = (item) => {
+    if (isPromotedKuasi(item)) return 'bg-blue-500';
+    return isInactiveStatus(item) ? 'bg-rose-500' : 'bg-emerald-500';
+};
+const statusLabel = (item) => {
+    if (isPromotedKuasi(item)) return 'Menjadi Paroki';
+    return isInactiveStatus(item) ? 'Nonaktif' : 'Aktif';
+};
+</script>
+
+<template>
+    <AppLayout :title="title">
+        <Head :title="`${title} - SIPAROKI`" />
+
+        <!-- Responsive layout: natural flow on mobile/tablet, full-height pinned on desktop -->
+        <div class="flex flex-col h-auto min-h-0 lg:h-full gap-2.5 pb-4 lg:pb-0">
+
+        <!-- Header Card with Actions -->
+        <div class="rounded-2xl bg-white border border-slate-200/80 p-3 sm:p-4 shadow-2xs shrink-0 space-y-3.5">
+            <!-- Top Row: Title + Action Buttons -->
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-sm shrink-0">
+                        <i v-if="moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga'" class="fa-regular fa-folder-open"></i>
+                        <i v-else-if="moduleKey === 'umat' || moduleKey === 'data-umat'" class="fa-solid fa-users"></i>
+                        <i v-else class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-base font-black text-slate-900 tracking-tight">
+                                {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'Daftar Kartu Keluarga Terdaftar' : title }}
+                            </h1>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                {{ items.total || 0 }} Data Terdaftar
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-500">Kelola dan pantau data master {{ title.toLowerCase() }} paroki secara terintegrasi.</p>
+                    </div>
+                </div>
+
+                <!-- Right: Action Buttons Group -->
+                <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <!-- 1. Tambah Button -->
+                    <Link
+                        v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri'].includes(moduleKey)"
+                        :href="moduleKey === 'konten' ? `${basePrefix}/konten/create` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/kk-katolik/create` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/create` : `${basePrefix}/role/create`))"
+                        class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                    >
+                        <i class="fa-solid fa-plus text-[11px]"></i>
+                        <span>+ Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : (moduleKey === 'galeri' ? 'Album Galeri' : title) }}</span>
+                    </Link>
+                    <button
+                        v-else
+                        type="button"
+                        @click="openCreateModal"
+                        class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                    >
+                        <i class="fa-solid fa-plus text-[11px]"></i>
+                        <span>+ Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : title }}</span>
+                    </button>
+
+                    <!-- 2. Import Excel Button -->
+                    <input
+                        ref="importFileInput"
+                        type="file"
+                        accept=".xlsx,.xls,.csv,.txt"
+                        class="hidden"
+                        @change="handleImportFile"
+                    />
+                    <button
+                        type="button"
+                        :disabled="isImporting"
+                        @click="triggerImportFile"
+                        class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60"
+                    >
+                        <i v-if="isImporting" class="fa-solid fa-circle-notch fa-spin text-[11px]"></i>
+                        <i v-else class="fa-solid fa-arrow-up-from-bracket text-[11px]"></i>
+                        <span>{{ isImporting ? 'Mengimpor...' : 'Impor' }}</span>
+                    </button>
+
+                    <!-- 3. Export Excel Button -->
+                    <a
+                        :href="exportModuleUrl('excel')"
+                        class="px-3.5 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap"
+                    >
+                        <i class="fa-solid fa-arrow-right-from-bracket text-[11px]"></i>
+                        <span>Ekspor</span>
+                    </a>
+
+                    <!-- 4. Template Download -->
+                    <a
+                        :href="exportModuleUrl('template')"
+                        class="px-3.5 py-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-300 text-cyan-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap"
+                    >
+                        <i class="fa-solid fa-file-excel text-[11px]"></i>
+                        <span>Template</span>
+                    </a>
+
+                    <!-- 5. Print / PDF Button -->
+                    <a
+                        :href="exportModuleUrl('print')"
+                        target="_blank"
+                        class="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap"
+                    >
+                        <i class="fa-solid fa-print text-[11px]"></i>
+                        <span>Cetak / PDF</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Bottom Row: Filter Bar (Role, Wilayah, Kapela, KUB, Status, Search) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+                <!-- 0. Filter Level / Role -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filter Level</label>
+                    <SearchableSelect
+                        v-model="roleFilter"
+                        :options="roleList"
+                        valueKey="id"
+                        labelKey="nama_role"
+                        placeholder="Semua Level"
+                        searchPlaceholder="Cari level..."
+                        icon="fa-shield-halved"
+                        iconColor="text-amber-600"
+                    />
+                </div>
+
+                <!-- 1. Filter Wilayah -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                        Filter Wilayah
+                        <span v-if="kapelaFilter" class="text-rose-500 text-[9px] font-normal lowercase">(stasi aktif)</span>
+                    </label>
+                    <SearchableSelect
+                        v-model="wilayahFilter"
+                        :options="filteredWilayahsForFilter"
+                        :disabled="Boolean(kapelaFilter)"
+                        valueKey="id"
+                        labelKey="nama_wilayah"
+                        :placeholder="kapelaFilter ? '— Nonaktif —' : 'Semua Wilayah'"
+                        searchPlaceholder="Cari wilayah..."
+                        icon="fa-church"
+                        iconColor="text-blue-600"
+                    />
+                </div>
+
+                <!-- 2. Filter Kapela / Stasi -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                        Filter Kapela / Stasi
+                        <span v-if="wilayahFilter" class="text-rose-500 text-[9px] font-normal lowercase">(wilayah aktif)</span>
+                    </label>
+                    <SearchableSelect
+                        v-model="kapelaFilter"
+                        :options="filteredKapelasForFilter"
+                        :disabled="Boolean(wilayahFilter)"
+                        valueKey="id"
+                        labelKey="nama_kapela"
+                        :placeholder="wilayahFilter ? '— Nonaktif —' : 'Semua Kapela / Stasi'"
+                        searchPlaceholder="Cari stasi/kapela..."
+                        icon="fa-place-of-worship"
+                        iconColor="text-indigo-600"
+                    />
+                </div>
+
+                <!-- 3. Filter KUB -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filter KUB</label>
+                    <SearchableSelect
+                        v-model="kubFilter"
+                        :options="filteredKubsForFilter"
+                        valueKey="id"
+                        labelKey="nama_kub"
+                        placeholder="Semua KUB"
+                        searchPlaceholder="Cari KUB..."
+                        icon="fa-users"
+                        iconColor="text-teal-600"
+                    />
+                </div>
+
+                <!-- Status Verifikasi -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Status Verifikasi</label>
+                    <SearchableSelect
+                        v-model="statusFilter"
+                        :options="statusOptions"
+                        valueKey="value"
+                        labelKey="label"
+                        placeholder="Semua Status"
+                        searchPlaceholder="Cari status..."
+                        icon="fa-circle-check"
+                        iconColor="text-emerald-600"
+                    />
+                </div>
+
+                <!-- Cari Data -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Cari Data</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input
+                            v-model="search"
+                            type="text"
+                            placeholder="Kata kunci..."
+                            class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 min-h-[38px]"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Container: flex-1 so it fills remaining height, with internal scroll on desktop, natural scroll on mobile -->
+        <div class="flex-1 min-h-[380px] lg:min-h-0 rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-2xs flex flex-col">
+            <div class="flex-1 overflow-auto custom-scrollbar">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50/90 text-slate-600 uppercase tracking-wider text-[10px] font-bold border-b border-slate-200/80 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-3 py-2 w-10 text-center">#</th>
+                            <th v-for="col in columns" :key="col.key" class="px-3.5 py-2">
+                                {{ col.label }}
+                            </th>
+                            <th class="px-3 py-2 text-center">Status</th>
+                            <th class="px-3.5 py-2 text-right w-24">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700 text-xs">
+                        <tr
+                            v-for="(item, idx) in items.data"
+                            :key="item.id || item.id_keuskupan || item.id_dekenat || item.id_paroki || idx"
+                            class="hover:bg-slate-50/80 transition-colors group"
+                        >
+                            <!-- Row Number -->
+                            <td class="px-3 py-2.5 text-center font-bold text-slate-400 text-[11px]">
+                                {{ (items.from || 1) + idx }}
+                            </td>
+
+                            <!-- Columns Data -->
+                            <td
+                                v-for="col in columns"
+                                :key="col.key"
+                                class="px-3.5 py-2.5"
+                            >
+                                <!-- Image / Logo Column -->
+                                <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto' || isImageField(col, getFieldValue(item, col))" class="w-8 h-8 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5">
+                                    <img
+                                        v-if="getFieldValue(item, col) !== '—' && getFieldValue(item, col)"
+                                        :src="getImageUrl(getFieldValue(item, col))"
+                                        :alt="item.nama_pastor || item.nama_lengkap || item.nama_keuskupan || 'Foto'"
+                                        class="w-full h-full object-cover rounded-md"
+                                        @error="(e) => { e.target.style.display = 'none'; e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex'); }"
+                                    />
+                                    <div :class="['w-full h-full rounded-md flex items-center justify-center text-xs', getFieldValue(item, col) !== '—' && getFieldValue(item, col) ? 'hidden' : '', col.key === 'foto' || ['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'direktori-dpp', 'direktori-katekis', 'direktori-misdinar', 'user'].includes(moduleKey) ? 'bg-slate-100 text-slate-400' : 'bg-amber-50 text-amber-600']">
+                                        <i :class="col.key === 'foto' || ['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor'].includes(moduleKey) ? 'fa-solid fa-user-tie text-slate-400' : (moduleKey === 'user' ? 'fa-solid fa-user text-slate-400' : 'fa-solid fa-church')"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Dedicated Icon Column (isIcon) -->
+                                <div v-else-if="col.isIcon" :class="[
+                                    'w-8 h-8 rounded-lg border flex items-center justify-center text-sm shadow-2xs',
+                                    col.iconColor || (
+                                        (moduleKey === 'provinsi') ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                        (moduleKey === 'kabupaten') ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                                        (moduleKey === 'kecamatan') ? 'bg-teal-50 text-teal-700 border-teal-200' :
+                                        (moduleKey === 'desa-kelurahan') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                        (moduleKey === 'dekenat' || moduleKey === 'kevikepan') ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                                        (moduleKey === 'paroki') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                        (moduleKey === 'kuasi-paroki') ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                        (moduleKey === 'kapela' || moduleKey === 'stasi') ? 'bg-rose-50 text-rose-600 border-rose-200' :
+                                        (moduleKey === 'wilayah') ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                                        (moduleKey === 'kub') ? 'bg-teal-50 text-teal-700 border-teal-200' :
+                                        'bg-amber-50 text-amber-600 border-amber-200'
+                                    )
+                                ]">
+                                    <i :class="col.iconClass || (
+                                        (moduleKey === 'provinsi') ? 'fa-solid fa-map-location-dot' :
+                                        (moduleKey === 'kabupaten') ? 'fa-solid fa-city' :
+                                        (moduleKey === 'kecamatan') ? 'fa-solid fa-building-columns' :
+                                        (moduleKey === 'desa-kelurahan') ? 'fa-solid fa-tree-city' :
+                                        (moduleKey === 'keuskupan') ? 'fa-solid fa-church' :
+                                        (moduleKey === 'dekenat' || moduleKey === 'kevikepan') ? 'fa-solid fa-layer-group' :
+                                        (moduleKey === 'paroki') ? 'fa-solid fa-place-of-worship' :
+                                        (moduleKey === 'kuasi-paroki') ? 'fa-solid fa-location-dot' :
+                                        (moduleKey === 'kapela' || moduleKey === 'stasi') ? 'fa-solid fa-gopuram' :
+                                        (moduleKey === 'wilayah') ? 'fa-solid fa-map-location-dot' :
+                                        (moduleKey === 'kub') ? 'fa-solid fa-people-group' :
+                                        'fa-solid fa-landmark'
+                                    )"></i>
+                                </div>
+
+                                <!-- Relation Link Column (isRelationLink): clickable badge showing count with filter query -->
+                                <div v-else-if="col.isRelationLink">
+                                    <template v-if="item[col.relation] && item[col.relation].length > 0">
+                                        <Link
+                                            :href="getRelationHref(col, item)"
+                                            :class="[
+                                                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition hover:opacity-80 cursor-pointer',
+                                                col.color === 'blue' ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' :
+                                                col.color === 'emerald' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' :
+                                                col.color === 'purple' ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100' :
+                                                col.color === 'rose' ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' :
+                                                col.color === 'amber' ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
+                                                'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                                            ]"
+                                        >
+                                            <i v-if="col.icon" :class="`fa-solid ${col.icon} text-[10px]`"></i>
+                                            <span>{{ item[col.relation].length }}</span>
+                                            <span>{{ col.label }}</span>
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-60"></i>
+                                        </Link>
+                                    </template>
+                                    <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-50 text-slate-400 border border-slate-200">
+                                        <i v-if="col.icon" :class="`fa-solid ${col.icon} text-[9px]`"></i>
+                                        <span>0 {{ col.label }}</span>
+                                    </span>
+                                </div>
+
+                                <div v-else-if="col.isPrimary" class="flex items-center gap-2">
+                                    <!-- Only show inline icon if there's no dedicated logo/icon column -->
+                                    <div v-if="!columns.some(c => c.key === 'logo' || c.isImage || c.isIcon)" :class="[
+                                        'w-6 h-6 rounded-md border flex items-center justify-center text-[10px] font-bold shrink-0',
+                                        (moduleKey === 'dekenat' || moduleKey === 'kevikepan') ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                                        (moduleKey === 'paroki') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                        (moduleKey === 'kuasi-paroki') ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                        (moduleKey === 'kapela' || moduleKey === 'stasi') ? 'bg-rose-50 text-rose-600 border-rose-200' :
+                                        (moduleKey === 'wilayah') ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                                        (moduleKey === 'kub') ? 'bg-teal-50 text-teal-700 border-teal-200' :
+                                        'bg-amber-50 text-amber-700 border-amber-200'
+                                    ]">
+                                        <i :class="
+                                            (moduleKey === 'keuskupan') ? 'fa-solid fa-church text-[10px]' :
+                                            (moduleKey === 'dekenat' || moduleKey === 'kevikepan') ? 'fa-solid fa-layer-group text-[10px]' :
+                                            (moduleKey === 'paroki') ? 'fa-solid fa-place-of-worship text-[10px]' :
+                                            (moduleKey === 'kuasi-paroki') ? 'fa-solid fa-location-dot text-[10px]' :
+                                            (moduleKey === 'kapela' || moduleKey === 'stasi') ? 'fa-solid fa-gopuram text-[10px]' :
+                                            (moduleKey === 'wilayah') ? 'fa-solid fa-map-location-dot text-[10px]' :
+                                            (moduleKey === 'kub') ? 'fa-solid fa-people-group text-[10px]' :
+                                            'fa-solid fa-landmark text-[10px]'
+                                        "></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="font-bold text-slate-900 group-hover:text-amber-600 transition block leading-snug">
+                                            {{ getFieldValue(item, col) }}
+                                        </span>
+                                        <!-- Sub-info line for dekenat: show keuskupan name -->
+                                        <span v-if="(moduleKey === 'dekenat' || moduleKey === 'kevikepan') && item.keuskupan" class="text-[10px] text-amber-700 font-semibold flex items-center gap-1 mt-0.5">
+                                            <i class="fa-solid fa-church text-[9px]"></i>
+                                            {{ item.keuskupan.nama_keuskupan }}
+                                        </span>
+                                        <!-- Sub-info for kapela/stasi: show paroki name -->
+                                        <span v-if="(moduleKey === 'kapela' || moduleKey === 'stasi') && item.paroki" class="text-[10px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
+                                            <i class="fa-solid fa-place-of-worship text-[9px]"></i>
+                                            {{ item.paroki.nama_paroki }}
+                                        </span>
+                                        <!-- Sub-info for wilayah: show paroki name -->
+                                        <span v-if="moduleKey === 'wilayah' && item.paroki" class="text-[10px] text-sky-700 font-semibold flex items-center gap-1 mt-0.5">
+                                            <i class="fa-solid fa-place-of-worship text-[9px]"></i>
+                                            {{ item.paroki.nama_paroki }}
+                                        </span>
+                                        <!-- Sub-info for kub: show wilayah name -->
+                                        <span v-if="moduleKey === 'kub' && item.wilayah" class="text-[10px] text-teal-700 font-semibold flex items-center gap-1 mt-0.5">
+                                            <i class="fa-solid fa-map-location-dot text-[9px]"></i>
+                                            {{ item.wilayah.nama_wilayah }}
+                                        </span>
+                                        <span v-if="moduleKey === 'user'" class="text-[10px] text-slate-500 font-semibold flex items-center gap-1 mt-0.5">
+                                            <i class="fa-solid fa-at text-[9px]"></i>
+                                            {{ item.username || 'username' }}
+                                            <span v-if="isSelfUser(item)" class="ml-1 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[9px]">Anda</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Code Badge Column -->
+                                <span v-else-if="col.key === 'kode_keuskupan' || col.key === 'kode_kevikepan' || col.key === 'kode_dekenat' || col.key === 'kode_paroki' || col.key === 'kode_kapela' || col.key === 'kode_wilayah' || col.key === 'kode_kub' || col.key === 'kode'" class="inline-block px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[10px] font-semibold border border-slate-200">
+                                    {{ getFieldValue(item, col) }}
+                                </span>
+
+                                <!-- Latin Name Column -->
+                                <span v-else-if="col.key === 'nama_latin' || col.key === 'nama_keuskupan_latin'" class="italic text-slate-600 font-serif text-[11px]">
+                                    {{ getFieldValue(item, col) }}
+                                </span>
+
+                                <!-- General Text Column -->
+                                <span v-else-if="moduleKey === 'user' && col.relation === 'role'" :class="[
+                                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold',
+                                    roleBadgeClass(item.role)
+                                ]">
+                                    <i class="fa-solid fa-shield-halved text-[9px]"></i>
+                                    {{ getFieldValue(item, col) }}
+                                </span>
+
+                                <!-- General Text Column -->
+                                <span v-else class="text-slate-600 text-xs">
+                                    {{ getFieldValue(item, col) }}
+                                </span>
+                            </td>
+
+                            <!-- Status Badge -->
+                            <td class="px-3 py-2.5 text-center">
+                                <!-- Dekenat: show paroki count badge -->
+                                <template v-if="moduleKey === 'dekenat' || moduleKey === 'kevikepan'">
+                                    <div class="flex flex-col items-center gap-1">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                            <i class="fa-solid fa-church text-[8px]"></i>
+                                            <span>{{ (item.parokis && item.parokis.length) ? item.parokis.length : 0 }} Paroki</span>
+                                        </span>
+                                        <span :class="[
+                                            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border',
+                                            statusBadgeClass(item)
+                                        ]">
+                                            <span :class="[
+                                                'w-1.5 h-1.5 rounded-full',
+                                                statusDotClass(item)
+                                            ]"></span>
+                                            <span>{{ statusLabel(item) }}</span>
+                                        </span>
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <span :class="[
+                                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border',
+                                        statusBadgeClass(item)
+                                    ]">
+                                        <span :class="[
+                                            'w-1.5 h-1.5 rounded-full',
+                                            statusDotClass(item)
+                                        ]"></span>
+                                        <span>{{ statusLabel(item) }}</span>
+                                    </span>
+                                </template>
+                            </td>
+
+                            <!-- Row Actions -->
+                            <td class="px-3.5 py-2.5 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    <Link
+                                        v-if="moduleKey === 'konten'"
+                                        :href="`${basePrefix}/konten/${item.id || item.slug}/preview`"
+                                        title="Preview Konten"
+                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                    >
+                                        <i class="fa-solid fa-eye text-[10px]"></i>
+                                    </Link>
+                                    <Link
+                                        v-else-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey)"
+                                        :href="`${basePrefix}/kk-katolik/${item.id || item.no_kk_kw}/view`"
+                                        title="Lihat Detail Kartu Keluarga"
+                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                    >
+                                        <i class="fa-solid fa-eye text-[10px]"></i>
+                                    </Link>
+                                    <a
+                                        v-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey)"
+                                        :href="`${basePrefix}/kk-katolik/${item.id || item.no_kk_kw}/cetak`"
+                                        target="_blank"
+                                        title="Cetak Kartu Keluarga (PDF / Print)"
+                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                    >
+                                        <i class="fa-solid fa-print text-[10px]"></i>
+                                    </a>
+                                    <button
+                                        v-else-if="moduleKey !== 'konten'"
+                                        type="button"
+                                        @click="openDetailModal(item)"
+                                        title="Lihat Detail"
+                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                    >
+                                        <i class="fa-solid fa-eye text-[10px]"></i>
+                                    </button>
+                                    <Link
+                                        v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri'].includes(moduleKey)"
+                                        :href="moduleKey === 'konten' ? `${basePrefix}/konten/${item.id || item.slug}/edit` : (['kk-katolik', 'kk', 'keluarga', 'galeri'].includes(moduleKey) ? `${basePrefix}/${moduleKey}/${item.id || item.slug || item.no_kk_kw}/edit` : `${basePrefix}/role/${item.id || item.id_role || item.slug}/edit`)"
+                                        title="Ubah Data"
+                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                    >
+                                        <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                                    </Link>
+                                    <button
+                                        v-else
+                                        type="button"
+                                        @click="openEditModal(item)"
+                                        title="Ubah Data"
+                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                    >
+                                        <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                                    </button>
+                                    <button
+                                        v-if="moduleKey === 'user'"
+                                        type="button"
+                                        @click="resetUserPassword(item)"
+                                        title="Reset Password"
+                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                    >
+                                        <i class="fa-solid fa-key text-[10px]"></i>
+                                    </button>
+                                    <button
+                                        v-if="moduleKey === 'user'"
+                                        type="button"
+                                        @click="toggleUserStatus(item)"
+                                        :disabled="isSelfUser(item)"
+                                        title="Ubah Status"
+                                        :class="[
+                                            'w-6.5 h-6.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 flex items-center justify-center transition',
+                                            isSelfUser(item) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-cyan-50 hover:text-cyan-700 cursor-pointer'
+                                        ]"
+                                    >
+                                        <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="openDeleteModal(item)"
+                                        :disabled="isSelfUser(item)"
+                                        title="Hapus Data"
+                                        :class="[
+                                            'w-6.5 h-6.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 flex items-center justify-center transition',
+                                            isSelfUser(item) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-rose-50 hover:text-rose-700 cursor-pointer'
+                                        ]"
+                                    >
+                                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Empty State -->
+                        <tr v-if="!items.data || !items.data.length">
+                            <td :colspan="columns.length + 3" class="px-5 py-8 text-center text-slate-400">
+                                <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-300 border border-slate-200 mx-auto flex items-center justify-center text-lg mb-2">
+                                    <i class="fa-solid fa-folder-open"></i>
+                                </div>
+                                <p class="text-xs font-bold text-slate-700">Belum Ada Data Ditemukan</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Tidak ada record pada modul {{ title.toLowerCase() }} saat ini.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Bar: outside scroll area, always visible at bottom -->
+            <div
+                v-if="items.links && items.links.length > 3"
+                class="shrink-0 px-4 py-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 bg-slate-50/50"
+            >
+                <span class="text-xs text-slate-500">
+                    Menampilkan <b class="text-slate-800">{{ items.from || 0 }}</b> - <b class="text-slate-800">{{ items.to || 0 }}</b> dari <b class="text-slate-800">{{ items.total || 0 }}</b> total data
+                </span>
+
+                <div class="flex items-center gap-1">
+                    <Link
+                        v-for="(link, idx) in items.links"
+                        :key="idx"
+                        :href="link.url || '#'"
+                        :only="['items', 'filters']"
+                        preserve-state
+                        preserve-scroll
+                        :disabled="!link.url"
+                        :class="[
+                            'px-2.5 py-1 rounded-lg text-[11px] font-bold transition',
+                            link.active
+                                ? 'bg-amber-500 text-white shadow-xs shadow-amber-500/30'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                            !link.url ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
+                        ]"
+                        v-html="link.label"
+                    />
+                </div>
+            </div>
+        </div>
+        <!-- end Table Container -->
+                <!-- DETAIL MODAL -->
+        <div
+            v-if="showDetailModal && selectedItem"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs overflow-y-auto"
+        >
+            <div :class="['bg-white rounded-3xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 my-8', (moduleKey === 'umat' || moduleKey === 'data-umat') ? 'max-w-4xl' : 'max-w-3xl']">
+                <!-- Amber / Gold Header Banner -->
+                <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4 flex items-center justify-between text-white shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-base">
+                            <i :class="(moduleKey === 'umat' || moduleKey === 'data-umat') ? 'fa-solid fa-user-circle' : (moduleKey === 'keuskupan' ? 'fa-solid fa-church' : (moduleKey === 'dekenat' || moduleKey === 'kevikepan' ? 'fa-solid fa-layer-group' : 'fa-solid fa-place-of-worship'))"></i>
+                        </div>
+                        <h3 class="text-sm font-bold tracking-tight">
+                            <template v-if="moduleKey === 'umat' || moduleKey === 'data-umat'">
+                                Detail Data Umat: {{ selectedItem.nama_lengkap || selectedItem.nama_baptis || selectedItem.nama_lahir || 'Umat Paroki' }}
+                            </template>
+                            <template v-else>
+                                Detail {{ title }}: {{ selectedItem.nama_keuskupan || selectedItem.nama_kevikepan || selectedItem.nama_dekenat || selectedItem.nama_paroki || selectedItem.nama || title }}
+                            </template>
+                        </h3>
+                    </div>
+                    <button
+                        @click="showDetailModal = false"
+                        class="text-white/80 hover:text-white p-1 text-sm cursor-pointer transition"
+                    >
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                    <!-- 0. DETAIL DATA UMAT / JIWA LENGKAP -->
+                    <template v-if="moduleKey === 'umat' || moduleKey === 'data-umat'">
+                        <!-- Profile Header Card -->
+                        <div class="p-5 rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-50/50 border border-amber-200/80 flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                            <div class="w-24 h-24 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-200 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-xs">
+                                <img
+                                    v-if="selectedItem.foto"
+                                    :src="getImageUrl(selectedItem.foto)"
+                                    :alt="selectedItem.nama_lengkap"
+                                    class="w-full h-full object-cover"
+                                    @error="(e) => { e.target.onerror = null; e.target.parentElement.innerHTML = '<i class=\'fa-solid fa-user-tie text-4xl text-amber-600\'></i>'; }"
+                                />
+                                <i v-else class="fa-solid fa-user-circle text-5xl text-amber-500"></i>
+                            </div>
+                            <div class="flex-1 text-center sm:text-left space-y-2">
+                                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                                    <h4 class="text-base sm:text-lg font-black text-slate-900">
+                                        {{ selectedItem.nama_lengkap || selectedItem.nama_lahir || '—' }}
+                                    </h4>
+                                    <span v-if="selectedItem.nama_baptis" class="text-xs sm:text-sm font-semibold text-amber-800 bg-amber-100/80 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                        ({{ selectedItem.nama_baptis }})
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs">
+                                    <span v-if="selectedItem.usia || selectedItem.tanggal_lahir" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 font-bold border border-blue-200">
+                                        <i class="fa-solid fa-cake-candles text-[10px]"></i>
+                                        <span>{{ selectedItem.usia !== undefined ? `${selectedItem.usia} Tahun` : (selectedItem.tanggal_lahir ? `${new Date().getFullYear() - new Date(selectedItem.tanggal_lahir).getFullYear()} Thn` : '') }}</span>
+                                    </span>
+                                    <span :class="[
+                                        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold border text-[11px]',
+                                        (selectedItem.status_panggilan && selectedItem.status_panggilan !== 'Awam')
+                                            ? 'bg-purple-50 text-purple-800 border-purple-200'
+                                            : 'bg-slate-100 text-slate-700 border-slate-200'
+                                    ]">
+                                        <i class="fa-solid fa-hands-praying text-[10px]"></i>
+                                        <span>{{ selectedItem.status_panggilan || 'Awam' }}</span>
+                                    </span>
+                                    <span :class="[
+                                        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold border text-[11px]',
+                                        (selectedItem.status_umat === 'Aktif' || selectedItem.status_aktif == 1 || !selectedItem.status_umat)
+                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                            : 'bg-rose-50 text-rose-800 border-rose-200'
+                                    ]">
+                                        <span class="w-1.5 h-1.5 rounded-full" :class="(selectedItem.status_umat === 'Aktif' || selectedItem.status_aktif == 1 || !selectedItem.status_umat) ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                                        <span>{{ selectedItem.status_umat || 'Aktif' }}</span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-500 flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-1">
+                                    <span v-if="selectedItem.no_kk_kw || selectedItem.kk?.no_kk_kw">
+                                        <i class="fa-solid fa-folder-open text-amber-600 mr-1"></i> No KK: <b>{{ selectedItem.no_kk_kw || selectedItem.kk?.no_kk_kw }}</b>
+                                    </span>
+                                    <span v-if="selectedItem.nik">
+                                        <i class="fa-solid fa-id-card text-blue-600 mr-1"></i> NIK: <b>{{ selectedItem.nik }}</b>
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- 1. IDENTITAS & KEPENDUDUKAN -->
+                        <div class="space-y-3">
+                            <h5 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-100">
+                                <i class="fa-solid fa-id-card text-amber-600"></i>
+                                <span>1. Identitas Sipil & Kependudukan</span>
+                            </h5>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Nama Lahir / Marga</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.nama_lahir || selectedItem.nama_marga || selectedItem.nama_lengkap || '—' }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Jenis Kelamin</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.jenis_kelamin === 'L' || selectedItem.jenis_kelamin === 'Laki-Laki' ? 'Laki-Laki (Pria)' : (selectedItem.jenis_kelamin === 'P' || selectedItem.jenis_kelamin === 'Perempuan' ? 'Perempuan (Wanita)' : (selectedItem.jenis_kelamin || '—')) }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Tempat & Tanggal Lahir</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.tempat_lahir || '—' }}, {{ selectedItem.tanggal_lahir ? String(selectedItem.tanggal_lahir).substring(0, 10) : '—' }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Kedudukan dalam Keluarga</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.hubungan_keluarga || '—' }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Golongan Darah</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.golongan_darah || 'Tidak Tahu' }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Agama Asal</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.agama_asal || 'Katolik sejak lahir' }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Status Perkawinan Sipil</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.status_perkawinan || selectedItem.status_menikah || 'Belum Menikah' }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Status Perkawinan Kanonik</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.status_perkawinan_kanonik || 'Katolik Organik' }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80" v-if="selectedItem.nama_pasangan">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Nama Pasangan</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.nama_pasangan }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. WILAYAH GEREJANI & DOMISILI -->
+                        <div class="space-y-3">
+                            <h5 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-100">
+                                <i class="fa-solid fa-church text-amber-600"></i>
+                                <span>2. Wilayah Pastoral & Domisili</span>
+                            </h5>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                                <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-200/80">
+                                    <span class="text-[10px] text-blue-700 font-bold uppercase block mb-1">Wilayah Pastoral</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.kk?.wilayah?.nama_wilayah || selectedItem.wilayah?.nama_wilayah || '—' }}</span>
+                                </div>
+                                <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-200/80">
+                                    <span class="text-[10px] text-indigo-700 font-bold uppercase block mb-1">Stasi / Kapela</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.kk?.kapela?.nama_kapela || selectedItem.kapela?.nama_kapela || 'Pusat Paroki' }}</span>
+                                </div>
+                                <div class="p-3 bg-teal-50/60 rounded-xl border border-teal-200/80">
+                                    <span class="text-[10px] text-teal-700 font-bold uppercase block mb-1">KUB / KBG</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.kk?.kub?.nama_kub || selectedItem.kub?.nama_kub || '—' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. STATUS PANGGILAN & VOKASI KHUSUS -->
+                        <div class="space-y-3" v-if="selectedItem.status_panggilan && selectedItem.status_panggilan !== 'Awam'">
+                            <h5 class="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-purple-100">
+                                <i class="fa-solid fa-hands-praying text-purple-600"></i>
+                                <span>3. Status Panggilan & Tarekat Hidup Bakti</span>
+                            </h5>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                                <div class="p-3 bg-purple-50/60 rounded-xl border border-purple-200/80">
+                                    <span class="text-[10px] text-purple-700 font-bold uppercase block mb-1">Status Panggilan</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.status_panggilan }}</span>
+                                </div>
+                                <div class="p-3 bg-purple-50/60 rounded-xl border border-purple-200/80">
+                                    <span class="text-[10px] text-purple-700 font-bold uppercase block mb-1">Ordo / Kongregasi</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.nama_ordo_kongregasi || '—' }}</span>
+                                </div>
+                                <div class="p-3 bg-purple-50/60 rounded-xl border border-purple-200/80">
+                                    <span class="text-[10px] text-purple-700 font-bold uppercase block mb-1">Tahap Panggilan</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.tahap_panggilan || '—' }}</span>
+                                </div>
+                                <div class="sm:col-span-2 p-3 bg-purple-50/60 rounded-xl border border-purple-200/80">
+                                    <span class="text-[10px] text-purple-700 font-bold uppercase block mb-1">Tempat Tugas / Komunitas Biara</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.tempat_tugas_biara || '—' }}</span>
+                                </div>
+                                <div class="p-3 bg-purple-50/60 rounded-xl border border-purple-200/80" v-if="selectedItem.tgl_tahbisan_kaul">
+                                    <span class="text-[10px] text-purple-700 font-bold uppercase block mb-1">Tgl Tahbisan / Kaul</span>
+                                    <span class="font-bold text-slate-900">{{ String(selectedItem.tgl_tahbisan_kaul).substring(0, 10) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. CATATAN SAKRAMEN GEREJA -->
+                        <div class="space-y-3">
+                            <h5 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-100">
+                                <i class="fa-solid fa-cross text-amber-600"></i>
+                                <span>4. Penerimaan Sakramen Gereja Katolik</span>
+                            </h5>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <!-- Baptis -->
+                                <div class="p-3.5 bg-amber-50/60 rounded-xl border border-amber-200/80 space-y-1.5">
+                                    <div class="flex items-center gap-1.5 font-bold text-amber-950">
+                                        <i class="fa-solid fa-droplet text-amber-600"></i>
+                                        <span>Sakramen Baptis</span>
+                                    </div>
+                                    <p class="text-slate-700 text-[11px] leading-relaxed">
+                                        Tgl: <b>{{ selectedItem.tgl_baptis ? String(selectedItem.tgl_baptis).substring(0, 10) : '—' }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_baptis || '—' }}</b><br />
+                                        Pastor: <b>{{ selectedItem.pastor_baptis || '—' }}</b> &bull; Wali: <b>{{ selectedItem.wali_baptis || '—' }}</b><br />
+                                        Buku Baptis: <b>Vol {{ selectedItem.buku_baptis_vol || '-' }} / Hal {{ selectedItem.buku_baptis_hal || '-' }} / No {{ selectedItem.buku_baptis_no || '-' }}</b>
+                                    </p>
+                                </div>
+
+                                <!-- Komuni 1 & Krisma -->
+                                <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
+                                    <div>
+                                        <div class="flex items-center gap-1.5 font-bold text-slate-900">
+                                            <i class="fa-solid fa-bread-slice text-amber-600"></i>
+                                            <span>Komuni Pertama (Ekaristi)</span>
+                                        </div>
+                                        <p class="text-slate-700 text-[11px]">
+                                            Tgl: <b>{{ selectedItem.tgl_komuni_1 ? String(selectedItem.tgl_komuni_1).substring(0, 10) : '—' }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_komuni_1 || '—' }}</b>
+                                        </p>
+                                    </div>
+                                    <div class="pt-1.5 border-t border-slate-200">
+                                        <div class="flex items-center gap-1.5 font-bold text-slate-900">
+                                            <i class="fa-solid fa-fire-flame-curved text-amber-600"></i>
+                                            <span>Sakramen Krisma (Penguatan)</span>
+                                        </div>
+                                        <p class="text-slate-700 text-[11px]">
+                                            Tgl: <b>{{ selectedItem.tgl_krisma ? String(selectedItem.tgl_krisma).substring(0, 10) : '—' }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_krisma || '—' }}</b>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. PENDIDIKAN, PROFESI & TALENTA -->
+                        <div class="space-y-3">
+                            <h5 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-100">
+                                <i class="fa-solid fa-graduation-cap text-amber-600"></i>
+                                <span>5. Pendidikan, Profesi & Talenta Pelayanan</span>
+                            </h5>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Pendidikan Terakhir</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.pendidikan || '—' }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Profesi / Pekerjaan</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.pekerjaan || '—' }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Kebutuhan Khusus / Disabilitas</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.disabilitas || 'Tidak Ada' }}</span>
+                                </div>
+                                <div class="sm:col-span-2 md:col-span-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80" v-if="selectedItem.talenta">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Talenta / Bidang Pelayanan Paroki</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.talenta }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80" v-if="selectedItem.handphone">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">No. Handphone / WhatsApp</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.handphone }}</span>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80" v-if="selectedItem.email">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Alamat Email</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.email }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 1. DETAIL KEUSKUPAN -->
+                    <template v-else-if="moduleKey === 'keuskupan'">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                                <div class="w-28 h-28 rounded-2xl overflow-hidden bg-white border border-slate-200 p-2 shadow-xs mb-3 flex items-center justify-center">
+                                    <img
+                                        v-if="selectedItem.logo || isImageField({key: 'logo'}, selectedItem.logo)"
+                                        :src="getImageUrl(selectedItem.logo)"
+                                        :alt="selectedItem.nama_keuskupan"
+                                        class="w-full h-full object-contain"
+                                        @error="(e) => { e.target.onerror = null; e.target.src = '/uploads/keuskupan/logo_keuskupan_kupang.svg'; }"
+                                    />
+                                    <i v-else class="fa-solid fa-church text-4xl text-amber-600"></i>
+                                </div>
+                                <h4 class="font-black text-slate-900 text-sm leading-snug">
+                                    {{ selectedItem.nama_keuskupan || '—' }}
+                                </h4>
+                                <p v-if="selectedItem.nama_latin || selectedItem.nama_keuskupan_latin" class="text-xs text-slate-500 italic mt-0.5 font-serif">
+                                    {{ selectedItem.nama_latin || selectedItem.nama_keuskupan_latin }}
+                                </p>
+                                <span class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span>AKTIF</span>
+                                </span>
+                            </div>
+
+                            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-barcode text-amber-500"></i> Kode Keuskupan
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200 inline-block">
+                                        {{ selectedItem.kode_keuskupan || selectedItem.kode || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-cross text-emerald-600"></i> Uskup
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.uskup || selectedItem.nama_uskup || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-location-dot text-rose-500"></i> Alamat Kantor
+                                    </span>
+                                    <span class="text-slate-800 leading-relaxed font-medium">
+                                        {{ selectedItem.alamat || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-phone text-cyan-600"></i> Telepon
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.no_telp || selectedItem.telepon || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-envelope text-amber-500"></i> Email
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.email || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-globe text-amber-600"></i> Website
+                                    </span>
+                                    <a
+                                        v-if="selectedItem.website"
+                                        :href="selectedItem.website.startsWith('http') ? selectedItem.website : `https://${selectedItem.website}`"
+                                        target="_blank"
+                                        class="text-amber-700 hover:underline font-semibold flex items-center gap-1 truncate"
+                                    >
+                                        <span>{{ selectedItem.website }}</span>
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                    </a>
+                                    <span v-else class="text-slate-400">—</span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle-info text-purple-500"></i> Keterangan
+                                    </span>
+                                    <span class="text-slate-600">
+                                        {{ selectedItem.keterangan || '—' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Daftar Kevikepan -->
+                        <div v-if="selectedItem.dekenats" class="space-y-3 pt-3 border-t border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-black text-slate-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-layer-group text-amber-600"></i>
+                                    <span>Daftar Kevikepan / Dekenat Terdaftar</span>
+                                </h4>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                    {{ selectedItem.dekenats.length }} Kevikepan
+                                </span>
+                            </div>
+
+                            <div class="rounded-2xl border border-slate-200 overflow-hidden">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-50 text-slate-600 font-bold text-[10px] uppercase border-b border-slate-200">
+                                        <tr>
+                                            <th class="px-3.5 py-2.5 text-center w-10">NO</th>
+                                            <th class="px-4 py-2.5">NAMA KEVIKEPAN / DEKENAT</th>
+                                            <th class="px-4 py-2.5">VIKEP (DEKEN)</th>
+                                            <th class="px-4 py-2.5 text-center">PAROKI</th>
+                                            <th class="px-4 py-2.5 text-center">STATUS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                                        <tr v-for="(dek, dIdx) in selectedItem.dekenats" :key="dek.id_kevikepan || dek.id_dekenat || dek.id || dIdx" class="hover:bg-slate-50/70">
+                                            <td class="px-3.5 py-2.5 text-center text-slate-400 font-bold text-[11px]">{{ dIdx + 1 }}</td>
+                                            <td class="px-4 py-2.5 font-bold text-slate-900">
+                                                {{ dek.nama_kevikepan || dek.nama_dekenat || dek.nama || '—' }}
+                                            </td>
+                                            <td class="px-4 py-2.5">
+                                                <span v-if="dek.vikep || dek.nama_vikep || dek.nama_deken || dek.deken" class="inline-flex items-center gap-1.5 text-slate-800">
+                                                    <i class="fa-solid fa-user-tie text-emerald-600 text-xs"></i>
+                                                    <span>{{ dek.vikep || dek.nama_vikep || dek.nama_deken || dek.deken }}</span>
+                                                </span>
+                                                <span v-else class="text-slate-400">—</span>
+                                            </td>
+                                            <td class="px-4 py-2.5 text-center">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                                    <i class="fa-solid fa-church text-[9px]"></i>
+                                                    <span>{{ (dek.parokis && dek.parokis.length) ? dek.parokis.length : (dek.jumlah_paroki || dek.parokis_count || 0) }} Paroki</span>
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-2.5 text-center">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    <span>Aktif</span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 2. DETAIL KEVIKEPAN / DEKENAT -->
+                    <template v-else-if="moduleKey === 'dekenat' || moduleKey === 'kevikepan'">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                                <div class="w-24 h-24 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-200/80 flex items-center justify-center text-4xl mb-3 shadow-2xs">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </div>
+                                <h4 class="font-black text-slate-900 text-sm leading-snug">
+                                    {{ selectedItem.nama_kevikepan || selectedItem.nama_dekenat || selectedItem.nama || '—' }}
+                                </h4>
+                                <p class="text-xs text-amber-800 font-semibold mt-1">
+                                    {{ selectedItem.keuskupan ? selectedItem.keuskupan.nama_keuskupan : 'Keuskupan' }}
+                                </p>
+                                <span class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span>AKTIF</span>
+                                </span>
+                            </div>
+
+                            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-barcode text-amber-500"></i> Kode Kevikepan
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200 inline-block">
+                                        {{ selectedItem.kode_kevikepan || selectedItem.kode_dekenat || selectedItem.kode || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-tie text-emerald-600"></i> Vikep (Deken)
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.vikep || selectedItem.nama_vikep || selectedItem.nama_deken || selectedItem.deken || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-church text-amber-600"></i> Keuskupan Naungan
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.keuskupan ? selectedItem.keuskupan.nama_keuskupan : '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-location-dot text-rose-500"></i> Alamat Kantor
+                                    </span>
+                                    <span class="text-slate-800 leading-relaxed font-medium">
+                                        {{ selectedItem.alamat || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-phone text-cyan-600"></i> Telepon / Kontak
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.telepon || selectedItem.no_telp || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-envelope text-amber-500"></i> Email
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.email || '—' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Embedded Table: Paroki di Bawah Kevikepan Ini -->
+                        <div class="space-y-3 pt-3 border-t border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-black text-slate-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-church text-amber-600"></i>
+                                    <span>Daftar Paroki di Kevikepan Ini</span>
+                                </h4>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                    {{ (selectedItem.parokis && selectedItem.parokis.length) ? selectedItem.parokis.length : 0 }} Paroki
+                                </span>
+                            </div>
+
+                            <div class="rounded-2xl border border-slate-200 overflow-hidden">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-50 text-slate-600 font-bold text-[10px] uppercase border-b border-slate-200">
+                                        <tr>
+                                            <th class="px-3.5 py-2.5 text-center w-10">NO</th>
+                                            <th class="px-4 py-2.5">NAMA PAROKI</th>
+                                            <th class="px-4 py-2.5">PASTOR PAROKI</th>
+                                            <th class="px-4 py-2.5">KONTAK</th>
+                                            <th class="px-4 py-2.5 text-center">STATUS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                                        <tr v-for="(p, pIdx) in selectedItem.parokis" :key="p.id_paroki || pIdx" class="hover:bg-slate-50/70">
+                                            <td class="px-3.5 py-2.5 text-center text-slate-400 font-bold text-[11px]">{{ pIdx + 1 }}</td>
+                                            <td class="px-4 py-2.5 font-bold text-slate-900">
+                                                {{ p.nama_paroki || p.nama || '—' }}
+                                            </td>
+                                            <td class="px-4 py-2.5 text-slate-800">
+                                                <span v-if="p.nama_pastor_paroki_aktif || p.pastor_paroki" class="inline-flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-user-tie text-emerald-600 text-xs"></i>
+                                                    <span>{{ p.nama_pastor_paroki_aktif || p.pastor_paroki }}</span>
+                                                </span>
+                                                <span v-else class="text-slate-400">—</span>
+                                            </td>
+                                            <td class="px-4 py-2.5 text-slate-600">{{ p.telepon || p.whatsapp || '—' }}</td>
+                                            <td class="px-4 py-2.5 text-center">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    <span>Aktif</span>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="!selectedItem.parokis || !selectedItem.parokis.length">
+                                            <td colspan="5" class="px-4 py-6 text-center text-slate-400 text-xs">
+                                                Belum ada data paroki terdaftar di kevikepan ini.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 3. DETAIL PAROKI -->
+                    <template v-else-if="moduleKey === 'paroki'">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                                <div class="w-28 h-28 rounded-2xl overflow-hidden bg-white border border-slate-200 p-2 shadow-xs mb-3 flex items-center justify-center">
+                                    <img
+                                        v-if="selectedItem.logo || isImageField({key: 'logo'}, selectedItem.logo)"
+                                        :src="getImageUrl(selectedItem.logo)"
+                                        :alt="selectedItem.nama_paroki"
+                                        class="w-full h-full object-contain"
+                                        @error="(e) => { e.target.onerror = null; e.target.src = '/uploads/keuskupan/logo_keuskupan_kupang.svg'; }"
+                                    />
+                                    <i v-else class="fa-solid fa-place-of-worship text-4xl text-amber-600"></i>
+                                </div>
+                                <h4 class="font-black text-slate-900 text-sm leading-snug">
+                                    {{ selectedItem.nama_paroki || '—' }}
+                                </h4>
+                                <p v-if="selectedItem.pelindung_paroki" class="text-xs text-amber-800 font-semibold mt-0.5">
+                                    Pelindung: {{ selectedItem.pelindung_paroki }}
+                                </p>
+                                <span :class="[
+                                    'mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border',
+                                    (selectedItem.status === 'Aktif' || !selectedItem.status)
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                        : 'bg-rose-50 text-rose-700 border-rose-200'
+                                ]">
+                                    <span :class="['w-1.5 h-1.5 rounded-full', (selectedItem.status === 'Aktif' || !selectedItem.status) ? 'bg-emerald-500' : 'bg-rose-500']"></span>
+                                    <span>{{ selectedItem.status || 'Aktif' }}</span>
+                                </span>
+                            </div>
+
+                            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-barcode text-amber-500"></i> Kode Paroki
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200 inline-block">
+                                        {{ selectedItem.kode_paroki || selectedItem.kode || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-church text-amber-600"></i> Keuskupan Induk
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.keuskupan ? selectedItem.keuskupan.nama_keuskupan : '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-layer-group text-cyan-600"></i> Kevikepan / Dekenat
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.dekenat ? (selectedItem.dekenat.nama_kevikepan || selectedItem.dekenat.nama_dekenat) : '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-tie text-emerald-600"></i> Pastor Paroki
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.nama_pastor_paroki_aktif || selectedItem.pastor_paroki || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80" v-if="selectedItem.nama_pastor_rekan">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-users text-amber-600"></i> Pastor Rekan
+                                    </span>
+                                    <div class="flex flex-wrap gap-1.5 mt-1">
+                                        <span
+                                            v-for="(pr, prIdx) in (selectedItem.nama_pastor_rekan.split ? selectedItem.nama_pastor_rekan.split(',').map(s=>s.trim()).filter(Boolean) : [selectedItem.nama_pastor_rekan])"
+                                            :key="prIdx"
+                                            class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-900"
+                                        >
+                                            <i class="fa-solid fa-user-tie text-[10px] text-amber-600"></i>
+                                            <span>{{ pr }}</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-location-dot text-rose-500"></i> Alamat & Wilayah Administratif
+                                    </span>
+                                    <p class="text-slate-800 leading-relaxed font-medium mb-1.5">
+                                        {{ selectedItem.alamat || '—' }}
+                                    </p>
+                                    <div class="flex flex-wrap gap-2 text-[11px] text-slate-600 font-medium pt-1 border-t border-slate-200/60">
+                                        <span v-if="selectedItem.desa || selectedItem.kelurahan">Desa/Kel: <b>{{ selectedItem.desa?.nama_desa || selectedItem.kelurahan }}</b></span>
+                                        <span v-if="selectedItem.kecamatan">• Kec: <b>{{ selectedItem.kecamatan?.nama_kecamatan }}</b></span>
+                                        <span v-if="selectedItem.kabupaten">• Kab/Kota: <b>{{ selectedItem.kabupaten?.nama_kabupaten }}</b></span>
+                                        <span v-if="selectedItem.provinsi">• Prov: <b>{{ selectedItem.provinsi?.nama_provinsi }}</b></span>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-phone text-cyan-600"></i> Telepon / WA
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.telepon || selectedItem.whatsapp || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-envelope text-amber-500"></i> Email
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.email || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-globe text-amber-600"></i> Website
+                                    </span>
+                                    <a
+                                        v-if="selectedItem.website"
+                                        :href="selectedItem.website.startsWith('http') ? selectedItem.website : `https://${selectedItem.website}`"
+                                        target="_blank"
+                                        class="text-amber-700 hover:underline font-semibold flex items-center gap-1 truncate"
+                                    >
+                                        <span>{{ selectedItem.website }}</span>
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                    </a>
+                                    <span v-else class="text-slate-400">—</span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle-info text-purple-500"></i> Keterangan
+                                    </span>
+                                    <span class="text-slate-700 font-medium">
+                                        {{ selectedItem.keterangan || '—' }}
+                                    </span>
+                                </div>
+
+                                <!-- Maps Coordinates & Link -->
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-2" v-if="selectedItem.maps_url || selectedItem.latitude || selectedItem.maps_embed">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1.5">
+                                            <i class="fa-solid fa-map-location-dot text-emerald-600"></i> Lokasi & Peta Google Maps
+                                        </span>
+                                        <a
+                                            v-if="selectedItem.maps_url"
+                                            :href="selectedItem.maps_url"
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:underline"
+                                        >
+                                            <span>Buka di Google Maps</span>
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                        </a>
+                                    </div>
+                                    <div class="flex gap-4 text-xs font-mono text-slate-700" v-if="selectedItem.latitude || selectedItem.longitude">
+                                        <span>Lat: <b>{{ selectedItem.latitude || '—' }}</b></span>
+                                        <span>Long: <b>{{ selectedItem.longitude || '—' }}</b></span>
+                                    </div>
+                                    <!-- Render Embed Iframe if provided -->
+                                    <div v-if="selectedItem.maps_embed" class="rounded-xl overflow-hidden border border-slate-200 aspect-video w-full [&_iframe]:w-full [&_iframe]:h-full" v-html="selectedItem.maps_embed"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 4. GENERIC DETAIL FOR OTHER MODULES -->
+                    <template v-else>
+                        <!-- Photo header for pastor modules -->
+                        <div v-if="['riwayat-pastor','riwayat_pastor_paroki','master-pastor','direktori-dpp','direktori-katekis','direktori-misdinar'].includes(moduleKey) && (selectedItem.foto || selectedItem.logo)"
+                             class="flex flex-col items-center mb-4">
+                            <div class="w-28 h-28 rounded-2xl overflow-hidden bg-slate-100 border-2 border-amber-200 shadow-md flex items-center justify-center">
+                                <img
+                                    :src="getImageUrl(selectedItem.foto || selectedItem.logo)"
+                                    :alt="selectedItem.nama_pastor || selectedItem.nama || 'Foto'"
+                                    class="w-full h-full object-cover"
+                                    @error="(e) => { e.target.onerror = null; e.target.src=''; e.target.parentElement.innerHTML='<i class=\'fa-solid fa-user-tie text-4xl text-slate-300\'></i>'; }"
+                                />
+                            </div>
+                            <p class="mt-2 text-sm font-bold text-slate-800">{{ selectedItem.nama_pastor || selectedItem.nama || '' }}</p>
+                            <p class="text-xs text-slate-500">{{ selectedItem.jabatan || '' }}</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <template v-for="col in columns" :key="col.key">
+                                <!-- Skip foto/logo if already shown in photo header above -->
+                                <div v-if="!((col.key === 'foto' || col.key === 'logo') && ['riwayat-pastor','riwayat_pastor_paroki','master-pastor','direktori-dpp','direktori-katekis','direktori-misdinar'].includes(moduleKey) && (selectedItem.foto || selectedItem.logo))"
+                                     class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">{{ col.label }}</span>
+                                    <!-- Image field -->
+                                    <div v-if="col.key === 'foto' || col.key === 'logo' || col.isImage" class="flex items-center gap-2">
+                                        <div v-if="getFieldValue(selectedItem, col) && getFieldValue(selectedItem, col) !== '—'"
+                                             class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                                            <img
+                                                :src="getImageUrl(getFieldValue(selectedItem, col))"
+                                                :alt="col.label"
+                                                class="w-full h-full object-cover"
+                                                @error="(e) => { e.target.onerror = null; e.target.parentElement.innerHTML = '<i class=\'fa-solid fa-user-tie text-2xl text-slate-300\'></i>'; }"
+                                            />
+                                        </div>
+                                        <span v-else class="text-slate-400 italic text-[11px]">Belum ada foto</span>
+                                    </div>
+                                    <!-- Regular field -->
+                                    <span v-else class="font-medium text-slate-900">{{ getFieldValue(selectedItem, col) }}</span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <a
+                            v-if="moduleKey === 'keuskupan'"
+                            href="/superadmin/dekenat"
+                            class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-100 transition flex items-center gap-1.5 shadow-2xs"
+                        >
+                            <i class="fa-solid fa-layer-group text-amber-600 text-xs"></i>
+                            <span>Lihat Daftar Kevikepan</span>
+                        </a>
+                        <a
+                            v-if="moduleKey === 'dekenat' || moduleKey === 'kevikepan'"
+                            href="/superadmin/paroki"
+                            class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-100 transition flex items-center gap-1.5 shadow-2xs"
+                        >
+                            <i class="fa-solid fa-place-of-worship text-amber-600 text-xs"></i>
+                            <span>Lihat Daftar Paroki</span>
+                        </a>
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                        <button
+                            type="button"
+                            @click="openEditModal(selectedItem)"
+                            class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-amber-500/25 cursor-pointer"
+                        >
+                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            <span>{{ (moduleKey === 'umat' || moduleKey === 'data-umat') ? 'Edit Data Umat' : `Edit ${title}` }}</span>
+                        </button>
+                        <button
+                            type="button"
+                            @click="showDetailModal = false"
+                            class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition cursor-pointer"
+                        >
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CREATE / EDIT MODAL -->
+        <div
+            v-if="showFormModal"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs overflow-y-auto"
+        >
+            <div
+                :class="[
+                    'bg-white rounded-3xl p-6 w-full shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 my-8',
+                    (moduleKey === 'keuskupan' || moduleKey === 'dekenat' || moduleKey === 'kevikepan' || moduleKey === 'paroki' || moduleKey === 'kapela' || moduleKey === 'stasi' || moduleKey === 'user' || moduleKey === 'role' || moduleKey === 'roles' || moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga' || moduleKey === 'umat' || moduleKey === 'data-umat') ? 'max-w-4xl' : (['rapat', 'rapat-notulen', 'kegiatan', 'surat-masuk', 'surat-keluar', 'arsip-digital'].includes(moduleKey) ? 'max-w-2xl' : 'max-w-lg')
+                ]"
+            >
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center text-lg">
+                            <i :class="modalMode === 'create' ? 'fa-solid fa-plus' : 'fa-solid fa-pen-to-square'"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900">
+                                {{ modalMode === 'create' ? `Form Tambah ${title} Baru` : `Form Edit ${title}: ${selectedItem?.nama_keuskupan || selectedItem?.nama_kevikepan || selectedItem?.nama_dekenat || selectedItem?.nama_paroki || selectedItem?.nama || title}` }}
+                            </h3>
+                            <p class="text-[11px] text-slate-400">Silakan lengkapi formulir data master berikut ini</p>
+                        </div>
+                    </div>
+                    <button @click="showFormModal = false" class="text-slate-400 hover:text-slate-700 p-1 text-sm cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <form @submit.prevent="submitForm" class="space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar pr-1">
+                    <!-- 1. KEUSKUPAN FORM -->
+                    <template v-if="moduleKey === 'keuskupan'">
+                        <!-- Section 1: Informasi Utama -->
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-church text-amber-600"></i>
+                                <span>Informasi Utama Keuskupan</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kode Keuskupan *</label>
+                                    <input
+                                        v-model="formData.kode_keuskupan"
+                                        type="text"
+                                        placeholder="Contoh: 012"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 font-mono transition"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status</label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Keuskupan *</label>
+                                    <input
+                                        v-model="formData.nama_keuskupan"
+                                        type="text"
+                                        placeholder="Contoh: Keuskupan Agung Kupang"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Latin Keuskupan</label>
+                                    <input
+                                        v-model="formData.nama_latin"
+                                        type="text"
+                                        placeholder="Contoh: Archidioecesis Kupangensis"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 italic transition"
+                                    />
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Uskup</label>
+                                    <input
+                                        v-model="formData.uskup"
+                                        type="text"
+                                        placeholder="Contoh: Mgr. Hironimus Pakaenoni"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Alamat & Wilayah Sipil -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-map-location-dot text-rose-500"></i>
+                                <span>Alamat & Wilayah Sipil</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Alamat Lengkap</label>
+                                    <textarea
+                                        v-model="formData.alamat"
+                                        rows="2"
+                                        placeholder="Alamat kantor keuskupan (terisi otomatis sesuai wilayah sipil)..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Provinsi</label>
+                                    <select
+                                        v-model="formData.provinsi_id"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
+                                    >
+                                        <option value="">-- Pilih Provinsi --</option>
+                                        <option v-for="prov in provinsiList" :key="prov.id || prov.id_provinsi" :value="prov.id || prov.id_provinsi">
+                                            {{ prov.nama_provinsi }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kabupaten / Kota</label>
+                                    <select
+                                        v-model="formData.kabupaten_id"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
+                                    >
+                                        <option value="">-- Pilih Kabupaten --</option>
+                                        <option v-for="kab in availableKabupatens" :key="kab.id || kab.id_kabupaten" :value="kab.id || kab.id_kabupaten">
+                                            {{ kab.nama_kabupaten }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kecamatan</label>
+                                    <select
+                                        v-model="formData.kecamatan_id"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
+                                    >
+                                        <option value="">-- Pilih Kecamatan --</option>
+                                        <option v-for="kec in availableKecamatans" :key="kec.id || kec.id_kecamatan" :value="kec.id || kec.id_kecamatan">
+                                            {{ kec.nama_kecamatan }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kelurahan / Desa</label>
+                                    <select
+                                        v-model="formData.desa_id"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
+                                    >
+                                        <option value="">-- Pilih Kelurahan/Desa --</option>
+                                        <option v-for="desa in availableDesas" :key="desa.id || desa.id_desa" :value="desa.id || desa.id_desa">
+                                            {{ desa.nama_desa }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Kontak & Informasi Tambahan -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-address-book text-cyan-600"></i>
+                                <span>Kontak & Informasi Tambahan</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Telepon</label>
+                                    <input
+                                        v-model="formData.no_telp"
+                                        type="text"
+                                        placeholder="Nomor telepon kantor..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Email</label>
+                                    <input
+                                        v-model="formData.email"
+                                        type="email"
+                                        placeholder="Email keuskupan..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Website</label>
+                                    <input
+                                        v-model="formData.website"
+                                        type="text"
+                                        placeholder="https://keuskupanagungkupang.org/"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Keterangan</label>
+                                    <input
+                                        v-model="formData.keterangan"
+                                        type="text"
+                                        placeholder="Keterangan tambahan..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Logo Keuskupan -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-image text-amber-600"></i>
+                                <span>Logo Keuskupan</span>
+                            </h4>
+                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-4">
+                                <div class="w-20 h-20 rounded-2xl bg-white border border-slate-200 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
+                                    <img
+                                        v-if="previewImage || (formData.logo && typeof formData.logo === 'string')"
+                                        :src="previewImage || getImageUrl(formData.logo)"
+                                        :alt="formData.nama_keuskupan || 'Logo'"
+                                        class="w-full h-full object-contain"
+                                        @error="(e) => { e.target.onerror = null; e.target.src = '/uploads/keuskupan/logo_keuskupan_kupang.svg'; }"
+                                    />
+                                    <i v-else class="fa-solid fa-church text-3xl text-amber-600"></i>
+                                </div>
+                                <div class="space-y-1.5 flex-1">
+                                    <input
+                                        type="file"
+                                        id="upload-logo-keuskupan"
+                                        accept="image/png, image/jpeg, image/jpg, image/svg+xml, image/webp"
+                                        @change="handleFileUpload($event, 'logo')"
+                                        class="hidden"
+                                    />
+                                    <label
+                                        for="upload-logo-keuskupan"
+                                        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition cursor-pointer shadow-2xs"
+                                    >
+                                        <i class="fa-solid fa-cloud-arrow-up text-amber-600 text-sm"></i>
+                                        <span>{{ (previewImage || formData.logo) ? 'Ganti Logo Keuskupan' : 'Pilih Logo...' }}</span>
+                                    </label>
+                                    <p class="text-[10px] text-slate-400">
+                                        Format didukung: PNG, JPG, JPEG, SVG, WebP. Maks 2MB.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 2. KEVIKEPAN / DEKENAT FORM -->
+                    <template v-else-if="moduleKey === 'dekenat' || moduleKey === 'kevikepan'">
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group text-amber-600"></i>
+                                <span>Informasi Kevikepan / Dekenat</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Keuskupan Naungan *</label>
+                                    <select
+                                        v-model="formData.keuskupan_id"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
+                                    >
+                                        <option value="" disabled>Pilih Keuskupan...</option>
+                                        <option v-for="k in keuskupanList" :key="k.id || k.id_keuskupan" :value="k.id || k.id_keuskupan">
+                                            {{ k.nama_keuskupan }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status</label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kode Kevikepan / Dekenat *</label>
+                                    <input
+                                        v-model="formData.kode_kevikepan"
+                                        type="text"
+                                        placeholder="Contoh: KEV-01"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 font-mono transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Kevikepan / Dekenat *</label>
+                                    <input
+                                        v-model="formData.nama_kevikepan"
+                                        type="text"
+                                        placeholder="Contoh: Kevikepan/Dekenat Kota Kupang"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Vikep (Deken)</label>
+                                    <input
+                                        v-model="formData.vikep"
+                                        type="text"
+                                        placeholder="Contoh: RD. Ambros Ladjar"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Alamat Kantor Kevikepan</label>
+                                    <textarea
+                                        v-model="formData.alamat"
+                                        rows="2"
+                                        placeholder="Alamat kantor kevikepan..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Telepon / Kontak</label>
+                                    <input
+                                        v-model="formData.telepon"
+                                        type="text"
+                                        placeholder="Nomor kontak kantor..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Email</label>
+                                    <input
+                                        v-model="formData.email"
+                                        type="email"
+                                        placeholder="Email kevikepan..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 3. PAROKI FORM -->
+                    <template v-else-if="moduleKey === 'paroki'">
+                        <!-- Section 1: Informasi Induk & Identitas Paroki -->
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-place-of-worship text-amber-600"></i>
+                                <span>Informasi Induk & Identitas Paroki</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Keuskupan Induk *</label>
+                                    <SearchableSelect
+                                        v-model="formData.keuskupan_id"
+                                        :options="keuskupanList"
+                                        value-key="id_keuskupan"
+                                        label-key="nama_keuskupan"
+                                        placeholder="-- Pilih Keuskupan --"
+                                        search-placeholder="Ketik cari keuskupan..."
+                                        icon="fa-church"
+                                        icon-color="text-amber-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Dekenat / Kevikepan *</label>
+                                    <SearchableSelect
+                                        v-model="formData.dekenat_id"
+                                        :options="availableDekenats"
+                                        value-key="id"
+                                        label-key="nama_kevikepan"
+                                        placeholder="-- Pilih Dekenat --"
+                                        search-placeholder="Ketik cari dekenat..."
+                                        icon="fa-layer-group"
+                                        icon-color="text-amber-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-[11px] font-bold text-slate-700">Kode Paroki</label>
+                                        <span class="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Readonly (Otomatis)</span>
+                                    </div>
+                                    <input
+                                        v-model="formData.kode_paroki"
+                                        type="text"
+                                        placeholder="Otomatis terisi saat memilih keuskupan..."
+                                        readonly
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-100/90 border border-slate-200 text-xs text-slate-700 font-mono font-bold cursor-not-allowed transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Paroki *</label>
+                                    <input
+                                        v-model="formData.nama_paroki"
+                                        type="text"
+                                        placeholder="Contoh: Paroki St. Petrus dan Paulus Aileu"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Pelindung / Santo</label>
+                                    <input
+                                        v-model="formData.pelindung_paroki"
+                                        type="text"
+                                        placeholder="Contoh: St. Vinsensius a Paulo"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status</label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Pastor Paroki</label>
+                                    <SearchableSelect
+                                        v-model="formData.nama_pastor_paroki_aktif"
+                                        :options="pastorParokiOptions"
+                                        value-key="value"
+                                        label-key="label"
+                                        placeholder="-- Pilih Pastor Paroki --"
+                                        search-placeholder="Ketik cari nama pastor..."
+                                        icon="fa-user-tie"
+                                        icon-color="text-amber-600"
+                                    />
+                                    <p class="text-[10px] text-slate-400 mt-1">Pilih pastor yang bertugas sebagai Pastor Paroki</p>
+                                </div>
+
+                                <div class="md:col-span-2 space-y-2">
+                                    <label class="block text-[11px] font-bold text-slate-700">Pastor Rekan (Bisa pilih lebih dari 1)</label>
+                                    
+                                    <!-- Selected Pastors Tags -->
+                                    <div v-if="formData.selected_pastor_rekan && formData.selected_pastor_rekan.length" class="flex flex-wrap gap-1.5 p-2.5 bg-amber-50/60 rounded-xl border border-amber-200/80">
+                                        <span
+                                            v-for="rekan in formData.selected_pastor_rekan"
+                                            :key="rekan"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-[11px] font-bold text-amber-900 shadow-2xs"
+                                        >
+                                            <i class="fa-solid fa-user-tie text-[10px] text-amber-600"></i>
+                                            <span>{{ rekan }}</span>
+                                            <button
+                                                type="button"
+                                                @click="removePastorRekan(rekan)"
+                                                class="text-slate-400 hover:text-rose-600 transition ml-0.5 cursor-pointer"
+                                                title="Hapus pastor"
+                                            >
+                                                <i class="fa-solid fa-xmark text-[9px]"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+
+                                    <!-- Search box for Pastors -->
+                                    <div class="relative">
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <input
+                                            v-model="pastorRekanSearch"
+                                            type="text"
+                                            placeholder="Cari nama pastor rekan..."
+                                            class="w-full pl-8.5 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                                        />
+                                    </div>
+
+                                    <!-- Scrollable Checkbox List -->
+                                    <div class="max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/60 p-2 space-y-1 custom-scrollbar">
+                                        <label
+                                            v-for="p in filteredPastorsForRekan"
+                                            :key="typeof p === 'string' ? p : p.nama_pastor"
+                                            :class="[
+                                                'flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer select-none',
+                                                isPastorRekanSelected(typeof p === 'string' ? p : p.nama_pastor)
+                                                    ? 'bg-amber-100/80 text-amber-900 font-bold border border-amber-200'
+                                                    : 'hover:bg-white text-slate-700'
+                                            ]"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                :checked="isPastorRekanSelected(typeof p === 'string' ? p : p.nama_pastor)"
+                                                @change="togglePastorRekan(typeof p === 'string' ? p : p.nama_pastor)"
+                                                class="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                            />
+                                            <span>{{ typeof p === 'string' ? p : p.nama_pastor }}</span>
+                                        </label>
+                                        <div v-if="!filteredPastorsForRekan.length" class="text-center py-3 text-slate-400 text-xs">
+                                            Tidak ada pastor ditemukan dengan kata kunci tersebut.
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400">Pilih satu atau beberapa pastor yang bertugas sebagai Pastor Rekan</p>
+                                </div>
+
+                                <div class="md:col-span-2 space-y-2 pt-1">
+                                    <label class="block text-[11px] font-bold text-slate-700">Logo / Foto Paroki</label>
+                                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-4">
+                                        <div class="w-18 h-18 rounded-2xl bg-white border border-slate-200 p-1 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
+                                            <img
+                                                v-if="previewImage || (formData.logo && typeof formData.logo === 'string')"
+                                                :src="previewImage || getImageUrl(formData.logo)"
+                                                :alt="formData.nama_paroki || 'Logo'"
+                                                class="w-full h-full object-contain"
+                                                @error="(e) => { e.target.onerror = null; e.target.src = '/uploads/keuskupan/logo_keuskupan_kupang.svg'; }"
+                                            />
+                                            <i v-else class="fa-solid fa-place-of-worship text-3xl text-amber-600"></i>
+                                        </div>
+                                        <div class="space-y-1.5 flex-1">
+                                            <input
+                                                type="file"
+                                                id="upload-logo-paroki"
+                                                accept="image/png, image/jpeg, image/jpg, image/gif, image/svg+xml, image/webp"
+                                                @change="handleFileUpload($event, 'logo')"
+                                                class="hidden"
+                                            />
+                                            <label
+                                                for="upload-logo-paroki"
+                                                class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition cursor-pointer shadow-2xs"
+                                            >
+                                                <i class="fa-solid fa-cloud-arrow-up text-amber-600 text-sm"></i>
+                                                <span>{{ (previewImage || formData.logo) ? 'Ganti Foto / Logo Paroki' : 'Pilih Foto / Logo Paroki' }}</span>
+                                            </label>
+                                            <p class="text-[10px] text-slate-400">
+                                                Format: JPG, PNG, GIF, SVG, WEBP. Maksimal 2MB (Kosongkan jika tidak ada)
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Alamat Lengkap</label>
+                                    <textarea
+                                        v-model="formData.alamat"
+                                        rows="2"
+                                        placeholder="Alamat kantor paroki"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Wilayah Administratif -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-map-location-dot text-rose-500"></i>
+                                <span>Wilayah Administratif</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Provinsi</label>
+                                    <select
+                                        v-model="formData.provinsi_id"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
+                                    >
+                                        <option value="">-- Pilih Provinsi --</option>
+                                        <option v-for="prov in provinsiList" :key="prov.id || prov.id_provinsi" :value="prov.id || prov.id_provinsi">
+                                            {{ prov.nama_provinsi }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kabupaten / Kota</label>
+                                    <select
+                                        v-model="formData.kabupaten_id"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
+                                    >
+                                        <option value="">-- Pilih Kabupaten --</option>
+                                        <option v-for="kab in availableKabupatens" :key="kab.id || kab.id_kabupaten" :value="kab.id || kab.id_kabupaten">
+                                            {{ kab.nama_kabupaten }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kecamatan</label>
+                                    <select
+                                        v-model="formData.kecamatan_id"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
+                                    >
+                                        <option value="">-- Pilih Kecamatan --</option>
+                                        <option v-for="kec in availableKecamatans" :key="kec.id || kec.id_kecamatan" :value="kec.id || kec.id_kecamatan">
+                                            {{ kec.nama_kecamatan }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kelurahan / Desa</label>
+                                    <select
+                                        v-model="formData.desa_id"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
+                                    >
+                                        <option value="">-- Pilih Kelurahan/Desa --</option>
+                                        <option v-for="desa in availableDesas" :key="desa.id || desa.id_desa" :value="desa.id || desa.id_desa">
+                                            {{ desa.nama_desa }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Kontak & Informasi Tambahan -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-address-book text-cyan-600"></i>
+                                <span>Kontak & Informasi Tambahan</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Telepon</label>
+                                    <input
+                                        v-model="formData.telepon"
+                                        type="text"
+                                        placeholder="Nomor telepon paroki"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Email</label>
+                                    <input
+                                        v-model="formData.email"
+                                        type="email"
+                                        placeholder="Email paroki"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Website</label>
+                                    <input
+                                        v-model="formData.website"
+                                        type="text"
+                                        placeholder="Contoh: https://parokibenlutu.id"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Keterangan</label>
+                                    <textarea
+                                        v-model="formData.keterangan"
+                                        rows="2"
+                                        placeholder="Keterangan tambahan..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Google Maps & Peta Lokasi -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-map-location-dot text-emerald-600"></i>
+                                <span>Google Maps & Peta Lokasi</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Link Google Maps (URL)</label>
+                                    <input
+                                        v-model="formData.maps_url"
+                                        type="text"
+                                        placeholder="https://maps.google.com/?q=..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono text-[11px]"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Latitude</label>
+                                    <input
+                                        v-model="formData.latitude"
+                                        type="text"
+                                        placeholder="Contoh: -9.812345"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Longitude</label>
+                                    <input
+                                        v-model="formData.longitude"
+                                        type="text"
+                                        placeholder="Contoh: 124.123456"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Embed Google Maps (Iframe)</label>
+                                    <textarea
+                                        v-model="formData.maps_embed"
+                                        rows="2"
+                                        placeholder="Paste kode embed <iframe> Google Maps di sini..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono text-[11px]"
+                                    ></textarea>
+                                    <p class="text-[10px] text-slate-400 mt-1">
+                                        Pastekan tag &lt;iframe src="..."&gt;&lt;/iframe&gt; dari Google Maps (Bagikan / Share -&gt; Sematkan peta / Embed a map).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 4. KAPELA / STASI FORM (100% Matches http://localhost/katedral/admin/kapela/create) -->
+                    <template v-else-if="moduleKey === 'kapela' || moduleKey === 'stasi'">
+                        <!-- Section 1: Informasi Induk & Identitas Stasi / Kapela -->
+                        <div class="space-y-3.5">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-place-of-worship text-amber-600"></i>
+                                <span>Informasi Induk & Identitas Stasi / Kapela</span>
+                            </h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Paroki Induk *</label>
+                                    <SearchableSelect
+                                        v-model="formData.paroki_id"
+                                        :options="parokiList"
+                                        value-key="id_paroki"
+                                        label-key="nama_paroki"
+                                        placeholder="Mengikuti Profil Paroki"
+                                        search-placeholder="Ketik cari paroki..."
+                                        icon="fa-church"
+                                        icon-color="text-amber-600"
+                                        :clearable="false"
+                                        disabled
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tipe</label>
+                                    <select
+                                        v-model="formData.tipe"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    >
+                                        <option value="Stasi">Stasi</option>
+                                        <option value="Kapela">Kapela</option>
+                                        <option value="Gereja Pusat">Gereja Pusat</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status</label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                        <option value="Pembangunan">Pembangunan</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-[11px] font-bold text-slate-700">Kode Stasi/Kapela</label>
+                                        <span class="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Otomatis</span>
+                                    </div>
+                                    <input
+                                        v-model="formData.kode_kapela"
+                                        type="text"
+                                        placeholder="(Otomatis dari Sistem)"
+                                        readonly
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-100/90 border border-slate-200 text-xs text-slate-700 font-mono font-bold cursor-not-allowed transition"
+                                    />
+                                    <p class="text-[10px] text-slate-400 mt-1">Dibuat otomatis berdasarkan Paroki</p>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Stasi/Kapela *</label>
+                                    <input
+                                        v-model="formData.nama_kapela"
+                                        type="text"
+                                        placeholder="Contoh: Stasi Santo Yosef"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Pelindung (Nama Kudus)</label>
+                                    <input
+                                        v-model="formData.pelindung_kapela"
+                                        type="text"
+                                        placeholder="Contoh: Maria Bintang Laut"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Penanggung Jawab</label>
+                                    <input
+                                        v-model="formData.penanggung_jawab"
+                                        type="text"
+                                        placeholder="Nama koordinator stasi/kapela"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-3">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Alamat Lengkap</label>
+                                    <textarea
+                                        v-model="formData.lokasi"
+                                        rows="2"
+                                        placeholder="Alamat lengkap stasi/kapela..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Wilayah Administratif -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-map-location-dot text-rose-500"></i>
+                                <span>Wilayah Administratif</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Provinsi</label>
+                                    <SearchableSelect
+                                        v-model="formData.provinsi_id"
+                                        :options="provinsiList"
+                                        value-key="id_provinsi"
+                                        label-key="nama_provinsi"
+                                        placeholder="-- Pilih Provinsi --"
+                                        search-placeholder="Ketik cari provinsi..."
+                                        icon="fa-map"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kabupaten / Kota</label>
+                                    <SearchableSelect
+                                        v-model="formData.kabupaten_id"
+                                        :options="availableKabupatens"
+                                        value-key="id_kabupaten"
+                                        label-key="nama_kabupaten"
+                                        placeholder="-- Pilih Kabupaten --"
+                                        search-placeholder="Ketik cari kabupaten..."
+                                        icon="fa-city"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kecamatan</label>
+                                    <SearchableSelect
+                                        v-model="formData.kecamatan_id"
+                                        :options="availableKecamatans"
+                                        value-key="id_kecamatan"
+                                        label-key="nama_kecamatan"
+                                        placeholder="-- Pilih Kecamatan --"
+                                        search-placeholder="Ketik cari kecamatan..."
+                                        icon="fa-building-columns"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kelurahan / Desa</label>
+                                    <SearchableSelect
+                                        v-model="formData.desa_id"
+                                        :options="availableDesas"
+                                        value-key="id_desa"
+                                        label-key="nama_desa"
+                                        placeholder="-- Pilih Kelurahan/Desa --"
+                                        search-placeholder="Ketik cari kelurahan/desa..."
+                                        icon="fa-tree-city"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Peta & Geolocation -->
+                        <div class="space-y-3.5 pt-3 border-t border-slate-100">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-map text-blue-600"></i>
+                                    <span>Peta & Geolocation</span>
+                                </h4>
+                                <button
+                                    type="button"
+                                    @click="getCurrentLocation"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold hover:bg-purple-100 transition cursor-pointer"
+                                >
+                                    <i class="fa-solid fa-location-crosshairs text-[10px]"></i>
+                                    <span>Gunakan Lokasi Saya</span>
+                                </button>
+                            </div>
+
+                            <!-- Interactive Map Preview Box -->
+                            <div class="w-full h-44 rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden relative shadow-inner">
+                                <iframe
+                                    :src="`https://maps.google.com/maps?q=${formData.latitude || '-9.850000'},${formData.longitude || '124.300000'}&z=14&output=embed`"
+                                    class="w-full h-full border-0 pointer-events-none"
+                                    loading="lazy"
+                                ></iframe>
+                                <div class="absolute bottom-2 left-2 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-700 border border-slate-200 shadow-xs flex items-center gap-1.5">
+                                    <i class="fa-solid fa-location-dot text-rose-600"></i>
+                                    <span>Lat: {{ formData.latitude || '-9.850000' }}, Long: {{ formData.longitude || '124.300000' }}</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Latitude</label>
+                                    <input
+                                        v-model="formData.latitude"
+                                        type="text"
+                                        placeholder="Contoh: -9.850000"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Longitude</label>
+                                    <input
+                                        v-model="formData.longitude"
+                                        type="text"
+                                        placeholder="Contoh: 124.300000"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Warna Area Peta</label>
+                                    <div class="flex items-center gap-2">
+                                        <input
+                                            v-model="formData.warna_area"
+                                            type="color"
+                                            class="w-10 h-8.5 rounded-xl border border-slate-200 bg-white p-1 cursor-pointer"
+                                        />
+                                        <input
+                                            v-model="formData.warna_area"
+                                            type="text"
+                                            placeholder="#007bff"
+                                            class="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Google Maps URL</label>
+                                    <input
+                                        v-model="formData.maps_url"
+                                        type="text"
+                                        placeholder="https://maps.google.com/?q=..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono text-[11px]"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-4">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Data Poligon Batas Area (GeoJSON) <span class="text-slate-400 font-normal">(Opsional / Otomatis)</span></label>
+                                    <textarea
+                                        v-model="formData.geojson"
+                                        rows="2"
+                                        placeholder='Format GeoJSON polygon, contoh: {"type":"Polygon","coordinates":[[[124.28,-9.84],[124.32,-9.84],[124.32,-9.87],[124.28,-9.87],[124.28,-9.84]]]}'
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono text-[11px]"
+                                    ></textarea>
+                                    <p class="text-[10px] text-slate-400 mt-1">Jika dikosongkan, sistem di peta frontend akan otomatis menandai dengan Pin Ikon Gereja.</p>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Keterangan</label>
+                                    <textarea
+                                        v-model="formData.keterangan"
+                                        rows="3"
+                                        placeholder="Keterangan tambahan tentang stasi/kapela..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Foto Unggulan / Cover</label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                                            <img
+                                                v-if="previewImage || (formData.logo && typeof formData.logo === 'string')"
+                                                :src="previewImage || getImageUrl(formData.logo)"
+                                                class="w-full h-full object-cover"
+                                            />
+                                            <i v-else class="fa-solid fa-image text-slate-400 text-lg"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                @change="handleFileUpload($event, 'logo')"
+                                                class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 file:cursor-pointer"
+                                            />
+                                            <p class="text-[10px] text-slate-400 mt-1">Format: JPG, PNG, WEBP. Maksimal 2MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Profil, Sejarah, & Visi Misi -->
+                        <div class="space-y-3.5 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-book-open text-purple-600"></i>
+                                <span>Profil, Sejarah, & Visi Misi</span>
+                            </h4>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Sejarah Stasi/Kapela</label>
+                                    <textarea
+                                        v-model="formData.sejarah"
+                                        rows="3"
+                                        placeholder="Tuliskan sejarah berdirinya stasi/kapela..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Visi Stasi/Kapela</label>
+                                        <textarea
+                                            v-model="formData.visi"
+                                            rows="2"
+                                            placeholder="Visi stasi/kapela..."
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                        ></textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Misi Stasi/Kapela</label>
+                                        <textarea
+                                            v-model="formData.misi"
+                                            rows="2"
+                                            placeholder="Misi stasi/kapela..."
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 5. DIREKTORI DPP FORM (100% Matches http://localhost/katedral/admin/direktori-dpp) -->
+                    <template v-else-if="moduleKey === 'direktori-dpp'">
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-users-line text-amber-600"></i>
+                                <span>Informasi Pengurus & Anggota DPP</span>
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Lengkap & Gelar *</label>
+                                    <input
+                                        v-model="formData.nama_lengkap"
+                                        type="text"
+                                        placeholder="Contoh: Drs. Petrus Fernandez, M.Si"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Jabatan DPP *</label>
+                                    <select
+                                        v-model="formData.jabatan"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    >
+                                        <option value="Ketua Umum (Pastor Paroki)">Ketua Umum (Pastor Paroki)</option>
+                                        <option value="Wakil Ketua DPP">Wakil Ketua DPP</option>
+                                        <option value="Sekretaris I">Sekretaris I</option>
+                                        <option value="Sekretaris II">Sekretaris II</option>
+                                        <option value="Bendahara I">Bendahara I</option>
+                                        <option value="Bendahara II">Bendahara II</option>
+                                        <option value="Ketua Bidang">Ketua Bidang</option>
+                                        <option value="Ketua Seksi">Ketua Seksi</option>
+                                        <option value="Anggota Pleno">Anggota Pleno</option>
+                                        <option value="Penasihat DPP">Penasihat DPP</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Bidang / Seksi Pastoral *</label>
+                                    <select
+                                        v-model="formData.seksi"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    >
+                                        <option value="Pengurus Inti DPP">Pengurus Inti DPP</option>
+                                        <option value="Bidang Liturgi & Peribadatan">Bidang Liturgi & Peribadatan</option>
+                                        <option value="Bidang Pewartaan & Katekese">Bidang Pewartaan & Katekese</option>
+                                        <option value="Bidang Pelayanan Kemasyarakatan (PSE)">Bidang Pelayanan Kemasyarakatan (PSE)</option>
+                                        <option value="Bidang Paguyuban & Persaudaraan">Bidang Paguyuban & Persaudaraan</option>
+                                        <option value="Dewan Keuangan Paroki (DKP)">Dewan Keuangan Paroki (DKP)</option>
+                                        <option value="Seksi Kepemudaan (OMK)">Seksi Kepemudaan (OMK)</option>
+                                        <option value="Seksi Kerasulan Keluarga">Seksi Kerasulan Keluarga</option>
+                                        <option value="Seksi Komunikasi Sosial (KOMSOS)">Seksi Komunikasi Sosial (KOMSOS)</option>
+                                        <option value="Seksi Sarana & Prasarana">Seksi Sarana & Prasarana</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Periode Kepengurusan</label>
+                                    <input
+                                        v-model="formData.periode"
+                                        type="text"
+                                        placeholder="Contoh: 2024 - 2027"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">No. Kontak / WhatsApp</label>
+                                    <input
+                                        v-model="formData.no_hp"
+                                        type="text"
+                                        placeholder="Contoh: 081234567890"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Kepengurusan</label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Demisioner">Demisioner</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Urutan Tampil (Prioritas)</label>
+                                    <input
+                                        v-model.number="formData.urutan"
+                                        type="number"
+                                        min="1"
+                                        placeholder="1, 2, 3..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-bold"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Foto Profil Pengurus</label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-16 h-16 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                                            <img
+                                                v-if="previewImage || (formData.foto && typeof formData.foto === 'string')"
+                                                :src="previewImage || getImageUrl(formData.foto)"
+                                                class="w-full h-full object-cover"
+                                            />
+                                            <i v-else class="fa-solid fa-user text-slate-400 text-lg"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                @change="handleFileUpload($event, 'foto')"
+                                                class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 file:cursor-pointer"
+                                            />
+                                            <p class="text-[10px] text-slate-400 mt-1">Format: JPG, PNG, WEBP. Maksimal 2MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Keterangan / Tugas Pokok</label>
+                                    <textarea
+                                        v-model="formData.keterangan"
+                                        rows="2"
+                                        placeholder="Keterangan tugas atau catatan tambahan..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 6. KUASI PAROKI FORM -->
+                    <template v-else-if="moduleKey === 'kuasi-paroki'">
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-place-of-worship text-amber-600"></i>
+                                <span>Informasi & Identitas Kuasi Paroki</span>
+                            </h4>
+
+                            <!-- Notice jika status telah berubah menjadi Paroki -->
+                            <div v-if="formData.status === 'Ditingkatkan Menjadi Paroki (Definitif)' || formData.status === 'Definitif'" class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-3">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-base mt-0.5 shrink-0"></i>
+                                <div class="space-y-1">
+                                    <p class="font-bold">Status: Ditingkatkan Menjadi Paroki Definitif</p>
+                                    <p class="text-[11px] text-emerald-700 leading-relaxed">
+                                        Kuasi Paroki ini telah berstatus sebagai Paroki Mandiri. Anda dapat langsung mengelola profil lengkap, wilayah, dan stasinya di menu
+                                        <a :href="`/superadmin/paroki?search=${encodeURIComponent(formData.nama_kuasi || '')}`" class="underline font-bold text-emerald-900 hover:text-emerald-950">
+                                            Data Paroki
+                                        </a>.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Kuasi Paroki *</label>
+                                    <input
+                                        v-model="formData.nama_kuasi"
+                                        type="text"
+                                        placeholder="Contoh: Kuasi Paroki St. Petrus"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kode Kuasi Paroki</label>
+                                    <input
+                                        v-model="formData.kode_kuasi"
+                                        type="text"
+                                        placeholder="Contoh: KP-001"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono font-bold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Paroki Induk (Asal Pemekaran) *</label>
+                                    <SearchableSelect
+                                        v-model="formData.paroki_id"
+                                        :options="parokiList"
+                                        value-key="id_paroki"
+                                        label-key="nama_paroki"
+                                        placeholder="-- Pilih Paroki Induk --"
+                                        search-placeholder="Ketik cari paroki..."
+                                        icon="fa-church"
+                                        icon-color="text-amber-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Dekenat / Kevikepan</label>
+                                    <SearchableSelect
+                                        v-model="formData.dekenat_id"
+                                        :options="dekenatList"
+                                        value-key="id_kevikepan"
+                                        label-key="nama_kevikepan"
+                                        placeholder="-- Pilih Kevikepan --"
+                                        search-placeholder="Ketik cari kevikepan..."
+                                        icon="fa-layer-group"
+                                        icon-color="text-cyan-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Pastor Administrator Kuasi</label>
+                                    <SearchableSelect
+                                        v-model="formData.pastor_administrator"
+                                        :options="pastorParokiOptions"
+                                        value-key="id"
+                                        label-key="nama_pastor"
+                                        placeholder="-- Pilih Pastor Administrator --"
+                                        search-placeholder="Ketik cari nama pastor..."
+                                        icon="fa-user-tie"
+                                        icon-color="text-amber-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Kuasi Paroki *</label>
+                                    <select
+                                        v-model="formData.status"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    >
+                                        <option value="Aktif">Aktif (Kuasi Paroki)</option>
+                                        <option value="Ditingkatkan Menjadi Paroki (Definitif)">Ditingkatkan Menjadi Paroki (Definitif)</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Pelindung Kuasi Paroki</label>
+                                    <input
+                                        v-model="formData.pelindung"
+                                        type="text"
+                                        placeholder="Contoh: Santo Fransiskus Xaverius"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <!-- SEKSI ELEVASI OTOMATIS KE DATA PAROKI -->
+                                <div v-if="formData.status === 'Ditingkatkan Menjadi Paroki (Definitif)' || formData.status === 'Definitif'" class="md:col-span-2 p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 space-y-3">
+                                    <div class="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                                        <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i>
+                                        <span>Pengaturan Elevasi & Pendaftaran Paroki Baru</span>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[10.5px] font-bold text-slate-700 mb-1">Kode Paroki Baru (Resmi Keuskupan)</label>
+                                            <input
+                                                v-model="formData.kode_paroki_baru"
+                                                type="text"
+                                                placeholder="Contoh: 012.016"
+                                                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10.5px] font-bold text-slate-700 mb-1">Nomor SK / Dekret Uskup Diosesan</label>
+                                            <input
+                                                v-model="formData.no_sk_elevasi"
+                                                type="text"
+                                                placeholder="Contoh: 045/SK/KA-KPG/2026"
+                                                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900"
+                                            />
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-amber-800">
+                                        💡 Sistem akan otomatis mendaftarkan entitas <b>Paroki {{ (formData.nama_kuasi || '').replace(/^Kuasi\s+Paroki\s+/i, '') }}</b> ke tabel <b>Data Paroki</b> dan menyimpan riwayat historis ini secara permanen.
+                                    </p>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Lokasi / Alamat Lengkap</label>
+                                    <textarea
+                                        v-model="formData.lokasi"
+                                        rows="2"
+                                        placeholder="Alamat lengkap lokasi gereja kuasi paroki..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Riwayat Lengkap & Keterangan Historis Kuasi Paroki</label>
+                                    <textarea
+                                        v-model="formData.keterangan"
+                                        rows="3"
+                                        placeholder="Tuliskan catatan riwayat: Tanggal pendirian kuasi, pastor administrator yang pernah bertugas, stasi asal, nomor dekret, hingga proses elevasi..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 7. LAPAK & TOKO UMKM UMAT FORM (100% Matches Reference) -->
+                    <template v-else-if="moduleKey === 'lapak-produk'">
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-shop text-amber-600"></i>
+                                <span>Informasi Produk & Usaha UMKM Umat</span>
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Produk *</label>
+                                    <input
+                                        v-model="formData.nama_produk"
+                                        type="text"
+                                        placeholder="Contoh: Buku Doa Harian"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Harga (Rupiah) *</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3.5 top-2 text-xs font-bold text-slate-400">Rp</span>
+                                        <input
+                                            v-model="formData.harga"
+                                            type="number"
+                                            min="0"
+                                            placeholder="0"
+                                            required
+                                            class="w-full pl-10 pr-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono font-bold"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Tampil</label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    >
+                                        <option value="Aktif (Tampil di Lapak)">Aktif (Tampil di Lapak)</option>
+                                        <option value="Nonaktif (Sembunyikan)">Nonaktif (Sembunyikan)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-[11px] font-bold text-slate-700">Kategori Produk</label>
+                                        <button
+                                            type="button"
+                                            @click="isCustomKategori = !isCustomKategori"
+                                            class="text-[10.5px] font-bold text-amber-600 hover:text-amber-700 underline cursor-pointer"
+                                        >
+                                            {{ isCustomKategori ? 'Pilih dari Daftar' : '+ Ketik Kategori Baru' }}
+                                        </button>
+                                    </div>
+                                    <input
+                                        v-if="isCustomKategori"
+                                        v-model="formData.kategori"
+                                        type="text"
+                                        placeholder="Ketik nama kategori baru..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    />
+                                    <select
+                                        v-else
+                                        v-model="formData.kategori"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    >
+                                        <option value="Benda Rohani & Perlengkapan Doa">Benda Rohani & Perlengkapan Doa</option>
+                                        <option value="Makanan & Minuman Olahan">Makanan & Minuman Olahan</option>
+                                        <option value="Kerajinan & Seni Tangan">Kerajinan & Seni Tangan</option>
+                                        <option value="Kain Tenun & Busana Adat">Kain Tenun & Busana Adat</option>
+                                        <option value="Hasil Tani & Kebun Organik">Hasil Tani & Kebun Organik</option>
+                                        <option value="Jasa & Keterampilan">Jasa & Keterampilan</option>
+                                        <option value="Pakaian & Busana Gerejawi">Pakaian & Busana Gerejawi</option>
+                                        <option value="Peternakan & Hasil Hewan">Peternakan & Hasil Hewan</option>
+                                        <option value="Lain-lain">Lain-lain</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Jumlah Stok</label>
+                                    <input
+                                        v-model.number="formData.stok"
+                                        type="number"
+                                        min="0"
+                                        placeholder="1"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-bold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Penjual / Pemilik Usaha</label>
+                                    <input
+                                        v-model="formData.penjual"
+                                        type="text"
+                                        placeholder="Contoh: Ibu Maria Fernandez"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">No. WhatsApp Pemesanan</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3.5 top-2 text-xs font-bold text-emerald-600"><i class="fa-brands fa-whatsapp"></i></span>
+                                        <input
+                                            v-model="formData.no_wa"
+                                            type="text"
+                                            placeholder="081234567890"
+                                            class="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono font-semibold"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Foto Produk</label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                                            <img
+                                                v-if="previewImage || (formData.foto && typeof formData.foto === 'string')"
+                                                :src="previewImage || getImageUrl(formData.foto)"
+                                                class="w-full h-full object-cover"
+                                            />
+                                            <i v-else class="fa-solid fa-bag-shopping text-slate-400 text-lg"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                @change="handleFileUpload($event, 'foto')"
+                                                class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 file:cursor-pointer"
+                                            />
+                                            <p class="text-[10px] text-slate-400 mt-1">Format: JPG, JPEG, PNG, WEBP. Maksimal 2MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Deskripsi Produk</label>
+                                    <textarea
+                                        v-model="formData.deskripsi"
+                                        rows="3"
+                                        placeholder="Tuliskan deskripsi singkat produk..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template v-else-if="moduleKey === 'user'">
+                        <div class="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-4">
+                            <div class="rounded-2xl bg-slate-50 border border-slate-200/80 p-4 space-y-3">
+                                <h4 class="text-xs font-black text-slate-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-camera text-blue-600"></i>
+                                    <span>Foto Profil</span>
+                                </h4>
+                                <div class="w-28 h-28 rounded-full bg-white border border-slate-200 mx-auto overflow-hidden shadow-sm flex items-center justify-center">
+                                    <img v-if="previewImage || formData.foto" :src="previewImage || getImageUrl(formData.foto)" class="w-full h-full object-cover" />
+                                    <i v-else class="fa-solid fa-user text-4xl text-slate-300"></i>
+                                </div>
+                                <input type="file" accept="image/*" @change="handleFileUpload($event, 'foto')" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer" />
+                                <p class="text-[10px] text-slate-400 text-center">Format JPG, PNG, WebP. Maks. 2MB.</p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="rounded-2xl bg-white border border-slate-200/80 p-4">
+                                    <h4 class="text-xs font-black text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
+                                        <i class="fa-solid fa-user-shield text-blue-600"></i>
+                                        <span>Rincian Akun Pengguna</span>
+                                    </h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Lengkap *</label>
+                                            <input v-model="formData.nama_lengkap" type="text" placeholder="Nama lengkap pengguna" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-amber-500" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Username *</label>
+                                            <input v-model="formData.username" type="text" autocomplete="new-password" placeholder="username login" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono focus:outline-none focus:border-amber-500" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Email *</label>
+                                            <input v-model="formData.email" type="email" placeholder="alamat@email.com" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-amber-500" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">No. HP / WhatsApp</label>
+                                            <input v-model="formData.no_hp" type="text" placeholder="08123456789" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-amber-500" />
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                                Password <span v-if="modalMode === 'create'">*</span>
+                                                <span v-else class="font-medium text-slate-400">(kosongkan jika tidak diubah)</span>
+                                            </label>
+                                            <div class="flex gap-2">
+                                                <input v-model="formData.password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" placeholder="Ketik password atau generate" class="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-amber-500" />
+                                                <button type="button" @click="showPassword = !showPassword" class="w-9 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:text-blue-700">
+                                                    <i :class="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                                                </button>
+                                                <button type="button" @click="generatePassword" class="px-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold hover:bg-blue-100">Generate</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rounded-2xl bg-white border border-slate-200/80 p-4">
+                                    <h4 class="text-xs font-black text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
+                                        <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                                        <span>Peran & Relasi Wilayah</span>
+                                    </h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <!-- 1. Peran / Role -->
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Peran / Role *</label>
+                                            <SearchableSelect
+                                                v-model="formData.role_id"
+                                                :options="roleList"
+                                                valueKey="id"
+                                                labelKey="nama_role"
+                                                placeholder="-- Pilih Peran / Role --"
+                                                searchPlaceholder="Cari peran..."
+                                                icon="fa-shield-halved"
+                                                iconColor="text-amber-600"
+                                            />
+                                        </div>
+
+                                        <!-- 2. Status Akun -->
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Akun</label>
+                                            <SearchableSelect
+                                                v-model="formData.status"
+                                                :options="accountStatusOptions"
+                                                valueKey="value"
+                                                labelKey="label"
+                                                placeholder="Pilih Status"
+                                                searchPlaceholder="Cari status..."
+                                                icon="fa-circle-check"
+                                                iconColor="text-emerald-600"
+                                            />
+                                        </div>
+
+                                        <!-- 3. Wilayah Terkait -->
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                                Wilayah Terkait
+                                                <span v-if="formData.kapela_id" class="text-rose-500 text-[9px] font-normal lowercase">(stasi aktif)</span>
+                                            </label>
+                                            <SearchableSelect
+                                                v-model="formData.wilayah_id"
+                                                :options="wilayahList"
+                                                :disabled="Boolean(formData.kapela_id)"
+                                                valueKey="id"
+                                                labelKey="nama_wilayah"
+                                                :placeholder="formData.kapela_id ? '— Nonaktif (Stasi Dipilih) —' : '-- Tidak Terikat Wilayah --'"
+                                                searchPlaceholder="Cari wilayah..."
+                                                icon="fa-church"
+                                                iconColor="text-blue-600"
+                                            />
+                                        </div>
+
+                                        <!-- 4. Stasi / Kapela Terkait -->
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                                Stasi / Kapela Terkait
+                                                <span v-if="formData.wilayah_id" class="text-rose-500 text-[9px] font-normal lowercase">(wilayah aktif)</span>
+                                            </label>
+                                            <SearchableSelect
+                                                v-model="formData.kapela_id"
+                                                :options="kapelaList"
+                                                :disabled="Boolean(formData.wilayah_id)"
+                                                valueKey="id"
+                                                labelKey="nama_kapela"
+                                                :placeholder="formData.wilayah_id ? '— Nonaktif (Wilayah Dipilih) —' : '-- Tidak Terikat Stasi/Kapela --'"
+                                                searchPlaceholder="Cari stasi/kapela..."
+                                                icon="fa-place-of-worship"
+                                                iconColor="text-indigo-600"
+                                            />
+                                        </div>
+
+                                        <!-- 5. KUB Terkait -->
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">KUB Terkait</label>
+                                            <SearchableSelect
+                                                v-model="formData.kub_id"
+                                                :options="filteredFormKubs"
+                                                valueKey="id"
+                                                labelKey="nama_kub"
+                                                placeholder="-- Tidak Terikat KUB --"
+                                                searchPlaceholder="Cari KUB..."
+                                                icon="fa-users"
+                                                iconColor="text-teal-600"
+                                            />
+                                        </div>
+
+                                        <!-- 6. Akses Maintenance -->
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Akses Maintenance</label>
+                                            <SearchableSelect
+                                                v-model="formData.maintenance_access"
+                                                :options="maintenanceOptions"
+                                                valueKey="value"
+                                                labelKey="label"
+                                                placeholder="Pilih Akses Maintenance"
+                                                searchPlaceholder="Cari opsi..."
+                                                icon="fa-screwdriver-wrench"
+                                                iconColor="text-slate-600"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 8. ROLE & HAK AKSES FORM (100% Matches http://localhost/katedral/admin/roles) -->
+                    <template v-else-if="moduleKey === 'role' || moduleKey === 'roles'">
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-shield-halved text-amber-600"></i>
+                                <span>Informasi Peran & Hak Akses (RBAC)</span>
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Role / Peran *</label>
+                                    <input
+                                        v-model="formData.nama_role"
+                                        type="text"
+                                        placeholder="Contoh: Sekretariat Paroki"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-bold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Slug / Kode Sistem *</label>
+                                    <input
+                                        v-model="formData.slug"
+                                        type="text"
+                                        placeholder="Contoh: sekretariat"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono font-bold"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Deskripsi Wewenang & Tanggung Jawab</label>
+                                    <textarea
+                                        v-model="formData.deskripsi"
+                                        rows="2"
+                                        placeholder="Jelaskan wewenang, batasan tugas, dan tanggung jawab peran ini..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Role</label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    >
+                                        <option :value="1">Aktif (Dapat Digunakan)</option>
+                                        <option :value="0">Nonaktif</option>
+                                    </select>
+                                </div>
+
+                                <!-- HAK AKSES & IZIN MENU (PERMISSIONS) 100% Matches Katedral Admin -->
+                                <div class="md:col-span-2 p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90 space-y-4">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
+                                        <div>
+                                            <h5 class="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-2">
+                                                <i class="fa-solid fa-shield-halved text-amber-600"></i>
+                                                <span>Hak Akses & Izin Menu (Permissions)</span>
+                                            </h5>
+                                            <p class="text-[11px] text-slate-500 font-medium">Centang menu-menu yang dapat diakses oleh role ini.</p>
+                                        </div>
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <button
+                                                type="button"
+                                                @click="selectAllAllPermissions"
+                                                class="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-[10.5px] font-bold transition cursor-pointer"
+                                            >
+                                                Pilih Semua
+                                            </button>
+                                            <button
+                                                type="button"
+                                                @click="clearAllPermissions"
+                                                class="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10.5px] font-bold transition cursor-pointer"
+                                            >
+                                                Kosongkan
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- 8 CATEGORY GROUPS -->
+                                    <div class="space-y-4">
+                                        <div
+                                            v-for="group in permissionGroups"
+                                            :key="group.title"
+                                            class="rounded-xl bg-white border border-slate-200/90 p-3.5 shadow-2xs space-y-2.5"
+                                        >
+                                            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                                                <span class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                                    <i :class="['fa-solid text-amber-600 text-[11px]', group.icon]"></i>
+                                                    <span>{{ group.title }}</span>
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    @click="toggleGroupPermissions(group)"
+                                                    class="text-[10.5px] font-bold text-amber-600 hover:text-amber-700 underline cursor-pointer"
+                                                >
+                                                    {{ isGroupAllSelected(group) ? 'Batal Pilih Semua' : 'Pilih Semua' }}
+                                                </button>
+                                            </div>
+
+                                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pt-1">
+                                                <label
+                                                    v-for="item in group.items"
+                                                    :key="item.key"
+                                                    class="flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer transition select-none"
+                                                    :class="Array.isArray(formData.permissions) && formData.permissions.includes(item.key)
+                                                        ? 'bg-amber-50/60 border-amber-300 font-bold text-amber-900'
+                                                        : 'bg-slate-50/50 border-slate-200/80 text-slate-700 hover:border-slate-300'"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        :value="item.key"
+                                                        v-model="formData.permissions"
+                                                        class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300"
+                                                    />
+                                                    <span class="truncate">{{ item.label }}</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 9. RIWAYAT PASTOR PAROKI FORM (100% Matches Katedral) -->
+                    <template v-else-if="moduleKey === 'riwayat-pastor' || moduleKey === 'riwayat_pastor_paroki'">
+                        <div class="space-y-4">
+                            <!-- Foto Pastor Upload -->
+                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
+                                <label class="block text-xs font-bold text-slate-700">Foto Pastor / Gembala</label>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-18 h-18 rounded-2xl bg-white border border-slate-200 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
+                                        <img
+                                            v-if="previewImage || (formData.foto && typeof formData.foto === 'string')"
+                                            :src="previewImage || getImageUrl(formData.foto)"
+                                            alt="Foto Pastor"
+                                            class="w-full h-full object-cover rounded-xl"
+                                        />
+                                        <i v-else class="fa-solid fa-user-tie text-2xl text-slate-300"></i>
+                                    </div>
+                                    <div class="space-y-1.5 flex-1">
+                                        <input
+                                            type="file"
+                                            id="upload-foto-pastor"
+                                            accept="image/png, image/jpeg, image/jpg, image/webp"
+                                            @change="handleFileUpload($event, 'foto')"
+                                            class="hidden"
+                                        />
+                                        <label
+                                            for="upload-foto-pastor"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 transition cursor-pointer shadow-2xs"
+                                        >
+                                            <i class="fa-solid fa-arrow-up-from-bracket text-[11px] text-amber-600"></i>
+                                            <span>Unggah Foto Pastor</span>
+                                        </label>
+                                        <p class="text-[10px] text-slate-400">Format: JPG, JPEG, PNG, WEBP. Maks 3MB</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Lengkap Pastor & Gelar *</label>
+                                    <input
+                                        v-model="formData.nama_pastor"
+                                        type="text"
+                                        placeholder="Contoh: RD. Fransiskus Xaverius, Pr"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-bold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Jabatan di Paroki *</label>
+                                    <select
+                                        v-model="formData.jabatan"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                    >
+                                        <option value="Pastor Paroki">Pastor Paroki</option>
+                                        <option value="Pastor Rekan">Pastor Rekan</option>
+                                        <option value="Pastor Vikaris">Pastor Vikaris</option>
+                                        <option value="Pastor Administrator">Pastor Administrator</option>
+                                        <option value="Pastor Tamu">Pastor Tamu</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Pelayanan</label>
+                                    <select
+                                        v-model="formData.status_pelayanan"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                    >
+                                        <option value="Sedang Menjabat">Sedang Menjabat (Aktif)</option>
+                                        <option value="Selesai Bertugas">Selesai Bertugas / Mutasi</option>
+                                        <option value="Emeritus">Emeritus / Purna Bakti</option>
+                                        <option value="Meninggal">Meninggal Dunia</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Periode / Tahun Mulai</label>
+                                    <input
+                                        v-model="formData.periode_mulai"
+                                        type="text"
+                                        placeholder="Contoh: 2018 atau 15 Agustus 2018"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-medium"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Periode / Tahun Selesai</label>
+                                    <input
+                                        v-model="formData.periode_selesai"
+                                        type="text"
+                                        placeholder="Contoh: 2023 atau Sekarang"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-medium"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Urutan Gembala</label>
+                                    <input
+                                        v-model="formData.urutan"
+                                        type="number"
+                                        placeholder="Contoh: 1"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-mono font-bold"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Catatan Karya & Sejarah Pelayanan Paroki</label>
+                                    <textarea
+                                        v-model="formData.keterangan"
+                                        rows="3"
+                                        placeholder="Tuliskan karya-karya pembangunan, penggembalaan, atau catatan sejarah selama bertugas di paroki..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 10. KONTEN WEBSITE FORM -->
+                    <template v-else-if="moduleKey === 'konten'">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 text-xs">
+                            <div class="lg:col-span-2 space-y-4">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Judul Postingan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="formData.judul"
+                                        type="text"
+                                        required
+                                        placeholder="Masukkan judul berita atau artikel..."
+                                        @input="updateKontenSlug"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-bold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Slug SEO / URL</label>
+                                    <div class="flex rounded-xl overflow-hidden border border-slate-200 bg-slate-50 focus-within:border-amber-500">
+                                        <span class="px-3 py-2 bg-white border-r border-slate-200 text-[11px] text-slate-400 font-mono">/berita/</span>
+                                        <input
+                                            v-model="formData.slug"
+                                            type="text"
+                                            placeholder="otomatis-dari-judul"
+                                            class="flex-1 px-3 py-2 bg-transparent text-xs text-amber-700 font-mono font-bold focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                        <label class="block text-[11px] font-bold text-slate-700">
+                                            Ringkasan / Excerpt
+                                        </label>
+                                        <button
+                                            type="button"
+                                            @click="generateKontenExcerpt"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold"
+                                        >
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                            <span>Generate</span>
+                                        </button>
+                                    </div>
+                                    <textarea
+                                        v-model="formData.excerpt"
+                                        rows="3"
+                                        placeholder="Ringkasan singkat yang tampil di daftar berita/artikel..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                    ></textarea>
+                                    <p class="mt-1 text-[10px] text-slate-400">{{ (formData.excerpt || '').length }} karakter</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Isi Konten Postingan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <RichTextEditor
+                                        v-model="formData.isi"
+                                        placeholder="Tuliskan isi berita, artikel, atau pengumuman secara lengkap dan rapi..."
+                                        min-height="280"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                                    <div class="grid grid-cols-1 gap-3">
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Publikasi</label>
+                                            <select v-model="formData.status_publish" class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500">
+                                                <option value="Publish">Diterbitkan (Publish)</option>
+                                                <option value="Draft">Draft</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Publikasi</label>
+                                            <input v-model="formData.tanggal_publish" type="datetime-local" class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500" />
+                                        </div>
+                                        <label class="flex items-center gap-2 text-[11px] font-bold text-slate-700">
+                                            <input v-model="formData.is_featured" type="checkbox" true-value="1" false-value="0" class="rounded border-slate-300 text-amber-600 focus:ring-amber-500" />
+                                            <span>Jadikan Postingan Utama</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Tipe Konten <span class="text-rose-500">*</span></label>
+                                        <select v-model="formData.tipe" required class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500">
+                                            <option v-for="tipe in tipeKontenList" :key="tipe" :value="tipe">{{ tipe }}</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Kategori Konten</label>
+                                        <select v-model="formData.kategori_id" @change="syncKontenKategori" class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500">
+                                            <option value="">-- Tanpa Kategori / Umum --</option>
+                                            <option v-for="kategori in kategoriKontenList" :key="kategori.id" :value="kategori.id">{{ kategori.nama_kategori }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                                    <label class="block text-[11px] font-bold text-slate-700">Gambar Sampul</label>
+                                    <div class="aspect-video rounded-xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center">
+                                        <img v-if="previewImage || formData.gambar" :src="previewImage || getImageUrl(formData.gambar)" class="w-full h-full object-cover" />
+                                        <i v-else class="fa-solid fa-image text-3xl text-slate-300"></i>
+                                    </div>
+                                    <input type="file" accept="image/*" @change="handleFileUpload($event, 'gambar')" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-50 file:text-amber-800 hover:file:bg-amber-100 file:cursor-pointer" />
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Dokumen Lampiran PDF</label>
+                                        <input v-model="formData.file_pdf" type="text" placeholder="Nama file PDF / path lampiran" class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">ID Arsip Digital</label>
+                                        <input v-model="formData.arsip_id" type="text" placeholder="Opsional" class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500" />
+                                    </div>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Penulis / Kontributor</label>
+                                        <input v-model="formData.penulis" list="konten-penulis-options" type="text" class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500" />
+                                        <datalist id="konten-penulis-options">
+                                            <option v-for="penulis in penulisList" :key="penulis" :value="penulis" />
+                                        </datalist>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Tags / Label</label>
+                                        <input v-model="formData.tags" type="text" placeholder="Paroki, Liturgi, OMK" class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500" />
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <button v-for="tag in ['Paroki', 'Liturgi', 'OMK', 'Misa', 'Katekese', 'Sosial', 'Pengumuman', 'Renungan']" :key="tag" type="button" @click="addKontenTag(tag)" class="px-2 py-1 rounded-full bg-white border border-slate-200 text-[10px] font-bold text-slate-600 hover:text-amber-800 hover:border-amber-300">
+                                            + {{ tag }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 11. RAPAT & NOTULEN FORM -->
+                    <template v-else-if="moduleKey === 'rapat' || moduleKey === 'rapat-notulen'">
+                        <div class="space-y-4 text-xs">
+                            <div class="space-y-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Agenda / Judul Rapat <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="formData.agenda"
+                                        type="text"
+                                        placeholder="Contoh: Rapat Pleno DPP Inti Paroki"
+                                        required
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-bold"
+                                    />
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Tanggal Pelaksanaan <span class="text-rose-500">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <input
+                                                v-model="formData.tanggal"
+                                                type="date"
+                                                required
+                                                class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Waktu / Jam Mulai
+                                        </label>
+                                        <div class="relative">
+                                            <input
+                                                v-model="formData.waktu"
+                                                type="time"
+                                                placeholder="Contoh: 19:00"
+                                                class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Lokasi / Tempat Rapat
+                                        </label>
+                                        <input
+                                            v-model="formData.lokasi"
+                                            type="text"
+                                            placeholder="Contoh: Aula Paroki / Ruang Pastoral"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-medium"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Status Rapat
+                                        </label>
+                                        <select
+                                            v-model="formData.status"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                        >
+                                            <option value="Aktif">Aktif (Dijadwalkan)</option>
+                                            <option value="Terlaksana">Terlaksana</option>
+                                            <option value="Ditunda">Ditunda</option>
+                                            <option value="Dibatalkan">Dibatalkan</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Notulen & Hasil Pembahasan Rapat
+                                    </label>
+                                    <RichTextEditor
+                                        v-model="formData.notulen"
+                                        placeholder="Tuliskan ringkasan hasil rapat, poin-poin keputusan penting, dan tindak lanjut..."
+                                        min-height="180"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 12. AGENDA KEGIATAN PAROKI FORM -->
+                    <template v-else-if="moduleKey === 'kegiatan'">
+                        <div class="space-y-4 text-xs">
+                            <!-- Poster / Foto Kegiatan -->
+                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
+                                <label class="block text-xs font-bold text-slate-700">Pamflet / Poster / Foto Kegiatan</label>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-20 h-20 rounded-2xl bg-white border border-slate-200 p-1 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
+                                        <img
+                                            v-if="previewImage || (formData.gambar && typeof formData.gambar === 'string') || (formData.foto && typeof formData.foto === 'string')"
+                                            :src="previewImage || getImageUrl(formData.gambar || formData.foto)"
+                                            alt="Poster Kegiatan"
+                                            class="w-full h-full object-cover rounded-xl"
+                                        />
+                                        <i v-else class="fa-solid fa-calendar-days text-2xl text-slate-300"></i>
+                                    </div>
+                                    <div class="space-y-1.5 flex-1">
+                                        <input
+                                            type="file"
+                                            id="upload-kegiatan-poster"
+                                            accept="image/png, image/jpeg, image/jpg, image/webp"
+                                            @change="handleFileUpload($event, 'gambar')"
+                                            class="hidden"
+                                        />
+                                        <label
+                                            for="upload-kegiatan-poster"
+                                            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition cursor-pointer shadow-2xs"
+                                        >
+                                            <i class="fa-solid fa-cloud-arrow-up text-amber-600 text-sm"></i>
+                                            <span>{{ (previewImage || formData.gambar || formData.foto) ? 'Ganti Poster / Foto' : 'Unggah Poster Kegiatan' }}</span>
+                                        </label>
+                                        <p class="text-[10px] text-slate-400">PNG, JPG, WEBP (Maks. 3MB)</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Nama / Judul Kegiatan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="formData.nama_kegiatan"
+                                        type="text"
+                                        placeholder="Contoh: Rekoleksi OMK Se-Paroki 2026"
+                                        required
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-bold"
+                                    />
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Kategori Kegiatan</label>
+                                        <select
+                                            v-model="formData.kategori"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                        >
+                                            <option value="Liturgi & Ibadah">Liturgi & Ibadah</option>
+                                            <option value="Pastoral & Pembinaan">Pastoral & Pembinaan</option>
+                                            <option value="Sosial & Kemasyarakatan">Sosial & Kemasyarakatan</option>
+                                            <option value="OMK & Kepemudaan">OMK & Kepemudaan</option>
+                                            <option value="Rapat & Pertemuan">Rapat & Pertemuan</option>
+                                            <option value="Kategorial">Kategorial</option>
+                                            <option value="Umum & Lainnya">Umum & Lainnya</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Kegiatan</label>
+                                        <select
+                                            v-model="formData.status"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                        >
+                                            <option value="Akan Datang">Akan Datang (Dijadwalkan)</option>
+                                            <option value="Berlangsung">Sedang Berlangsung</option>
+                                            <option value="Selesai">Selesai</option>
+                                            <option value="Ditunda">Ditunda</option>
+                                            <option value="Dibatalkan">Dibatalkan</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Tanggal Mulai <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input
+                                            v-model="formData.tanggal_mulai"
+                                            type="date"
+                                            required
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Selesai</label>
+                                        <input
+                                            v-model="formData.tanggal_selesai"
+                                            type="date"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Waktu / Jam Mulai</label>
+                                        <input
+                                            v-model="formData.waktu"
+                                            type="time"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Lokasi / Tempat Pelaksanaan</label>
+                                        <input
+                                            v-model="formData.lokasi"
+                                            type="text"
+                                            placeholder="Contoh: Gereja Pusat / Aula Paroki"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Penyelenggara / Panitia</label>
+                                        <input
+                                            v-model="formData.penyelenggara"
+                                            type="text"
+                                            placeholder="Contoh: DPP Bidang Kepemudaan / Panitia Paskah"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Deskripsi & Rincian Kegiatan</label>
+                                    <RichTextEditor
+                                        v-model="formData.deskripsi"
+                                        placeholder="Tuliskan keterangan lengkap tentang kegiatan, susunan acara, persyaratan peserta, dll..."
+                                        min-height="180"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 13. PENGUMUMAN PAROKI FORM -->
+                    <template v-else-if="moduleKey === 'pengumuman'">
+                        <div class="space-y-4 text-xs">
+                            <div class="space-y-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Judul Pengumuman <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="formData.judul"
+                                        type="text"
+                                        placeholder="Contoh: Pengumuman Pendaftaran Calon Baptis Baru"
+                                        required
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-bold"
+                                    />
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Tayang / Berlaku</label>
+                                        <input
+                                            v-model="formData.tgl_tayang"
+                                            type="date"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Pengumuman</label>
+                                        <select
+                                            v-model="formData.status"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                        >
+                                            <option value="Aktif">Aktif (Ditampilkan)</option>
+                                            <option value="Nonaktif">Nonaktif / Diarsipkan</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Isi Lengkap Pengumuman <span class="text-rose-500">*</span>
+                                    </label>
+                                    <RichTextEditor
+                                        v-model="formData.isi"
+                                        placeholder="Tuliskan naskah pengumuman paroki secara lengkap..."
+                                        min-height="240"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 14. RENUNGAN HARIAN & ROHANI FORM -->
+                    <template v-else-if="moduleKey === 'renungan'">
+                        <div class="space-y-4 text-xs">
+                            <div class="space-y-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Tema / Judul Renungan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="formData.judul"
+                                        type="text"
+                                        placeholder="Contoh: Menjadi Garam dan Terang Dunia"
+                                        required
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-bold"
+                                    />
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Renungan <span class="text-rose-500">*</span></label>
+                                        <input
+                                            v-model="formData.tanggal"
+                                            type="date"
+                                            required
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Bacaan Kitab Suci / Perikop</label>
+                                        <input
+                                            v-model="formData.bacaan_kitab_suci"
+                                            type="text"
+                                            placeholder="Contoh: Matius 5:13-16"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Naskah Renungan & Refleksi Rohani <span class="text-rose-500">*</span>
+                                    </label>
+                                    <RichTextEditor
+                                        v-model="formData.isi"
+                                        placeholder="Tuliskan renungan firman, refleksi rohani, dan doa..."
+                                        min-height="240"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 15. KRONIK PAROKI FORM -->
+                    <template v-else-if="moduleKey === 'kronik'">
+                        <div class="space-y-4 text-xs">
+                            <div class="space-y-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Judul Catatan Kronik <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="formData.judul_kronik"
+                                        type="text"
+                                        placeholder="Contoh: Kunjungan Kanonik Bapak Uskup ke Paroki Benlutu"
+                                        required
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-bold"
+                                    />
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Peristiwa</label>
+                                        <input
+                                            v-model="formData.tanggal_peristiwa"
+                                            type="date"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Kategori Kronik</label>
+                                        <input
+                                            v-model="formData.kategori_kronik"
+                                            type="text"
+                                            placeholder="Contoh: Pastoral / Sejarah"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Lokasi Peristiwa</label>
+                                        <input
+                                            v-model="formData.lokasi_peristiwa"
+                                            type="text"
+                                            placeholder="Contoh: Gereja Paroki"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Narasi Sejarah & Uraian Kronik <span class="text-rose-500">*</span>
+                                    </label>
+                                    <RichTextEditor
+                                        v-model="formData.deskripsi"
+                                        placeholder="Tuliskan catatan peristiwa, urutan kronologi, dan dokumentasi sejarah..."
+                                        min-height="240"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 16. GENERIC FORM FOR OTHER MODULES -->
+                    <template v-else>
+                        <div v-for="col in columns" :key="col.key">
+                            <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto'" class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
+                                <label class="block text-xs font-bold text-slate-700">{{ col.label }}</label>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-18 h-18 rounded-2xl bg-white border border-slate-200 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
+                                        <img
+                                            v-if="previewImage || (formData[col.key] && typeof formData[col.key] === 'string')"
+                                            :src="previewImage || getImageUrl(formData[col.key])"
+                                            :alt="col.label"
+                                            class="w-full h-full object-contain"
+                                            @error="(e) => { e.target.onerror = null; e.target.src = '/uploads/keuskupan/logo_keuskupan_kupang.svg'; }"
+                                        />
+                                        <i v-else class="fa-solid fa-cloud-arrow-up text-2xl text-slate-300"></i>
+                                    </div>
+                                    <div class="space-y-1.5 flex-1">
+                                        <input
+                                            type="file"
+                                            :id="`upload-${col.key}`"
+                                            accept="image/png, image/jpeg, image/jpg, image/svg+xml, image/webp"
+                                            @change="handleFileUpload($event, col.key)"
+                                            class="hidden"
+                                        />
+                                        <label
+                                            :for="`upload-${col.key}`"
+                                            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition cursor-pointer shadow-2xs"
+                                        >
+                                            <i class="fa-solid fa-cloud-arrow-up text-amber-600 text-sm"></i>
+                                            <span>{{ (previewImage || formData[col.key]) ? 'Ganti Logo / Gambar' : 'Pilih File Logo' }}</span>
+                                        </label>
+                                        <p class="text-[10px] text-slate-400">
+                                            Format didukung: PNG, JPG, JPEG, SVG, WebP (Maks. 2MB)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">{{ col.label }}</label>
+                                <SearchableSelect
+                                    v-if="moduleKey === 'desa-kelurahan' && col.relation === 'kecamatan'"
+                                    v-model="formData.kecamatan_id"
+                                    :options="filteredKecamatansForFilter"
+                                    value-key="id_kecamatan"
+                                    label-key="nama_kecamatan"
+                                    placeholder="-- Pilih Kecamatan dari database --"
+                                    search-placeholder="Ketik cari kecamatan..."
+                                    icon="fa-building-columns"
+                                    icon-color="text-teal-600"
+                                />
+                                <!-- Date input detection -->
+                                <input
+                                    v-else-if="col.isDate || col.key.includes('tanggal') || col.key.includes('tgl') || col.key.endsWith('_at')"
+                                    v-model="formData[col.key]"
+                                    type="date"
+                                    class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                />
+                                <!-- Time input detection -->
+                                <input
+                                    v-else-if="col.isTime || col.key.includes('waktu') || col.key.includes('jam')"
+                                    v-model="formData[col.key]"
+                                    type="time"
+                                    class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                />
+                                <!-- Status dropdown detection -->
+                                <select
+                                    v-else-if="col.key === 'status' || col.key === 'status_aktif'"
+                                    v-model="formData[col.key]"
+                                    class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                >
+                                    <option value="Aktif">Aktif</option>
+                                    <option value="Nonaktif">Nonaktif</option>
+                                    <option value="Terlaksana">Terlaksana</option>
+                                    <option value="Ditunda">Ditunda</option>
+                                </select>
+                                <!-- Rich Text Editor for long content -->
+                                <RichTextEditor
+                                    v-else-if="col.key === 'isi' || col.key === 'konten' || col.key === 'deskripsi' || col.key === 'keterangan' || col.key === 'notulen' || col.key === 'catatan'"
+                                    v-model="formData[col.key]"
+                                    :placeholder="`Tuliskan ${col.label.toLowerCase()} secara lengkap...`"
+                                    min-height="180"
+                                />
+                                <input
+                                    v-else
+                                    v-model="formData[col.key]"
+                                    type="text"
+                                    :placeholder="`Masukkan ${col.label.toLowerCase()}...`"
+                                    class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                />
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Form Buttons -->
+                    <div class="pt-3 flex items-center justify-end gap-2.5 sticky bottom-0 bg-white py-2 border-t border-slate-100">
+                        <button
+                            type="button"
+                            @click="showFormModal = false"
+                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="isSubmitting"
+                            class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-sm shadow-amber-500/25 transition cursor-pointer flex items-center gap-2"
+                        >
+                            <i v-if="isSubmitting" class="fa-solid fa-circle-notch fa-spin text-xs"></i>
+                            <span>{{ modalMode === 'create' ? 'Simpan Data' : 'Simpan Perubahan' }}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- DELETE CONFIRMATION MODAL -->
+        <div
+            v-if="showDeleteModal && selectedItem"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs"
+        >
+            <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95">
+                <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 mx-auto flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">Konfirmasi Hapus Data</h3>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Apakah Anda yakin ingin menghapus data <b>{{ selectedItem[columns[0]?.key] || 'ini' }}</b>? Tindakan ini tidak dapat dibatalkan.
+                    </p>
+                </div>
+                <div class="flex items-center justify-center gap-2.5 pt-2">
+                    <button
+                        type="button"
+                        @click="showDeleteModal = false"
+                        class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        @click="confirmDelete"
+                        class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm shadow-rose-600/30 transition cursor-pointer"
+                    >
+                        Ya, Hapus Data
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- end delete modal -->
+        </div>
+        <!-- end flex full-height wrapper -->
+    </AppLayout>
+</template>

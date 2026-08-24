@@ -1,0 +1,4 @@
+Require all denied
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Require all granted
+</FilesMatch>

@@ -3,10 +3,10 @@
 @section('title', 'Renungan Harian - SIPAROKI')
 
 @section('content')
-<div class="bg-amber-600 py-12">
+<div class="page-hero py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 class="text-3xl font-bold text-white">Renungan Harian</h1>
-        <p class="text-amber-100 mt-2">Bacaan rohani dan refleksi iman</p>
+        <p class="text-sky-100 mt-2">Bacaan rohani dan refleksi iman</p>
     </div>
 </div>
 

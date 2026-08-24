@@ -1,12 +1,12 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Artikel - SIPAROKI')
 
 @section('content')
-<div class="bg-amber-600 py-12">
+<div class="page-hero py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 class="text-3xl font-bold text-white">Artikel & Warta Gereja</h1>
-        <p class="text-amber-100 mt-2">Bacaan rohani dan berita paroki</p>
+        <p class="text-sky-100 mt-2">Bacaan rohani dan berita paroki</p>
     </div>
 </div>
 
@@ -31,7 +31,7 @@
                 <p class="text-gray-600 text-sm mt-2 line-clamp-3">{{ $item->ringkasan ?? Str::limit(strip_tags($item->konten), 120) }}</p>
                 <div class="flex items-center justify-between mt-4">
                     <span class="text-sm text-gray-400">{{ $item->created_at->format('d M Y') }}</span>
-                    <a href="/artikel/{{ $item->slug }}" wire:navigate class="text-amber-600 hover:text-amber-700 font-medium text-sm">Baca &rarr;</a>
+                    <a href="/artikel/{{ $item->slug }}" class="text-amber-600 hover:text-amber-700 font-medium text-sm">Baca &rarr;</a>
                 </div>
             </div>
         </article>
@@ -43,3 +43,4 @@
     </div>
 </div>
 @endsection
+

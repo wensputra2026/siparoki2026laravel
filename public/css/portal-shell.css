@@ -1,0 +1,124 @@
+html {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+.public-portal {
+    background:
+        linear-gradient(180deg, #f8fafc 0%, #eef5fb 46%, #ffffff 100%);
+}
+
+.portal-shell-ready .header {
+    border-top: 4px solid #f59e0b !important;
+    background: rgba(7, 19, 38, 0.96) !important;
+}
+
+.portal-shell-ready .header {
+    will-change: transform, box-shadow;
+}
+
+.portal-shell-ready .header.is-scrolled {
+    box-shadow: 0 18px 42px -20px rgba(2, 8, 23, 0.8) !important;
+}
+
+.portal-shell-ready .header.is-scrolled .header-inner {
+    height: 66px;
+}
+
+.portal-shell-ready main {
+    isolation: isolate;
+}
+
+.portal-shell-ready main > section,
+.portal-shell-ready .page-section,
+.portal-shell-ready .cbt-section {
+    position: relative;
+}
+
+.portal-shell-ready .hero {
+    contain: layout paint;
+}
+
+.portal-shell-ready .hero,
+.portal-shell-ready .page-hero {
+    background:
+        linear-gradient(135deg, rgba(7, 17, 31, 0.94), rgba(12, 74, 110, 0.86)),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px) !important;
+    background-size: auto, 44px 44px, 44px 44px !important;
+}
+
+.portal-shell-ready .counter-card,
+.portal-shell-ready .sambutan-pastor-card,
+.portal-shell-ready .section-title,
+.portal-shell-ready article,
+.portal-shell-ready .card {
+    backface-visibility: hidden;
+}
+
+.portal-shell-ready .counter-card,
+.portal-shell-ready .cbt-card,
+.portal-shell-ready .sambutan-pastor-card,
+.portal-shell-ready article[class*="rounded"],
+.portal-shell-ready .card {
+    border-radius: 12px !important;
+}
+
+.portal-shell-ready .nav a,
+.portal-shell-ready .nav-dd-btn,
+.portal-shell-ready .nav-login-btn {
+    letter-spacing: 0 !important;
+}
+
+.portal-shell-ready .footer {
+    background:
+        linear-gradient(180deg, #07111f 0%, #040811 100%) !important;
+}
+
+.portal-shell-ready .footer-grid {
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.portal-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 600ms ease, transform 600ms ease;
+}
+
+.portal-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.portal-shell-ready .portal-data-band {
+    background:
+        linear-gradient(90deg, rgba(12, 74, 110, 0.08), rgba(245, 158, 11, 0.08)),
+        #ffffff;
+    border-block: 1px solid #e2e8f0;
+}
+
+.portal-shell-ready .portal-stat-value {
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 991px) {
+    .portal-shell-ready .header.is-scrolled .header-inner {
+        height: 64px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-typing-text,
+    .hero-quote-track,
+    * {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+    }
+}

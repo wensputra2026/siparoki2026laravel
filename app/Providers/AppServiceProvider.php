@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 
 // Models
 use App\Models\Umat;
@@ -97,11 +99,63 @@ class AppServiceProvider extends ServiceProvider
 
         // Superadmin bypass — Pastor Paroki & Admin full access
         Gate::before(function (User $user, string $ability): ?bool {
-            $slug = strtolower(trim($user->role?->slug ?? $user->role?->nama_role ?? ''));
-            if (in_array($slug, ['superadmin', 'admin', 'pastor-paroki', 'administrator', 'pastor'])) {
+            if ($user->role_id == 1 || $user->id == 1) {
+                return true;
+            }
+            $slug = str_replace(['_', '-', ' '], '', strtolower(trim($user->role?->slug ?? $user->role?->nama_role ?? '')));
+            if (in_array($slug, ['superadmin', 'superadministrator', 'admin', 'administrator', 'pastor', 'pastorparoki'])) {
                 return true;
             }
             return null;
+        });
+
+        // Global data is injected into many partials; cache it to avoid repeated DB hits per page render.
+        View::composer('*', function ($view) {
+            $defaultId = session('default_paroki_id') ?: 'default';
+            $version = Cache::get('global_view_data_version', 1);
+            $globalData = Cache::remember("global_view_data.{$version}.{$defaultId}", 600, function () use ($defaultId) {
+                try {
+                    $activeParoki = null;
+                    if ($defaultId !== 'default') {
+                        $activeParoki = \App\Models\Paroki::find($defaultId);
+                    }
+
+                    if (!$activeParoki) {
+                        $pengaturan = Cache::remember('global_pengaturan_aplikasi_first', 600, function () {
+                            return \Illuminate\Support\Facades\Schema::hasTable('pengaturan_aplikasi')
+                                ? \Illuminate\Support\Facades\DB::table('pengaturan_aplikasi')->first()
+                                : null;
+                        });
+
+                        if ($pengaturan && !empty($pengaturan->nama_paroki)) {
+                            $activeParoki = \App\Models\Paroki::where('nama_paroki', $pengaturan->nama_paroki)->first();
+                        }
+                    }
+
+                    if (!$activeParoki) {
+                        $activeParoki = \App\Models\Paroki::first();
+                    }
+
+                    $namaParoki = $activeParoki->nama_paroki ?? 'SIPAROKI';
+                    $logoUrl = $activeParoki->logo ?? asset('favicon.ico');
+
+                    return [
+                        'globalProfil' => $activeParoki,
+                        'globalPengaturan' => $activeParoki,
+                        'globalLogo' => $logoUrl,
+                        'globalFavicon' => $logoUrl,
+                        'globalNamaParoki' => $namaParoki,
+                    ];
+                } catch (\Throwable $e) {
+                    return [
+                        'globalLogo' => asset('favicon.ico'),
+                        'globalFavicon' => asset('favicon.ico'),
+                        'globalNamaParoki' => 'SIPAROKI',
+                    ];
+                }
+            });
+
+            $view->with($globalData);
         });
     }
 }

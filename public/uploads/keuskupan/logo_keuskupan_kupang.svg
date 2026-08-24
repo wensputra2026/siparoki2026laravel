@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">
+  <!-- Mitre (Top Bishop Crown) -->
+  <path d="M100 15 L140 55 L135 90 L65 90 L60 55 Z" fill="#F59E0B" stroke="#B45309" stroke-width="3"/>
+  <path d="M100 15 L100 90" stroke="#B45309" stroke-width="3"/>
+  <path d="M75 55 L125 55" stroke="#B45309" stroke-width="3"/>
+  <circle cx="100" cy="15" r="5" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+  
+  <!-- Infulae (Ribbons) -->
+  <path d="M70 85 L45 130 L60 130 L75 88 Z" fill="#F59E0B" stroke="#B45309" stroke-width="1.5"/>
+  <path d="M130 85 L155 130 L140 130 L125 88 Z" fill="#F59E0B" stroke="#B45309" stroke-width="1.5"/>
+  <path d="M45 130 L60 130 L52.5 140 Z" fill="#D97706"/>
+  <path d="M155 130 L140 130 L147.5 140 Z" fill="#D97706"/>
+
+  <!-- Main Shield -->
+  <path d="M40 90 L160 90 L160 160 C160 205 100 230 100 230 C100 230 40 205 40 160 Z" fill="#1E3A8A" stroke="#1E293B" stroke-width="4"/>
+  <path d="M45 95 L155 95 L155 158 C155 198 100 222 100 222 C100 222 45 198 45 158 Z" fill="#1E40AF"/>
+
+  <!-- Cross in Shield -->
+  <path d="M100 105 L100 205" stroke="#F59E0B" stroke-width="12" stroke-linecap="round"/>
+  <path d="M65 135 L135 135" stroke="#F59E0B" stroke-width="12" stroke-linecap="round"/>
+  <path d="M100 105 L100 205" stroke="#FBBF24" stroke-width="6" stroke-linecap="round"/>
+  <path d="M65 135 L135 135" stroke="#FBBF24" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Stars in Shield -->
+  <polygon points="75,115 78,122 85,123 80,128 81,135 75,131 69,135 70,128 65,123 72,122" fill="#FFFFFF"/>
+  <polygon points="125,115 128,122 135,123 130,128 131,135 125,131 119,135 120,128 115,123 122,122" fill="#FFFFFF"/>
+
+  <!-- Bottom Scroll Motto -->
+  <path d="M30 220 Q100 245 170 220 Q100 235 30 220 Z" fill="#F59E0B" stroke="#B45309" stroke-width="1"/>
+</svg>

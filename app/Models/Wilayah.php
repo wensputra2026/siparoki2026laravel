@@ -30,11 +30,26 @@ class Wilayah extends Model
 
     public function paroki()
     {
-        return $this->belongsTo(Paroki::class);
+        return $this->belongsTo(Paroki::class, 'paroki_id', 'id_paroki');
+    }
+
+    public function kapela()
+    {
+        return $this->belongsTo(Kapela::class, 'kapela_id');
+    }
+
+    public function stasi()
+    {
+        return $this->belongsTo(Kapela::class, 'kapela_id');
     }
 
     public function lingkungan()
     {
-        return $this->hasMany(Lingkungan::class);
+        return $this->hasMany(Lingkungan::class, 'wilayah_id');
+    }
+
+    public function kubs()
+    {
+        return $this->hasMany(Kub::class, 'wilayah_id');
     }
 }

@@ -1,0 +1,18 @@
+﻿.jm-page { background: #f8fafc; }
+[data-theme="dark"] .jm-page { background: #07111f; }
+.jm-card { border: 1px solid #e5e7eb; border-radius: 16px; background: #fff; box-shadow: 0 4px 20px rgba(15,23,42,.08); overflow: hidden; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+.jm-card:hover { transform: translateY(-4px); box-shadow: 0 18px 38px rgba(15,23,42,.12); border-color: rgba(37,99,235,.25); }
+.jm-date-header { background: #2563eb; color: #fff; padding: 1rem 1.25rem; }
+.jm-card.today-card { border: 2px solid #2563eb; box-shadow: 0 8px 24px rgba(37,99,235,.16); }
+.jm-calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid transparent; background: #fff; color: #334155; font-size: .95rem; transition: transform .18s ease, background .18s ease, color .18s ease; position: relative; }
+.jm-calendar-day.has-jadwal { background: #f0f9ff; color: #2563eb; font-weight: 700; cursor: pointer; }
+.jm-calendar-day.has-jadwal::after { content: ''; width: 4px; height: 4px; border-radius: 999px; background: #2563eb; position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); }
+.jm-calendar-day.has-jadwal:hover, .jm-calendar-day.active-date { background: #2563eb; color: #fff; transform: scale(1.04); box-shadow: 0 8px 18px rgba(37,99,235,.25); }
+.jm-calendar-day.active-date::after { background: #fff; }
+.jm-calendar-day.today { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; font-weight: 800; }
+.jm-item { background: #fafbfc; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.15rem; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
+.jm-item:hover { background: #fff; border-color: #93c5fd; transform: translateX(3px); }
+.jm-liturgi { background: #f8fafc; border-left: 3px solid #2563eb; border-radius: 8px; padding: .85rem 1rem; }
+.jm-badge { display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; padding: .3rem .7rem; font-size: .72rem; font-weight: 700; }
+[data-theme="dark"] .jm-card, [data-theme="dark"] .jm-calendar-day { background: #111c30; border-color: #243a57; color: #e2e8f0; }
+[data-theme="dark"] .jm-item, [data-theme="dark"] .jm-liturgi { background: #0f1a2d; border-color: #243a57; }
