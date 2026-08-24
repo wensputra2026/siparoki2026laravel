@@ -310,7 +310,7 @@
                 <div class="p-6">
                     <span class="text-xs font-bold text-sky-600 bg-sky-50 dark:bg-sky-950 px-2.5 py-1 rounded-full">{{ $item->kategori ?? 'WARTA' }}</span>
                     <h3 class="font-bold text-lg text-slate-900 dark:text-white mt-3 line-clamp-2">{{ $item->judul }}</h3>
-                    <p class="text-xs text-slate-500 mt-2 line-clamp-3">{{ $item->ringkasan ?? Str::limit(strip_tags($item->konten), 120) }}</p>
+                    <p class="text-xs text-slate-500 mt-2 line-clamp-3">{{ $item->ringkasan ?? Str::limit(strip_tags($item->konten ?? $item->isi ?? $item->isi_konten ?? $item->deskripsi ?? ''), 120) }}</p>
                     <a href="/artikel/{{ $item->slug }}" class="inline-block mt-4 text-xs font-bold text-sky-600 hover:text-sky-700">Baca Selengkapnya &rarr;</a>
                 </div>
             </div>

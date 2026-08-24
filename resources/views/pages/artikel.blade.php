@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Artikel - SIPAROKI')
 
@@ -28,9 +28,9 @@
                     <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded">{{ $item->kategori }}</span>
                 @endif
                 <h2 class="font-bold text-lg text-gray-900 mt-2 line-clamp-2">{{ $item->judul }}</h2>
-                <p class="text-gray-600 text-sm mt-2 line-clamp-3">{{ $item->ringkasan ?? Str::limit(strip_tags($item->konten), 120) }}</p>
+                <p class="text-gray-600 text-sm mt-2 line-clamp-3">{{ $item->ringkasan ?? Str::limit(strip_tags($item->konten ?? $item->isi ?? $item->isi_konten ?? $item->deskripsi ?? ''), 120) }}</p>
                 <div class="flex items-center justify-between mt-4">
-                    <span class="text-sm text-gray-400">{{ $item->created_at->format('d M Y') }}</span>
+                    <span class="text-sm text-gray-400">{{ isset($item->created_at) ? \Carbon\Carbon::parse($item->created_at)->format('d M Y') : (isset($item->tanggal_publish) ? \Carbon\Carbon::parse($item->tanggal_publish)->format('d M Y') : '') }}</span>
                     <a href="/artikel/{{ $item->slug }}" class="text-amber-600 hover:text-amber-700 font-medium text-sm">Baca &rarr;</a>
                 </div>
             </div>

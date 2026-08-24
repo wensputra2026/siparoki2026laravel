@@ -15,9 +15,9 @@
         @forelse($renungan ?? [] as $item)
         <article class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
             <div class="p-6">
-                <p class="text-xs text-amber-600 font-semibold mb-2">{{ $item->created_at->format('d M Y') }}</p>
+                <p class="text-xs text-amber-600 font-semibold mb-2">{{ isset($item->created_at) ? \Carbon\Carbon::parse($item->created_at)->format('d M Y') : (isset($item->tanggal_publish) ? \Carbon\Carbon::parse($item->tanggal_publish)->format('d M Y') : '') }}</p>
                 <h2 class="font-bold text-lg text-gray-900 mb-3 line-clamp-2">{{ $item->judul }}</h2>
-                <p class="text-gray-600 text-sm line-clamp-4">{{ Str::limit(strip_tags($item->isi ?? $item->konten ?? ''), 200) }}</p>
+                <p class="text-gray-600 text-sm line-clamp-4">{{ Str::limit(strip_tags($item->isi ?? $item->konten ?? $item->ringkasan ?? ''), 200) }}</p>
             </div>
         </article>
         @empty
