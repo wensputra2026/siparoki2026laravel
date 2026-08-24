@@ -44,6 +44,18 @@ const optionsForField = (field) => {
     return field.options || [];
 };
 
+const formatPaginationLabel = (label) => {
+    if (!label) return '';
+    const str = String(label).trim();
+    if (str.toLowerCase().includes('prev') || str.toLowerCase().includes('pagination.previous')) {
+        return '&laquo; Sebelum';
+    }
+    if (str.toLowerCase().includes('next') || str.toLowerCase().includes('pagination.next')) {
+        return 'Sesudah &raquo;';
+    }
+    return str;
+};
+
 const handleFileChange = (field, e) => {
     const file = e.target.files[0];
     if (file) {
@@ -340,7 +352,7 @@ const displayedColumns = computed(() => {
                             link.active ? 'bg-amber-500 text-white shadow-xs shadow-amber-500/30' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900',
                             !link.url ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
                         ]"
-                        v-html="link.label"
+                        v-html="formatPaginationLabel(link.label)"
                     />
                 </div>
             </div>

@@ -37,6 +37,18 @@ watch(search, (val) => {
         );
     }, 250);
 });
+
+const formatPaginationLabel = (label) => {
+    if (!label) return '';
+    const str = String(label).trim();
+    if (str.toLowerCase().includes('prev') || str.toLowerCase().includes('pagination.previous')) {
+        return '&laquo; Sebelum';
+    }
+    if (str.toLowerCase().includes('next') || str.toLowerCase().includes('pagination.next')) {
+        return 'Sesudah &raquo;';
+    }
+    return str;
+};
 </script>
 
 <template>
@@ -159,7 +171,7 @@ watch(search, (val) => {
                                 : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900',
                             !link.url ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
                         ]"
-                        v-html="link.label"
+                        v-html="formatPaginationLabel(link.label)"
                     />
                 </div>
             </div>

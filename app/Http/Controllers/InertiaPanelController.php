@@ -2091,16 +2091,9 @@ class InertiaPanelController extends Controller
             })
             : [];
 
-        $needsUmatRefs = in_array($slug, ['user', 'kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'lingkungan', 'kub'], true);
-        $wilayahList = $needsUmatRefs
-            ? \Illuminate\Support\Facades\Cache::remember('ref_wilayah_list_v2', 1800, fn () => \App\Models\Wilayah::orderBy('nama_wilayah')->get())
-            : [];
-        $kapelaList = $needsUmatRefs
-            ? \Illuminate\Support\Facades\Cache::remember('ref_kapela_list_v2', 1800, fn () => \App\Models\Kapela::orderBy('nama_kapela')->get())
-            : [];
-        $kubList = $needsUmatRefs
-            ? \Illuminate\Support\Facades\Cache::remember('ref_kub_list_v2', 1800, fn () => \App\Models\Kub::orderBy('nama_kub')->get())
-            : [];
+        $wilayahList = \Illuminate\Support\Facades\Cache::remember('ref_wilayah_list_v2', 1800, fn () => \App\Models\Wilayah::orderBy('nama_wilayah')->get());
+        $kapelaList = \Illuminate\Support\Facades\Cache::remember('ref_kapela_list_v2', 1800, fn () => \App\Models\Kapela::orderBy('nama_kapela')->get());
+        $kubList = \Illuminate\Support\Facades\Cache::remember('ref_kub_list_v2', 1800, fn () => \App\Models\Kub::orderBy('nama_kub')->get());
 
 
 

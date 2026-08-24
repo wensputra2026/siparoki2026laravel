@@ -568,6 +568,18 @@ const removePastorRekan = (name) => {
     }
 };
 
+const formatPaginationLabel = (label) => {
+    if (!label) return '';
+    const str = String(label).trim();
+    if (str.toLowerCase().includes('prev') || str.toLowerCase().includes('pagination.previous')) {
+        return '&laquo; Sebelum';
+    }
+    if (str.toLowerCase().includes('next') || str.toLowerCase().includes('pagination.next')) {
+        return 'Sesudah &raquo;';
+    }
+    return str;
+};
+
 // Cascading watchers
 watch(() => formData.value.keuskupan_id, (newVal) => {
     if (props.moduleKey === 'paroki') {
@@ -2071,7 +2083,7 @@ const statusLabel = (item) => {
                                 : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900',
                             !link.url ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
                         ]"
-                        v-html="link.label"
+                        v-html="formatPaginationLabel(link.label)"
                     />
                 </div>
             </div>
@@ -2087,14 +2099,35 @@ const statusLabel = (item) => {
                 <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4 flex items-center justify-between text-white shadow-sm">
                     <div class="flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-base">
-                            <i :class="(moduleKey === 'umat' || moduleKey === 'data-umat') ? 'fa-solid fa-user-circle' : (moduleKey === 'keuskupan' ? 'fa-solid fa-church' : (moduleKey === 'dekenat' || moduleKey === 'kevikepan' ? 'fa-solid fa-layer-group' : 'fa-solid fa-place-of-worship'))"></i>
+                            <i :class="(moduleKey === 'umat' || moduleKey === 'data-umat') ? 'fa-solid fa-user-circle' : (moduleKey === 'keuskupan' ? 'fa-solid fa-church' : (moduleKey === 'dekenat' || moduleKey === 'kevikepan' ? 'fa-solid fa-layer-group' : (moduleKey === 'wilayah' ? 'fa-solid fa-map-location-dot' : (moduleKey === 'kub' ? 'fa-solid fa-people-roof' : (moduleKey === 'provinsi' ? 'fa-solid fa-earth-asia' : (moduleKey === 'kabupaten' ? 'fa-solid fa-city' : (moduleKey === 'kecamatan' ? 'fa-solid fa-building-columns' : (moduleKey === 'desa' || moduleKey === 'desa-kelurahan' ? 'fa-solid fa-tree-city' : 'fa-solid fa-place-of-worship'))))))))"></i>
                         </div>
                         <h3 class="text-sm font-bold tracking-tight">
                             <template v-if="moduleKey === 'umat' || moduleKey === 'data-umat'">
                                 Detail Data Umat: {{ selectedItem.nama_lengkap || selectedItem.nama_baptis || selectedItem.nama_lahir || 'Umat Paroki' }}
                             </template>
+                            <template v-else-if="moduleKey === 'kapela' || moduleKey === 'stasi-kapela' || moduleKey === 'stasi_kapela'">
+                                Detail Data Stasi / Kapela: {{ selectedItem.nama_kapela || selectedItem.nama_stasi || selectedItem.nama || 'Stasi / Kapela' }}
+                            </template>
+                            <template v-else-if="moduleKey === 'wilayah'">
+                                Detail Wilayah Pastoral: {{ selectedItem.nama_wilayah || selectedItem.nama || 'Wilayah' }}
+                            </template>
+                            <template v-else-if="moduleKey === 'kub'">
+                                Detail KUB / KBG: {{ selectedItem.nama_kub || selectedItem.nama || 'KUB' }}
+                            </template>
+                            <template v-else-if="moduleKey === 'provinsi'">
+                                Detail Provinsi: {{ selectedItem.nama_provinsi || selectedItem.nama || 'Provinsi' }}
+                            </template>
+                            <template v-else-if="moduleKey === 'kabupaten'">
+                                Detail Kabupaten / Kota: {{ selectedItem.nama_kabupaten || selectedItem.nama || 'Kabupaten' }}
+                            </template>
+                            <template v-else-if="moduleKey === 'kecamatan'">
+                                Detail Kecamatan: {{ selectedItem.nama_kecamatan || selectedItem.nama || 'Kecamatan' }}
+                            </template>
+                            <template v-else-if="moduleKey === 'desa' || moduleKey === 'desa-kelurahan'">
+                                Detail Desa / Kelurahan: {{ selectedItem.nama_desa || selectedItem.nama_kelurahan || selectedItem.nama || 'Desa / Kelurahan' }}
+                            </template>
                             <template v-else>
-                                Detail {{ title }}: {{ selectedItem.nama_keuskupan || selectedItem.nama_kevikepan || selectedItem.nama_dekenat || selectedItem.nama_paroki || selectedItem.nama || title }}
+                                Detail {{ title }}: {{ selectedItem.nama_keuskupan || selectedItem.nama_kevikepan || selectedItem.nama_dekenat || selectedItem.nama_paroki || selectedItem.nama_kapela || selectedItem.nama_stasi || selectedItem.nama_wilayah || selectedItem.nama_kub || selectedItem.nama || title }}
                             </template>
                         </h3>
                     </div>
@@ -2790,6 +2823,523 @@ const statusLabel = (item) => {
                                     </div>
                                     <!-- Render Embed Iframe if provided -->
                                     <div v-if="selectedItem.maps_embed" class="rounded-xl overflow-hidden border border-slate-200 aspect-video w-full [&_iframe]:w-full [&_iframe]:h-full" v-html="selectedItem.maps_embed"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 3B. DETAIL STASI / KAPELA LENGKAP -->
+                    <template v-else-if="moduleKey === 'kapela' || moduleKey === 'stasi-kapela' || moduleKey === 'stasi_kapela'">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                                <div class="w-24 h-24 rounded-2xl overflow-hidden bg-white border border-slate-200 p-2 shadow-xs mb-3 flex items-center justify-center">
+                                    <img
+                                        v-if="selectedItem.foto || selectedItem.logo || selectedItem.ikon || selectedItem.gambar"
+                                        :src="getImageUrl(selectedItem.foto || selectedItem.logo || selectedItem.ikon || selectedItem.gambar)"
+                                        :alt="selectedItem.nama_kapela || selectedItem.nama_stasi || 'Kapela'"
+                                        class="w-full h-full object-cover rounded-xl"
+                                        @error="(e) => { e.target.onerror = null; e.target.parentElement.innerHTML = '<i class=\'fa-solid fa-place-of-worship text-4xl text-amber-600\'></i>'; }"
+                                    />
+                                    <i v-else class="fa-solid fa-place-of-worship text-4xl text-amber-600"></i>
+                                </div>
+                                <h4 class="font-black text-slate-900 text-sm leading-snug">
+                                    {{ selectedItem.nama_kapela || selectedItem.nama_stasi || selectedItem.nama || 'Stasi / Kapela' }}
+                                </h4>
+                                <p v-if="selectedItem.pelindung || selectedItem.nama_pelindung" class="text-xs text-amber-800 font-semibold mt-1">
+                                    Pelindung: {{ selectedItem.pelindung || selectedItem.nama_pelindung }}
+                                </p>
+                                <span class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span>{{ selectedItem.status || selectedItem.status_aktif || 'Aktif' }}</span>
+                                </span>
+                            </div>
+
+                            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-barcode text-amber-500"></i> Kode Stasi / Kapela
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200 inline-block">
+                                        {{ selectedItem.kode_kapela || selectedItem.kode_stasi || selectedItem.kode || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-church text-emerald-600"></i> Paroki Induk
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.paroki?.nama_paroki || selectedItem.nama_paroki || 'Paroki St. Vinsensius a Paulo - Benlutu' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-tie text-blue-600"></i> Penanggung Jawab / Ketua Stasi
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.penanggung_jawab || selectedItem.ketua_stasi || selectedItem.ketua_dps || selectedItem.nama_ketua || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-phone text-cyan-600"></i> Telepon / Kontak WA
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.telepon || selectedItem.kontak || selectedItem.no_telp || selectedItem.whatsapp || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-calendar text-purple-600"></i> Tahun Berdiri / Diresmikan
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.tahun_berdiri || selectedItem.tgl_peresmian || selectedItem.tahun || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-people-roof text-indigo-600"></i> Jumlah KUB / KBG
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.jumlah_kub || (selectedItem.kubs ? selectedItem.kubs.length : (selectedItem.total_kub || '—')) }} KUB
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-location-dot text-rose-500"></i> Alamat & Lokasi
+                                    </span>
+                                    <p class="text-slate-800 leading-relaxed font-medium mb-1">
+                                        {{ selectedItem.alamat || selectedItem.lokasi || '—' }}
+                                    </p>
+                                    <div class="flex flex-wrap gap-2 text-[11px] text-slate-600 font-medium pt-1 border-t border-slate-200/60" v-if="selectedItem.desa || selectedItem.kecamatan">
+                                        <span v-if="selectedItem.desa || selectedItem.kelurahan">Desa/Kel: <b>{{ selectedItem.desa?.nama_desa || selectedItem.kelurahan || selectedItem.desa }}</b></span>
+                                        <span v-if="selectedItem.kecamatan">• Kec: <b>{{ selectedItem.kecamatan?.nama_kecamatan || selectedItem.kecamatan }}</b></span>
+                                    </div>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80" v-if="selectedItem.keterangan || selectedItem.deskripsi || selectedItem.catatan">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle-info text-amber-500"></i> Keterangan Pastoral & Sejarah
+                                    </span>
+                                    <p class="text-slate-700 leading-relaxed font-medium">
+                                        {{ selectedItem.keterangan || selectedItem.deskripsi || selectedItem.catatan }}
+                                    </p>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-2" v-if="selectedItem.maps_url || selectedItem.latitude || selectedItem.longitude">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1.5">
+                                            <i class="fa-solid fa-map-location-dot text-emerald-600"></i> Koordinat & Peta Google Maps
+                                        </span>
+                                        <a
+                                            v-if="selectedItem.maps_url || (selectedItem.latitude && selectedItem.longitude)"
+                                            :href="selectedItem.maps_url || `https://www.google.com/maps?q=${selectedItem.latitude},${selectedItem.longitude}`"
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:underline"
+                                        >
+                                            <span>Buka di Google Maps</span>
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                        </a>
+                                    </div>
+                                    <div class="flex gap-4 text-xs font-mono text-slate-700" v-if="selectedItem.latitude || selectedItem.longitude">
+                                        <span>Latitude: <b>{{ selectedItem.latitude || '—' }}</b></span>
+                                        <span>Longitude: <b>{{ selectedItem.longitude || '—' }}</b></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 3C. DETAIL WILAYAH PASTORAL -->
+                    <template v-else-if="moduleKey === 'wilayah'">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                                <div class="w-24 h-24 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-200/80 flex items-center justify-center text-4xl mb-3 shadow-2xs">
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <h4 class="font-black text-slate-900 text-sm leading-snug">
+                                    {{ selectedItem.nama_wilayah || selectedItem.nama || 'Wilayah Pastoral' }}
+                                </h4>
+                                <p class="text-xs text-amber-800 font-semibold mt-1">
+                                    {{ selectedItem.paroki?.nama_paroki || 'Paroki St. Vinsensius a Paulo - Benlutu' }}
+                                </p>
+                                <span class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span>{{ selectedItem.status || selectedItem.status_aktif || 'Aktif' }}</span>
+                                </span>
+                            </div>
+
+                            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-barcode text-amber-500"></i> Kode Wilayah
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200 inline-block">
+                                        {{ selectedItem.kode_wilayah || selectedItem.kode || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-church text-emerald-600"></i> Paroki Induk
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.paroki?.nama_paroki || 'Paroki St. Vinsensius a Paulo - Benlutu' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-tie text-blue-600"></i> Ketua / Koordinator Wilayah
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.ketua_wilayah || selectedItem.koordinator || selectedItem.penanggung_jawab || selectedItem.nama_ketua || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-phone text-cyan-600"></i> Kontak / Telepon
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.telepon || selectedItem.kontak || selectedItem.whatsapp || selectedItem.no_telp || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-people-roof text-indigo-600"></i> Jumlah KUB / KBG
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.jumlah_kub || (selectedItem.kubs ? selectedItem.kubs.length : '—') }} KUB
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-place-of-worship text-teal-600"></i> Stasi / Kapela Terkait
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.kapela?.nama_kapela || selectedItem.nama_kapela || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80" v-if="selectedItem.keterangan || selectedItem.deskripsi || selectedItem.alamat">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle-info text-amber-500"></i> Batas & Keterangan Wilayah
+                                    </span>
+                                    <p class="text-slate-700 leading-relaxed font-medium">
+                                        {{ selectedItem.keterangan || selectedItem.deskripsi || selectedItem.alamat }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 3D. DETAIL KUB / KBG -->
+                    <template v-else-if="moduleKey === 'kub'">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                                <div class="w-24 h-24 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-200/80 flex items-center justify-center text-4xl mb-3 shadow-2xs">
+                                    <i class="fa-solid fa-people-roof"></i>
+                                </div>
+                                <h4 class="font-black text-slate-900 text-sm leading-snug">
+                                    {{ selectedItem.nama_kub || selectedItem.nama || 'KUB' }}
+                                </h4>
+                                <p v-if="selectedItem.pelindung || selectedItem.nama_pelindung" class="text-xs text-amber-800 font-semibold mt-1">
+                                    Pelindung: {{ selectedItem.pelindung || selectedItem.nama_pelindung }}
+                                </p>
+                                <span class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span>{{ selectedItem.status || selectedItem.status_aktif || 'Aktif' }}</span>
+                                </span>
+                            </div>
+
+                            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-barcode text-amber-500"></i> Kode KUB / KBG
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200 inline-block">
+                                        {{ selectedItem.kode_kub || selectedItem.kode || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-map-location-dot text-emerald-600"></i> Wilayah Pastoral
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.wilayah?.nama_wilayah || selectedItem.nama_wilayah || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-place-of-worship text-teal-600"></i> Stasi / Kapela Naungan
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.kapela?.nama_kapela || selectedItem.nama_kapela || 'Pusat Paroki' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-tie text-blue-600"></i> Ketua KUB / Pengurus
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.ketua_kub || selectedItem.penanggung_jawab || selectedItem.nama_ketua || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-phone text-cyan-600"></i> Kontak WA / Telepon
+                                    </span>
+                                    <span class="font-medium text-slate-800">
+                                        {{ selectedItem.telepon || selectedItem.kontak || selectedItem.whatsapp || selectedItem.no_telp || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-house-chimney-user text-indigo-600"></i> Jumlah KK Terdata
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.jumlah_kk || (selectedItem.kks ? selectedItem.kks.length : '—') }} KK
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80" v-if="selectedItem.lokasi || selectedItem.alamat || selectedItem.jadwal_ibadat">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-location-dot text-rose-500"></i> Lokasi & Jadwal Ibadat
+                                    </span>
+                                    <p class="text-slate-800 leading-relaxed font-medium mb-1">
+                                        {{ selectedItem.alamat || selectedItem.lokasi || '—' }}
+                                    </p>
+                                    <p v-if="selectedItem.jadwal_ibadat" class="text-amber-800 text-xs font-semibold">
+                                        Jadwal Ibadat: {{ selectedItem.jadwal_ibadat }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 3E. DETAIL WILAYAH SIPIL: PROVINSI -->
+                    <template v-else-if="moduleKey === 'provinsi'">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                                <div class="w-24 h-24 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-200/80 flex items-center justify-center text-4xl mb-3 shadow-2xs">
+                                    <i class="fa-solid fa-earth-asia"></i>
+                                </div>
+                                <h4 class="font-black text-slate-900 text-sm leading-snug">
+                                    {{ selectedItem.nama_provinsi || selectedItem.nama || 'Provinsi' }}
+                                </h4>
+                                <span class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span>WILAYAH SIPIL RI</span>
+                                </span>
+                            </div>
+
+                            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-barcode text-amber-500"></i> Kode / ID Provinsi (BPS)
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200 inline-block">
+                                        {{ selectedItem.id_provinsi || selectedItem.kode_provinsi || selectedItem.kode || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-city text-blue-600"></i> Ibu Kota Provinsi
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.ibu_kota || 'Kupang' }}
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle-info text-emerald-600"></i> Cakupan Wilayah Pelayanan
+                                    </span>
+                                    <p class="text-slate-700 leading-relaxed font-medium">
+                                        Provinsi {{ selectedItem.nama_provinsi || 'ini' }} merupakan cakupan wilayah administratif pelayanan paroki dan keuskupan.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 3F. DETAIL WILAYAH SIPIL: KABUPATEN / KOTA -->
+                    <template v-else-if="moduleKey === 'kabupaten'">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                                <div class="w-24 h-24 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-200/80 flex items-center justify-center text-4xl mb-3 shadow-2xs">
+                                    <i class="fa-solid fa-city"></i>
+                                </div>
+                                <h4 class="font-black text-slate-900 text-sm leading-snug">
+                                    {{ selectedItem.nama_kabupaten || selectedItem.nama || 'Kabupaten / Kota' }}
+                                </h4>
+                                <p class="text-xs text-amber-800 font-semibold mt-1">
+                                    {{ selectedItem.provinsi?.nama_provinsi || 'Nusa Tenggara Timur' }}
+                                </p>
+                                <span class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span>WILAYAH TINGKAT II</span>
+                                </span>
+                            </div>
+
+                            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-barcode text-amber-500"></i> Kode / ID Kabupaten (BPS)
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200 inline-block">
+                                        {{ selectedItem.id_kabupaten || selectedItem.kode_kabupaten || selectedItem.kode || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-earth-asia text-emerald-600"></i> Provinsi Induk
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.provinsi?.nama_provinsi || 'Nusa Tenggara Timur (NTT)' }}
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-building-columns text-blue-600"></i> Keterangan Wilayah Sipil
+                                    </span>
+                                    <p class="text-slate-700 leading-relaxed font-medium">
+                                        {{ selectedItem.keterangan || `Kabupaten ${selectedItem.nama_kabupaten || ''} menaungi wilayah administrasi sipil kecamatan dan desa di paroki.` }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 3G. DETAIL WILAYAH SIPIL: KECAMATAN -->
+                    <template v-else-if="moduleKey === 'kecamatan'">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                                <div class="w-24 h-24 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-200/80 flex items-center justify-center text-4xl mb-3 shadow-2xs">
+                                    <i class="fa-solid fa-building-columns"></i>
+                                </div>
+                                <h4 class="font-black text-slate-900 text-sm leading-snug">
+                                    {{ selectedItem.nama_kecamatan || selectedItem.nama || 'Kecamatan' }}
+                                </h4>
+                                <p class="text-xs text-amber-800 font-semibold mt-1">
+                                    {{ selectedItem.kabupaten?.nama_kabupaten || 'Kabupaten Timor Tengah Selatan' }}
+                                </p>
+                                <span class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span>KECAMATAN</span>
+                                </span>
+                            </div>
+
+                            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-barcode text-amber-500"></i> Kode / ID Kecamatan
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200 inline-block">
+                                        {{ selectedItem.id_kecamatan || selectedItem.kode_kecamatan || selectedItem.kode || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-city text-emerald-600"></i> Kabupaten Induk
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.kabupaten?.nama_kabupaten || 'Kabupaten Timor Tengah Selatan' }}
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-tree-city text-blue-600"></i> Wilayah Pelayanan Paroki
+                                    </span>
+                                    <p class="text-slate-700 leading-relaxed font-medium">
+                                        Kecamatan {{ selectedItem.nama_kecamatan || '' }} mencakup desa/kelurahan tempat domisili umat dan stasi/kapela paroki.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 3H. DETAIL WILAYAH SIPIL: DESA / KELURAHAN -->
+                    <template v-else-if="moduleKey === 'desa' || moduleKey === 'desa-kelurahan'">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
+                                <div class="w-24 h-24 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-200/80 flex items-center justify-center text-4xl mb-3 shadow-2xs">
+                                    <i class="fa-solid fa-tree-city"></i>
+                                </div>
+                                <h4 class="font-black text-slate-900 text-sm leading-snug">
+                                    {{ selectedItem.nama_desa || selectedItem.nama_kelurahan || selectedItem.nama || 'Desa / Kelurahan' }}
+                                </h4>
+                                <p class="text-xs text-amber-800 font-semibold mt-1">
+                                    Kec. {{ selectedItem.kecamatan?.nama_kecamatan || selectedItem.nama_kecamatan || '—' }}
+                                </p>
+                                <span class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span>DESA / KELURAHAN</span>
+                                </span>
+                            </div>
+
+                            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-barcode text-amber-500"></i> Kode / ID Desa (BPS)
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 font-mono font-bold text-xs border border-amber-200 inline-block">
+                                        {{ selectedItem.id_desa || selectedItem.kode_desa || selectedItem.kode || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-building-columns text-emerald-600"></i> Kecamatan
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.kecamatan?.nama_kecamatan || selectedItem.nama_kecamatan || '—' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-city text-blue-600"></i> Kabupaten / Kota
+                                    </span>
+                                    <span class="font-bold text-slate-900">
+                                        {{ selectedItem.kecamatan?.kabupaten?.nama_kabupaten || 'Kabupaten Timor Tengah Selatan' }}
+                                    </span>
+                                </div>
+
+                                <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-mail-bulk text-cyan-600"></i> Kode Pos
+                                    </span>
+                                    <span class="font-medium text-slate-800 font-mono">
+                                        {{ selectedItem.kode_pos || '85561' }}
+                                    </span>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-location-dot text-rose-500"></i> Domisili & Wilayah Sipil
+                                    </span>
+                                    <p class="text-slate-700 leading-relaxed font-medium">
+                                        Desa {{ selectedItem.nama_desa || selectedItem.nama_kelurahan || '' }} menjadi basis domisili kependudukan umat dalam pengelompokan KUB dan KK Katolik.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -4791,6 +5341,123 @@ const statusLabel = (item) => {
                         </div>
                     </template>
 
+                    <!-- 9B. DIREKTORI MISDINAR FORM -->
+                    <template v-else-if="moduleKey === 'direktori-misdinar' || moduleKey === 'direktori_misdinar'">
+                        <div class="space-y-4 text-xs">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                    Nama Lengkap Anggota Misdinar <span class="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    v-model="formData.nama_lengkap"
+                                    type="text"
+                                    placeholder="Contoh: Antonius Maria Goretti"
+                                    required
+                                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-bold"
+                                />
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Stasi / Kapela (Data Gerejawi) <span class="text-rose-500">*</span>
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="formData.stasi"
+                                        :options="kapelaList"
+                                        value-key="nama_kapela"
+                                        label-key="nama_kapela"
+                                        placeholder="-- Pilih Stasi / Kapela --"
+                                        search-placeholder="Ketik cari stasi / kapela..."
+                                        icon="fa-place-of-worship"
+                                        icon-color="text-amber-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Status Keanggotaan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select
+                                        v-model="formData.status_aktif"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                    >
+                                        <option value="Aktif">Aktif (Bertugas)</option>
+                                        <option value="Purna Bakti">Purna Bakti (Senior)</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 9C. DIREKTORI KATEKIS FORM -->
+                    <template v-else-if="moduleKey === 'direktori-katekis' || moduleKey === 'direktori_katekis'">
+                        <div class="space-y-4 text-xs">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                <div class="sm:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Nama Lengkap Katekis <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="formData.nama_lengkap"
+                                        type="text"
+                                        placeholder="Contoh: Bpk. Petrus Taena, S.Ag"
+                                        required
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-bold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Jenis Katekis</label>
+                                    <select
+                                        v-model="formData.jenis_katekis"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                    >
+                                        <option value="Katekis Sukarela (Umat)">Katekis Sukarela (Umat)</option>
+                                        <option value="Katekis Paroki Resmi">Katekis Paroki Resmi</option>
+                                        <option value="Guru Agama Katolik">Guru Agama Katolik</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Wilayah / Stasi Pelayanan</label>
+                                    <SearchableSelect
+                                        v-model="formData.wilayah_pelayanan"
+                                        :options="kapelaList"
+                                        value-key="nama_kapela"
+                                        label-key="nama_kapela"
+                                        placeholder="-- Pilih Stasi / Kapela --"
+                                        search-placeholder="Ketik cari stasi / kapela..."
+                                        icon="fa-place-of-worship"
+                                        icon-color="text-amber-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">No. Kontak / WhatsApp</label>
+                                    <input
+                                        v-model="formData.no_hp"
+                                        type="text"
+                                        placeholder="081234567890"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Katekis</label>
+                                    <select
+                                        v-model="formData.status_aktif"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
                     <!-- 10. KONTEN WEBSITE FORM -->
                     <template v-else-if="moduleKey === 'konten'">
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 text-xs">
@@ -5390,6 +6057,54 @@ const statusLabel = (item) => {
                                     search-placeholder="Ketik cari kecamatan..."
                                     icon="fa-building-columns"
                                     icon-color="text-teal-600"
+                                />
+                                <!-- Stasi / Kapela Dropdown from database -->
+                                <SearchableSelect
+                                    v-else-if="col.key === 'stasi' || col.key === 'kapela' || col.key === 'kapela_id' || col.key === 'stasi_kapela' || col.key === 'wilayah_pelayanan'"
+                                    v-model="formData[col.key]"
+                                    :options="kapelaList"
+                                    value-key="nama_kapela"
+                                    label-key="nama_kapela"
+                                    placeholder="-- Pilih Stasi / Kapela --"
+                                    search-placeholder="Ketik cari stasi / kapela..."
+                                    icon="fa-place-of-worship"
+                                    icon-color="text-amber-600"
+                                />
+                                <!-- Wilayah Dropdown from database -->
+                                <SearchableSelect
+                                    v-else-if="col.key === 'wilayah' || col.key === 'wilayah_id'"
+                                    v-model="formData[col.key]"
+                                    :options="wilayahList"
+                                    value-key="nama_wilayah"
+                                    label-key="nama_wilayah"
+                                    placeholder="-- Pilih Wilayah Pastoral --"
+                                    search-placeholder="Ketik cari wilayah..."
+                                    icon="fa-map-location-dot"
+                                    icon-color="text-emerald-600"
+                                />
+                                <!-- KUB Dropdown from database -->
+                                <SearchableSelect
+                                    v-else-if="col.key === 'kub' || col.key === 'kub_id'"
+                                    v-model="formData[col.key]"
+                                    :options="kubList"
+                                    value-key="nama_kub"
+                                    label-key="nama_kub"
+                                    placeholder="-- Pilih KUB / KBG --"
+                                    search-placeholder="Ketik cari KUB..."
+                                    icon="fa-people-roof"
+                                    icon-color="text-indigo-600"
+                                />
+                                <!-- Paroki Dropdown from database -->
+                                <SearchableSelect
+                                    v-else-if="col.key === 'paroki' || col.key === 'paroki_id'"
+                                    v-model="formData[col.key]"
+                                    :options="parokiList"
+                                    value-key="id_paroki"
+                                    label-key="nama_paroki"
+                                    placeholder="-- Pilih Paroki --"
+                                    search-placeholder="Ketik cari paroki..."
+                                    icon="fa-church"
+                                    icon-color="text-blue-600"
                                 />
                                 <!-- Date input detection -->
                                 <input
