@@ -133,7 +133,7 @@
             position: relative;
             display: inline-flex;
             align-items: center;
-            height: 50px;
+            height: 74px;
         }
         .header .nav-dd-btn i {
             font-size: 0.65rem !important;
@@ -147,7 +147,7 @@
         }
         .header .nav-dd-menu {
             position: absolute !important;
-            top: 100% !important;
+            top: calc(100% - 10px) !important;
             left: 50% !important;
             transform: translateX(-50%) translateY(0px) !important;
             min-width: 220px !important;
@@ -161,16 +161,16 @@
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
-            transition: all 0.2s ease !important;
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease !important;
         }
         /* Invisible hover bridge to eliminate mouse deadzone */
         .header .nav-dd-menu::before {
             content: '';
             position: absolute;
-            top: -12px;
-            left: 0;
-            right: 0;
-            height: 14px;
+            top: -24px;
+            left: -30px;
+            right: -30px;
+            height: 30px;
             background: transparent;
         }
         .header .nav-dropdown:hover .nav-dd-menu,
@@ -179,6 +179,16 @@
             visibility: visible !important;
             pointer-events: auto !important;
             transform: translateX(-50%) translateY(2px) !important;
+        }
+        /* Specific alignment for rightmost login dropdown */
+        .header .nav-login-dropdown .nav-dd-menu {
+            left: auto !important;
+            right: 0 !important;
+            transform: translateY(0px) !important;
+        }
+        .header .nav-login-dropdown:hover .nav-dd-menu,
+        .header .nav-login-dropdown.active .nav-dd-menu {
+            transform: translateY(2px) !important;
         }
         .header .nav-dd-menu a {
             display: block !important;

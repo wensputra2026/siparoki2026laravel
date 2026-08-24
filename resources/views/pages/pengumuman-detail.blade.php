@@ -10,13 +10,19 @@
             $imageUrl = $imagePath;
         } else {
             $cleanImagePath = ltrim($imagePath, '/');
-            $imageUrl = Str::startsWith($cleanImagePath, ['storage/', 'assets/', 'uploads/'])
-                ? asset($cleanImagePath)
-                : asset('assets/uploads/pengumuman/' . basename($cleanImagePath));
+            $base = basename($cleanImagePath);
+            if (file_exists(public_path('uploads/pengumuman/' . $base))) {
+                $imageUrl = asset('uploads/pengumuman/' . $base);
+            } elseif (file_exists(public_path('assets/uploads/pengumuman/' . $base))) {
+                $imageUrl = asset('assets/uploads/pengumuman/' . $base);
+            } else {
+                $imageUrl = asset('uploads/pengumuman/' . $base);
+            }
         }
     } elseif (!empty($globalLogo)) {
         $imageUrl = Str::startsWith($globalLogo, ['http://', 'https://']) ? $globalLogo : url($globalLogo);
     }
+    $publishedAt = $item->created_at ?? now();
 @endphp
 
 @section('title', $item->judul . ' - ' . ($globalNamaParoki ?? 'SIPAROKI'))
@@ -25,7 +31,7 @@
 @section('og_type', 'article')
 @section('image', $imageUrl)
 @section('article_meta')
-    <meta property="article:published_time" content="{{ \Carbon\Carbon::parse($item->created_at ?? now())->toIso8601String() }}">
+    <meta property="article:published_time" content="{{ \Carbon\Carbon::parse($publishedAt)->toIso8601String() }}">
     @if(!empty($item->updated_at))
         <meta property="article:modified_time" content="{{ \Carbon\Carbon::parse($item->updated_at)->toIso8601String() }}">
     @endif
@@ -41,9 +47,9 @@
             'headline' => $item->judul,
             'description' => $description,
             'image' => $imageUrl ? [$imageUrl] : [],
-            'datePublished' => \Carbon\Carbon::parse($item->created_at ?? now())->toIso8601String(),
-            'dateModified' => \Carbon\Carbon::parse($item->updated_at ?? $item->created_at ?? now())->toIso8601String(),
-            'author' => ['@type' => 'Person', 'name' => $item->penulis ?? 'Admin'],
+            'datePublished' => \Carbon\Carbon::parse($publishedAt)->toIso8601String(),
+            'dateModified' => \Carbon\Carbon::parse($item->updated_at ?? $publishedAt)->toIso8601String(),
+            'author' => ['@type' => 'Person', 'name' => $item->penulis ?? 'Sekretariat'],
             'publisher' => [
                 '@type' => 'Organization',
                 'name' => $globalNamaParoki ?? 'SIPAROKI',
@@ -55,36 +61,68 @@
 @endpush
 
 @section('content')
-<section class="page-banner page-hero">
-    <div class="page-banner-shape page-banner-shape--1" aria-hidden="true"></div>
-    <div class="page-banner-shape page-banner-shape--2" aria-hidden="true"></div>
-    <div class="container page-banner-content">
-        @if($item->kategori)
-            <span class="page-banner-badge"><i class="fas fa-bullhorn"></i> {{ $item->kategori }}</span>
-        @endif
-        <h1>{{ $item->judul }}</h1>
-        <p>{{ \Carbon\Carbon::parse($item->created_at ?? now())->translatedFormat('l, d F Y') }}</p>
+<!-- Page Header / Breadcrumb Konoha Style -->
+<section class="page-header" style="background: linear-gradient(rgba(10, 30, 25, 0.75), rgba(10, 30, 25, 0.85)), url('{{ $globalHeroBg ?? '/assets/uploads/profil/hero_bg.jpg' }}') center/cover; padding: 90px 0 50px; color: white; text-align: center;">
+    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 18px; color: #ffffff; line-height: 1.25; max-width: 960px; margin-left: auto; margin-right: auto;">
+            {{ $item->judul }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 10px; background: transparent; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                    <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Beranda</a>
+                </li>
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                    <a href="/pengumuman" style="color: white; text-decoration: none; font-weight: 500;">Pengumuman</a>
+                </li>
+                <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 6px 20px; border-radius: 25px; font-size: 0.85rem; font-weight: 700;">
+                    {{ Str::limit($item->judul, 25) }}
+                </li>
+            </ol>
+        </nav>
     </div>
 </section>
 
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    @if($imageUrl)
-        <div class="mb-6 rounded-xl overflow-hidden shadow-md">
-            <img src="{{ $imageUrl }}" alt="{{ $item->judul }}" class="w-full h-72 object-cover">
+<!-- Detail Content Section Konoha Style -->
+<section class="content-section" style="padding: 50px 0 70px; background: #f4faf9;">
+    <div class="container" style="max-width: 960px; margin: 0 auto; padding: 0 20px;">
+        
+        <div style="margin-bottom: 25px;">
+            <a href="/pengumuman" class="back-link" style="display: inline-flex; align-items: center; gap: 8px; color: var(--primary-teal, #00897b); font-weight: 600; text-decoration: none; font-size: 0.95rem;">
+                <i class="fas fa-arrow-left"></i> Kembali ke Pengumuman
+            </a>
         </div>
-    @endif
 
-    <article class="bg-white rounded-xl shadow-md p-8">
-        <div class="prose prose-amber max-w-none">
-            {!! nl2br(e($item->isi)) !!}
+        <div class="detail-content" style="background: #ffffff; padding: 35px 40px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border-left: 5px solid var(--primary-orange, #ff9800);">
+            
+            <div style="margin-bottom: 20px;">
+                <span style="display: inline-block; background: #e0f2fe; color: #0284c7; padding: 6px 20px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                    {{ $item->kategori ?? 'PENGUMUMAN' }}
+                </span>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #eef2f6; font-size: 0.9rem; color: #64748b;">
+                <span style="display: inline-flex; align-items: center; gap: 7px;">
+                    <i class="far fa-calendar-alt" style="color: #ff9800; font-size: 1rem;"></i> 
+                    {{ \Carbon\Carbon::parse($publishedAt)->translatedFormat('l, d F Y') }}
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 7px;">
+                    <i class="far fa-user" style="color: #ff9800; font-size: 1rem;"></i> 
+                    {{ $item->penulis ?? 'Sekretariat Paroki' }}
+                </span>
+            </div>
+
+            @if($imageUrl)
+                <div style="border-radius: 12px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.06);">
+                    <img src="{{ $imageUrl }}" alt="{{ $item->judul }}" style="width: 100%; max-height: 450px; object-fit: cover; display: block;">
+                </div>
+            @endif
+
+            <div class="article-text" style="color: #334155; font-size: 1rem; line-height: 1.85;">
+                {!! $item->isi !!}
+            </div>
         </div>
-    </article>
-
-    <div class="mt-6">
-        <a href="/pengumuman" class="inline-flex items-center text-amber-600 hover:text-amber-700 font-medium">
-            <i class="fa-solid fa-arrow-left mr-2"></i>
-            Kembali ke Pengumuman
-        </a>
     </div>
-</div>
+</section>
 @endsection
+

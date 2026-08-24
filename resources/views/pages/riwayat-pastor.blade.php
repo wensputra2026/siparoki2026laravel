@@ -1,44 +1,72 @@
 @extends('layouts.app')
-@section('title', 'Riwayat Pastor Paroki - ' . ($globalNamaParoki ?? 'St. Vinsensius a Paulo Benlutu'))
-@section('content')
-<div class="py-12 bg-slate-100 dark:bg-[#090e1a]">
-    <div class="max-w-4xl mx-auto px-4">
-        <div class="bg-white dark:bg-[#101d31] rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-[#263a55] shadow-sm">
-            <span class="st-badge mb-2"><i class="fas fa-user-clock me-1"></i> Gembala Paroki</span>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mb-2">Riwayat Pastor Paroki dari Masa ke Masa</h1>
-            <p class="text-xs sm:text-sm text-slate-500 mb-8">{{ $globalNamaParoki ?? 'Paroki St. Vinsensius a Paulo Benlutu' }}</p>
+@section('title', 'Riwayat Pastor Paroki - ' . ($globalNamaParoki ?? 'SIPAROKI'))
 
-            <div class="space-y-4">
+@section('content')
+<!-- Page Header / Breadcrumb Konoha Style -->
+<section class="page-header" style="background: linear-gradient(rgba(10, 30, 25, 0.75), rgba(10, 30, 25, 0.85)), url('{{ $globalHeroBg ?? '/assets/uploads/profil/hero_bg.jpg' }}') center/cover; padding: 90px 0 50px; color: white; text-align: center;">
+    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Riwayat Pastor Paroki</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                    <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Beranda</a>
+                </li>
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                    <a href="/profil" style="color: white; text-decoration: none; font-weight: 500;">Tentang</a>
+                </li>
+                <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 6px 18px; border-radius: 25px; font-size: 0.85rem; font-weight: 600;">
+                    Riwayat Pastor
+                </li>
+            </ol>
+        </nav>
+    </div>
+</section>
+
+<!-- Content Section Konoha Style -->
+<section class="content-section" style="padding: 60px 0 80px; background: #f4faf9;">
+    <div class="container" style="max-width: 1000px; margin: 0 auto; padding: 0 20px;">
+        
+        <div style="background: #ffffff; border-radius: 15px; padding: 35px 40px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); margin-bottom: 30px;">
+            <h3 style="font-size: 1.3rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 25px; border-left: 4px solid var(--primary-orange, #ff9800); padding-left: 14px;">
+                Gembala Umat dari Masa ke Masa
+            </h3>
+
+            <div style="display: flex; flex-direction: column; gap: 18px;">
                 @forelse($riwayat ?? [] as $r)
-                    <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 flex items-center justify-center font-bold text-lg shrink-0">
-                                <i class="fa-solid fa-user-tie"></i>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; transition: transform 0.2s, box-shadow 0.2s;">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
+                                <i class="fas fa-user-tie"></i>
                             </div>
                             <div>
-                                <h3 class="font-extrabold text-base text-slate-900 dark:text-white">
+                                <h4 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0 0 4px;">
                                     {{ $r->nama_lengkap_gelar ?? \App\Models\MasterPastor::formatNama($r) }}
-                                </h3>
-                                <p class="text-xs text-sky-600 dark:text-sky-400 font-semibold">{{ $r->jabatan ?? 'Pastor Paroki' }}</p>
+                                </h4>
+                                <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary-teal, #00897b);">
+                                    <i class="fas fa-cross" style="font-size: 0.75rem; margin-right: 4px;"></i> {{ $r->jabatan ?? 'Pastor Paroki' }}
+                                </span>
                             </div>
                         </div>
-                        <div class="text-left sm:text-right">
-                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+
+                        <div style="text-align: right;">
+                            <span style="display: inline-block; background: var(--primary-orange, #ff9800); color: white; padding: 4px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">
                                 {{ $r->periode_mulai ?? $r->tahun_mulai ?? '-' }} &mdash; {{ $r->periode_selesai ?? $r->tahun_selesai ?? 'Sekarang' }}
                             </span>
-                            <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">
+                            <span style="display: block; font-size: 0.78rem; font-weight: 600; color: #10b981; margin-top: 5px;">
                                 {{ $r->status_pelayanan ?? $r->status ?? 'Aktif' }}
-                            </p>
+                            </span>
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-12 text-slate-400">
-                        <i class="fas fa-user-shield text-4xl mb-3"></i>
-                        <p>Belum ada data riwayat pastor.</p>
+                    <div style="text-align: center; padding: 50px 20px; color: #94a3b8;">
+                        <i class="fas fa-user-tie" style="font-size: 3rem; margin-bottom: 12px; display: block; color: #cbd5e1;"></i>
+                        <p style="font-size: 1rem; font-weight: 600; margin: 0;">Belum ada data riwayat pastor paroki yang tercatat.</p>
                     </div>
                 @endforelse
             </div>
         </div>
+
     </div>
-</div>
+</section>
 @endsection
+

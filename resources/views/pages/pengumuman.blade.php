@@ -1,37 +1,72 @@
 @extends('layouts.app')
 
-@section('title', 'Pengumuman - SIPAROKI')
+@section('title', 'Pengumuman Resmi - ' . ($globalNamaParoki ?? 'SIPAROKI'))
 
 @section('content')
-<div class="page-hero py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold text-white">Pengumuman</h1>
-        <p class="text-sky-100 mt-2">Informasi dan pengumuman terbaru dari paroki</p>
+<!-- Page Header / Breadcrumb Konoha Style -->
+<section class="page-header" style="background: linear-gradient(rgba(10, 30, 25, 0.75), rgba(10, 30, 25, 0.85)), url('{{ $globalHeroBg ?? '/assets/uploads/profil/hero_bg.jpg' }}') center/cover; padding: 90px 0 50px; color: white; text-align: center;">
+    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Warta & Pengumuman</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                    <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Beranda</a>
+                </li>
+                <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 6px 18px; border-radius: 25px; font-size: 0.85rem; font-weight: 600;">
+                    Pengumuman
+                </li>
+            </ol>
+        </nav>
     </div>
-</div>
+</section>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="space-y-6">
-        @forelse($pengumuman ?? [] as $item)
-        <article class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
-            <div class="flex items-center gap-3 mb-3">
-                <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full">{{ $item->kategori ?? 'PENGUMUMAN' }}</span>
-                <span class="text-sm text-gray-400">{{ $item->created_at->format('d M Y') }}</span>
-            </div>
-            <h2 class="text-xl font-bold text-gray-900 mb-2">{{ $item->judul }}</h2>
-            @if($item->ringkasan)
-                <p class="text-gray-600 mb-3">{{ $item->ringkasan }}</p>
-            @endif
-            <div class="prose prose-sm max-w-none text-gray-700">
-                {!! $item->isi !!}
-            </div>
-        </article>
-        @empty
-        <div class="bg-white rounded-xl shadow-md p-12 text-center">
-            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
-            <p class="text-gray-500 text-lg">Belum ada pengumuman terbaru.</p>
+<!-- Content Section Konoha Style -->
+<section class="content-section" style="padding: 60px 0 80px; background: #f4faf9;">
+    <div class="container" style="max-width: 1000px; margin: 0 auto; padding: 0 20px;">
+        
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+            @forelse($pengumuman ?? [] as $item)
+                @php
+                    $pDate = $item->created_at ?? now();
+                @endphp
+                <div style="background: #ffffff; border-radius: 15px; border-left: 5px solid var(--primary-orange, #ff9800); padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s;">
+                    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 15px;">
+                        <span style="display: inline-block; background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); padding: 4px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                            <i class="fas fa-bullhorn" style="margin-right: 4px;"></i> {{ $item->kategori ?? 'PENGUMUMAN' }}
+                        </span>
+                        <span style="font-size: 0.82rem; color: #94a3b8; font-weight: 500;">
+                            <i class="far fa-calendar-alt" style="color: #ff9800; margin-right: 4px;"></i> {{ \Carbon\Carbon::parse($pDate)->translatedFormat('l, d F Y') }}
+                        </span>
+                    </div>
+
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 14px; line-height: 1.4;">
+                        {{ $item->judul }}
+                    </h3>
+
+                    @if(!empty($item->ringkasan))
+                        <p style="font-size: 0.92rem; color: #64748b; margin-bottom: 16px; font-style: italic;">
+                            {{ $item->ringkasan }}
+                        </p>
+                    @endif
+
+                    <div style="color: #334155; font-size: 0.95rem; line-height: 1.8; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                        {!! $item->isi !!}
+                    </div>
+                </div>
+            @empty
+                <div style="background: #ffffff; border-radius: 15px; padding: 60px 20px; text-align: center; color: #94a3b8; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+                    <i class="fas fa-bullhorn" style="font-size: 3rem; margin-bottom: 15px; color: #cbd5e1; display: block;"></i>
+                    <p style="font-size: 1.05rem; font-weight: 600; margin: 0;">Belum ada pengumuman warta terbaru saat ini.</p>
+                </div>
+            @endforelse
         </div>
-        @endforelse
+
+        @if(isset($pengumuman) && method_exists($pengumuman, 'links'))
+            <div style="margin-top: 45px; display: flex; justify-content: center;">
+                {{ $pengumuman->links() }}
+            </div>
+        @endif
+
     </div>
-</div>
+</section>
 @endsection

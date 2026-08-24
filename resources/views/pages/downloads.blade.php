@@ -1,29 +1,40 @@
 @extends('layouts.app')
 
-@section('title', 'Pusat Unduhan Formulir & Dokumen - ' . ($globalNamaParoki ?? 'SIPAROKI'))
+@section('title', 'Pusat Unduhan Dokumen & Formulir - ' . ($globalNamaParoki ?? 'SIPAROKI'))
 
 @section('content')
-<section class="page-banner page-hero" id="main-content">
-    <div class="page-banner-shape page-banner-shape--1" aria-hidden="true"></div>
-    <div class="page-banner-shape page-banner-shape--2" aria-hidden="true"></div>
-    <div class="container page-banner-content">
-        <span class="page-banner-badge"><i class="fas fa-download"></i> Download Center</span>
-        <h1>Pusat Unduhan <span class="text-gradient">{{ $globalNamaParoki ?? 'SIPAROKI' }}</span></h1>
-        <p>Unduh formulir, dokumen pelayanan, warta, dan arsip digital paroki.</p>
+<!-- Page Header / Breadcrumb Konoha Style -->
+<section class="page-header" style="background: linear-gradient(rgba(10, 30, 25, 0.75), rgba(10, 30, 25, 0.85)), url('{{ $globalHeroBg ?? '/assets/uploads/profil/hero_bg.jpg' }}') center/cover; padding: 90px 0 50px; color: white; text-align: center;">
+    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Pusat Unduhan Dokumen</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                    <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Beranda</a>
+                </li>
+                <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 6px 18px; border-radius: 25px; font-size: 0.85rem; font-weight: 600;">
+                    Unduhan
+                </li>
+            </ol>
+        </nav>
     </div>
 </section>
 
-<section class="section">
-    <div class="container">
+<!-- Content Section Konoha Style -->
+<section class="content-section" style="padding: 60px 0 80px; background: #f4faf9;">
+    <div class="container" style="max-width: 1100px; margin: 0 auto; padding: 0 20px;">
         @forelse(($downloadGroups ?? collect()) as $category => $items)
-            <div class="download-group">
-                <div class="download-group-header">
-                    <i class="fas fa-folder-open"></i>
-                    <h2>{{ $category ?: 'Dokumen Resmi' }}</h2>
-                    <span class="download-group-count">{{ $items->count() }} berkas</span>
+            <div style="background: #ffffff; border-radius: 15px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); margin-bottom: 30px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px solid #eef2f6;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--primary-teal, #00897b); margin: 0; border-left: 4px solid var(--primary-orange, #ff9800); padding-left: 12px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-folder-open" style="color: #ff9800;"></i> {{ $category ?: 'Dokumen Resmi' }}
+                    </h3>
+                    <span style="background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">
+                        {{ $items->count() }} berkas
+                    </span>
                 </div>
 
-                <div class="download-list">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 18px;">
                     @foreach($items as $d)
                         @php
                             $filePath = $d->file_path ?? $d->file_name ?? $d->file ?? null;
@@ -38,36 +49,43 @@
                             $description = $d->keterangan ?? $d->deskripsi ?? null;
                         @endphp
 
-                        <a href="{{ $fileUrl }}" target="_blank" rel="noopener" class="download-card">
-                            <div class="dc-icon">
-                                <i class="fas fa-file-alt"></i>
+                        <a href="{{ $fileUrl }}" target="_blank" rel="noopener" style="text-decoration: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 15px; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--primary-teal, #00897b)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
+                            <div style="display: flex; align-items: center; gap: 14px; min-width: 0;">
+                                <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                                    <i class="fas fa-file-pdf"></i>
+                                </div>
+                                <div style="min-width: 0;">
+                                    <h4 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0 0 4px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        {{ $d->judul ?? $d->nama_file ?? 'Dokumen Paroki' }}
+                                    </h4>
+                                    <div style="font-size: 0.78rem; color: #94a3b8; display: flex; align-items: center; gap: 10px;">
+                                        @if($size)
+                                            <span><i class="fas fa-hdd" style="margin-right: 2px;"></i> {{ is_numeric($size) ? number_format(((int) $size) / 1024, 1, ',', '.') . ' KB' : $size }}</span>
+                                        @endif
+                                        <span><i class="fas fa-download" style="margin-right: 2px;"></i> {{ number_format($downloadCount, 0, ',', '.') }}x</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="dc-body">
-                                <h3>{{ $d->judul ?? $d->nama_file ?? 'Dokumen Paroki' }}</h3>
-                                @if($description)
-                                    <p>{{ Str::limit(strip_tags($description), 120) }}</p>
-                                @endif
-                            </div>
-                            <div class="dc-meta">
-                                @if($size)
-                                    <span class="dc-size"><i class="fas fa-weight-hanging"></i> {{ is_numeric($size) ? number_format(((int) $size) / 1024, 1, ',', '.') . ' KB' : $size }}</span>
-                                @endif
-                                <span class="dc-download" title="Diunduh {{ number_format($downloadCount, 0, ',', '.') }} kali"><i class="fas fa-download"></i></span>
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-orange, #ff9800); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.88rem; flex-shrink: 0;">
+                                <i class="fas fa-arrow-down"></i>
                             </div>
                         </a>
                     @endforeach
                 </div>
             </div>
         @empty
-            <div class="download-empty">
-                <i class="fas fa-download"></i>
-                <p>Belum ada berkas unduhan yang tersedia.</p>
+            <div style="background: #ffffff; border-radius: 15px; padding: 60px 20px; text-align: center; color: #94a3b8; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+                <i class="fas fa-folder-open" style="font-size: 3.5rem; margin-bottom: 15px; display: block; color: #cbd5e1;"></i>
+                <p style="font-size: 1.05rem; font-weight: 600; margin: 0;">Belum ada dokumen atau formulir unduhan yang tersedia.</p>
             </div>
         @endforelse
 
-        <div class="mt-8">
-            {{ $downloads->links() }}
-        </div>
+        @if(isset($downloads) && method_exists($downloads, 'links'))
+            <div style="margin-top: 40px; display: flex; justify-content: center;">
+                {{ $downloads->links() }}
+            </div>
+        @endif
     </div>
 </section>
 @endsection
+

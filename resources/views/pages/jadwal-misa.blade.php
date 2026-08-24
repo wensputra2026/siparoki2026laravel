@@ -39,23 +39,20 @@
 
 
 <div class="jm-page">
-    <section class="page-hero py-12">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-2xl text-white shadow-lg">
-                        <i class="fa-solid fa-calendar-days"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-black text-white">Jadwal Misa</h1>
-                        <p class="text-sky-100 mt-1">Jadwal perayaan Ekaristi dan petugas liturgi paroki</p>
-                    </div>
-                </div>
-                <div class="inline-flex items-center gap-2 rounded-full bg-white/12 border border-white/20 px-4 py-2 text-sm font-semibold text-white w-fit">
-                    <i class="fa-solid fa-circle-info"></i>
-                    {{ $namaBulan[$bulanAktif - 1] }} {{ $tahunAktif }}
-                </div>
-            </div>
+    <!-- Page Header / Breadcrumb Konoha Style -->
+    <section class="page-header" style="background: linear-gradient(rgba(10, 30, 25, 0.75), rgba(10, 30, 25, 0.85)), url('{{ $globalHeroBg ?? '/assets/uploads/profil/hero_bg.jpg' }}') center/cover; padding: 90px 0 50px; color: white; text-align: center;">
+        <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+            <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Jadwal Perayaan Ekaristi</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
+                    <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                        <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Beranda</a>
+                    </li>
+                    <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 6px 18px; border-radius: 25px; font-size: 0.85rem; font-weight: 600;">
+                        Jadwal Misa
+                    </li>
+                </ol>
+            </nav>
         </div>
     </section>
 

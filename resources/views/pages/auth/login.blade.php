@@ -9,10 +9,37 @@
     @else
         <link rel="icon" type="image/jpeg" href="/assets/uploads/profil/logo_paroki_1787370466.jpeg">
     @endif
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Local Offline Poppins Fonts & FontAwesome -->
+    <link rel="preload" href="/fonts/poppins/poppins-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/poppins/poppins-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/poppins/poppins-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+    <style>
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('/fonts/poppins/poppins-latin-400-normal.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 600;
+            font-display: swap;
+            src: url('/fonts/poppins/poppins-latin-600-normal.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('/fonts/poppins/poppins-latin-700-normal.woff2') format('woff2');
+        }
+        body, html {
+            font-family: 'Poppins', sans-serif;
+        }
+    </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {

@@ -109,8 +109,10 @@ Route::get('/uploads/{path}', function($path) {
         public_path('assets/uploads/' . $cleanPath),
         public_path('assets/uploads/video/' . $baseName),
         public_path('assets/uploads/profil/' . $baseName),
+        public_path('assets/uploads/galeri/' . $baseName),
         public_path('uploads/video/' . $baseName),
         public_path('uploads/profil/' . $baseName),
+        public_path('uploads/galeri/' . $baseName),
         storage_path('app/public/' . $path),
     ];
     foreach ($candidates as $cand) {
@@ -120,6 +122,38 @@ Route::get('/uploads/{path}', function($path) {
     }
     abort(404);
 })->where('path', '.*');
+
+// Static / Dynamic storage uploads handler for galeri & assets
+Route::get('/storage/{path}', function($path) {
+    $cleanPath = preg_replace('#^(uploads/)?#', '', $path);
+    $baseName = basename($path);
+    $candidates = [
+        storage_path('app/public/' . $path),
+        public_path('uploads/' . $path),
+        public_path('uploads/galeri/' . $baseName),
+        public_path('assets/uploads/' . $path),
+        public_path('assets/uploads/galeri/' . $baseName),
+        public_path('uploads/' . $cleanPath),
+        public_path('assets/uploads/' . $cleanPath),
+    ];
+    foreach ($candidates as $cand) {
+        if (file_exists($cand) && !is_dir($cand)) {
+            return response()->file($cand);
+        }
+    }
+    abort(404);
+})->where('path', '.*');
+
+// Serve Konoha styles and assets directly from workspace konoha folder
+Route::get('/konoha/{file}', function($file) {
+    $path = base_path('konoha/' . $file);
+    if (file_exists($path) && !is_dir($path)) {
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        $mime = $ext === 'css' ? 'text/css' : ($ext === 'js' ? 'application/javascript' : mime_content_type($path));
+        return response()->file($path, ['Content-Type' => $mime]);
+    }
+    abort(404);
+})->where('file', '.*');
 
 // Proxy route: serve CI3 pastor/umat photos by filename
 Route::get('/foto-pastor/{filename}', function(string $filename) {

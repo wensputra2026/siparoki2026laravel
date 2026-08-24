@@ -1,46 +1,96 @@
 @extends('layouts.app')
 
-@section('title', 'Artikel - SIPAROKI')
+@section('title', 'Artikel & Warta - ' . ($globalNamaParoki ?? 'SIPAROKI'))
 
 @section('content')
-<div class="page-hero py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold text-white">Artikel & Warta Gereja</h1>
-        <p class="text-sky-100 mt-2">Bacaan rohani dan berita paroki</p>
+<!-- Page Header / Breadcrumb Konoha Style -->
+<section class="page-header" style="background: linear-gradient(rgba(10, 30, 25, 0.75), rgba(10, 30, 25, 0.85)), url('{{ $globalHeroBg ?? '/assets/uploads/profil/hero_bg.jpg' }}') center/cover; padding: 90px 0 50px; color: white; text-align: center;">
+    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Artikel & Katekese</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                    <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Beranda</a>
+                </li>
+                <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 6px 18px; border-radius: 25px; font-size: 0.85rem; font-weight: 600;">
+                    Artikel
+                </li>
+            </ol>
+        </nav>
     </div>
-</div>
+</section>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @forelse($artikel ?? [] as $item)
-        <article class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
-            <div class="aspect-video bg-gray-200">
-                @if($item->gambar)
-                    <img src="{{ asset('storage/' . $item->gambar) }}" alt="{{ $item->judul }}" class="w-full h-full object-cover">
-                @else
-                    <div class="w-full h-full flex items-center justify-center text-gray-400">
-                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+<!-- News/Article Section Konoha Style -->
+<section class="news-section" style="padding: 60px 0 80px; background: #f4faf9;">
+    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px;">
+            @forelse($artikel ?? [] as $item)
+                @php
+                    $img = $item->gambar ?? null;
+                    $imgUrl = null;
+                    if ($img) {
+                        $base = basename(ltrim($img, '/'));
+                        if (file_exists(public_path('uploads/konten/' . $base))) {
+                            $imgUrl = asset('uploads/konten/' . $base);
+                        } elseif (file_exists(public_path('assets/uploads/konten/' . $base))) {
+                            $imgUrl = asset('assets/uploads/konten/' . $base);
+                        } elseif (str_starts_with($img, 'http')) {
+                            $imgUrl = $img;
+                        } else {
+                            $imgUrl = asset('uploads/konten/' . $base);
+                        }
+                    }
+                    $date = $item->tanggal_publish ?? $item->created_at ?? now();
+                @endphp
+                <div class="news-card" style="background: #ffffff; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.06); display: flex; flex-direction: column; height: 100%; transition: transform 0.3s, box-shadow 0.3s;">
+                    <div style="position: relative; overflow: hidden; height: 210px; background: #e2e8f0;">
+                        @if($imgUrl)
+                            <img src="{{ $imgUrl }}" alt="{{ $item->judul }}" class="news-img" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s;">
+                        @else
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: #f1f5f9;">
+                                <i class="fas fa-book-open" style="font-size: 2.5rem;"></i>
+                            </div>
+                        @endif
+                        <span class="news-category category-news" style="position: absolute; top: 15px; left: 15px; background: #5c6bc0; color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">
+                            {{ $item->kategori ?? 'ARTIKEL' }}
+                        </span>
                     </div>
-                @endif
-            </div>
-            <div class="p-5">
-                @if($item->kategori)
-                    <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded">{{ $item->kategori }}</span>
-                @endif
-                <h2 class="font-bold text-lg text-gray-900 mt-2 line-clamp-2">{{ $item->judul }}</h2>
-                <p class="text-gray-600 text-sm mt-2 line-clamp-3">{{ $item->ringkasan ?? Str::limit(strip_tags($item->konten ?? $item->isi ?? $item->isi_konten ?? $item->deskripsi ?? ''), 120) }}</p>
-                <div class="flex items-center justify-between mt-4">
-                    <span class="text-sm text-gray-400">{{ isset($item->created_at) ? \Carbon\Carbon::parse($item->created_at)->format('d M Y') : (isset($item->tanggal_publish) ? \Carbon\Carbon::parse($item->tanggal_publish)->format('d M Y') : '') }}</span>
-                    <a href="/artikel/{{ $item->slug }}" class="text-amber-600 hover:text-amber-700 font-medium text-sm">Baca &rarr;</a>
+                    <div style="padding: 24px; display: flex; flex-direction: column; flex-grow: 1;">
+                        <span class="news-date" style="display: inline-flex; align-items: center; gap: 6px; color: var(--primary-orange, #ff9800); font-size: 0.8rem; font-weight: 600; margin-bottom: 10px;">
+                            <i class="far fa-calendar-alt"></i> {{ \Carbon\Carbon::parse($date)->translatedFormat('d M Y') }}
+                        </span>
+                        <h4 class="card-title" style="font-size: 1.1rem; font-weight: 700; line-height: 1.45; margin-bottom: 10px; color: #1e293b;">
+                            <a href="/artikel/{{ $item->slug }}" style="color: inherit; text-decoration: none;">
+                                {{ $item->judul }}
+                            </a>
+                        </h4>
+                        <p class="card-text" style="font-size: 0.88rem; color: #64748b; line-height: 1.6; margin-bottom: 20px; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ $item->ringkasan ?? $item->excerpt ?? Str::limit(strip_tags($item->konten ?? $item->isi ?? ''), 120) }}
+                        </p>
+                        <div>
+                            <a href="/artikel/{{ $item->slug }}" class="btn-news" style="display: inline-flex; align-items: center; gap: 6px; color: var(--primary-teal, #00897b); font-weight: 700; font-size: 0.88rem; text-decoration: none; transition: transform 0.2s;">
+                                Selengkapnya <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </article>
-        @empty
-        <div class="md:col-span-2 lg:col-span-3 bg-white rounded-xl shadow-md p-12 text-center">
-            <p class="text-gray-500 text-lg">Belum ada artikel.</p>
+            @empty
+                <div style="grid-column: 1 / -1; background: #ffffff; border-radius: 15px; padding: 50px 20px; text-align: center; color: #94a3b8; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+                    <i class="far fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
+                    <p style="font-size: 1rem; font-weight: 600;">Belum ada artikel yang dipublikasikan.</p>
+                </div>
+            @endforelse
         </div>
-        @endforelse
+
+        @if(isset($artikel) && method_exists($artikel, 'links'))
+            <div style="margin-top: 50px; display: flex; justify-content: center;">
+                {{ $artikel->links() }}
+            </div>
+        @endif
+
     </div>
-</div>
+</section>
 @endsection
+
 

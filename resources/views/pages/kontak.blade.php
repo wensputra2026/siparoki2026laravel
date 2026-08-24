@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Kontak & Sekretariat - ' . ($nama_paroki ?? $globalNamaParoki ?? 'SIPAROKI'))
+@section('title', 'Hubungi Kami - ' . ($nama_paroki ?? $globalNamaParoki ?? 'SIPAROKI'))
 @section('description', 'Hubungi sekretariat ' . ($nama_paroki ?? $globalNamaParoki ?? 'SIPAROKI') . ' untuk informasi pelayanan, administrasi, jadwal, dan lokasi paroki.')
 
 @section('content')
@@ -9,62 +9,44 @@
     $displayName = $nama_paroki ?? $paroki?->nama_paroki ?? $globalNamaParoki ?? 'SIPAROKI';
     $mapLat = $latitude ?? $paroki?->latitude ?? null;
     $mapLng = $longitude ?? $paroki?->longitude ?? null;
-    $primaryAddress = $alamat ?? $paroki?->alamat ?? null;
-
-    $identityRows = [
-        ['icon' => 'fa-hashtag', 'label' => 'Kode Paroki', 'value' => $paroki?->kode_paroki],
-        ['icon' => 'fa-shield-heart', 'label' => 'Pelindung Paroki', 'value' => $paroki?->pelindung_paroki],
-        ['icon' => 'fa-circle-check', 'label' => 'Status', 'value' => trim(($paroki?->status_paroki ?? '') . ' ' . ($paroki?->status ? '(' . $paroki->status . ')' : ''))],
-        ['icon' => 'fa-calendar-days', 'label' => 'Tanggal Berdiri', 'value' => !empty($paroki?->tanggal_berdiri) ? \Illuminate\Support\Carbon::parse($paroki->tanggal_berdiri)->translatedFormat('d F Y') : null],
-    ];
-
-    $pastoralRows = [
-        ['icon' => 'fa-user-tie', 'label' => 'Pastor Paroki', 'value' => $pastor_paroki ?? $paroki?->nama_pastor_paroki_aktif ?? null],
-        ['icon' => 'fa-user-group', 'label' => 'Pastor Rekan', 'value' => $pastor_rekan ?? $paroki?->nama_pastor_rekan ?? null],
-    ];
-
-    $locationRows = [
-        ['icon' => 'fa-location-dot', 'label' => 'Alamat Lengkap', 'value' => $primaryAddress],
-        ['icon' => 'fa-map-pin', 'label' => 'Desa / Kelurahan', 'value' => $paroki?->nama_desa],
-        ['icon' => 'fa-map', 'label' => 'Kecamatan', 'value' => $paroki?->nama_kecamatan],
-        ['icon' => 'fa-city', 'label' => 'Kabupaten / Kota', 'value' => $paroki?->nama_kabupaten],
-        ['icon' => 'fa-earth-asia', 'label' => 'Provinsi', 'value' => $paroki?->nama_provinsi],
-        ['icon' => 'fa-landmark', 'label' => 'Keuskupan', 'value' => $paroki?->nama_keuskupan ?? $nama_keuskupan ?? null],
-        ['icon' => 'fa-layer-group', 'label' => 'Dekenat / Kevikepan', 'value' => $paroki?->nama_dekenat],
-    ];
-
-    $channels = [
-        ['icon' => 'fa-phone', 'label' => 'Telepon', 'value' => $telepon ?? $paroki?->telepon ?? null, 'href' => !empty($telepon) ? 'tel:' . preg_replace('/\s+/', '', $telepon) : null],
-        ['icon' => 'fa-brands fa-whatsapp', 'label' => 'WhatsApp', 'value' => $whatsapp ?? $paroki?->whatsapp ?? null, 'href' => !empty($whatsapp) ? 'https://wa.me/' . preg_replace('/\D+/', '', $whatsapp) : null],
-        ['icon' => 'fa-envelope', 'label' => 'Email', 'value' => $email ?? $paroki?->email ?? null, 'href' => !empty($email) ? 'mailto:' . $email : null],
-        ['icon' => 'fa-globe', 'label' => 'Website', 'value' => $website ?? $paroki?->website ?? null, 'href' => !empty($website) ? (str_starts_with($website, 'http') ? $website : 'https://' . $website) : null],
-    ];
-
-    $availableChannels = collect($channels)->filter(fn ($item) => filled($item['value']));
+    $primaryAddress = $alamat ?? $paroki?->alamat ?? 'Benlutu, Kec. Batu Putih, Kab. Timor Tengah Selatan, Nusa Tenggara Timur';
+    $telp = $telepon ?? $paroki?->telepon ?? '0812-3456-7890';
+    $wa = $whatsapp ?? $paroki?->whatsapp ?? '0812-3456-7890';
+    $mail = $email ?? $paroki?->email ?? 'sekretariat@parokibenlutu.org';
 @endphp
 
-<section class="page-banner page-hero" id="main-content">
-    <div class="page-banner-shape page-banner-shape--1" aria-hidden="true"></div>
-    <div class="page-banner-shape page-banner-shape--2" aria-hidden="true"></div>
-    <div class="container page-banner-content">
-        <span class="page-banner-badge"><i class="fas fa-envelope"></i> Kontak & Lokasi</span>
-        <h1>Sekretariat {{ $displayName }}</h1>
-        <p>Informasi resmi untuk pelayanan administrasi, pastoral, dan komunikasi umat.</p>
+<!-- Page Header / Breadcrumb Konoha Style -->
+<section class="page-header" style="background: linear-gradient(rgba(10, 30, 25, 0.75), rgba(10, 30, 25, 0.85)), url('{{ $globalHeroBg ?? '/assets/uploads/profil/hero_bg.jpg' }}') center/cover; padding: 90px 0 50px; color: white; text-align: center;">
+    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Hubungi Kami</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                    <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Beranda</a>
+                </li>
+                <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 6px 18px; border-radius: 25px; font-size: 0.85rem; font-weight: 600;">
+                    Hubungi Kami
+                </li>
+            </ol>
+        </nav>
     </div>
 </section>
 
-<section class="contact-page section bg-slate-100 dark:bg-[#090e1a]">
-    <div class="container">
+<!-- Contact Main Section Konoha Style -->
+<section class="contact-section" style="padding: 60px 0 80px; background: #f4faf9;">
+    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+        
         @if(session('success'))
-            <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-800">
-                <i class="fa-solid fa-circle-check mr-2"></i>{{ session('success') }}
+            <div style="margin-bottom: 25px; border-radius: 12px; border: 1px solid #a7f3d0; background: #ecfdf5; padding: 16px 20px; font-size: 0.9rem; font-weight: 600; color: #065f46; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-check-circle" style="font-size: 1.2rem; color: #10b981;"></i>
+                <span>{{ session('success') }}</span>
             </div>
         @endif
 
         @if($errors->any())
-            <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800">
-                <p class="font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Periksa kembali isian Anda.</p>
-                <ul class="list-disc pl-5 space-y-1">
+            <div style="margin-bottom: 25px; border-radius: 12px; border: 1px solid #fecdd3; background: #fff1f2; padding: 16px 20px; font-size: 0.9rem; color: #9f1239;">
+                <p style="font-weight: 700; margin-bottom: 6px;"><i class="fas fa-exclamation-triangle" style="margin-right: 6px;"></i> Mohon periksa isian formulir:</p>
+                <ul style="margin: 0; padding-left: 24px; font-size: 0.85rem;">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -72,162 +54,134 @@
             </div>
         @endif
 
-        <div class="contact-layout">
-            <div class="contact-main space-y-6">
-                <div class="bg-white dark:bg-[#101d31] rounded-3xl border border-slate-200 dark:border-[#263a55] shadow-sm overflow-hidden">
-                    <div class="p-6 sm:p-8">
-                        <div class="flex flex-col sm:flex-row gap-5 sm:items-center">
-                            <div class="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
-                                @if(!empty($globalLogo))
-                                    <img src="{{ $globalLogo }}" alt="Logo {{ $displayName }}" class="w-full h-full object-contain p-2">
-                                @else
-                                    <i class="fa-solid fa-church text-3xl text-sky-600"></i>
-                                @endif
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-xs font-black uppercase tracking-wider text-sky-700">Sekretariat Paroki</p>
-                                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight mt-1">{{ $displayName }}</h2>
-                                <p class="text-sm text-slate-500 dark:text-slate-300 mt-2">{{ filled($primaryAddress) ? $primaryAddress : 'Alamat sekretariat belum diisi.' }}</p>
-                            </div>
-                        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; align-items: start;">
+            
+            <!-- Left: Contact Information Card -->
+            <div class="contact-info" style="background: #ffffff; padding: 35px 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); height: 100%;">
+                <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 25px; border-left: 4px solid var(--primary-orange, #ff9800); padding-left: 12px;">
+                    Informasi Sekretariat
+                </h4>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
-                            @foreach ($identityRows as $row)
-                                <div class="rounded-2xl bg-slate-50 dark:bg-[#0b1728] border border-slate-100 dark:border-[#263a55] p-4">
-                                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                                        <i class="fa-solid {{ $row['icon'] }} text-teal-700 w-4"></i>
-                                        <span>{{ $row['label'] }}</span>
-                                    </p>
-                                    <p class="mt-1 text-sm font-black text-slate-900 dark:text-white">{{ filled($row['value']) ? $row['value'] : 'Belum diisi' }}</p>
-                                </div>
-                            @endforeach
-                        </div>
+                <!-- Item 1: Alamat -->
+                <div class="contact-item" style="display: flex; align-items: flex-start; margin-bottom: 24px;">
+                    <div class="contact-icon" style="width: 44px; height: 44px; background: var(--primary-teal, #00897b); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; font-size: 1.1rem; flex-shrink: 0;">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <h5 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Alamat Paroki</h5>
+                        <p style="font-size: 0.88rem; color: #64748b; margin: 0; line-height: 1.5;">{{ $primaryAddress }}</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white dark:bg-[#101d31] rounded-3xl border border-slate-200 dark:border-[#263a55] shadow-sm overflow-hidden">
-                        <div class="px-6 py-4 border-b border-slate-100 dark:border-[#263a55]">
-                            <h3 class="font-black text-lg text-slate-900 dark:text-white">Pelayan Pastoral</h3>
-                        </div>
-                        <div class="divide-y divide-slate-100 dark:divide-[#263a55]">
-                            @foreach ($pastoralRows as $row)
-                                <div class="px-6 py-4">
-                                    <p class="text-sm font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                                        <i class="fa-solid {{ $row['icon'] }} text-teal-700 w-4"></i>
-                                        <span>{{ $row['label'] }}</span>
-                                    </p>
-                                    <p class="mt-1 text-sm font-black text-slate-900 dark:text-white">{{ filled($row['value']) ? $row['value'] : 'Belum diisi' }}</p>
-                                </div>
-                            @endforeach
-                        </div>
+                <!-- Item 2: Telepon & WhatsApp -->
+                <div class="contact-item" style="display: flex; align-items: flex-start; margin-bottom: 24px;">
+                    <div class="contact-icon" style="width: 44px; height: 44px; background: var(--primary-teal, #00897b); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; font-size: 1.1rem; flex-shrink: 0;">
+                        <i class="fas fa-phone-alt"></i>
                     </div>
-
-                    <div class="bg-white dark:bg-[#101d31] rounded-3xl border border-slate-200 dark:border-[#263a55] shadow-sm overflow-hidden">
-                        <div class="px-6 py-4 border-b border-slate-100 dark:border-[#263a55]">
-                            <h3 class="font-black text-lg text-slate-900 dark:text-white">Aksi Cepat</h3>
-                        </div>
-                        <div class="p-6 space-y-3">
-                            @forelse ($availableChannels as $channel)
-                                <a href="{{ $channel['href'] ?? '#' }}" target="{{ !empty($channel['href']) && str_starts_with($channel['href'], 'http') ? '_blank' : '_self' }}" class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800 dark:border-[#263a55] dark:bg-[#0b1728] dark:text-slate-200">
-                                    <i class="{{ str_starts_with($channel['icon'], 'fa-brands') ? $channel['icon'] : 'fa-solid ' . $channel['icon'] }} text-teal-700 w-5"></i>
-                                    <span>{{ $channel['label'] }}</span>
-                                    <span class="ml-auto text-xs text-slate-400 truncate max-w-[160px]">{{ $channel['value'] }}</span>
-                                </a>
-                            @empty
-                                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                                    Kanal komunikasi belum diisi di profil paroki.
-                                </div>
-                            @endforelse
-
-                            @if (!empty($maps_url))
-                                <a href="{{ $maps_url }}" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 rounded-2xl bg-teal-600 px-4 py-3 text-sm font-black text-white hover:bg-teal-700">
-                                    <i class="fa-solid fa-map-location-dot"></i>
-                                    <span>Buka Google Maps</span>
-                                </a>
-                            @endif
-                        </div>
+                    <div>
+                        <h5 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Telepon & WhatsApp</h5>
+                        <p style="font-size: 0.88rem; color: #64748b; margin: 0; line-height: 1.5;">
+                            Kantor: <a href="tel:{{ preg_replace('/\s+/', '', $telp) }}" style="color: #0284c7; text-decoration: none;">{{ $telp }}</a><br>
+                            WhatsApp: <a href="https://wa.me/{{ preg_replace('/\D+/', '', $wa) }}" target="_blank" style="color: #10b981; text-decoration: none;">{{ $wa }}</a>
+                        </p>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-[#101d31] rounded-3xl border border-slate-200 dark:border-[#263a55] shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-100 dark:border-[#263a55]">
-                        <h3 class="font-black text-lg text-slate-900 dark:text-white">Lokasi & Wilayah Administratif</h3>
+                <!-- Item 3: Email -->
+                <div class="contact-item" style="display: flex; align-items: flex-start; margin-bottom: 24px;">
+                    <div class="contact-icon" style="width: 44px; height: 44px; background: var(--primary-teal, #00897b); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; font-size: 1.1rem; flex-shrink: 0;">
+                        <i class="fas fa-envelope"></i>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2">
-                        @foreach ($locationRows as $row)
-                            <div class="border-b sm:odd:border-r border-slate-100 dark:border-[#263a55] px-6 py-4">
-                                <p class="text-sm font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                                    <i class="fa-solid {{ $row['icon'] }} text-teal-700 w-4"></i>
-                                    <span>{{ $row['label'] }}</span>
-                                </p>
-                                <p class="mt-1 text-sm font-black text-slate-900 dark:text-white">{{ filled($row['value']) ? $row['value'] : 'Belum diisi' }}</p>
-                            </div>
-                        @endforeach
+                    <div>
+                        <h5 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Email Resmi</h5>
+                        <p style="font-size: 0.88rem; color: #64748b; margin: 0; line-height: 1.5;">
+                            <a href="mailto:{{ $mail }}" style="color: var(--primary-teal, #00897b); text-decoration: none;">{{ $mail }}</a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Item 4: Jam Operasional -->
+                <div class="contact-item" style="display: flex; align-items: flex-start; margin-bottom: 28px;">
+                    <div class="contact-icon" style="width: 44px; height: 44px; background: var(--primary-teal, #00897b); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; font-size: 1.1rem; flex-shrink: 0;">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <h5 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Jam Pelayanan Sekretariat</h5>
+                        <p style="font-size: 0.88rem; color: #64748b; margin: 0; line-height: 1.6;">
+                            Senin - Jumat: 08.00 - 15.00 WITA<br>
+                            Sabtu: 08.00 - 13.00 WITA<br>
+                            Minggu & Libur Nasional: Tutup (Hanya Layanan Darurat)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Media Sosial -->
+                <div style="border-top: 1px solid #eef2f6; padding-top: 20px;">
+                    <h5 style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Ikuti Kami:</h5>
+                    <div class="contact-social-icons" style="display: flex; gap: 10px;">
+                        <a href="#" style="width: 38px; height: 38px; background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; text-decoration: none; transition: all 0.3s;"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" style="width: 38px; height: 38px; background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; text-decoration: none; transition: all 0.3s;"><i class="fab fa-instagram"></i></a>
+                        <a href="#" style="width: 38px; height: 38px; background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; text-decoration: none; transition: all 0.3s;"><i class="fab fa-youtube"></i></a>
+                        <a href="https://wa.me/{{ preg_replace('/\D+/', '', $wa) }}" target="_blank" style="width: 38px; height: 38px; background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; text-decoration: none; transition: all 0.3s;"><i class="fab fa-whatsapp"></i></a>
                     </div>
                 </div>
             </div>
 
-            <aside class="contact-side space-y-6">
-                <div class="bg-white dark:bg-[#101d31] rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-[#263a55] shadow-sm">
-                    <div class="mb-5">
-                        <p class="text-xs font-black uppercase tracking-wider text-teal-700">Pesan Pengunjung</p>
-                        <h3 class="font-black text-2xl text-slate-900 dark:text-white mt-1">Kirim Pesan</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-300 mt-2">Gunakan formulir ini untuk pertanyaan administrasi, pelayanan, jadwal, atau informasi paroki.</p>
+            <!-- Right: Contact Form Card -->
+            <div class="contact-form" style="background: #ffffff; padding: 35px 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+                <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 8px; border-left: 4px solid var(--primary-orange, #ff9800); padding-left: 12px;">
+                    Kirim Pesan
+                </h4>
+                <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 24px; padding-left: 16px;">
+                    Sampaikan permohonan informasi, intensi misa, atau pertanyaan ke sekretariat paroki.
+                </p>
+
+                <form action="{{ route('kontak.kirim') }}" method="POST">
+                    @csrf
+                    <div class="hidden" style="display: none;">
+                        <input id="website_url" name="website_url" type="text" tabindex="-1" autocomplete="off">
                     </div>
 
-                    <form action="{{ route('kontak.kirim') }}" method="POST" class="space-y-4">
-                        @csrf
-                        <div class="hidden" aria-hidden="true">
-                            <label for="website_url">Website</label>
-                            <input id="website_url" name="website_url" type="text" tabindex="-1" autocomplete="off">
-                        </div>
+                    <div style="margin-bottom: 16px;">
+                        <label for="nama" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Nama Lengkap <span style="color: #ef4444;">*</span></label>
+                        <input id="nama" name="nama" type="text" value="{{ old('nama') }}" required class="form-control" placeholder="Masukkan nama lengkap Anda..." style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
+                    </div>
 
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
                         <div>
-                            <label for="nama" class="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Nama Lengkap <span class="text-rose-500">*</span></label>
-                            <input id="nama" name="nama" type="text" value="{{ old('nama') }}" required maxlength="150" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-teal-500 focus:bg-white dark:border-[#263a55] dark:bg-[#0b1728] dark:text-white" placeholder="Nama Anda">
+                            <label for="email" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Email</label>
+                            <input id="email" name="email" type="email" value="{{ old('email') }}" class="form-control" placeholder="nama@email.com" style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
                         </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="telepon" class="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">WhatsApp / Telepon</label>
-                                <input id="telepon" name="telepon" type="text" value="{{ old('telepon') }}" maxlength="30" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-teal-500 focus:bg-white dark:border-[#263a55] dark:bg-[#0b1728] dark:text-white" placeholder="081234567890">
-                            </div>
-                            <div>
-                                <label for="email" class="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Email</label>
-                                <input id="email" name="email" type="email" value="{{ old('email') }}" maxlength="150" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-teal-500 focus:bg-white dark:border-[#263a55] dark:bg-[#0b1728] dark:text-white" placeholder="nama@email.com">
-                            </div>
-                        </div>
-
                         <div>
-                            <label for="subjek" class="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Subjek</label>
-                            <input id="subjek" name="subjek" type="text" value="{{ old('subjek') }}" maxlength="180" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-teal-500 focus:bg-white dark:border-[#263a55] dark:bg-[#0b1728] dark:text-white" placeholder="Keperluan pesan">
+                            <label for="telepon" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">WhatsApp / Telepon</label>
+                            <input id="telepon" name="telepon" type="text" value="{{ old('telepon') }}" class="form-control" placeholder="081234567890" style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
                         </div>
+                    </div>
 
-                        <div>
-                            <label for="pesan" class="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Isi Pesan <span class="text-rose-500">*</span></label>
-                            <textarea id="pesan" name="pesan" required minlength="10" maxlength="3000" rows="5" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-teal-500 focus:bg-white dark:border-[#263a55] dark:bg-[#0b1728] dark:text-white" placeholder="Tuliskan pesan Anda...">{{ old('pesan') }}</textarea>
-                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Isi email atau nomor WhatsApp agar sekretariat dapat membalas.</p>
-                        </div>
+                    <div style="margin-bottom: 16px;">
+                        <label for="subjek" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Subjek Pesan</label>
+                        <input id="subjek" name="subjek" type="text" value="{{ old('subjek') }}" class="form-control" placeholder="Contoh: Informasi Sakramen Baptis, Intensi Misa, dll" style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
+                    </div>
 
-                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-teal-600 px-6 py-3 text-sm font-black text-white shadow-sm hover:bg-teal-700">
-                            <i class="fa-solid fa-paper-plane"></i>
-                            <span>Kirim Pesan</span>
-                        </button>
-                    </form>
-                </div>
+                    <div style="margin-bottom: 20px;">
+                        <label for="pesan" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Isi Pesan <span style="color: #ef4444;">*</span></label>
+                        <textarea id="pesan" name="pesan" required rows="5" class="form-control" placeholder="Tuliskan pesan atau pertanyaan Anda secara rinci..." style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">{{ old('pesan') }}</textarea>
+                    </div>
 
-                <div class="contact-map-card bg-white dark:bg-[#101d31] rounded-3xl p-4 border border-slate-200 dark:border-[#263a55] shadow-sm overflow-hidden">
-                    <div id="contact-map" class="online-map w-full h-[360px] rounded-2xl" data-title="{{ e($displayName) }}" data-address="{{ e($primaryAddress) }}" data-lat="{{ e($mapLat) }}" data-lng="{{ e($mapLng) }}"></div>
-                    @if (!empty($mapLat) && !empty($mapLng))
-                        <div class="contact-map-meta mt-4 rounded-2xl bg-slate-50 dark:bg-[#0b1728] px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200">
-                            <i class="fa-solid fa-location-crosshairs text-teal-700"></i>
-                            <span>{{ $mapLat }}, {{ $mapLng }}</span>
-                        </div>
-                    @endif
-                </div>
+                    <button type="submit" class="btn-submit" style="background: var(--primary-teal, #00897b); color: white; padding: 12px 36px; border-radius: 25px; border: none; font-weight: 600; font-size: 0.92rem; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Kirim Pesan Sekarang</span>
+                    </button>
+                </form>
+            </div>
+        </div>
 
-            </aside>
+        <!-- Interactive Map Section Konoha Style -->
+        <div style="margin-top: 45px; background: #ffffff; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+            <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 18px; border-left: 4px solid var(--primary-orange, #ff9800); padding-left: 12px;">
+                Lokasi Gereja & Sekretariat
+            </h4>
+            <div id="contact-map" class="online-map" style="width: 100%; height: 380px; border-radius: 12px; overflow: hidden;" data-title="{{ e($displayName) }}" data-address="{{ e($primaryAddress) }}" data-lat="{{ e($mapLat) }}" data-lng="{{ e($mapLng) }}"></div>
         </div>
     </div>
 </section>

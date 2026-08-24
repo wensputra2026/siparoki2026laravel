@@ -4,8 +4,112 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../**/*.vue';
+
+/* Offline Poppins Fonts */
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/poppins/poppins-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/fonts/poppins/poppins-latin-500-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/fonts/poppins/poppins-latin-600-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/poppins/poppins-latin-700-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url('/fonts/poppins/poppins-latin-800-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url('/fonts/poppins/poppins-latin-900-normal.woff2') format('woff2');
+}
 
 @theme {
-    --font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+body, html {
+    font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Inertia Modern Top Loader & Spinner */
+#nprogress {
+    pointer-events: none;
+}
+
+#nprogress .bar {
+    background: linear-gradient(90deg, #f59e0b, #0ea5e9, #10b981) !important;
+    position: fixed;
+    z-index: 99999;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px !important;
+    box-shadow: 0 0 10px #f59e0b, 0 0 5px #0ea5e9;
+}
+
+#nprogress .peg {
+    display: block;
+    position: absolute;
+    right: 0px;
+    width: 100px;
+    height: 100%;
+    box-shadow: 0 0 12px #f59e0b, 0 0 6px #f59e0b;
+    opacity: 1.0;
+    transform: rotate(3deg) translate(0px, -4px);
+}
+
+#nprogress .spinner {
+    display: block;
+    position: fixed;
+    z-index: 99999;
+    top: 15px;
+    right: 18px;
+}
+
+#nprogress .spinner-icon {
+    width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    border: solid 2.5px transparent;
+    border-top-color: #f59e0b !important;
+    border-left-color: #0ea5e9 !important;
+    border-radius: 50%;
+    animation: nprogress-spinner 400ms linear infinite;
+}
+
+@keyframes nprogress-spinner {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

@@ -1,4 +1,4 @@
-﻿document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function() {
     var typingText = document.querySelector('.hero-typing-text');
     if (typingText) {
         var fullText = typingText.getAttribute('data-typing-text') || typingText.textContent || '';
@@ -40,10 +40,12 @@
                         .bindPopup('<strong>Gereja Paroki</strong><br>Fontein, Kota Kupang')
                         .openPopup();
                 }
+                setTimeout(function() { homeMap.invalidateSize(); }, 300);
             })
             .catch(function() {
                 L.marker([-10.1626, 123.5796]).addTo(homeMap)
                     .bindPopup('<strong>Gereja Paroki</strong><br>Fontein, Kota Kupang');
+                setTimeout(function() { homeMap.invalidateSize(); }, 300);
             });
     }
 });

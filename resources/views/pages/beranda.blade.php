@@ -209,20 +209,21 @@
 </section>
 
 <!-- ===== PETA WILAYAH & KAPELA (WEBGIS INTERAKTIF) SECTION ===== -->
-<section id="peta-wilayah-kapela" class="py-16 bg-slate-100/70 dark:bg-[#090e1a] border-t border-slate-200 dark:border-slate-800">
-    <div class="max-w-6xl mx-auto px-4">
-        <div class="section-title">
+<section id="peta-wilayah-kapela" class="py-16 bg-slate-100/70 dark:bg-[#090e1a] border-t border-b border-slate-200 dark:border-slate-800 relative">
+    <div class="max-w-6xl mx-auto px-4 mb-8">
+        <div class="section-title mb-0">
             <span class="st-badge"><i class="fas fa-map-marked-alt me-1"></i> Teritorial Pastoral</span>
             <h2>Peta Wilayah <span class="text-gradient">Stasi &amp; Kapela</span></h2>
             <p>Persebaran lokasi Gereja Pusat, Stasi, dan Kapela di wilayah teritorial paroki.</p>
         </div>
+    </div>
 
-        <div class="bg-white dark:bg-[#101d31] border border-slate-200 dark:border-[#263a55] rounded-3xl overflow-hidden shadow-xl">
-            <div id="home-map-kapela" class="online-map" style="height: 480px; width: 100%;"></div>
-        </div>
+    {{-- Full Width Map (Edge to Edge) --}}
+    <div class="w-full relative shadow-inner border-y border-slate-300/80 dark:border-[#263a55]">
+        <div id="home-map-kapela" class="online-map" style="height: 520px; width: 100%;"></div>
 
-        <div class="text-center mt-6">
-            <a href="/peta-kapela" class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-2.5 rounded-full text-sm transition shadow-md">
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400]">
+            <a href="/peta-kapela" class="inline-flex items-center gap-2 bg-sky-600/95 hover:bg-sky-600 backdrop-blur-md text-white font-semibold px-6 py-3 rounded-full text-sm transition shadow-xl hover:shadow-sky-600/30 border border-white/20">
                 <i class="fas fa-expand-arrows-alt text-xs"></i> <span>Buka Peta Layar Penuh</span>
             </a>
         </div>
@@ -338,11 +339,27 @@
             <p>Foto perayaan liturgi, penerimaan sakramen, dan momen kegiatan umat paroki.</p>
         </div>
 
+        @php
+            $galleryImage = function ($item) {
+                $path = $item->gambar ?? $item->youtube_thumbnail ?? null;
+                if (empty($path)) return null;
+                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
+                $clean = ltrim($path, '/');
+                $base = basename($clean);
+                if (str_starts_with($clean, 'uploads/galeri/')) return asset($clean);
+                if (str_starts_with($clean, 'uploads/') || str_starts_with($clean, 'assets/')) return asset($clean);
+                if (file_exists(public_path('uploads/galeri/' . $base))) return asset('uploads/galeri/' . $base);
+                if (file_exists(public_path('assets/uploads/galeri/' . $base))) return asset('assets/uploads/galeri/' . $base);
+                return asset('uploads/galeri/' . $base);
+            };
+        @endphp
+
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             @forelse($galeri ?? [] as $item)
+            @php $imgUrl = $galleryImage($item); @endphp
             <div class="rounded-2xl overflow-hidden aspect-square bg-slate-200 dark:bg-slate-800 shadow-sm hover:shadow-md transition">
-                @if($item->gambar)
-                    <img src="{{ asset('storage/' . $item->gambar) }}" alt="{{ $item->judul }}" class="w-full h-full object-cover">
+                @if($imgUrl)
+                    <img src="{{ $imgUrl }}" alt="{{ $item->judul ?? 'Galeri Foto' }}" class="w-full h-full object-cover" loading="lazy">
                 @else
                     <div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fa-regular fa-image text-2xl"></i></div>
                 @endif

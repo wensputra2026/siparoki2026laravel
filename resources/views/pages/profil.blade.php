@@ -9,62 +9,79 @@
     $pastorName = $pastor_paroki ?? $paroki?->pastor_paroki ?? $paroki?->nama_pastor_paroki_aktif ?? null;
     $profileText = $profil->sejarah ?? $profil->deskripsi ?? $paroki?->keterangan ?? null;
     $profileRows = [
-        ['icon' => 'fa-location-dot', 'label' => 'Alamat', 'value' => $alamat ?? $paroki?->alamat ?? null],
-        ['icon' => 'fa-phone', 'label' => 'Telepon', 'value' => $telepon ?? $paroki?->telepon ?? null],
-        ['icon' => 'fa-envelope', 'label' => 'Email', 'value' => $email ?? $paroki?->email ?? null],
-        ['icon' => 'fa-globe', 'label' => 'Website', 'value' => $website ?? $paroki?->website ?? null],
+        ['icon' => 'fas fa-map-marker-alt', 'label' => 'Alamat Paroki', 'value' => $alamat ?? $paroki?->alamat ?? null],
+        ['icon' => 'fas fa-phone-alt', 'label' => 'Telepon / HP', 'value' => $telepon ?? $paroki?->telepon ?? null],
+        ['icon' => 'fas fa-envelope', 'label' => 'Email Resmi', 'value' => $email ?? $paroki?->email ?? null],
+        ['icon' => 'fas fa-globe', 'label' => 'Website', 'value' => $website ?? $paroki?->website ?? null],
     ];
 @endphp
 
-<section class="page-banner">
-    <span class="page-banner-shape page-banner-shape--1"></span>
-    <span class="page-banner-shape page-banner-shape--2"></span>
-    <div class="page-banner-content container">
-        <span class="page-banner-badge"><i class="fa-solid fa-church"></i> Profil Paroki</span>
-        <h1>{{ $displayName }}</h1>
-        <p>Informasi umum, sejarah, dan identitas pastoral paroki.</p>
+<!-- Page Header / Breadcrumb Konoha Style -->
+<section class="page-header" style="background: linear-gradient(rgba(10, 30, 25, 0.75), rgba(10, 30, 25, 0.85)), url('{{ $globalHeroBg ?? '/assets/uploads/profil/hero_bg.jpg' }}') center/cover; padding: 90px 0 50px; color: white; text-align: center;">
+    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Profil Paroki</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                    <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Beranda</a>
+                </li>
+                <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 6px 18px; border-radius: 25px; font-size: 0.85rem; font-weight: 600;">
+                    Profil
+                </li>
+            </ol>
+        </nav>
     </div>
 </section>
 
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    @if($profil || $paroki)
-    <div class="bg-white rounded-xl shadow-md p-8">
-        @if($profil->foto ?? false)
-        <div class="mb-8 rounded-xl overflow-hidden">
-            <img src="{{ asset('storage/' . $profil->foto) }}" alt="{{ $displayName }}" class="w-full h-64 object-cover">
-        </div>
-        @endif
-
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ $displayName }}</h2>
-
-        @if($pastorName)
-        <p class="text-amber-600 font-medium mb-4">Pastor: {{ $pastorName }}</p>
-        @endif
-
-        @if($profileText)
-        <div class="prose prose-amber max-w-none mb-6">
-            {!! nl2br(e($profileText)) !!}
-        </div>
-        @endif
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 border-t pt-6">
-            @foreach($profileRows as $row)
-                @if(filled($row['value']))
-                    <div class="flex items-start space-x-3">
-                        <i class="fa-solid {{ $row['icon'] }} text-amber-600 mt-1 w-5 text-center shrink-0"></i>
-                        <div>
-                            <p class="font-medium text-gray-900">{{ $row['label'] }}</p>
-                            <p class="text-gray-600 text-sm">{{ $row['value'] }}</p>
-                        </div>
+<!-- Content Section Konoha Style -->
+<section class="content-section" style="padding: 60px 0 80px; background: #f4faf9;">
+    <div class="container" style="max-width: 1000px; margin: 0 auto; padding: 0 20px;">
+        
+        <div style="background: #ffffff; border-radius: 15px; padding: 40px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+            
+            <div style="text-align: center; margin-bottom: 35px;">
+                @if(!empty($globalLogo))
+                    <div style="width: 90px; height: 90px; margin: 0 auto 18px; border-radius: 50%; background: #f8fafc; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 10px;">
+                        <img src="{{ $globalLogo }}" alt="{{ $displayName }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                     </div>
                 @endif
-            @endforeach
+                <h2 style="font-size: 1.8rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">
+                    {{ $displayName }}
+                </h2>
+                @if($pastorName)
+                    <p style="font-size: 0.95rem; font-weight: 600; color: var(--primary-teal, #00897b); margin: 0;">
+                        <i class="fas fa-user-tie" style="color: var(--primary-orange, #ff9800); margin-right: 6px;"></i> Pastor Paroki: {{ $pastorName }}
+                    </p>
+                @endif
+            </div>
+
+            @if($profileText)
+                <div style="color: #334155; font-size: 0.98rem; line-height: 1.85; margin-bottom: 35px; border-top: 1px solid #f1f5f9; padding-top: 25px;">
+                    {!! nl2br(e($profileText)) !!}
+                </div>
+            @endif
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; border-top: 1px solid #eef2f6; padding-top: 30px;">
+                @foreach($profileRows as $row)
+                    @if(filled($row['value']))
+                        <div style="display: flex; align-items: flex-start; gap: 14px; background: #f8fafc; border-radius: 12px; padding: 16px 20px;">
+                            <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">
+                                <i class="{{ $row['icon'] }}"></i>
+                            </div>
+                            <div>
+                                <span style="display: block; font-size: 0.78rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">
+                                    {{ $row['label'] }}
+                                </span>
+                                <span style="font-size: 0.9rem; font-weight: 600; color: #1e293b; margin-top: 2px; display: block;">
+                                    {{ $row['value'] }}
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+
         </div>
     </div>
-    @else
-    <div class="bg-white rounded-xl shadow-md p-12 text-center">
-        <p class="text-gray-500 text-lg">Profil paroki belum tersedia.</p>
-    </div>
-    @endif
-</div>
+</section>
 @endsection
