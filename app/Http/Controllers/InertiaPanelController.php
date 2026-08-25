@@ -7452,9 +7452,9 @@ class InertiaPanelController extends Controller
             $data['jenis_iuran_id'] = !empty($data['jenis_iuran_id']) ? (int) $data['jenis_iuran_id'] : null;
         }
 
-        if (isset($data['total_jumlah']) && !isset($data['jumlah'])) {
+        if (isset($data['total_jumlah']) && $data['total_jumlah'] !== '' && $data['total_jumlah'] !== null) {
             $data['jumlah'] = (float) $data['total_jumlah'];
-        } elseif (isset($data['jumlah'])) {
+        } elseif (isset($data['jumlah']) && $data['jumlah'] !== '' && $data['jumlah'] !== null) {
             $data['jumlah'] = (float) $data['jumlah'];
         } else {
             $data['jumlah'] = 0.00;
