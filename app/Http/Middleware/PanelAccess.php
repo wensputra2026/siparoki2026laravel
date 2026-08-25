@@ -132,21 +132,21 @@ class PanelAccess
 
         // Least-privilege module allow-list per (non-elevated) role prefix.
         $moduleAccess = [
-            'bendahara' => ['keuangan', 'aset', 'kategori-keuangan', 'lapak-produk', 'jenis-iuran', 'iuran', 'kolekte', 'intensi-misa', 'intensi'],
-            'penulis' => ['konten', 'kategori-konten', 'pengumuman', 'galeri', 'renungan', 'kegiatan', 'artikel', 'berita'],
+            'bendahara' => ['keuangan', 'aset', 'kategori-keuangan', 'lapak-produk', 'jenis-iuran', 'iuran', 'kolekte', 'intensi-misa', 'intensi', 'umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga'],
+            'penulis' => ['konten', 'kategori-konten', 'pengumuman', 'galeri', 'renungan', 'kegiatan', 'artikel', 'berita', 'komentar-artikel', 'download'],
             'wilayah' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kegiatan', 'iuran', 'keuangan', 'aset'],
             'kapela' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kapela', 'stasi', 'kegiatan', 'iuran', 'keuangan', 'aset'],
-            'kub' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'lingkungan', 'kub', 'iuran', 'keuangan', 'aset'],
-            'umat' => [],
+            'kub' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'lingkungan', 'kub', 'iuran', 'keuangan', 'aset', 'lapak-produk'],
+            'umat' => ['kk-katolik', 'kk', 'keluarga', 'pengajuan-sakramen', 'lapak-produk', 'umat'],
         ];
 
-        // The legacy /v2/* prefix is a generic dashboard for parishioners:
-        // it must not become an admin backdoor.
+        // The legacy /v2/* prefix smoothly redirects to the user's role panel.
         if ($segment === 'v2') {
-            if ($module === null || in_array($module, $safeModules, true)) {
-                return $next($request);
+            $prefix = $this->rolePrefix($slug) ?? 'superadmin';
+            if ($module === null || in_array($module, ['dashboard', ''], true)) {
+                return redirect("/{$prefix}");
             }
-            abort(403, 'Akses ditolak untuk peran Anda.');
+            return redirect("/{$prefix}/{$module}");
         }
 
         $prefix = $this->rolePrefix($slug);

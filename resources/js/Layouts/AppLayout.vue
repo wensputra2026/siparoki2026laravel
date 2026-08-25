@@ -570,7 +570,6 @@ const roleMenus = {
         {
             section: 'Akun Saya',
             menus: [
-                { name: 'Manajemen User', href: '/v2/user', icon: 'fa-user-gear' },
                 { name: 'Profil Saya', href: '/v2/profil-saya', icon: 'fa-circle-user' },
             ],
         },
