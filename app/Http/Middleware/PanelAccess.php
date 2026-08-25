@@ -151,8 +151,19 @@ class PanelAccess
 
         $prefix = $this->rolePrefix($slug);
 
-        if (!$prefix || $segment !== $prefix) {
-            abort(403, 'Akses ditolak untuk peran Anda.');
+        if (!$prefix) {
+            return redirect()->route('login');
+        }
+
+        if ($segment !== $prefix) {
+            if ($module === null || in_array($module, ['dashboard', ''], true)) {
+                return redirect("/{$prefix}");
+            }
+            $allowed = $moduleAccess[$prefix] ?? [];
+            if (in_array($module, $allowed, true) || in_array($module, $safeModules, true)) {
+                return redirect("/{$prefix}/{$module}");
+            }
+            return redirect("/{$prefix}");
         }
 
         if ($module !== null) {

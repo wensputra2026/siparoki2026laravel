@@ -394,9 +394,52 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
 Route::middleware([\App\Http\Middleware\PanelAccess::class])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\InertiaPanelController::class, 'dashboard'])->name('dashboard');
 });
-Route::get('/panduan', fn () => redirect('/superadmin/panduan-hak-akses'))->name('panduan');
-Route::get('/profil-saya', fn () => redirect('/superadmin/profil-saya'))->name('profil-saya.legacy');
-Route::get('/penfui/users', fn () => redirect('/admin/user'))->name('penfui.users.legacy');
+Route::get('/panduan', function () {
+    $user = auth()->user();
+    if (!$user) return redirect()->route('login');
+    $slug = strtolower(preg_replace('/[^a-z0-9]/', '', $user->role?->slug ?? $user->role?->nama_role ?? ''));
+    $roleMap = [
+        'superadmin' => 'superadmin',
+        'paroki' => 'paroki',
+        'pastor' => 'pastor',
+        'wilayah' => 'wilayah',
+        'kapela' => 'kapela',
+        'stasi' => 'kapela',
+        'kub' => 'kub',
+        'bendahara' => 'bendahara',
+        'penulis' => 'penulis',
+        'umat' => 'umat',
+    ];
+    $prefix = 'superadmin';
+    foreach ($roleMap as $k => $p) {
+        if (str_contains($slug, $k)) { $prefix = $p; break; }
+    }
+    return redirect("/{$prefix}/panduan-hak-akses");
+})->name('panduan');
+
+Route::get('/profil-saya', function () {
+    $user = auth()->user();
+    if (!$user) return redirect()->route('login');
+    $slug = strtolower(preg_replace('/[^a-z0-9]/', '', $user->role?->slug ?? $user->role?->nama_role ?? ''));
+    $roleMap = [
+        'superadmin' => 'superadmin',
+        'paroki' => 'paroki',
+        'pastor' => 'pastor',
+        'wilayah' => 'wilayah',
+        'kapela' => 'kapela',
+        'stasi' => 'kapela',
+        'kub' => 'kub',
+        'bendahara' => 'bendahara',
+        'penulis' => 'penulis',
+        'umat' => 'umat',
+    ];
+    $prefix = 'superadmin';
+    foreach ($roleMap as $k => $p) {
+        if (str_contains($slug, $k)) { $prefix = $p; break; }
+    }
+    return redirect("/{$prefix}/profil-saya");
+})->name('profil-saya.legacy');
+Route::get('/penfui/users', fn () => redirect('/superadmin/user'))->name('penfui.users.legacy');
 
 // Master Referensi & Admin Profil Saya (Inertia, ringan, tanpa eager relation Eloquent)
 Route::middleware([\App\Http\Middleware\PanelAccess::class])->prefix('admin')->group(function () use ($legacyModuleAliases) {
