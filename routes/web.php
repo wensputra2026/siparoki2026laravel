@@ -293,7 +293,13 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::get('/master-referensi/pastor/edit/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'editPastor'])->name("panel.{$prefix}.master-referensi.pastor.edit");
         Route::post('/master-pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name("panel.{$prefix}.master-pastor.store");
         Route::post('/pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name("panel.{$prefix}.pastor.store");
+        Route::post('/master-referensi/pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name("panel.{$prefix}.master-referensi.pastor.store");
         Route::post('/master-pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-pastor.update");
+        Route::post('/master-pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-pastor.update.alt");
+        Route::post('/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.pastor.update");
+        Route::post('/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.pastor.update.alt");
+        Route::post('/master-referensi/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-referensi.pastor.update");
+        Route::post('/master-referensi/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-referensi.pastor.update.alt");
         if (in_array($prefix, ['superadmin', 'admin'], true)) {
             Route::get('/profil-paroki', [\App\Http\Controllers\InertiaPanelController::class, 'profilParoki'])->name("panel.{$prefix}.profil-paroki");
         }
@@ -486,6 +492,15 @@ Route::middleware([\App\Http\Middleware\PanelAccess::class])->prefix('admin')->g
     Route::get('/master-referensi/pastor/create', [\App\Http\Controllers\InertiaPanelController::class, 'createPastor'])->name('admin.master-referensi.pastor.create');
     Route::get('/master-referensi/pastor/{id}/edit', [\App\Http\Controllers\InertiaPanelController::class, 'editPastor'])->name('admin.master-referensi.pastor.edit');
     Route::get('/master-referensi/pastor/edit/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'editPastor'])->name('admin.master-referensi.pastor.edit.alt');
+    Route::post('/master-pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name('admin.master-pastor.store');
+    Route::post('/master-pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-pastor.update');
+    Route::post('/master-pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-pastor.update.alt');
+    Route::post('/master-referensi/pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name('admin.master-referensi.pastor.store');
+    Route::post('/master-referensi/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-referensi.pastor.update');
+    Route::post('/master-referensi/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-referensi.pastor.update.alt');
+    Route::post('/pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name('admin.pastor.store');
+    Route::post('/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.pastor.update');
+    Route::post('/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.pastor.update.alt');
     Route::get('/master-referensi/{type}', [MasterReferensiController::class, 'list'])->name('admin.master-referensi.list');
     Route::get('/master-referensi/options/{relTable}', [MasterReferensiController::class, 'options'])->name('admin.master-referensi.options');
     Route::post('/master-referensi/{type}', [MasterReferensiController::class, 'store'])->name('admin.master-referensi.store');

@@ -23,6 +23,16 @@ const basePrefix = computed(() => {
 const search = ref(props.filters.search || '');
 let searchDebounceTimeout = null;
 
+const isReloadingData = ref(false);
+const reloadData = () => {
+    isReloadingData.value = true;
+    router.reload({
+        only: ['umats', 'filters'],
+        preserveScroll: true,
+        onFinish: () => { isReloadingData.value = false; },
+    });
+};
+
 watch(search, (val) => {
     clearTimeout(searchDebounceTimeout);
     searchDebounceTimeout = setTimeout(() => {
@@ -63,6 +73,8 @@ const formatPaginationLabel = (label) => {
                     <p class="text-xs text-slate-500">Pencarian data dan manajemen direktori umat paroki secara terintegrasi</p>
                 </div>
 
+                <!-- Instant Search + Reload -->
+                <div class="flex items-center gap-2 w-full sm:w-auto">
                 <!-- Instant Search Input -->
                 <div class="relative w-full sm:w-80">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
@@ -80,8 +92,19 @@ const formatPaginationLabel = (label) => {
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
+                <!-- Reload Data Button -->
+                <button
+                    @click="reloadData"
+                    :disabled="isReloadingData"
+                    title="Muat ulang data dari database tanpa menyegarkan halaman"
+                    class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60"
+                >
+                    <i class="fa-solid fa-rotate" :class="{ 'fa-spin': isReloadingData }"></i>
+                    <span>{{ isReloadingData ? 'Memuat...' : 'Reload' }}</span>
+                </button>
             </div>
         </div>
+    </div>
 
         <!-- Table Container -->
         <div class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-xs">

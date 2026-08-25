@@ -1829,7 +1829,9 @@ const statusLabel = (item) => {
         <div class="flex flex-col h-auto min-h-0 lg:h-full gap-2.5 pb-4 lg:pb-0">
 
         <!-- Header Card with Actions -->
-        <div class="rounded-2xl bg-white border border-slate-200/80 p-3 sm:p-4 shadow-2xs shrink-0 space-y-3.5">
+        <div class=
+        
+        "rounded-2xl bg-white border border-slate-200/80 p-3 sm:p-4 shadow-2xs shrink-0 space-y-3.5">
             <!-- Top Row: Title + Action Buttons -->
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-3 border-b border-slate-100">
                 <div class="flex items-center gap-2.5">
@@ -1847,7 +1849,7 @@ const statusLabel = (item) => {
                                 {{ items.total || 0 }} Data Terdaftar
                             </span>
                         </div>
-                        <p class="text-[11px] text-slate-500">Kelola dan pantau data master {{ title.toLowerCase() }} paroki secara terintegrasi.</p>
+                        <p v-if="moduleKey !== 'direktori-dpp'" class="text-[11px] text-slate-500">Kelola dan pantau data master {{ title.toLowerCase() }} paroki secara terintegrasi.</p>
                     </div>
                 </div>
 

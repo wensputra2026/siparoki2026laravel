@@ -286,9 +286,11 @@ const backUrl = computed(() => {
 const submit = () => {
     form.riwayat_tambahan = riwayatTambahan.value;
 
+    const isRefer = typeof window !== 'undefined' && window.location.pathname.includes('/master-referensi');
+    const pastorId = props.pastorItem?.id || props.pastorItem?.id_pastor;
     const targetUrl = props.isEdit
-        ? `/${props.prefix}/master-pastor/${props.pastorItem?.id}/update`
-        : `/${props.prefix}/master-pastor/store`;
+        ? (isRefer ? `/admin/master-referensi/pastor/${pastorId}/update` : `/${props.prefix}/master-pastor/${pastorId}/update`)
+        : (isRefer ? `/admin/master-referensi/pastor/store` : `/${props.prefix}/master-pastor/store`);
 
     form.post(targetUrl, {
         forceFormData: true,

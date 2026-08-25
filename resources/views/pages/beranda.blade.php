@@ -201,8 +201,8 @@
                     </div>
 
                     <span class="pelayan-role-badge">Pastor Paroki</span>
-                    <h4>{{ $pastor_paroki ?? 'RD. Herman Hillers Penga' }}</h4>
-                    <div class="pelayan-subrole">Ketua Dewan Pastoral Paroki</div>
+                    <h4>{{ $pastor_paroki ?? 'RD. Herman Hilers Penga' }}</h4>
+                    <div class="pelayan-subrole">{{ $pastor_paroki_obj->catatan_pelayanan ?? $pastor_paroki_obj->jabatan ?? 'Ketua Dewan Pastoral Paroki' }}</div>
 
                     <div class="pelayan-divider"></div>
 
@@ -221,7 +221,7 @@
                 <div class="pelayan-card-footer">
                     <span class="pelayan-status-label">Status</span>
                     <span class="pelayan-status-val">
-                        <span class="pelayan-status-dot"></span> Aktif Bertugas
+                        <span class="pelayan-status-dot"></span> {{ $pastor_paroki_obj->status ?? 'Aktif Bertugas' }}
                     </span>
                 </div>
             </div>
@@ -230,17 +230,21 @@
             <div class="pelayan-card pastor-rekan">
                 <div>
                     <div class="pelayan-avatar-wrap">
-                        <div class="pelayan-avatar-icon rekan">
-                            <i class="fa-solid fa-hands-praying"></i>
-                        </div>
+                        @if(!empty($pastor_rekan_obj?->foto))
+                            <img src="{{ asset($pastor_rekan_obj->foto) }}" alt="Pastor Rekan" class="pelayan-avatar-img">
+                        @else
+                            <div class="pelayan-avatar-icon rekan">
+                                <i class="fa-solid fa-hands-praying"></i>
+                            </div>
+                        @endif
                         <span class="pelayan-tag vikaris">
                             <i class="fa-solid fa-church text-[9px] me-0.5"></i> Vikaris
                         </span>
                     </div>
 
                     <span class="pelayan-role-badge rekan">Pastor Rekan</span>
-                    <h4>{{ (!empty($pastor_rekan) && $pastor_rekan !== 'Pastor Rekan') ? $pastor_rekan : 'Pastor Rekan Paroki' }}</h4>
-                    <div class="pelayan-subrole">Vikaris Paroki</div>
+                    <h4>{{ $pastor_rekan ?? 'Pastor Rekan Paroki' }}</h4>
+                    <div class="pelayan-subrole">{{ $pastor_rekan_obj->jabatan ?? 'Vikaris Paroki' }}</div>
 
                     <div class="pelayan-divider"></div>
 
@@ -259,7 +263,7 @@
                 <div class="pelayan-card-footer">
                     <span class="pelayan-status-label">Status</span>
                     <span class="pelayan-status-val">
-                        <span class="pelayan-status-dot"></span> Aktif Bertugas
+                        <span class="pelayan-status-dot"></span> {{ $pastor_rekan_obj->status ?? 'Aktif Bertugas' }}
                     </span>
                 </div>
             </div>
@@ -268,17 +272,21 @@
             <div class="pelayan-card frater-katekis">
                 <div>
                     <div class="pelayan-avatar-wrap">
-                        <div class="pelayan-avatar-icon frater">
-                            <i class="fa-solid fa-book-bible"></i>
-                        </div>
+                        @if(!empty($frater_obj?->foto))
+                            <img src="{{ asset($frater_obj->foto) }}" alt="Frater" class="pelayan-avatar-img">
+                        @else
+                            <div class="pelayan-avatar-icon frater">
+                                <i class="fa-solid fa-book-bible"></i>
+                            </div>
+                        @endif
                         <span class="pelayan-tag pastoral">
                             <i class="fa-solid fa-book-open text-[9px] me-0.5"></i> Pastoral
                         </span>
                     </div>
 
                     <span class="pelayan-role-badge frater">Frater / Katekis</span>
-                    <h4>{{ (!empty($frater) && $frater !== 'Frater TOP') ? $frater : 'Frater Pastoral / Katekis' }}</h4>
-                    <div class="pelayan-subrole">Pendamping Pastoral</div>
+                    <h4>{{ $frater ?? 'Frater Pastoral / Katekis' }}</h4>
+                    <div class="pelayan-subrole">{{ $frater_obj->jabatan ?? 'Pendamping Pastoral' }}</div>
 
                     <div class="pelayan-divider"></div>
 
@@ -297,7 +305,7 @@
                 <div class="pelayan-card-footer">
                     <span class="pelayan-status-label">Status</span>
                     <span class="pelayan-status-val">
-                        <span class="pelayan-status-dot"></span> Aktif Bertugas
+                        <span class="pelayan-status-dot"></span> {{ $frater_obj->status ?? 'Aktif Bertugas' }}
                     </span>
                 </div>
             </div>
@@ -321,10 +329,16 @@
 <!-- ===== PETA WILAYAH & KAPELA (WEBGIS INTERAKTIF) SECTION ===== -->
 <section id="peta-wilayah-kapela" class="py-16 bg-slate-100/70 dark:bg-[#090e1a] border-t border-b border-slate-200 dark:border-slate-800 relative">
     <div class="max-w-6xl mx-auto px-4 mb-8">
-        <div class="section-title mb-0">
-            <span class="st-badge"><i class="fas fa-map-marked-alt me-1"></i> Teritorial Pastoral</span>
-            <h2>Peta Wilayah <span class="text-gradient">Stasi &amp; Kapela</span></h2>
-            <p>Persebaran lokasi Gereja Pusat, Stasi, dan Kapela di wilayah teritorial paroki.</p>
+        <div class="section-title text-center mb-0">
+            <span class="badge mb-2 px-3 py-2" style="background: rgba(0, 137, 123, 0.1); color: var(--primary-teal, #00897b); font-weight: 700; border-radius: 20px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                <i class="fas fa-map-marked-alt me-1"></i> Teritorial Pastoral
+            </span>
+            <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b;" class="dark:text-white">
+                Peta Wilayah <span style="color: var(--primary-orange, #ff9800);">Stasi &amp; Kapela</span>
+            </h2>
+            <p style="color: #64748b; font-size: 0.95rem; max-width: 680px; margin: 8px auto 0;">
+                Persebaran lokasi Gereja Pusat, Stasi, dan Kapela di wilayah teritorial paroki.
+            </p>
         </div>
     </div>
 
@@ -342,65 +356,112 @@
 
 <!-- Section Jadwal Misa Paroki -->
 <section id="jadwal-misa" class="py-16 bg-white dark:bg-[#07111f]">
-    <div class="max-w-6xl mx-auto px-4">
-        <div class="section-title">
-            <span class="st-badge">Jadwal Misa</span>
-            <h2>Perayaan <span class="text-gradient">Ekaristi</span></h2>
-            <p>Jadwal Misa Harian dan Minggu {{ $globalNamaParoki ?? 'St. Vinsensius a Paulo - Benlutu' }}.</p>
+    <div class="container">
+        <div class="section-title text-center mb-5">
+            <span class="badge mb-2 px-3 py-2" style="background: rgba(255, 152, 0, 0.12); color: var(--primary-orange, #ff9800); font-weight: 700; border-radius: 20px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                <i class="fas fa-calendar-alt me-1"></i> Jadwal Misa
+            </span>
+            <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b;" class="dark:text-white">
+                Perayaan <span style="color: var(--primary-teal, #00897b);">Ekaristi</span>
+            </h2>
+            <p style="color: #64748b; font-size: 0.95rem; max-width: 680px; margin: 8px auto 0;">
+                Jadwal Misa Harian dan Minggu {{ $globalNamaParoki ?? 'St. Vinsensius a Paulo - Benlutu' }}.
+            </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @forelse($jadwalMisa ?? [] as $misa)
-            <div class="bg-slate-50 dark:bg-[#101d31] border border-slate-200 dark:border-[#263a55] rounded-2xl p-6 shadow-sm">
-                <div class="flex items-center space-x-3 mb-3">
-                    <div class="w-12 h-12 bg-sky-100 text-sky-700 rounded-xl flex items-center justify-center font-bold text-lg">
-                        {{ \Carbon\Carbon::parse($misa->tanggal)->format('d') }}
+        <div class="row g-4 justify-content-center">
+            @forelse($jadwalMisa ?? [] as $idx => $misa)
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-4 transition-all hover:shadow-md hover:-translate-y-1" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center font-bold text-white shadow-sm" style="width: 52px; height: 52px; background: linear-gradient(135deg, #00897b, #004d40); font-size: 1.1rem; flex-shrink: 0;">
+                            M{{ $idx + 1 }}
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-bold text-dark" style="font-size: 1.05rem;">{{ $misa->nama_misa ?? $misa->jenis_perayaan ?? 'Misa Kudus' }}</h5>
+                            <span class="text-muted small"><i class="fa-solid fa-church text-amber-600 me-1"></i> {{ $misa->lokasi ?? $misa->tempat ?? 'Gereja Pusat Paroki' }}</span>
+                        </div>
                     </div>
-                    <div>
-                        <p class="font-bold text-slate-900 dark:text-white">{{ $misa->jenis_perayaan ?? 'Misa Kudus' }}</p>
-                        <p class="text-xs text-slate-500">{{ \Carbon\Carbon::parse($misa->tanggal)->translatedFormat('l, d F Y') }}</p>
+                    <div class="pt-2 border-top border-slate-200/80 mt-auto d-flex align-items-center justify-content-between">
+                        <span class="fw-bold" style="color: var(--primary-teal, #00897b); font-size: 1rem;">
+                            <i class="fa-regular fa-clock me-1 text-teal-600"></i> {{ $misa->jam ?? $misa->jam_perayaan ?? $misa->waktu ?? '08.00 WITA' }}
+                        </span>
+                        <span class="badge rounded-pill px-3 py-1.5" style="background: rgba(0, 137, 123, 0.1); color: var(--primary-teal, #00897b); font-size: 0.75rem;">
+                            {{ $misa->hari ?? 'Minggu' }}
+                        </span>
                     </div>
                 </div>
-                <p class="text-sm font-semibold text-sky-600"><i class="fa-regular fa-clock mr-1.5"></i> {{ $misa->jam_perayaan ?? $misa->waktu ?? '08.00 WITA' }}</p>
-                <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot mr-1.5"></i> {{ $misa->tempat ?? 'Gereja Paroki' }}</p>
             </div>
             @empty
-            <div class="bg-slate-50 dark:bg-[#101d31] border border-slate-200 dark:border-[#263a55] rounded-2xl p-6 shadow-sm">
-                <div class="flex items-center space-x-3 mb-3">
-                    <div class="w-12 h-12 bg-sky-100 text-sky-700 rounded-xl flex items-center justify-center font-bold text-lg">M1</div>
-                    <div>
-                        <p class="font-bold text-slate-900 dark:text-white">Misa Minggu I (Pagi)</p>
-                        <p class="text-xs text-slate-500">Gereja Pusat Paroki</p>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-4 transition-all hover:shadow-md hover:-translate-y-1" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center font-bold text-white shadow-sm" style="width: 52px; height: 52px; background: linear-gradient(135deg, #00897b, #004d40); font-size: 1.1rem; flex-shrink: 0;">
+                            M1
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-bold text-dark" style="font-size: 1.05rem;">Misa Minggu I (Pagi)</h5>
+                            <span class="text-muted small"><i class="fa-solid fa-church text-amber-600 me-1"></i> Gereja Pusat Paroki</span>
+                        </div>
+                    </div>
+                    <div class="pt-2 border-top border-slate-200/80 mt-auto d-flex align-items-center justify-content-between">
+                        <span class="fw-bold" style="color: var(--primary-teal, #00897b); font-size: 1rem;">
+                            <i class="fa-regular fa-clock me-1 text-teal-600"></i> 06.00 WITA
+                        </span>
+                        <span class="badge rounded-pill px-3 py-1.5" style="background: rgba(0, 137, 123, 0.1); color: var(--primary-teal, #00897b); font-size: 0.75rem;">
+                            Minggu
+                        </span>
                     </div>
                 </div>
-                <p class="text-sm font-semibold text-sky-600"><i class="fa-regular fa-clock mr-1.5"></i> 06.00 WITA</p>
             </div>
-            <div class="bg-slate-50 dark:bg-[#101d31] border border-slate-200 dark:border-[#263a55] rounded-2xl p-6 shadow-sm">
-                <div class="flex items-center space-x-3 mb-3">
-                    <div class="w-12 h-12 bg-sky-100 text-sky-700 rounded-xl flex items-center justify-center font-bold text-lg">M2</div>
-                    <div>
-                        <p class="font-bold text-slate-900 dark:text-white">Misa Minggu II (Pagi)</p>
-                        <p class="text-xs text-slate-500">Gereja Pusat Paroki</p>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-4 transition-all hover:shadow-md hover:-translate-y-1" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center font-bold text-white shadow-sm" style="width: 52px; height: 52px; background: linear-gradient(135deg, #00897b, #004d40); font-size: 1.1rem; flex-shrink: 0;">
+                            M2
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-bold text-dark" style="font-size: 1.05rem;">Misa Minggu II (Pagi)</h5>
+                            <span class="text-muted small"><i class="fa-solid fa-church text-amber-600 me-1"></i> Gereja Pusat Paroki</span>
+                        </div>
+                    </div>
+                    <div class="pt-2 border-top border-slate-200/80 mt-auto d-flex align-items-center justify-content-between">
+                        <span class="fw-bold" style="color: var(--primary-teal, #00897b); font-size: 1rem;">
+                            <i class="fa-regular fa-clock me-1 text-teal-600"></i> 08.00 WITA
+                        </span>
+                        <span class="badge rounded-pill px-3 py-1.5" style="background: rgba(0, 137, 123, 0.1); color: var(--primary-teal, #00897b); font-size: 0.75rem;">
+                            Minggu
+                        </span>
                     </div>
                 </div>
-                <p class="text-sm font-semibold text-sky-600"><i class="fa-regular fa-clock mr-1.5"></i> 08.00 WITA</p>
             </div>
-            <div class="bg-slate-50 dark:bg-[#101d31] border border-slate-200 dark:border-[#263a55] rounded-2xl p-6 shadow-sm">
-                <div class="flex items-center space-x-3 mb-3">
-                    <div class="w-12 h-12 bg-sky-100 text-sky-700 rounded-xl flex items-center justify-center font-bold text-lg">M3</div>
-                    <div>
-                        <p class="font-bold text-slate-900 dark:text-white">Misa Minggu III (Sore)</p>
-                        <p class="text-xs text-slate-500">Gereja Pusat Paroki</p>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm rounded-4 p-4 transition-all hover:shadow-md hover:-translate-y-1" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center font-bold text-white shadow-sm" style="width: 52px; height: 52px; background: linear-gradient(135deg, #00897b, #004d40); font-size: 1.1rem; flex-shrink: 0;">
+                            M3
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-bold text-dark" style="font-size: 1.05rem;">Misa Minggu III (Sore)</h5>
+                            <span class="text-muted small"><i class="fa-solid fa-church text-amber-600 me-1"></i> Gereja Pusat Paroki</span>
+                        </div>
+                    </div>
+                    <div class="pt-2 border-top border-slate-200/80 mt-auto d-flex align-items-center justify-content-between">
+                        <span class="fw-bold" style="color: var(--primary-teal, #00897b); font-size: 1rem;">
+                            <i class="fa-regular fa-clock me-1 text-teal-600"></i> 17.00 WITA
+                        </span>
+                        <span class="badge rounded-pill px-3 py-1.5" style="background: rgba(0, 137, 123, 0.1); color: var(--primary-teal, #00897b); font-size: 0.75rem;">
+                            Minggu
+                        </span>
                     </div>
                 </div>
-                <p class="text-sm font-semibold text-sky-600"><i class="fa-regular fa-clock mr-1.5"></i> 17.00 WITA</p>
             </div>
             @endforelse
         </div>
 
-        <div class="text-center mt-8">
-            <a href="/jadwal-misa" class="inline-flex items-center gap-2 border border-slate-300 dark:border-slate-700 hover:border-sky-600 text-slate-700 dark:text-slate-200 px-6 py-2.5 rounded-full text-sm font-semibold transition">
-                Lihat Semua Jadwal Misa <i class="fas fa-arrow-right text-xs"></i>
+        <div class="text-center mt-5">
+            <a href="/jadwal-misa" class="btn-konoha-teal px-5 py-2.5 d-inline-flex align-items-center gap-2" style="border-radius: 50px; font-weight: 700; text-decoration: none;">
+                <span>Lihat Semua Jadwal Misa</span> <i class="fas fa-arrow-right text-xs"></i>
             </a>
         </div>
     </div>

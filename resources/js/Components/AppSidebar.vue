@@ -1,5 +1,5 @@
 <script setup>
-import { inject, ref, onMounted } from 'vue';
+import { inject } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { RoleMenuKey } from '../composables/useRoleMenu.js';
 import { roleMenus } from '../menu/roleMenus.js';
@@ -8,6 +8,7 @@ const {
     isSidebarOpen,
     isMobileOpen,
     showLogoutModal,
+    isMounted,
     activeRole,
     currentMenuTree,
     openGroups,
@@ -16,13 +17,6 @@ const {
     isItemActive,
     isGroupActive,
 } = inject(RoleMenuKey);
-
-const isMounted = ref(false);
-onMounted(() => {
-    requestAnimationFrame(() => {
-        isMounted.value = true;
-    });
-});
 </script>
 
 <template>
@@ -207,7 +201,7 @@ onMounted(() => {
     <aside
         :class="[
             'hidden lg:flex flex-col border-r border-slate-200 bg-white shrink-0 select-none shadow-xs h-full overflow-hidden',
-            isMounted ? 'transition-all duration-300 ease-in-out' : '',
+            isMounted ? 'transition-[width] duration-300 ease-in-out' : '',
             isSidebarOpen ? 'w-64' : 'w-20',
         ]"
     >

@@ -740,6 +740,16 @@ class InertiaPanelController extends Controller
                 $cleanData[$k] = $v;
             }
         }
+        if (in_array('tanggal_tahbisan', $validColumns, true) && !empty($cleanData['tgl_tahbisan']) && empty($cleanData['tanggal_tahbisan'])) {
+            $cleanData['tanggal_tahbisan'] = $cleanData['tgl_tahbisan'];
+        }
+        if (in_array('tgl_tahbisan', $validColumns, true) && !empty($cleanData['tanggal_tahbisan']) && empty($cleanData['tgl_tahbisan'])) {
+            $cleanData['tgl_tahbisan'] = $cleanData['tanggal_tahbisan'];
+        }
+        if (in_array('keuskupan_id', $validColumns, true) && empty($cleanData['keuskupan_id']) && !empty($cleanData['keuskupan'])) {
+            $k = \App\Models\Keuskupan::where('nama_keuskupan', $cleanData['keuskupan'])->first();
+            if ($k) $cleanData['keuskupan_id'] = $k->id_keuskupan;
+        }
         if (in_array('created_by', $validColumns, true)) {
             $cleanData['created_by'] = auth()->id();
         }
@@ -751,6 +761,8 @@ class InertiaPanelController extends Controller
             : "/{$firstSegment}/master-pastor";
 
         $this->clearFastAccessCache();
+        \Illuminate\Support\Facades\Cache::forget('global_view_data_version');
+        \Illuminate\Support\Facades\Cache::increment('global_view_data_version');
 
         return redirect($redirectUrl)->with('success', 'Data Pastor / Imam baru berhasil disimpan.');
     }
@@ -799,6 +811,16 @@ class InertiaPanelController extends Controller
                 $cleanData[$k] = $v;
             }
         }
+        if (in_array('tanggal_tahbisan', $validColumns, true) && !empty($cleanData['tgl_tahbisan']) && empty($cleanData['tanggal_tahbisan'])) {
+            $cleanData['tanggal_tahbisan'] = $cleanData['tgl_tahbisan'];
+        }
+        if (in_array('tgl_tahbisan', $validColumns, true) && !empty($cleanData['tanggal_tahbisan']) && empty($cleanData['tgl_tahbisan'])) {
+            $cleanData['tgl_tahbisan'] = $cleanData['tanggal_tahbisan'];
+        }
+        if (in_array('keuskupan_id', $validColumns, true) && empty($cleanData['keuskupan_id']) && !empty($cleanData['keuskupan'])) {
+            $k = \App\Models\Keuskupan::where('nama_keuskupan', $cleanData['keuskupan'])->first();
+            if ($k) $cleanData['keuskupan_id'] = $k->id_keuskupan;
+        }
         if (in_array('updated_by', $validColumns, true)) {
             $cleanData['updated_by'] = auth()->id();
         }
@@ -810,6 +832,8 @@ class InertiaPanelController extends Controller
             : "/{$firstSegment}/master-pastor";
 
         $this->clearFastAccessCache();
+        \Illuminate\Support\Facades\Cache::forget('global_view_data_version');
+        \Illuminate\Support\Facades\Cache::increment('global_view_data_version');
 
         return redirect($redirectUrl)->with('success', 'Data Pastor / Imam berhasil diperbarui.');
     }
@@ -3517,6 +3541,21 @@ class InertiaPanelController extends Controller
                 ->get(['id', 'nama_iuran', 'nominal_default', 'periode', 'kategori_iuran'])
             : [];
 
+        // Enrich column metadata with ENUM options so the generic form can
+        // render a proper dropdown instead of a free-text input (prevents
+        // "Data truncated" DB errors on enum columns like jenis_tugas).
+        $enumTable = (new $config['model'])->getTable();
+        foreach ($config['columns'] as &$col) {
+            if (!empty($col['key'])) {
+                $opts = $this->getEnumOptions($enumTable, $col['key']);
+                if ($opts !== null) {
+                    $col['isEnum'] = true;
+                    $col['enumOptions'] = $opts;
+                }
+            }
+        }
+        unset($col);
+
         return Inertia::render('Inertia/GenericModule', [
             'title' => $config['title'],
             'moduleKey' => $slug,
@@ -5543,6 +5582,24 @@ class InertiaPanelController extends Controller
         return Cache::remember("schema_columns_{$table}", 86400, fn () => \Illuminate\Support\Facades\Schema::getColumnListing($table));
     }
 
+    private function getEnumOptions(string $table, string $column): ?array
+    {
+        try {
+            $rows = DB::select("SHOW COLUMNS FROM `{$table}` WHERE Field = ?", [$column]);
+            if (empty($rows)) {
+                return null;
+            }
+            $type = $rows[0]->Type ?? '';
+            if (preg_match('/^enum\((.*)\)$/i', $type, $m)) {
+                return array_map(fn ($v) => trim($v, "'\""), explode(',', $m[1]));
+            }
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        return null;
+    }
+
     private function territoryModuleSlugs(): array
     {
         return [
@@ -7288,7 +7345,7 @@ class InertiaPanelController extends Controller
                 ['key' => 'urutan', 'label' => 'Urutan'],
                 ['key' => 'keterangan', 'altKey' => 'karya_pelayanan', 'label' => 'Catatan / Karya'],
             ]],
-            'direktori-dpp' => ['model' => \App\Models\DirektoriDpp::class, 'title' => 'Direktori Dewan Pastoral Paroki (DPP)', 'columns' => [['key' => 'foto', 'label' => 'Foto', 'isImage' => true], ['key' => 'nama_lengkap', 'label' => 'Nama Pengurus', 'isPrimary' => true], ['key' => 'jabatan', 'label' => 'Jabatan'], ['key' => 'seksi', 'label' => 'Seksi / Bidang'], ['key' => 'periode', 'label' => 'Periode'], ['key' => 'no_hp', 'label' => 'Kontak / WA'], ['key' => 'status', 'label' => 'Status'], ['key' => 'urutan', 'label' => 'Urutan']]],
+            'direktori-dpp' => ['model' => \App\Models\DirektoriDpp::class, 'title' => 'Direktori (DPP)', 'columns' => [['key' => 'foto', 'label' => 'Foto', 'isImage' => true], ['key' => 'nama_lengkap', 'label' => 'Nama Pengurus', 'isPrimary' => true], ['key' => 'jabatan', 'label' => 'Jabatan'], ['key' => 'seksi', 'label' => 'Seksi / Bidang'], ['key' => 'periode', 'label' => 'Periode'], ['key' => 'no_hp', 'label' => 'Kontak / WA'], ['key' => 'status', 'label' => 'Status'], ['key' => 'urutan', 'label' => 'Urutan']]],
             'direktori-katekis' => ['model' => \App\Models\DirektoriKatekis::class, 'title' => 'Direktori Katekis', 'columns' => [['key' => 'foto', 'label' => 'Foto', 'isImage' => true], ['key' => 'nama_lengkap', 'label' => 'Nama Katekis', 'isPrimary' => true], ['key' => 'jenis_katekis', 'label' => 'Jenis Katekis'], ['key' => 'wilayah_pelayanan', 'label' => 'Wilayah Pelayanan'], ['key' => 'sertifikasi', 'label' => 'Sertifikasi'], ['key' => 'no_hp', 'label' => 'Kontak / WA'], ['key' => 'status_aktif', 'label' => 'Status']]],
             'direktori-misdinar' => ['model' => \App\Models\DirektoriMisdinar::class, 'title' => 'Direktori Misdinar', 'columns' => [['key' => 'nama_lengkap', 'label' => 'Nama Anggota', 'isPrimary' => true], ['key' => 'stasi', 'label' => 'Stasi / Kapela'], ['key' => 'status_aktif', 'label' => 'Status']]],
             'kronik' => ['model' => \App\Models\KronikParoki::class, 'title' => 'Kronik Paroki', 'columns' => [['key' => 'foto_utama', 'label' => 'Foto', 'isImage' => true], ['key' => 'judul_kronik', 'label' => 'Judul Kronik', 'isPrimary' => true], ['key' => 'tanggal_peristiwa', 'label' => 'Tanggal Peristiwa'], ['key' => 'kategori_kronik', 'label' => 'Kategori'], ['key' => 'lokasi_peristiwa', 'label' => 'Lokasi'], ['key' => 'penulis', 'label' => 'Penulis'], ['key' => 'status_publish', 'label' => 'Status']]],
@@ -7425,12 +7482,10 @@ class InertiaPanelController extends Controller
                 ['key' => 'status', 'label' => 'Status'],
             ]],
             'jadwal-petugas-liturgi' => ['model' => \App\Models\JadwalPetugasLiturgi::class, 'title' => 'Jadwal Petugas Liturgi', 'columns' => [
-                ['key' => 'tanggal', 'label' => 'Tanggal', 'isDate' => true, 'isPrimary' => true],
-                ['key' => 'judul_misa', 'label' => 'Misa / Perayaan'],
-                ['key' => 'peran_tugas', 'label' => 'Tugas / Peran'],
-                ['key' => 'nama_petugas', 'label' => 'Nama Petugas'],
+                ['key' => 'nama_petugas', 'label' => 'Nama Petugas', 'isPrimary' => true],
+                ['key' => 'jenis_tugas', 'label' => 'Jenis Tugas'],
+                ['key' => 'kelompok', 'label' => 'Kelompok'],
                 ['key' => 'keterangan', 'label' => 'Keterangan'],
-                ['key' => 'status', 'label' => 'Status'],
             ]],
             'sambutan-pastor' => ['model' => \App\Models\SambutanPastor::class, 'title' => 'Sambutan Pastor', 'columns' => [
                 ['key' => 'foto', 'label' => 'Foto', 'isImage' => true],

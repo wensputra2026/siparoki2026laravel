@@ -75,16 +75,16 @@ const printDemografi = () => {
                     </div>
 
                     <div class="flex items-center gap-2.5 flex-wrap shrink-0">
-                        <!-- Segarkan Data (Database Reload) -->
+                        <!-- Reload Data (Database Reload) -->
                         <button
                             type="button"
                             :disabled="isReloading"
                             @click="reloadStats"
                             class="px-4 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
-                            title="Segarkan data statistik dan grafik langsung dari database"
+                            title="Reload data statistik dan grafik langsung dari database"
                         >
                             <i :class="['fa-solid fa-arrows-rotate', isReloading ? 'fa-spin' : '']"></i>
-                            <span>{{ isReloading ? 'Memuat...' : 'Segarkan Data' }}</span>
+                            <span>{{ isReloading ? 'Memuat...' : 'Reload' }}</span>
                         </button>
 
                         <!-- Ekspor Excel -->

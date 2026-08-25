@@ -12,60 +12,55 @@
             <link rel="shortcut icon" href="{{ $globalLogo }}">
         @endif
 
-        <!-- Google Fonts Poppins (Same as Frontend) -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
-
         <!-- Offline Poppins Fonts Direct Embed -->
         <style>
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 300;
-                font-display: swap;
+                font-display: optional;
                 src: url('/fonts/poppins/poppins-latin-400-normal.woff2') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 400;
-                font-display: swap;
+                font-display: optional;
                 src: url('/fonts/poppins/poppins-latin-400-normal.woff2') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 500;
-                font-display: swap;
+                font-display: optional;
                 src: url('/fonts/poppins/poppins-latin-500-normal.woff2') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 600;
-                font-display: swap;
+                font-display: optional;
                 src: url('/fonts/poppins/poppins-latin-600-normal.woff2') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 700;
-                font-display: swap;
+                font-display: optional;
                 src: url('/fonts/poppins/poppins-latin-700-normal.woff2') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 800;
-                font-display: swap;
+                font-display: optional;
                 src: url('/fonts/poppins/poppins-latin-800-normal.woff2') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 900;
-                font-display: swap;
+                font-display: optional;
                 src: url('/fonts/poppins/poppins-latin-900-normal.woff2') format('woff2');
             }
 

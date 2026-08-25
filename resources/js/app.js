@@ -2,6 +2,11 @@ import './bootstrap';
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 
+// Cegah browser memindahkan scroll window saat refresh (biar tidak "lompat").
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+}
+
 const appElement = document.getElementById('app');
 const pages = import.meta.glob('./Pages/**/*.vue');
 

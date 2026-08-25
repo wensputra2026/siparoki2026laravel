@@ -113,3 +113,10 @@ body, html {
     0%   { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Reserve scrollbar gutter permanently so content width never shifts
+   when the scrollbar appears/disappears (fixes page "bergeser"/jump
+   on data-heavy pages like iuran). */
+.custom-scrollbar {
+    scrollbar-gutter: stable;
+}

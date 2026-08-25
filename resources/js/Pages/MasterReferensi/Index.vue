@@ -101,10 +101,10 @@ const reloadMaster = () => {
                         :disabled="isReloading"
                         @click="reloadMaster"
                         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-60"
-                        title="Segarkan data referensi langsung dari database"
+                        title="Reload data referensi langsung dari database"
                     >
                         <i :class="['fa-solid fa-arrows-rotate text-amber-600', isReloading ? 'fa-spin' : '']"></i>
-                        <span>{{ isReloading ? 'Memuat...' : 'Segarkan Data' }}</span>
+                        <span>{{ isReloading ? 'Memuat...' : 'Reload' }}</span>
                     </button>
 
                     <Link

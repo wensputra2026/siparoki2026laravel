@@ -88,18 +88,88 @@ class PageController extends Controller
                 ?? $pengaturan->email_paroki
                 ?? '';
 
-            $pastorParoki = $activeParoki->nama_pastor_paroki_aktif
-                ?? $profil->pastor_paroki
-                ?? 'Pastor Paroki';
+            $pastorParokiObj = null;
+            $pastorRekanObj = null;
+            $fraterObj = null;
 
-            // Resolve dynamic pastor photo (priority: Admin uploaded photo > Riwayat Pastor Aktif > Master Pastor > default fallback)
-            $rawPastorFoto = $profil->foto_pastor
-                ?? $profil->foto_pastor_paroki
-                ?? $profil->foto
-                ?? $activeParoki->foto_pastor
-                ?? $activeParoki->foto
-                ?? $pengaturan->foto_pastor
-                ?? null;
+            if (Schema::hasTable('master_pastor')) {
+                try {
+                    $pastorParokiObj = DB::table('master_pastor')
+                        ->where(function($q) {
+                            $q->where('jabatan', 'like', '%Pastor Paroki%')
+                              ->orWhere('jabatan', 'Pastor Paroki');
+                        })
+                        ->where(function($q) {
+                            $q->where('status', '1')
+                              ->orWhere('status', 'like', '%aktif%')
+                              ->orWhere('status', 1);
+                        })
+                        ->orderBy('urutan')
+                        ->orderByDesc('id')
+                        ->first();
+
+                    if (!$pastorParokiObj) {
+                        $pastorParokiObj = DB::table('master_pastor')
+                            ->where(function($q) {
+                                $q->where('jabatan', 'like', '%Pastor Paroki%')
+                                  ->orWhere('jabatan', 'Pastor Paroki');
+                            })
+                            ->orderBy('urutan')
+                            ->first();
+                    }
+
+                    $pastorRekanObj = DB::table('master_pastor')
+                        ->where(function($q) {
+                            $q->where('jabatan', 'like', '%Rekan%')
+                              ->orWhere('jabatan', 'like', '%Vikaris%');
+                        })
+                        ->where(function($q) {
+                            $q->where('status', '1')
+                              ->orWhere('status', 'like', '%aktif%')
+                              ->orWhere('status', 1);
+                        })
+                        ->orderBy('urutan')
+                        ->first();
+
+                    $fraterObj = DB::table('master_pastor')
+                        ->where(function($q) {
+                            $q->where('jabatan', 'like', '%Frater%')
+                              ->orWhere('jabatan', 'like', '%Katekis%');
+                        })
+                        ->orderBy('urutan')
+                        ->first();
+                } catch (\Throwable $e) {}
+            }
+
+            if ($pastorParokiObj) {
+                $pastorParoki = \App\Models\MasterPastor::formatNama($pastorParokiObj);
+                if (!empty($pastorParokiObj->foto)) {
+                    $rawPastorFoto = $pastorParokiObj->foto;
+                }
+            } else {
+                $pastorParoki = $activeParoki->nama_pastor_paroki_aktif
+                    ?? $profil->pastor_paroki
+                    ?? 'RD. Herman Hilers Penga';
+            }
+
+            $pastorRekan = $pastorRekanObj
+                ? \App\Models\MasterPastor::formatNama($pastorRekanObj)
+                : ($activeParoki->nama_pastor_rekan ?? $profil->pastor_rekan ?? 'Pastor Rekan Paroki');
+
+            $frater = $fraterObj
+                ? \App\Models\MasterPastor::formatNama($fraterObj)
+                : ($profil->frater ?? 'Frater Pastoral / Katekis');
+
+            // Resolve dynamic pastor photo (priority: Master Pastor DB > Admin uploaded photo > Riwayat Pastor Aktif > default fallback)
+            if (empty($rawPastorFoto)) {
+                $rawPastorFoto = $profil->foto_pastor
+                    ?? $profil->foto_pastor_paroki
+                    ?? $profil->foto
+                    ?? $activeParoki->foto_pastor
+                    ?? $activeParoki->foto
+                    ?? $pengaturan->foto_pastor
+                    ?? null;
+            }
 
             if (empty($rawPastorFoto) && Schema::hasTable('riwayat_pastor_paroki')) {
                 try {
@@ -125,22 +195,6 @@ class PageController extends Controller
                     $activePastorRiwayat = $riwayatQuery->first();
                     if ($activePastorRiwayat && !empty($activePastorRiwayat->foto)) {
                         $rawPastorFoto = $activePastorRiwayat->foto;
-                    }
-                } catch (\Throwable $e) {}
-            }
-
-            if (empty($rawPastorFoto) && Schema::hasTable('master_pastor')) {
-                try {
-                    $masterPastor = DB::table('master_pastor')
-                        ->where(function($q) {
-                            $q->where('jabatan', 'like', '%pastor paroki%')
-                              ->orWhere('status', 'like', '%aktif%');
-                        })
-                        ->whereNotNull('foto')
-                        ->where('foto', '!=', '')
-                        ->first();
-                    if ($masterPastor && !empty($masterPastor->foto)) {
-                        $rawPastorFoto = $masterPastor->foto;
                     }
                 } catch (\Throwable $e) {}
             }
@@ -191,8 +245,11 @@ class PageController extends Controller
                 'longitude' => $activeParoki->longitude ?? null,
                 'pastor_paroki' => $pastorParoki,
                 'pastor_foto' => $pastorFotoUrl,
-                'pastor_rekan' => $activeParoki->nama_pastor_rekan ?? $profil->pastor_rekan ?? 'Pastor Rekan',
-                'frater' => $profil->frater ?? 'Frater TOP',
+                'pastor_rekan' => $pastorRekan,
+                'frater' => $frater,
+                'pastor_paroki_obj' => $pastorParokiObj,
+                'pastor_rekan_obj' => $pastorRekanObj,
+                'frater_obj' => $fraterObj,
             ];
         });
     }
