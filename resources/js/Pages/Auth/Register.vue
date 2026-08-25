@@ -7,7 +7,7 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
-    lingkungans: {
+    kapelas: {
         type: Array,
         default: () => [],
     },
@@ -34,20 +34,19 @@ const form = useForm({
     nik: '',
     no_hp: '',
     wilayah_id: '',
-    lingkungan_id: '',
+    kapela_id: '',
     kub_id: '',
     password: '',
     password_confirmation: '',
 });
 
-const filteredLingkungans = computed(() => {
-    if (!form.wilayah_id) return props.lingkungans;
-    return props.lingkungans.filter((l) => l.wilayah_id == form.wilayah_id);
-});
-
 const filteredKubs = computed(() => {
-    if (!form.lingkungan_id) return props.kubs;
-    return props.kubs.filter((k) => k.lingkungan_id == form.lingkungan_id);
+    if (!form.wilayah_id && !form.kapela_id) return props.kubs;
+    return props.kubs.filter((k) => {
+        if (form.wilayah_id && k.wilayah_id && k.wilayah_id == form.wilayah_id) return true;
+        if (form.kapela_id && k.kapela_id && k.kapela_id == form.kapela_id) return true;
+        return !k.wilayah_id && !k.kapela_id;
+    });
 });
 
 const submit = () => {
@@ -161,10 +160,10 @@ const submit = () => {
                         </div>
                     </div>
 
-                    <!-- Row 3: Domisili Gerejawi (Wilayah, Lingkungan, KUB) -->
+                    <!-- Row 3: Domisili Gerejawi (Wilayah, Stasi / Kapela, KUB) -->
                     <div class="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-3">
                         <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-                            <i class="fa-solid fa-church text-amber-500 mr-1"></i> Data Wilayah / Komunitas Basis
+                            <i class="fa-solid fa-church text-amber-500 mr-1"></i> Data Wilayah / Stasi / Komunitas Basis
                         </span>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -182,14 +181,14 @@ const submit = () => {
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Lingkungan</label>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Stasi / Kapela</label>
                                 <select
-                                    v-model="form.lingkungan_id"
+                                    v-model="form.kapela_id"
                                     class="w-full px-2.5 py-2 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
                                 >
-                                    <option value="">-- Pilih Lingkungan --</option>
-                                    <option v-for="l in filteredLingkungans" :key="l.id" :value="l.id">
-                                        {{ l.nama_lingkungan }}
+                                    <option value="">-- Pilih Stasi / Kapela --</option>
+                                    <option v-for="ka in kapelas" :key="ka.id" :value="ka.id">
+                                        {{ ka.nama_kapela }}
                                     </option>
                                 </select>
                             </div>

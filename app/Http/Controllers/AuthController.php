@@ -165,7 +165,7 @@ class AuthController extends Controller
     public function showRegister()
     {
         $wilayahs = collect();
-        $lingkungans = collect();
+        $kapelas = collect();
         $kubs = collect();
 
         try {
@@ -173,16 +173,21 @@ class AuthController extends Controller
         } catch (\Throwable $e) {}
 
         try {
-            $lingkungans = DB::table('lingkungan')->orderBy('nama_lingkungan')->get(['id', 'nama_lingkungan', 'wilayah_id']);
+            $kapelas = DB::table('kapela')
+                ->where(function($q) {
+                    $q->where('is_deleted', 0)->orWhereNull('is_deleted');
+                })
+                ->orderBy('nama_kapela')
+                ->get(['id', 'nama_kapela', 'kode_kapela']);
         } catch (\Throwable $e) {}
 
         try {
-            $kubs = DB::table('kub')->orderBy('nama_kub')->get(['id', 'nama_kub', 'lingkungan_id']);
+            $kubs = DB::table('kub')->orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id', 'kapela_id']);
         } catch (\Throwable $e) {}
 
         return view('pages.auth.register', [
             'wilayahs' => $wilayahs,
-            'lingkungans' => $lingkungans,
+            'kapelas' => $kapelas,
             'kubs' => $kubs,
         ]);
     }
@@ -199,7 +204,7 @@ class AuthController extends Controller
             'nik' => 'nullable|string|max:20',
             'no_hp' => 'nullable|string|max:20',
             'wilayah_id' => 'nullable|integer',
-            'lingkungan_id' => 'nullable|integer',
+            'kapela_id' => 'nullable|integer',
             'kub_id' => 'nullable|integer',
             'password' => 'required|string|min:6|confirmed',
         ], [
@@ -232,7 +237,7 @@ class AuthController extends Controller
             'username' => $username,
             'no_hp' => $request->no_hp,
             'wilayah_id' => $request->wilayah_id,
-            'lingkungan_id' => $request->lingkungan_id,
+            'kapela_id' => $request->kapela_id,
             'kub_id' => $request->kub_id,
             'umat_id' => $umatId,
             'password' => Hash::make($request->password),

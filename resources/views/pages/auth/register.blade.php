@@ -76,7 +76,7 @@
                     </div>
                 </div>
 
-                <!-- Row 2: Wilayah & Lingkungan & KUB -->
+                <!-- Row 2: Wilayah & Stasi/Kapela & KUB -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Wilayah</label>
@@ -88,11 +88,11 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Lingkungan</label>
-                        <select name="lingkungan_id" id="select_lingkungan" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
-                            <option value="">-- Lingkungan --</option>
-                            @foreach($lingkungans ?? [] as $l)
-                                <option value="{{ $l->id }}" data-wilayah="{{ $l->wilayah_id ?? '' }}" {{ old('lingkungan_id') == $l->id ? 'selected' : '' }}>{{ $l->nama_lingkungan ?? $l->nama ?? ('Lingkungan ' . $l->id) }}</option>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Stasi / Kapela</label>
+                        <select name="kapela_id" id="select_kapela" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+                            <option value="">-- Stasi / Kapela --</option>
+                            @foreach($kapelas ?? [] as $ka)
+                                <option value="{{ $ka->id }}" {{ old('kapela_id') == $ka->id ? 'selected' : '' }}>{{ $ka->nama_kapela ?? ('Stasi / Kapela ' . $ka->id) }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -101,7 +101,7 @@
                         <select name="kub_id" id="select_kub" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
                             <option value="">-- KUB --</option>
                             @foreach($kubs ?? [] as $k)
-                                <option value="{{ $k->id }}" data-lingkungan="{{ $k->lingkungan_id ?? '' }}" {{ old('kub_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kub ?? $k->nama ?? ('KUB ' . $k->id) }}</option>
+                                <option value="{{ $k->id }}" data-wilayah="{{ $k->wilayah_id ?? '' }}" data-kapela="{{ $k->kapela_id ?? '' }}" {{ old('kub_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kub ?? $k->nama ?? ('KUB ' . $k->id) }}</option>
                             @endforeach
                         </select>
                     </div>
