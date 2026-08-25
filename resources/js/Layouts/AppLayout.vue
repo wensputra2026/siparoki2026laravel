@@ -574,7 +574,6 @@ const roleMenus = {
                 { name: 'Data Umat / Jiwa', href: '/wilayah/umat', icon: 'fa-user' },
                 { name: 'Demografi & Statistik', href: '/wilayah/statistik', icon: 'fa-chart-pie' },
                 { name: 'Data Sakramen', href: '/wilayah/sakramen', icon: 'fa-feather' },
-                { name: 'Pengajuan Sakramen', href: '/wilayah/pengajuan-sakramen', icon: 'fa-envelope-open-text' },
             ],
         },
         {
