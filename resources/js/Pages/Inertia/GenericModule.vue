@@ -508,6 +508,20 @@ const roleBadgeClass = (role) => {
     return 'bg-emerald-50 text-emerald-700 border-emerald-200';
 };
 
+const isUmatReadOnlyRole = computed(() => {
+    const path = window.location.pathname;
+    const prefix = path.split('/').filter(Boolean)[0] || '';
+    const roleSlug = String(props.role?.slug || props.role?.nama_role || props.role || '').toLowerCase();
+    
+    // Wilayah, Kapela/Stasi are strictly VIEW ONLY for data Umat (CRUD is done at KUB & Paroki/Superadmin)
+    const isWilayahOrKapela = ['wilayah', 'kapela', 'stasi'].includes(prefix) || 
+                              roleSlug.includes('wilayah') || 
+                              roleSlug.includes('kapela') || 
+                              roleSlug.includes('stasi');
+                              
+    return ['umat', 'data-umat', 'data_umat'].includes(props.moduleKey) && isWilayahOrKapela;
+});
+
 const generatePassword = () => {
     const suffix = Math.random().toString(36).slice(2, 8).toUpperCase();
     formData.value.password = `SIP-${suffix}`;
@@ -1727,43 +1741,56 @@ const statusLabel = (item) => {
 
                 <!-- Right: Action Buttons Group -->
                 <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                    <!-- 1. Tambah Button -->
-                    <Link
-                        v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri'].includes(moduleKey)"
-                        :href="moduleKey === 'konten' ? `${basePrefix}/konten/create` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/kk-katolik/create` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/create` : `${basePrefix}/role/create`))"
-                        class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                    <!-- 0. Read-Only Indicator for Wilayah / Kapela on Umat Data -->
+                    <div
+                        v-if="isUmatReadOnlyRole"
+                        class="px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
                     >
-                        <i class="fa-solid fa-plus text-[11px]"></i>
-                        <span>+ Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : (moduleKey === 'galeri' ? 'Album Galeri' : title) }}</span>
-                    </Link>
-                    <button
-                        v-else
-                        type="button"
-                        @click="openCreateModal"
-                        class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
-                    >
-                        <i class="fa-solid fa-plus text-[11px]"></i>
-                        <span>+ Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : title }}</span>
-                    </button>
+                        <i class="fa-solid fa-eye text-blue-600 text-[11px]"></i>
+                        <span>Mode Lihat Saja (CRUD di KUB)</span>
+                    </div>
 
-                    <!-- 2. Import Excel Button -->
-                    <input
-                        ref="importFileInput"
-                        type="file"
-                        accept=".xlsx,.xls,.csv,.txt"
-                        class="hidden"
-                        @change="handleImportFile"
-                    />
-                    <button
-                        type="button"
-                        :disabled="isImporting"
-                        @click="triggerImportFile"
-                        class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60"
-                    >
-                        <i v-if="isImporting" class="fa-solid fa-circle-notch fa-spin text-[11px]"></i>
-                        <i v-else class="fa-solid fa-arrow-up-from-bracket text-[11px]"></i>
-                        <span>{{ isImporting ? 'Mengimpor...' : 'Impor' }}</span>
-                    </button>
+                    <!-- 1. Tambah Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
+                    <template v-if="!isUmatReadOnlyRole">
+                        <Link
+                            v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
+                            :href="moduleKey === 'konten' ? `${basePrefix}/konten/create` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/kk-katolik/create` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/create` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/create` : `${basePrefix}/role/create`)))"
+                            class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                        >
+                            <i class="fa-solid fa-plus text-[11px]"></i>
+                            <span>+ Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : (['umat', 'data-umat'].includes(moduleKey) ? 'Umat' : (moduleKey === 'galeri' ? 'Album Galeri' : title)) }}</span>
+                        </Link>
+                        <button
+                            v-else
+                            type="button"
+                            @click="openCreateModal"
+                            class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                        >
+                            <i class="fa-solid fa-plus text-[11px]"></i>
+                            <span>+ Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : title }}</span>
+                        </button>
+                    </template>
+
+                    <!-- 2. Import Excel Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
+                    <template v-if="!isUmatReadOnlyRole">
+                        <input
+                            ref="importFileInput"
+                            type="file"
+                            accept=".xlsx,.xls,.csv,.txt"
+                            class="hidden"
+                            @change="handleImportFile"
+                        />
+                        <button
+                            type="button"
+                            :disabled="isImporting"
+                            @click="triggerImportFile"
+                            class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60"
+                        >
+                            <i v-if="isImporting" class="fa-solid fa-circle-notch fa-spin text-[11px]"></i>
+                            <i v-else class="fa-solid fa-arrow-up-from-bracket text-[11px]"></i>
+                            <span>{{ isImporting ? 'Mengimpor...' : 'Impor' }}</span>
+                        </button>
+                    </template>
 
                     <!-- 3. Export Excel Button -->
                     <a
@@ -2153,23 +2180,27 @@ const statusLabel = (item) => {
                                     >
                                         <i class="fa-solid fa-eye text-[10px]"></i>
                                     </button>
-                                    <Link
-                                        v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri'].includes(moduleKey)"
-                                        :href="moduleKey === 'konten' ? `${basePrefix}/konten/${item.id || item.slug}/edit` : (['kk-katolik', 'kk', 'keluarga', 'galeri'].includes(moduleKey) ? `${basePrefix}/${moduleKey}/${item.id || item.slug || item.no_kk_kw}/edit` : `${basePrefix}/role/${item.id || item.id_role || item.slug}/edit`)"
-                                        title="Ubah Data"
-                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
-                                    >
-                                        <i class="fa-solid fa-pen-to-square text-[10px]"></i>
-                                    </Link>
-                                    <button
-                                        v-else
-                                        type="button"
-                                        @click="openEditModal(item)"
-                                        title="Ubah Data"
-                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
-                                    >
-                                        <i class="fa-solid fa-pen-to-square text-[10px]"></i>
-                                    </button>
+                                    <!-- Edit Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
+                                    <template v-if="!isUmatReadOnlyRole">
+                                        <Link
+                                            v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
+                                            :href="moduleKey === 'konten' ? `${basePrefix}/konten/${item.id || item.slug}/edit` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/${moduleKey}/${item.id || item.slug || item.no_kk_kw}/edit` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/${item.id}/edit` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/${item.id}/edit` : `${basePrefix}/role/${item.id || item.id_role || item.slug}/edit`)))"
+                                            title="Ubah Data"
+                                            class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                        >
+                                            <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                                        </Link>
+                                        <button
+                                            v-else
+                                            type="button"
+                                            @click="openEditModal(item)"
+                                            title="Ubah Data"
+                                            class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                        >
+                                            <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                                        </button>
+                                    </template>
+
                                     <button
                                         v-if="moduleKey === 'user'"
                                         type="button"
@@ -2192,7 +2223,10 @@ const statusLabel = (item) => {
                                     >
                                         <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
                                     </button>
+
+                                    <!-- Delete Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
                                     <button
+                                        v-if="!isUmatReadOnlyRole"
                                         type="button"
                                         @click="openDeleteModal(item)"
                                         :disabled="isSelfUser(item)"

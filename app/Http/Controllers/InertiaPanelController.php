@@ -328,9 +328,14 @@ class InertiaPanelController extends Controller
     /**
      * Dedicated Full Page for Creating Umat / Jiwa Baru.
      */
-    public function createUmat(Request $request): Response
+    public function createUmat(Request $request)
     {
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
+        if (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) {
+            return redirect("/{$firstSegment}/umat")->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
+        }
+
         $roleMap = [
             'superadmin' => 'Super Admin',
             'paroki' => 'Admin Paroki',
@@ -375,9 +380,14 @@ class InertiaPanelController extends Controller
     /**
      * Dedicated Full Page for Editing Umat / Jiwa.
      */
-    public function editUmat(Request $request, string|int $id): Response
+    public function editUmat(Request $request, string|int $id)
     {
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
+        if (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) {
+            return redirect("/{$firstSegment}/umat")->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
+        }
+
         $roleMap = [
             'superadmin' => 'Super Admin',
             'paroki' => 'Admin Paroki',
@@ -426,6 +436,12 @@ class InertiaPanelController extends Controller
      */
     public function storeUmat(Request $request)
     {
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
+        if (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) {
+            return redirect("/{$firstSegment}/umat")->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
+        }
+
         $data = $request->all();
         $validColumns = $this->schemaColumns('umat');
         $cleanData = [];
@@ -440,7 +456,6 @@ class InertiaPanelController extends Controller
         }
 
         $created = \App\Models\Umat::create($cleanData);
-        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
 
         $this->clearFastAccessCache();
 
@@ -452,6 +467,12 @@ class InertiaPanelController extends Controller
      */
     public function updateUmat(Request $request, $id)
     {
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
+        if (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) {
+            return redirect("/{$firstSegment}/umat")->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
+        }
+
         $umat = \App\Models\Umat::findOrFail($id);
         $data = $request->all();
         $validColumns = $this->schemaColumns('umat');
@@ -467,7 +488,6 @@ class InertiaPanelController extends Controller
         }
 
         $umat->update($cleanData);
-        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
 
         $this->clearFastAccessCache();
 
@@ -3590,6 +3610,12 @@ class InertiaPanelController extends Controller
 
         if (!$item) {
             return back()->with('error', 'Data tidak ditemukan.');
+        }
+
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
+        if (in_array($slug, ['umat', 'data-umat'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
+            return back()->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
         }
 
         if ($slug === 'user' && auth()->id() && (int) auth()->id() === (int) $item->getKey()) {
