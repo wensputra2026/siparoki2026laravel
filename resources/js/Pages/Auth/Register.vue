@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
 
 const props = defineProps({
     wilayahs: {
@@ -169,41 +170,43 @@ const submit = () => {
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Wilayah</label>
-                                <select
+                                <SearchableSelect
                                     v-model="form.wilayah_id"
-                                    class="w-full px-2.5 py-2 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
-                                >
-                                    <option value="">-- Pilih Wilayah --</option>
-                                    <option v-for="w in wilayahs" :key="w.id" :value="w.id">
-                                        {{ w.nama_wilayah }}
-                                    </option>
-                                </select>
+                                    :options="wilayahs"
+                                    value-key="id"
+                                    label-key="nama_wilayah"
+                                    placeholder="-- Wilayah --"
+                                    search-placeholder="Cari wilayah..."
+                                    icon="fa-location-dot"
+                                    @change="form.kub_id = ''"
+                                />
                             </div>
 
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Stasi / Kapela</label>
-                                <select
+                                <SearchableSelect
                                     v-model="form.kapela_id"
-                                    class="w-full px-2.5 py-2 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
-                                >
-                                    <option value="">-- Pilih Stasi / Kapela --</option>
-                                    <option v-for="ka in kapelas" :key="ka.id" :value="ka.id">
-                                        {{ ka.nama_kapela }}
-                                    </option>
-                                </select>
+                                    :options="kapelas"
+                                    value-key="id"
+                                    label-key="nama_kapela"
+                                    placeholder="-- Stasi / Kapela --"
+                                    search-placeholder="Cari stasi..."
+                                    icon="fa-church"
+                                    @change="form.kub_id = ''"
+                                />
                             </div>
 
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">KUB (Basis)</label>
-                                <select
+                                <SearchableSelect
                                     v-model="form.kub_id"
-                                    class="w-full px-2.5 py-2 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
-                                >
-                                    <option value="">-- Pilih KUB --</option>
-                                    <option v-for="k in filteredKubs" :key="k.id" :value="k.id">
-                                        {{ k.nama_kub }}
-                                    </option>
-                                </select>
+                                    :options="filteredKubs"
+                                    value-key="id"
+                                    label-key="nama_kub"
+                                    placeholder="-- Pilih KUB --"
+                                    search-placeholder="Cari nama KUB..."
+                                    icon="fa-users"
+                                />
                             </div>
                         </div>
                     </div>

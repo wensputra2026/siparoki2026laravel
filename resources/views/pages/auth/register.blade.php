@@ -13,6 +13,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -30,6 +35,73 @@
             }
         }
     </script>
+
+    <style>
+        /* Custom Select2 Styling to Match Tailwind Design */
+        .select2-container--default .select2-selection--single {
+            height: 42px !important;
+            padding: 6px 12px !important;
+            border-radius: 0.75rem !important;
+            border: 1px solid #cbd5e1 !important;
+            background-color: #ffffff !important;
+            font-size: 0.875rem !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        [data-theme="dark"] .select2-container--default .select2-selection--single {
+            background-color: #07111f !important;
+            border-color: #263a55 !important;
+            color: #ffffff !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #1e293b !important;
+            line-height: normal !important;
+            padding-left: 0 !important;
+        }
+        [data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #f1f5f9 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px !important;
+            right: 8px !important;
+        }
+        .select2-dropdown {
+            border-radius: 0.75rem !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
+            font-size: 0.875rem !important;
+            overflow: hidden !important;
+            z-index: 9999 !important;
+        }
+        [data-theme="dark"] .select2-dropdown {
+            background-color: #0d1b2e !important;
+            border-color: #263a55 !important;
+            color: #fff !important;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border-radius: 0.5rem !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 6px 10px !important;
+            font-size: 0.8125rem !important;
+        }
+        [data-theme="dark"] .select2-container--default .select2-search--dropdown .select2-search__field {
+            background-color: #07111f !important;
+            border-color: #263a55 !important;
+            color: #fff !important;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #f59e0b !important;
+            color: #ffffff !important;
+        }
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: #fef3c7 !important;
+            color: #92400e !important;
+        }
+        [data-theme="dark"] .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: #78350f !important;
+            color: #fef3c7 !important;
+        }
+    </style>
 </head>
 <body class="bg-slate-100 dark:bg-[#090e1a] text-slate-900 dark:text-white min-h-screen flex items-center justify-center p-4 py-8">
 
@@ -76,12 +148,12 @@
                     </div>
                 </div>
 
-                <!-- Row 2: Wilayah & Stasi/Kapela & KUB -->
+                <!-- Row 2: Wilayah & Stasi/Kapela & KUB (Select2 Searchable) -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Wilayah</label>
-                        <select name="wilayah_id" id="select_wilayah" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
-                            <option value="">-- Wilayah --</option>
+                        <select name="wilayah_id" id="select_wilayah" class="select2 w-full">
+                            <option value="">-- Semua Wilayah --</option>
                             @foreach($wilayahs ?? [] as $w)
                                 <option value="{{ $w->id }}" {{ old('wilayah_id') == $w->id ? 'selected' : '' }}>{{ $w->nama_wilayah ?? $w->nama ?? ('Wilayah ' . $w->id) }}</option>
                             @endforeach
@@ -89,17 +161,17 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Stasi / Kapela</label>
-                        <select name="kapela_id" id="select_kapela" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
-                            <option value="">-- Stasi / Kapela --</option>
+                        <select name="kapela_id" id="select_kapela" class="select2 w-full">
+                            <option value="">-- Semua Stasi / Kapela --</option>
                             @foreach($kapelas ?? [] as $ka)
                                 <option value="{{ $ka->id }}" {{ old('kapela_id') == $ka->id ? 'selected' : '' }}>{{ $ka->nama_kapela ?? ('Stasi / Kapela ' . $ka->id) }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">KUB</label>
-                        <select name="kub_id" id="select_kub" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
-                            <option value="">-- KUB --</option>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">KUB (Basis)</label>
+                        <select name="kub_id" id="select_kub" class="select2 w-full">
+                            <option value="">-- Pilih KUB --</option>
                             @foreach($kubs ?? [] as $k)
                                 <option value="{{ $k->id }}" data-wilayah="{{ $k->wilayah_id ?? '' }}" data-kapela="{{ $k->kapela_id ?? '' }}" {{ old('kub_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kub ?? $k->nama ?? ('KUB ' . $k->id) }}</option>
                             @endforeach
@@ -175,7 +247,78 @@
                 </div>
             </div>
         </div>
-    </div>    <script src="/js/pages/register.js" defer></script></body>
+    </div>
+
+    <!-- jQuery & Select2 JS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 on all three dropdowns
+            $('#select_wilayah').select2({
+                placeholder: '-- Semua Wilayah --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            $('#select_kapela').select2({
+                placeholder: '-- Semua Stasi / Kapela --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            $('#select_kub').select2({
+                placeholder: '-- Pilih KUB --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Cache all KUB options data
+            const allKubOptions = [];
+            $('#select_kub option').each(function() {
+                if ($(this).val()) {
+                    allKubOptions.push({
+                        value: $(this).val(),
+                        text: $(this).text(),
+                        wilayah: $(this).data('wilayah') || '',
+                        kapela: $(this).data('kapela') || ''
+                    });
+                }
+            });
+
+            function filterKubSelect2() {
+                const wId = $('#select_wilayah').val();
+                const kId = $('#select_kapela').val();
+                const currentKubVal = $('#select_kub').val();
+
+                let filtered = allKubOptions;
+                if (wId && kId) {
+                    filtered = allKubOptions.filter(k => k.wilayah == wId || k.kapela == kId);
+                } else if (wId) {
+                    filtered = allKubOptions.filter(k => k.wilayah == wId);
+                } else if (kId) {
+                    filtered = allKubOptions.filter(k => k.kapela == kId);
+                }
+
+                // Rebuild KUB options
+                let html = '<option value="">-- Pilih KUB --</option>';
+                filtered.forEach(k => {
+                    const sel = (k.value == currentKubVal) ? 'selected' : '';
+                    html += `<option value="${k.value}" data-wilayah="${k.wilayah}" data-kapela="${k.kapela}" ${sel}>${k.text}</option>`;
+                });
+
+                $('#select_kub').html(html).trigger('change.select2');
+            }
+
+            $('#select_wilayah').on('change', function() {
+                filterKubSelect2();
+            });
+
+            $('#select_kapela').on('change', function() {
+                filterKubSelect2();
+            });
+        });
+    </script>
+</body>
 </html>
-
-
