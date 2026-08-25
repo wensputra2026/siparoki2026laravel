@@ -2891,7 +2891,8 @@ class InertiaPanelController extends Controller
         $needsKabupatenReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'kecamatan', 'desa-kelurahan'], true);
         $needsKecamatanReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'desa-kelurahan'], true);
         $needsParokiReferences = in_array($slug, ['keuskupan', 'dekenat', 'kevikepan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'wilayah', 'kub', 'user'], true);
-        $needsPastors = in_array($slug, ['paroki', 'kuasi-paroki', 'dekenat', 'kevikepan', 'master-pastor', 'riwayat-pastor']);
+        $needsPastors = in_array($slug, ['paroki', 'kuasi-paroki', 'dekenat', 'kevikepan', 'master-pastor', 'riwayat-pastor', 'sakramen', 'pengajuan-sakramen']);
+        $needsUmatReferences = in_array($slug, ['pengajuan-sakramen', 'sakramen', 'iuran', 'umat', 'data-umat'], true);
         $needsKontenReferences = $slug === 'konten';
 
         $keuskupanList = $needsKeuskupanReferences
@@ -2975,6 +2976,9 @@ class InertiaPanelController extends Controller
         $wilayahList = \Illuminate\Support\Facades\Cache::remember('ref_wilayah_list_v2', 1800, fn () => \App\Models\Wilayah::orderBy('nama_wilayah')->get());
         $kapelaList = \Illuminate\Support\Facades\Cache::remember('ref_kapela_list_v2', 1800, fn () => \App\Models\Kapela::orderBy('nama_kapela')->get());
         $kubList = \Illuminate\Support\Facades\Cache::remember('ref_kub_list_v2', 1800, fn () => \App\Models\Kub::orderBy('nama_kub')->get());
+        $umatList = $needsUmatReferences
+            ? \Illuminate\Support\Facades\Cache::remember('ref_umat_select_list_v1', 600, fn () => \App\Models\Umat::orderBy('nama_lengkap')->take(500)->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']))
+            : [];
 
 
 
@@ -3063,6 +3067,7 @@ class InertiaPanelController extends Controller
             'wilayahList' => $wilayahList,
             'kapelaList' => $kapelaList,
             'kubList' => $kubList,
+            'umatList' => $umatList,
             'kategoriKontenList' => $kategoriKontenList,
             'penulisList' => $penulisList,
             'filters' => [
@@ -6577,7 +6582,19 @@ class InertiaPanelController extends Controller
                 ['key' => 'status_umat', 'altKey' => 'status_aktif', 'label' => 'Status'],
             ]],
             'sakramen' => ['model' => \App\Models\Sakramen::class, 'title' => 'Buku Sakramen', 'columns' => [['key' => 'tipe_sakramen', 'label' => 'Tipe Sakramen', 'isPrimary' => true], ['key' => 'tanggal', 'label' => 'Tanggal'], ['key' => 'tempat', 'label' => 'Tempat']]],
-            'pengajuan-sakramen' => ['model' => \App\Models\PengajuanSakramen::class, 'title' => 'Pengajuan Sakramen', 'columns' => [['key' => 'nama_lengkap', 'label' => 'Nama Pemohon', 'isPrimary' => true], ['key' => 'tipe_sakramen', 'label' => 'Sakramen'], ['key' => 'status_pengajuan', 'label' => 'Status']]],
+            'pengajuan-sakramen' => [
+                'model' => \App\Models\PengajuanSakramen::class,
+                'title' => 'Pengajuan & Administrasi Sakramen',
+                'columns' => [
+                    ['key' => 'nama_lengkap', 'label' => 'Nama Pemohon / Penerima', 'isPrimary' => true],
+                    ['key' => 'tipe_sakramen', 'label' => 'Tipe Sakramen'],
+                    ['key' => 'whatsapp', 'label' => 'No. WhatsApp'],
+                    ['key' => 'tanggal_pelaksanaan', 'label' => 'Tgl Pelaksanaan', 'isDate' => true],
+                    ['key' => 'biaya_administrasi', 'label' => 'Biaya Admin (Rp)'],
+                    ['key' => 'status_pembayaran', 'label' => 'Status Bayar'],
+                    ['key' => 'status_pengajuan', 'label' => 'Status Pengajuan'],
+                ],
+            ],
             'jadwal-misa' => ['model' => \App\Models\JadwalMisa::class, 'title' => 'Jadwal Misa', 'columns' => [['key' => 'jenis_perayaan', 'altKey' => 'jenis_misa', 'label' => 'Nama Misa', 'isPrimary' => true], ['key' => 'tanggal', 'label' => 'Tanggal'], ['key' => 'hari', 'label' => 'Hari'], ['key' => 'waktu', 'altKey' => 'jam_perayaan', 'label' => 'Waktu'], ['key' => 'tempat', 'altKey' => 'lokasi', 'label' => 'Gereja / Tempat']]],
             'jenis-iuran' => ['model' => \App\Models\JenisIuran::class, 'title' => 'Daftar Jenis Iuran Umat', 'columns' => [
                 ['key' => 'kode_iuran', 'label' => 'Kode'],

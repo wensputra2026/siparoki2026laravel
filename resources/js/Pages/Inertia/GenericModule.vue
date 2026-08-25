@@ -96,6 +96,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    umatList: {
+        type: Array,
+        default: () => [],
+    },
     filters: {
         type: Object,
         default: () => ({ search: '' }),
@@ -562,6 +566,26 @@ const tipeSakramenOptions = [
     { value: 'Sakramen Perminyakan', label: 'Sakramen Perminyakan' },
 ];
 
+const tipeSakramenPengajuanOptions = [
+    { value: 'Baptis', label: 'Sakramen Baptis (Sacramentum Baptismi)' },
+    { value: 'Komuni Pertama', label: 'Sakramen Ekaristi / Komuni Suci (Sacramentum Eucharistiae)' },
+    { value: 'Krisma', label: 'Sakramen Krisma / Penguatan (Sacramentum Confirmationis)' },
+    { value: 'Pengakuan Dosa', label: 'Sakramen Tobat / Rekonsiliasi (Sacramentum Paenitentiae)' },
+    { value: 'Pengurapan Orang Sakit', label: 'Sakramen Pengurapan Orang Sakit / Perminyakan Suci (Sacramentum Unctionis Infirmorum)' },
+    { value: 'Perkawinan', label: 'Sakramen Perkawinan / Matrimoni (Sacramentum Matrimonii)' },
+    { value: 'Tahbisan', label: 'Sakramen Tahbisan Suci / Imamat (Sacramentum Ordinis)' },
+    { value: 'Lainnya', label: 'Lainnya' },
+];
+
+const umatSelectOptions = computed(() => {
+    return (props.umatList || []).map(u => ({
+        id: u.id,
+        name: `${u.nama_lengkap}${u.nik ? ' (NIK: ' + u.nik + ')' : ''}`,
+        nama_lengkap: u.nama_lengkap,
+        handphone: u.handphone || '',
+    }));
+});
+
 const togglePastorRekan = (name) => {
     if (!Array.isArray(formData.value.selected_pastor_rekan)) {
         formData.value.selected_pastor_rekan = [];
@@ -634,6 +658,18 @@ watch(() => formData.value.kabupaten_id, (newVal) => {
         formData.value.desa_id = '';
         formData.value.kecamatan = '';
         formData.value.desa = '';
+    }
+});
+
+watch(() => formData.value.umat_id, (newVal) => {
+    if (props.moduleKey === 'pengajuan-sakramen' && newVal) {
+        const found = (props.umatList || []).find(u => String(u.id) === String(newVal));
+        if (found) {
+            formData.value.nama_lengkap = found.nama_lengkap || '';
+            if (found.handphone) {
+                formData.value.whatsapp = found.handphone;
+            }
+        }
     }
 });
 
@@ -6035,8 +6071,8 @@ const statusLabel = (item) => {
                         </div>
                     </template>
 
-                    <!-- 16. BUKU SAKRAMEN & PENGAJUAN SAKRAMEN FORM -->
-                    <template v-else-if="moduleKey === 'sakramen' || moduleKey === 'pengajuan-sakramen'">
+                    <!-- 16. BUKU SAKRAMEN FORM -->
+                    <template v-else-if="moduleKey === 'sakramen'">
                         <div class="space-y-4 text-xs">
                             <div class="space-y-3.5">
                                 <div>
@@ -6188,6 +6224,205 @@ const statusLabel = (item) => {
                                         placeholder="Catatan tambahan sakramen..."
                                         class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
                                     ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 17. PENGAJUAN SAKRAMEN FORM (100% Matches http://localhost/katedral/admin/pengajuan-sakramen/create) -->
+                    <template v-else-if="moduleKey === 'pengajuan-sakramen'">
+                        <div class="space-y-4 text-xs">
+                            <!-- Row 1: Pilih Umat & Tipe Sakramen -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-[11px] font-bold text-slate-700">Pilih Umat Terdaftar (Opsional)</label>
+                                        <span class="text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Autofill</span>
+                                    </div>
+                                    <SearchableSelect
+                                        v-model="formData.umat_id"
+                                        :options="umatSelectOptions"
+                                        valueKey="id"
+                                        labelKey="name"
+                                        placeholder="-- Cari nama / NIK umat --"
+                                        searchPlaceholder="Ketik cari nama / NIK..."
+                                        icon="fa-user-check"
+                                        iconColor="text-teal-600"
+                                    />
+                                    <p class="text-[10px] text-slate-400 mt-1">Pilih dari database untuk mengisi nama & WhatsApp otomatis.</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Tipe Sakramen Suci <span class="text-rose-500">*</span>
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="formData.tipe_sakramen"
+                                        :options="tipeSakramenPengajuanOptions"
+                                        valueKey="value"
+                                        labelKey="label"
+                                        placeholder="-- Pilih Tipe Sakramen --"
+                                        searchPlaceholder="Ketik cari tipe sakramen..."
+                                        icon="fa-cross"
+                                        iconColor="text-amber-600"
+                                    />
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Nama Lengkap & WhatsApp -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Nama Lengkap Penerima / Pemohon <span class="text-rose-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <input
+                                            v-model="formData.nama_lengkap"
+                                            type="text"
+                                            required
+                                            placeholder="Masukkan nama lengkap calon penerima..."
+                                            class="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        No. WhatsApp / Handphone <span class="text-rose-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <i class="fa-brands fa-whatsapp absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 text-sm"></i>
+                                        <input
+                                            v-model="formData.whatsapp"
+                                            type="text"
+                                            required
+                                            placeholder="Contoh: 081234567890"
+                                            class="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-mono text-[11px]"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Tanggal & Biaya Administrasi -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Tanggal Rencana Pelaksanaan
+                                    </label>
+                                    <input
+                                        v-model="formData.tanggal_pelaksanaan"
+                                        type="date"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Biaya Administrasi (Rupiah)
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">Rp</span>
+                                        <input
+                                            v-model="formData.biaya_administrasi"
+                                            type="number"
+                                            class="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none"
+                                        />
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-1">Biaya standar administrasi pengajuan sakramen.</p>
+                                </div>
+                            </div>
+
+                            <!-- Row 4: Status Pembayaran & Status Pengajuan -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Pembayaran</label>
+                                    <select
+                                        v-model="formData.status_pembayaran"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold focus:outline-none focus:border-amber-500"
+                                    >
+                                        <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+                                        <option value="Lunas">Lunas / Terverifikasi</option>
+                                        <option value="Ditolak">Ditolak</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Pengajuan</label>
+                                    <select
+                                        v-model="formData.status_pengajuan"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 font-semibold focus:outline-none focus:border-amber-500"
+                                    >
+                                        <option value="Pending">Pending</option>
+                                        <option value="Diproses">Diproses</option>
+                                        <option value="Selesai">Selesai / Terbit</option>
+                                        <option value="Ditolak">Ditolak</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Row 5: Keterangan / Catatan -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                    Keterangan / Catatan Tambahan
+                                </label>
+                                <textarea
+                                    v-model="formData.keterangan"
+                                    rows="3"
+                                    placeholder="Tuliskan nama Wali Baptis (Godparents), nama saksi nikah, atau catatan penting lainnya..."
+                                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                ></textarea>
+                            </div>
+
+                            <!-- Row 6: QRIS Info Box -->
+                            <div class="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200/80 flex flex-col sm:flex-row items-center gap-4">
+                                <div class="w-20 h-20 rounded-xl bg-white border border-amber-200 shadow-2xs flex flex-col items-center justify-center p-2 shrink-0">
+                                    <i class="fa-solid fa-qrcode text-3xl text-amber-800"></i>
+                                    <span class="text-[9px] font-black text-amber-700 uppercase mt-0.5">QRIS</span>
+                                </div>
+                                <div class="text-xs text-slate-700 space-y-1">
+                                    <h5 class="font-bold text-amber-900 flex items-center gap-1.5 text-xs">
+                                        <i class="fa-solid fa-circle-info text-amber-600"></i>
+                                        <span>Biaya Administrasi: Rp 25.000</span>
+                                    </h5>
+                                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                                        Umat dapat melakukan transfer administrasi via barcode QRIS Paroki atau rekening kas paroki, lalu mengunggah struk/bukti transfer di bawah.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Row 7: Upload Bukti Transfer / Berkas -->
+                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
+                                <label class="block text-xs font-bold text-slate-700">Foto Bukti Transfer QRIS / Berkas Persyaratan (Opsional)</label>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-18 h-18 rounded-2xl bg-white border border-slate-200 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
+                                        <img
+                                            v-if="previewImage || (formData.bukti_pembayaran && typeof formData.bukti_pembayaran === 'string')"
+                                            :src="previewImage || getImageUrl(formData.bukti_pembayaran)"
+                                            alt="Bukti Transfer"
+                                            class="w-full h-full object-contain"
+                                        />
+                                        <i v-else class="fa-solid fa-receipt text-2xl text-slate-300"></i>
+                                    </div>
+                                    <div class="space-y-1.5 flex-1">
+                                        <input
+                                            type="file"
+                                            id="upload-bukti-pembayaran"
+                                            accept="image/png, image/jpeg, image/jpg, application/pdf"
+                                            @change="handleFileUpload($event, 'bukti_pembayaran')"
+                                            class="hidden"
+                                        />
+                                        <label
+                                            for="upload-bukti-pembayaran"
+                                            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition cursor-pointer shadow-2xs"
+                                        >
+                                            <i class="fa-solid fa-cloud-arrow-up text-amber-600 text-sm"></i>
+                                            <span>{{ (previewImage || formData.bukti_pembayaran) ? 'Ganti Bukti Pembayaran' : 'Unggah Bukti Transfer QRIS' }}</span>
+                                        </label>
+                                        <p class="text-[10px] text-slate-400">
+                                            Format: JPG, PNG, PDF (Maks. 2MB)
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
