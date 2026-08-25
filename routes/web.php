@@ -39,6 +39,14 @@ if (!function_exists('siparoki_resolve_safe_file')) {
     }
 }
 
+// ==========================================
+// SIPAROKI MODERN WEB INSTALLER WIZARD
+// ==========================================
+Route::get('/installer', [\App\Http\Controllers\InstallController::class, 'index'])->name('installer.index');
+Route::post('/installer/test-db', [\App\Http\Controllers\InstallController::class, 'testDatabase'])->name('installer.test-db');
+Route::get('/installer/paroki-data', [\App\Http\Controllers\InstallController::class, 'getParokiByKeuskupan'])->name('installer.paroki-data');
+Route::post('/installer/process', [\App\Http\Controllers\InstallController::class, 'install'])->name('installer.process');
+
 // Inisialisasi & Setup Paroki Wizard (Untuk Instalasi Baru GitHub / Ganti Paroki)
 Route::get('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'index'])->name('setup.paroki');
 Route::post('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'save'])->name('setup.paroki.save');
