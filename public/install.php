@@ -1,13 +1,37 @@
 <?php
 /**
- * SIPAROKI - Standalone Web Installation Wizard (Laravel 12 Edition)
- * Full Modern Tailwind CSS Responsive Edition
- * Official Branding & Intelligent Diocesan Filter
+ * SIPAROKI - Standalone Web Installation Wizard (Universal: Local, VPS, Hosting)
+ * Full Modern Responsive Tailwind CSS Edition
+ * Supports Laravel 12 on Localhost, Shared Hosting (cPanel), and Linux VPS (Nginx/Apache)
  */
 session_start();
 
-$lock_file = __DIR__ . '/../storage/installed.lock';
+// Dynamic Base Paths
+$base_dir = is_dir(__DIR__ . '/../storage') ? realpath(__DIR__ . '/..') : __DIR__;
+$storage_dir = $base_dir . '/storage';
+$bootstrap_cache_dir = $base_dir . '/bootstrap/cache';
+$lock_file = $storage_dir . '/installed.lock';
 $public_lock_file = __DIR__ . '/installed.lock';
+$env_file = $base_dir . '/.env';
+
+// Master data JSON file
+$master_json_file = __DIR__ . '/installer/master_keuskupan_paroki.json';
+if (!file_exists($master_json_file)) {
+    $master_json_file = $base_dir . '/database/data/master_keuskupan_paroki.json';
+}
+$embedded_master_json = file_exists($master_json_file) ? file_get_contents($master_json_file) : '{"keuskupan":[],"dekenat":[],"paroki":[]}';
+
+// Dynamic Base URL Detection
+$is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+    || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+    || (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on')
+    || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+
+$protocol = $is_https ? 'https://' : 'http://';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$script_dir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+$root_app_url = rtrim($protocol . $host . preg_replace('#/public$#', '', $script_dir), '/');
+if (empty($root_app_url)) $root_app_url = $protocol . $host;
 
 function siparoki_table_exists(PDO $pdo, $table) {
     $stmt = $pdo->prepare("SHOW TABLES LIKE ?");
@@ -32,32 +56,32 @@ function siparoki_table_columns(PDO $pdo, $table) {
 // 1. Check if already installed
 if (file_exists($lock_file) || file_exists($public_lock_file)) {
     if (!isset($_GET['force'])) {
-        die('<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>SIPAROKI Terpasang</title><script src="https://cdn.tailwindcss.com"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{font-family:\'Poppins\',sans-serif;}</style></head><body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4"><div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl space-y-5"><div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mx-auto shadow-lg"><i class="fa-solid fa-church"></i></div><div class="space-y-1"><h2 class="text-xl font-black text-white">SIPAROKI Sudah Terpasang</h2><p class="text-slate-400 text-xs">Sistem paroki sudah aktif dan terkonfigurasi. Untuk instalasi ulang, hapus file <code>storage/installed.lock</code>.</p></div><div class="flex items-center justify-center gap-3 pt-2"><a href="/" class="inline-block bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20 text-xs">Buka Beranda Website &rarr;</a><a href="/login" class="inline-block bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-6 py-2.5 rounded-xl transition text-xs">Login Admin</a></div></div></body></html>');
+        die('<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>SIPAROKI Terpasang</title><script src="https://cdn.tailwindcss.com"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{font-family:\'Poppins\',sans-serif;}</style></head><body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4"><div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl space-y-5"><div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mx-auto shadow-lg"><i class="fa-solid fa-church"></i></div><div class="space-y-1"><h2 class="text-xl font-black text-white">SIPAROKI Sudah Terpasang</h2><p class="text-slate-400 text-xs">Sistem paroki sudah aktif dan terkonfigurasi. Untuk instalasi ulang, hapus file <code>storage/installed.lock</code>.</p></div><div class="flex items-center justify-center gap-3 pt-2"><a href="' . htmlspecialchars($root_app_url) . '/" class="inline-block bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20 text-xs">Buka Beranda Website &rarr;</a><a href="' . htmlspecialchars($root_app_url) . '/login" class="inline-block bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-6 py-2.5 rounded-xl transition text-xs">Login Admin</a></div></div></body></html>');
     }
 }
 
 // 2. AJAX: Test DB Connection
 if (isset($_GET['action']) && $_GET['action'] === 'test_db') {
     header('Content-Type: application/json');
-    $host = trim($_POST['db_host'] ?? '127.0.0.1');
-    $port = (int) ($_POST['db_port'] ?? 3306);
-    $user = trim($_POST['db_user'] ?? 'root');
-    $pass = $_POST['db_pass'] ?? '';
-    $db   = trim($_POST['db_name'] ?? 'siparoki_db');
+    $db_host = trim($_POST['db_host'] ?? '127.0.0.1');
+    $db_port = (int) ($_POST['db_port'] ?? 3306);
+    $db_user = trim($_POST['db_user'] ?? 'root');
+    $db_pass = $_POST['db_pass'] ?? '';
+    $db_name = trim($_POST['db_name'] ?? 'siparoki_db');
 
-    if (!preg_match('/^[A-Za-z0-9_]+$/', $db)) {
+    if (!preg_match('/^[A-Za-z0-9_]+$/', $db_name)) {
         echo json_encode(['status' => 'error', 'message' => 'Nama database hanya boleh memakai huruf, angka, dan underscore.']);
         exit;
     }
 
     try {
-        $dsn = "mysql:host={$host};port={$port};charset=utf8mb4";
-        $pdo = new PDO($dsn, $user, $pass, [
+        $dsn = "mysql:host={$db_host};port={$db_port};charset=utf8mb4";
+        $pdo = new PDO($dsn, $db_user, $db_pass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_TIMEOUT => 5
         ]);
-        $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-        echo json_encode(['status' => 'success', 'message' => "Koneksi database ke server MySQL ({$host}:{$port}) berhasil terhubung!"]);
+        $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$db_name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        echo json_encode(['status' => 'success', 'message' => "Koneksi database ke server MySQL ({$db_host}:{$db_port}) berhasil terhubung!"]);
     } catch (Exception $e) {
         echo json_encode(['status' => 'error', 'message' => "Gagal terhubung ke MySQL: " . $e->getMessage()]);
     }
@@ -67,17 +91,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'test_db') {
 // 3. AJAX: Execute Full Installation
 if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
     header('Content-Type: application/json');
-    ini_set('memory_limit', '1024M');
-    ini_set('max_execution_time', 600);
+    @ini_set('memory_limit', '1024M');
+    @ini_set('max_execution_time', 600);
     if (function_exists('set_time_limit')) {
-        set_time_limit(600);
+        @set_time_limit(600);
     }
 
-    $host = trim($_POST['db_host'] ?? '127.0.0.1');
-    $port = (int) ($_POST['db_port'] ?? 3306);
-    $user = trim($_POST['db_user'] ?? 'root');
-    $pass = $_POST['db_pass'] ?? '';
-    $db   = trim($_POST['db_name'] ?? 'siparoki_db');
+    $db_host       = trim($_POST['db_host'] ?? '127.0.0.1');
+    $db_port       = (int) ($_POST['db_port'] ?? 3306);
+    $db_user       = trim($_POST['db_user'] ?? 'root');
+    $db_pass       = $_POST['db_pass'] ?? '';
+    $db_name       = trim($_POST['db_name'] ?? 'siparoki_db');
 
     $app_name      = trim($_POST['app_name'] ?? 'SIPAROKI');
     $paroki_name   = trim($_POST['paroki_name'] ?? 'Paroki Baru');
@@ -98,18 +122,18 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
 
     try {
         // Step A: Connect & Create Database
-        $dsn = "mysql:host={$host};port={$port};charset=utf8mb4";
-        $pdo = new PDO($dsn, $user, $pass, [
+        $dsn = "mysql:host={$db_host};port={$db_port};charset=utf8mb4";
+        $pdo = new PDO($dsn, $db_user, $db_pass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_TIMEOUT => 30
         ]);
-        $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-        $pdo->exec("USE `{$db}`");
+        $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$db_name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        $pdo->exec("USE `{$db_name}`");
 
         // Step B: Import SQL Baseline if available
         $sql_file = __DIR__ . '/installer/database/siparoki.sql';
         if (!file_exists($sql_file)) {
-            $sql_file = __DIR__ . '/../database/data/siparoki.sql';
+            $sql_file = $base_dir . '/database/data/siparoki.sql';
         }
 
         if (file_exists($sql_file) && filesize($sql_file) > 0) {
@@ -277,24 +301,43 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
             }
         }
 
-        // Step G: Generate & Write .env File
-        $env_file = __DIR__ . '/../.env';
-        $app_key = 'base64:' . base64_encode(random_bytes(32));
+        // Step G: Ensure Storage Directory Structure (Local / VPS / Hosting)
+        $required_dirs = [
+            $storage_dir,
+            $storage_dir . '/app',
+            $storage_dir . '/app/public',
+            $storage_dir . '/framework',
+            $storage_dir . '/framework/cache',
+            $storage_dir . '/framework/cache/data',
+            $storage_dir . '/framework/sessions',
+            $storage_dir . '/framework/views',
+            $storage_dir . '/logs',
+            $bootstrap_cache_dir,
+            __DIR__ . '/uploads',
+            __DIR__ . '/uploads/paroki',
+        ];
+        foreach ($required_dirs as $dir) {
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0775, true);
+            }
+        }
 
+        // Step H: Generate & Write .env File
+        $app_key = 'base64:' . base64_encode(random_bytes(32));
         $env_content = "APP_NAME=\"" . addslashes($app_name) . "\"\n"
             . "APP_ENV=production\n"
             . "APP_KEY={$app_key}\n"
             . "APP_DEBUG=false\n"
-            . "APP_URL=" . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\n\n"
+            . "APP_URL=" . addslashes($root_app_url) . "\n\n"
             . "LOG_CHANNEL=stack\n"
             . "LOG_DEPRECATIONS_CHANNEL=null\n"
             . "LOG_LEVEL=debug\n\n"
             . "DB_CONNECTION=mysql\n"
-            . "DB_HOST={$host}\n"
-            . "DB_PORT={$port}\n"
-            . "DB_DATABASE={$db}\n"
-            . "DB_USERNAME={$user}\n"
-            . "DB_PASSWORD=\"{$pass}\"\n\n"
+            . "DB_HOST={$db_host}\n"
+            . "DB_PORT={$db_port}\n"
+            . "DB_DATABASE={$db_name}\n"
+            . "DB_USERNAME={$db_user}\n"
+            . "DB_PASSWORD=\"{$db_pass}\"\n\n"
             . "SESSION_DRIVER=database\n"
             . "SESSION_LIFETIME=120\n"
             . "SESSION_ENCRYPT=false\n"
@@ -305,10 +348,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
 
         @file_put_contents($env_file, $env_content);
 
-        // Step H: Write Lock Files
-        if (!is_dir(__DIR__ . '/../storage')) {
-            @mkdir(__DIR__ . '/../storage', 0777, true);
-        }
+        // Step I: Write Lock Files
         @file_put_contents($lock_file, date('Y-m-d H:i:s') . " - Paroki: {$paroki_name} ({$keuskupan})\n");
         @file_put_contents($public_lock_file, date('Y-m-d H:i:s') . " - Paroki: {$paroki_name} ({$keuskupan})\n");
 
@@ -316,7 +356,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
             'status' => 'success',
             'message' => 'Instalasi SIPAROKI berhasil diselesaikan!',
             'paroki' => $paroki_name,
-            'redirect' => '/login'
+            'redirect' => $root_app_url . '/login'
         ]);
 
     } catch (Exception $e) {
@@ -346,9 +386,9 @@ $reqs = [
 $all_reqs_passed = !in_array(false, $reqs, true);
 
 $perms = [
-    'storage/' => is_writable(__DIR__ . '/../storage'),
-    'bootstrap/cache/' => is_writable(__DIR__ . '/../bootstrap/cache') || @mkdir(__DIR__ . '/../bootstrap/cache', 0777, true),
-    'public/uploads/' => is_writable(__DIR__ . '/uploads') || @mkdir(__DIR__ . '/uploads', 0777, true),
+    'storage/' => is_writable($storage_dir) || @mkdir($storage_dir, 0775, true),
+    'bootstrap/cache/' => is_writable($bootstrap_cache_dir) || @mkdir($bootstrap_cache_dir, 0775, true),
+    'public/uploads/' => is_writable(__DIR__ . '/uploads') || @mkdir(__DIR__ . '/uploads', 0775, true),
 ];
 
 $all_perms_passed = !in_array(false, $perms, true);
@@ -358,9 +398,9 @@ $all_perms_passed = !in_array(false, $perms, true);
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SIPAROKI - Web Setup & Installation Wizard</title>
+    <title>SIPAROKI - Web Setup &amp; Installation Wizard</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -420,9 +460,9 @@ $all_perms_passed = !in_array(false, $perms, true);
             </div>
             <div>
                 <h1 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
-                    SIPAROKI <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">Installer</span>
+                    SIPAROKI <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">Universal Installer</span>
                 </h1>
-                <p class="text-[11px] text-slate-400">Sistem Informasi Manajemen Pastoral Paroki Terpadu</p>
+                <p class="text-[11px] text-slate-400">Siap untuk Localhost, Shared Hosting (cPanel), dan Linux VPS</p>
             </div>
         </div>
         <span class="text-xs font-mono text-slate-500">v2.0 &bull; Laravel 12</span>
@@ -456,7 +496,7 @@ $all_perms_passed = !in_array(false, $perms, true);
             <div class="step-content active" id="step-1">
                 <div class="space-y-5">
                     <div>
-                        <h2 class="text-xl font-black text-white">1. Pemeriksaan Lingkungan & Server</h2>
+                        <h2 class="text-xl font-black text-white">1. Pemeriksaan Lingkungan &amp; Server</h2>
                         <p class="text-xs text-slate-400 mt-0.5">Memastikan modul PHP dan izin folder memenuhi kriteria operasional SIPAROKI.</p>
                     </div>
 
@@ -485,7 +525,7 @@ $all_perms_passed = !in_array(false, $perms, true);
                 <div class="space-y-5">
                     <div>
                         <h2 class="text-xl font-black text-white">2. Konfigurasi Database MySQL</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Masukkan kredensial koneksi database MySQL / MariaDB Anda.</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Masukkan kredensial koneksi database MySQL / MariaDB (Localhost, cPanel, atau VPS).</p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -518,7 +558,7 @@ $all_perms_passed = !in_array(false, $perms, true);
                             <i class="fa-solid fa-arrow-left"></i> Kembali
                         </button>
                         <button type="button" id="btn_test_db" onclick="testDatabase()" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition flex items-center gap-2">
-                            <span>Uji Koneksi & Lanjut</span>
+                            <span>Uji Koneksi &amp; Lanjut</span>
                             <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </div>
@@ -529,8 +569,8 @@ $all_perms_passed = !in_array(false, $perms, true);
             <div class="step-content" id="step-3">
                 <div class="space-y-5">
                     <div>
-                        <h2 class="text-xl font-black text-white">3. Pilih Keuskupan, Paroki & Administrator</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Pilih Keuskupan & Paroki Anda dari daftar master nasional atau daftarkan nama baru.</p>
+                        <h2 class="text-xl font-black text-white">3. Pilih Keuskupan, Paroki &amp; Administrator</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Pilih Keuskupan &amp; Paroki Anda dari daftar master nasional atau daftarkan nama baru.</p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -632,7 +672,7 @@ $all_perms_passed = !in_array(false, $perms, true);
                             <p class="text-slate-400">Password: <span id="res_pass" class="text-slate-200"></span></p>
                         </div>
                         <div class="pt-2">
-                            <a href="/login" class="inline-flex items-center gap-2 px-8 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-xl shadow-amber-500/20 transition">
+                            <a id="btn_go_login" href="/login" class="inline-flex items-center gap-2 px-8 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-xl shadow-amber-500/20 transition">
                                 <span>Masuk ke Dashboard SIPAROKI</span>
                                 <i class="fa-solid fa-arrow-right"></i>
                             </a>
@@ -664,17 +704,11 @@ $all_perms_passed = !in_array(false, $perms, true);
 
     <!-- Script Logic -->
     <script>
-        let masterData = { keuskupan: [], dekenat: [], paroki: [] };
+        // Embedded master data fallback (instant load on any hosting/vps without AJAX mime block)
+        let masterData = <?= $embedded_master_json ?>;
 
         $(document).ready(function() {
-            // Load master JSON
-            $.getJSON('installer/master_keuskupan_paroki.json', function(data) {
-                masterData = data;
-                populateKeuskupan();
-            }).fail(function() {
-                // Fallback direct array
-                populateKeuskupan();
-            });
+            populateKeuskupan();
         });
 
         function goToStep(num) {
@@ -749,7 +783,7 @@ $all_perms_passed = !in_array(false, $perms, true);
             $('#db_alert').addClass('hidden');
 
             $.ajax({
-                url: 'install.php?action=test_db',
+                url: window.location.href.split('?')[0] + '?action=test_db',
                 type: 'POST',
                 data: {
                     db_host: $('#db_host').val(),
@@ -760,7 +794,7 @@ $all_perms_passed = !in_array(false, $perms, true);
                 },
                 dataType: 'json',
                 success: function(res) {
-                    $('#btn_test_db').prop('disabled', false).html('<span>Uji Koneksi & Lanjut</span> <i class="fa-solid fa-arrow-right"></i>');
+                    $('#btn_test_db').prop('disabled', false).html('<span>Uji Koneksi &amp; Lanjut</span> <i class="fa-solid fa-arrow-right"></i>');
                     if (res.status === 'success') {
                         goToStep(3);
                     } else {
@@ -768,8 +802,8 @@ $all_perms_passed = !in_array(false, $perms, true);
                     }
                 },
                 error: function(xhr) {
-                    $('#btn_test_db').prop('disabled', false).html('<span>Uji Koneksi & Lanjut</span> <i class="fa-solid fa-arrow-right"></i>');
-                    $('#db_alert').removeClass('hidden bg-emerald-500/20 text-emerald-300').addClass('bg-rose-500/20 text-rose-300 border border-rose-500/30').html('Gagal menghubungkan ke server MySQL: ' + xhr.statusText);
+                    $('#btn_test_db').prop('disabled', false).html('<span>Uji Koneksi &amp; Lanjut</span> <i class="fa-solid fa-arrow-right"></i>');
+                    $('#db_alert').removeClass('hidden bg-emerald-500/20 text-emerald-300').addClass('bg-rose-500/20 text-rose-300 border border-rose-500/30').html('Gagal menghubungkan ke server MySQL: ' + (xhr.responseJSON?.message || xhr.statusText));
                 }
             });
         }
@@ -804,7 +838,7 @@ $all_perms_passed = !in_array(false, $perms, true);
             };
 
             $.ajax({
-                url: 'install.php?action=process_install',
+                url: window.location.href.split('?')[0] + '?action=process_install',
                 type: 'POST',
                 data: postData,
                 dataType: 'json',
@@ -814,6 +848,9 @@ $all_perms_passed = !in_array(false, $perms, true);
                         $('#res_paroki').text(res.paroki || postData.paroki_name);
                         $('#res_email').text(postData.admin_email);
                         $('#res_pass').text(postData.admin_pass);
+                        if (res.redirect) {
+                            $('#btn_go_login').attr('href', res.redirect);
+                        }
                         $('#install_success').removeClass('hidden');
                     } else {
                         $('#err_msg').text(res.message);
@@ -822,7 +859,7 @@ $all_perms_passed = !in_array(false, $perms, true);
                 },
                 error: function(xhr) {
                     $('#install_loading').addClass('hidden');
-                    $('#err_msg').text('Terjadi kesalahan saat memproses data: ' + xhr.responseText);
+                    $('#err_msg').text('Terjadi kesalahan saat memproses data: ' + (xhr.responseJSON?.message || xhr.responseText));
                     $('#install_error').removeClass('hidden');
                 }
             });
