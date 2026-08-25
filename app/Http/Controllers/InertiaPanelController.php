@@ -57,25 +57,16 @@ class InertiaPanelController extends Controller
         $kapelaQuery = Kapela::query();
 
         if (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
-            $umatQuery->where(function($q) use ($authUser) {
-                $q->where('wilayah_id', $authUser->wilayah_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
-            });
+            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
             $kkQuery->where('wilayah_id', $authUser->wilayah_id);
             $kubQuery->where('wilayah_id', $authUser->wilayah_id);
         } elseif ((str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) && !empty($authUser?->kapela_id)) {
-            $umatQuery->where(function($q) use ($authUser) {
-                $q->where('kapela_id', $authUser->kapela_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
-            });
+            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
             $kkQuery->where('kapela_id', $authUser->kapela_id);
             $kubQuery->where('kapela_id', $authUser->kapela_id);
             $kapelaQuery->where('id', $authUser->kapela_id);
         } elseif (str_contains($slugClean, 'kub') && !empty($authUser?->kub_id)) {
-            $umatQuery->where(function($q) use ($authUser) {
-                $q->where('kub_id', $authUser->kub_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
-            });
+            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
             $kkQuery->where('kub_id', $authUser->kub_id);
             $kubQuery->where('id', $authUser->kub_id);
         }
@@ -3093,8 +3084,7 @@ class InertiaPanelController extends Controller
             $kubList = $kubList->where('wilayah_id', $authUser->wilayah_id)->values();
             $kapelaList = collect();
             if ($needsUmatReferences) {
-                $umatList = \App\Models\Umat::where('wilayah_id', $authUser->wilayah_id)
-                    ->orWhereHas('kk', fn($kQ) => $kQ->where('wilayah_id', $authUser->wilayah_id))
+                $umatList = \App\Models\Umat::whereHas('kk', fn($kQ) => $kQ->where('wilayah_id', $authUser->wilayah_id))
                     ->orderBy('nama_lengkap')
                     ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
             }
@@ -3103,8 +3093,7 @@ class InertiaPanelController extends Controller
             $kubList = $kubList->where('kapela_id', $authUser->kapela_id)->values();
             $wilayahList = collect();
             if ($needsUmatReferences) {
-                $umatList = \App\Models\Umat::where('kapela_id', $authUser->kapela_id)
-                    ->orWhereHas('kk', fn($kQ) => $kQ->where('kapela_id', $authUser->kapela_id))
+                $umatList = \App\Models\Umat::whereHas('kk', fn($kQ) => $kQ->where('kapela_id', $authUser->kapela_id))
                     ->orderBy('nama_lengkap')
                     ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
             }
@@ -3113,8 +3102,7 @@ class InertiaPanelController extends Controller
             $wilayahList = collect();
             $kapelaList = collect();
             if ($needsUmatReferences) {
-                $umatList = \App\Models\Umat::where('kub_id', $authUser->kub_id)
-                    ->orWhereHas('kk', fn($kQ) => $kQ->where('kub_id', $authUser->kub_id))
+                $umatList = \App\Models\Umat::whereHas('kk', fn($kQ) => $kQ->where('kub_id', $authUser->kub_id))
                     ->orderBy('nama_lengkap')
                     ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
             }
@@ -5346,8 +5334,7 @@ class InertiaPanelController extends Controller
                     $query->where('wilayah_id', $authUser->wilayah_id);
                 } elseif (in_array('umat_id', $tableColumns, true)) {
                     $query->whereHas('umat', function ($uQ) use ($authUser) {
-                        $uQ->where('wilayah_id', $authUser->wilayah_id)
-                           ->orWhereHas('kk', fn($kQ) => $kQ->where('wilayah_id', $authUser->wilayah_id));
+                        $uQ->whereHas('kk', fn($kQ) => $kQ->where('wilayah_id', $authUser->wilayah_id));
                     });
                 }
             }
@@ -5368,8 +5355,7 @@ class InertiaPanelController extends Controller
                     $query->where('kapela_id', $authUser->kapela_id);
                 } elseif (in_array('umat_id', $tableColumns, true)) {
                     $query->whereHas('umat', function ($uQ) use ($authUser) {
-                        $uQ->where('kapela_id', $authUser->kapela_id)
-                           ->orWhereHas('kk', fn($kQ) => $kQ->where('kapela_id', $authUser->kapela_id));
+                        $uQ->whereHas('kk', fn($kQ) => $kQ->where('kapela_id', $authUser->kapela_id));
                     });
                 }
             }
@@ -5390,8 +5376,7 @@ class InertiaPanelController extends Controller
                     $query->where('kub_id', $authUser->kub_id);
                 } elseif (in_array('umat_id', $tableColumns, true)) {
                     $query->whereHas('umat', function ($uQ) use ($authUser) {
-                        $uQ->where('kub_id', $authUser->kub_id)
-                           ->orWhereHas('kk', fn($kQ) => $kQ->where('kub_id', $authUser->kub_id));
+                        $uQ->whereHas('kk', fn($kQ) => $kQ->where('kub_id', $authUser->kub_id));
                     });
                 }
             }
