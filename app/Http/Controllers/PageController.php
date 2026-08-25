@@ -622,7 +622,108 @@ class PageController extends Controller
             $tags = collect(['kegiatan', 'misa', 'paroki', 'pengumuman', 'sakramen', 'orangtua']);
         }
 
-        return view('pages.artikel-detail', array_merge($common, compact('item', 'terkait', 'recentNews', 'categories', 'archive', 'tags', 'detailType')));
+        // Pastikan tabel komentar artikel ada di database
+        \App\Models\KomentarArtikel::ensureTableExists();
+
+        // Ambil komentar yang disetujui beserta balasannya
+        $comments = \App\Models\KomentarArtikel::where('konten_id', $item->id)
+            ->whereNull('parent_id')
+            ->where('status', 'Disetujui')
+            ->with(['replies' => function ($q) {
+                $q->where('status', 'Disetujui')->orderBy('created_at', 'asc');
+            }])
+            ->latest('created_at')
+            ->get();
+
+        $totalComments = \App\Models\KomentarArtikel::where('konten_id', $item->id)
+            ->where('status', 'Disetujui')
+            ->count();
+
+        return view('pages.artikel-detail', array_merge($common, compact('item', 'terkait', 'recentNews', 'categories', 'archive', 'tags', 'detailType', 'comments', 'totalComments')));
+    }
+
+    /**
+     * Menyimpan kiriman komentar dari artikel / berita publik dengan filter kata-kata kotor / spam.
+     */
+    public function kirimKomentarArtikel(Request $request, $slug)
+    {
+        \App\Models\KomentarArtikel::ensureTableExists();
+
+        $item = DB::table('konten')->where('slug', $slug)->first();
+        if (!$item) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Artikel tidak ditemukan.'], 404);
+            }
+            abort(404);
+        }
+
+        \App\Models\KomentarArtikel::ensureTableExists();
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:100',
+            'email' => 'nullable|email|max:100',
+            'pesan' => 'required|string|min:2|max:1000',
+            'parent_id' => 'nullable|integer',
+        ], [
+            'nama.required' => 'Nama lengkap wajib diisi.',
+            'pesan.required' => 'Pesan komentar wajib diisi.',
+            'pesan.min' => 'Pesan komentar terlalu pendek.',
+        ]);
+
+        // Filter bad words & profanity check
+        $profanityResult = \App\Services\ProfanityFilterService::check($validated['pesan'] . ' ' . $validated['nama']);
+        
+        $status = $profanityResult['isClean'] ? 'Disetujui' : 'Menunggu';
+        $hasBadWords = !$profanityResult['isClean'];
+        $badWordsFound = $hasBadWords ? implode(', ', array_slice($profanityResult['flaggedWords'], 0, 5)) : null;
+
+        // Check if parent_id is valid
+        $parentId = null;
+        if (!empty($validated['parent_id'])) {
+            $parent = \App\Models\KomentarArtikel::where('id', $validated['parent_id'])
+                ->where('konten_id', $item->id)
+                ->first();
+            if ($parent) {
+                // Flatten to top-level parent if parent is already a reply
+                $parentId = $parent->parent_id ?: $parent->id;
+            }
+        }
+
+        $komentar = \App\Models\KomentarArtikel::create([
+            'konten_id' => $item->id,
+            'parent_id' => $parentId,
+            'nama' => strip_tags(trim($validated['nama'])),
+            'email' => !empty($validated['email']) ? trim($validated['email']) : null,
+            'pesan' => strip_tags(trim($validated['pesan'])),
+            'status' => $status,
+            'has_bad_words' => $hasBadWords,
+            'bad_words_found' => $badWordsFound,
+            'is_admin_reply' => false,
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 500),
+        ]);
+
+        $message = $status === 'Disetujui'
+            ? 'Komentar Anda berhasil dikirim dan ditayangkan!'
+            : 'Komentar Anda telah diterima dan sedang menunggu tinjauan moderasi oleh admin paroki demi kenyamanan bersama.';
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'status' => $status,
+                'message' => $message,
+                'komentar' => [
+                    'id' => $komentar->id,
+                    'parent_id' => $komentar->parent_id,
+                    'nama' => $komentar->nama,
+                    'pesan' => $komentar->pesan,
+                    'created_at_human' => 'Baru saja',
+                    'status' => $status,
+                ],
+            ]);
+        }
+
+        return back()->with($status === 'Disetujui' ? 'success' : 'info', $message);
     }
 
     public function pengumuman()

@@ -260,6 +260,7 @@ const roleMenus = {
                     submenus: [
                         { name: 'Kategori Konten', href: '/v2/kategori-konten', icon: 'fa-folder-open' },
                         { name: 'Berita & Artikel', href: '/v2/konten', icon: 'fa-newspaper' },
+                        { name: 'Komentar Artikel', href: '/v2/komentar-artikel', icon: 'fa-comments' },
                         { name: 'Halaman Website', href: '/v2/konten?tipe=Halaman', icon: 'fa-file-lines' },
                         { name: 'Agenda Kegiatan', href: '/v2/kegiatan', icon: 'fa-calendar-check' },
                         { name: 'Pengumuman Paroki', href: '/v2/pengumuman', icon: 'fa-bullhorn' },
@@ -397,6 +398,7 @@ const roleMenus = {
                     submenus: [
                         { name: 'Kategori Konten', href: '/v2/kategori-konten', icon: 'fa-folder-open' },
                         { name: 'Berita & Artikel', href: '/v2/konten', icon: 'fa-newspaper' },
+                        { name: 'Komentar Artikel', href: '/v2/komentar-artikel', icon: 'fa-comments' },
                         { name: 'Halaman Website', href: '/v2/konten?tipe=Halaman', icon: 'fa-file-lines' },
                         { name: 'Agenda Kegiatan', href: '/v2/kegiatan', icon: 'fa-calendar-check' },
                         { name: 'Pengumuman Paroki', href: '/v2/pengumuman', icon: 'fa-bullhorn' },
@@ -484,6 +486,7 @@ const roleMenus = {
             menus: [
                 { name: 'Kategori Konten', href: '/v2/kategori-konten', icon: 'fa-folder-open' },
                 { name: 'Berita & Artikel', href: '/v2/konten', icon: 'fa-newspaper' },
+                { name: 'Komentar Artikel', href: '/v2/komentar-artikel', icon: 'fa-comments' },
                 { name: 'Halaman Website', href: '/v2/konten?tipe=Halaman', icon: 'fa-file-lines' },
                 { name: 'Agenda Kegiatan', href: '/v2/kegiatan', icon: 'fa-calendar-check' },
                 { name: 'Pengumuman Paroki', href: '/v2/pengumuman', icon: 'fa-bullhorn' },
@@ -679,6 +682,7 @@ const roleMenus = {
             menus: [
                 { name: 'Kategori Konten', href: '/v2/kategori-konten', icon: 'fa-folder-open' },
                 { name: 'Berita & Artikel', href: '/v2/konten', icon: 'fa-newspaper' },
+                { name: 'Komentar Artikel', href: '/v2/komentar-artikel', icon: 'fa-comments' },
                 { name: 'Halaman Website', href: '/v2/konten?tipe=Halaman', icon: 'fa-file-lines' },
                 { name: 'Agenda Kegiatan', href: '/v2/kegiatan', icon: 'fa-calendar-check' },
                 { name: 'Pengumuman Paroki', href: '/v2/pengumuman', icon: 'fa-bullhorn' },

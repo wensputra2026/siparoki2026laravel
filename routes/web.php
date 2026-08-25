@@ -66,8 +66,10 @@ Route::get('/kegiatan', [PageController::class, 'agenda'])->name('kegiatan');
 // Berita & Warta Dropdown
 Route::get('/berita', [PageController::class, 'berita'])->name('berita');
 Route::get('/berita/{slug}', [PageController::class, 'beritaDetail'])->name('berita.detail');
+Route::post('/berita/{slug}/komentar', [PageController::class, 'kirimKomentarArtikel'])->name('berita.komentar.kirim')->middleware('throttle:20,1');
 Route::get('/artikel', [PageController::class, 'artikel'])->name('artikel');
 Route::get('/artikel/{slug}', [PageController::class, 'artikelDetail'])->name('artikel.detail');
+Route::post('/artikel/{slug}/komentar', [PageController::class, 'kirimKomentarArtikel'])->name('artikel.komentar.kirim')->middleware('throttle:20,1');
 Route::get('/pengumuman', [PageController::class, 'pengumuman'])->name('pengumuman');
 Route::get('/pengumuman/{id}', [PageController::class, 'pengumumanDetail'])->name('pengumuman.detail');
 Route::get('/renungan', [PageController::class, 'renungan'])->name('renungan');

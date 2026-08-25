@@ -167,85 +167,104 @@
                 </div>
 
                 <!-- Komentar & Tanggapan Section Konoha Style -->
+                <!-- Komentar & Tanggapan Section Konoha Style (Live Backend & Database Connected) -->
                 <div class="comments-section" id="commentsSection" style="margin-top: 32px; background: #ffffff; padding: 35px 38px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; padding-bottom: 16px; border-bottom: 2px solid #f1f5f9; flex-wrap: wrap; gap: 10px;">
                         <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 10px;">
                             <i class="far fa-comments" style="color: var(--primary-teal, #00897b); font-size: 1.35rem;"></i> 
-                            Komentar &amp; Diskusi (<span id="commentCount">2</span>)
+                            Komentar &amp; Diskusi (<span id="commentCount">{{ $totalComments ?? ($comments ? $comments->count() : 0) }}</span>)
                         </h3>
                         <a href="#commentFormBox" class="btn btn-sm" style="background: rgba(0, 137, 123, 0.1); color: var(--primary-teal, #00897b); font-weight: 600; border-radius: 20px; font-size: 0.8rem; padding: 6px 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                             <i class="fas fa-pen"></i> Tulis Komentar
                         </a>
                     </div>
 
-                    <!-- List Komentar -->
+                    <!-- Notifikasi Status Komentar -->
+                    <div id="commentAlertBox" style="display: none; margin-bottom: 20px; padding: 14px 18px; border-radius: 12px; font-size: 0.88rem; font-weight: 500;"></div>
+
+                    <!-- List Komentar dari Database -->
                     <div id="commentsList" style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 35px;">
-                        
-                        <!-- Sample Comment 1 -->
-                        <div class="comment-item" id="comment-1" style="background: #f8fafc; border-radius: 12px; padding: 20px 22px; border: 1px solid #e2e8f0; transition: all 0.2s;">
-                            <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-teal, #00897b), #004d40); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 10px rgba(0,137,123,0.25); flex-shrink: 0;">
-                                        YM
-                                    </div>
-                                    <div>
-                                        <h5 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #1e293b;">Yohanes Maria</h5>
-                                        <span style="font-size: 0.75rem; color: #94a3b8;"><i class="far fa-clock me-1"></i> 2 jam yang lalu</span>
-                                    </div>
-                                </div>
-                                <button type="button" class="reply-btn" onclick="openReplyForm('1', 'Yohanes Maria')" style="background: white; border: 1px solid #cbd5e1; border-radius: 20px; padding: 4px 14px; font-size: 0.78rem; font-weight: 600; color: var(--primary-teal, #00897b); cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px;">
-                                    <i class="fas fa-reply"></i> Balas
-                                </button>
-                            </div>
-                            <p style="margin: 0; color: #475569; font-size: 0.9rem; line-height: 1.65;">
-                                Renungan dan penjelasan yang sangat mendalam tentang Sakramen Ekaristi. Sangat bermanfaat sebagai bahan katekese bersama keluarga di lingkungan KUB.
-                            </p>
+                        @php
+                            $gradientList = [
+                                'linear-gradient(135deg, #00897b, #004d40)',
+                                'linear-gradient(135deg, #ff9800, #e65100)',
+                                'linear-gradient(135deg, #6366f1, #4338ca)',
+                                'linear-gradient(135deg, #0284c7, #0369a1)',
+                                'linear-gradient(135deg, #ec4899, #be185d)',
+                                'linear-gradient(135deg, #10b981, #047857)',
+                            ];
+                        @endphp
 
-                            <!-- Nested Replies for Comment 1 -->
-                            <div class="replies-container" id="replies-1" style="margin-top: 15px; padding-left: 18px; border-left: 3px solid var(--primary-orange, #ff9800); display: flex; flex-direction: column; gap: 12px;">
-                                <div class="reply-item" style="background: #ffffff; border-radius: 10px; padding: 14px 18px; border: 1px solid #e2e8f0;">
-                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                        <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-orange, #ff9800), #e65100); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.78rem; flex-shrink: 0;">
-                                            AD
+                        @if(isset($comments) && $comments->count() > 0)
+                            @foreach($comments as $idx => $comment)
+                                @php
+                                    $bgGrad = $gradientList[$idx % count($gradientList)];
+                                    $words = explode(' ', trim($comment->nama));
+                                    $initials = count($words) >= 2 
+                                        ? strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1)) 
+                                        : strtoupper(substr($comment->nama, 0, 2));
+                                @endphp
+                                <div class="comment-item" id="comment-{{ $comment->id }}" style="background: #f8fafc; border-radius: 12px; padding: 20px 22px; border: 1px solid #e2e8f0; transition: all 0.2s;">
+                                    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div style="width: 42px; height: 42px; border-radius: 50%; background: {{ $bgGrad }}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-shrink: 0;">
+                                                {{ $initials }}
+                                            </div>
+                                            <div>
+                                                <h5 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #1e293b;">
+                                                    {{ $comment->nama }}
+                                                    @if($comment->is_admin_reply)
+                                                        <span style="background: rgba(0, 137, 123, 0.12); color: var(--primary-teal, #00897b); font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 4px; font-weight: 700;">Pengelola</span>
+                                                    @endif
+                                                </h5>
+                                                <span style="font-size: 0.75rem; color: #94a3b8;"><i class="far fa-clock me-1"></i> {{ $comment->created_at ? $comment->created_at->diffForHumans() : 'Baru saja' }}</span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h6 style="margin: 0; font-size: 0.88rem; font-weight: 700; color: #1e293b;">
-                                                Admin Paroki <span style="background: rgba(0, 137, 123, 0.12); color: var(--primary-teal, #00897b); font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 4px; font-weight: 700;">Pengelola</span>
-                                            </h6>
-                                            <span style="font-size: 0.72rem; color: #94a3b8;"><i class="far fa-clock me-1"></i> 1 jam yang lalu</span>
-                                        </div>
+                                        <button type="button" class="reply-btn" onclick="openReplyForm('{{ $comment->id }}', '{{ addslashes($comment->nama) }}')" style="background: white; border: 1px solid #cbd5e1; border-radius: 20px; padding: 4px 14px; font-size: 0.78rem; font-weight: 600; color: var(--primary-teal, #00897b); cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px;">
+                                            <i class="fas fa-reply"></i> Balas
+                                        </button>
                                     </div>
-                                    <p style="margin: 0; color: #475569; font-size: 0.85rem; line-height: 1.55;">
-                                        <span style="color: var(--primary-teal, #00897b); font-weight: 600;">@Yohanes Maria</span> Amin, terima kasih atas tanggapan positifnya. Semoga berkat Ekaristi selalu menguatkan persekutuan iman kita.
-                                    </p>
+                                    <p style="margin: 0; color: #475569; font-size: 0.9rem; line-height: 1.65; white-space: pre-line;">{{ $comment->pesan }}</p>
+
+                                    <!-- Nested Replies Container -->
+                                    <div class="replies-container" id="replies-{{ $comment->id }}" style="margin-top: 15px; padding-left: 18px; border-left: 3px solid var(--primary-orange, #ff9800); display: flex; flex-direction: column; gap: 12px; {{ $comment->replies && $comment->replies->count() > 0 ? '' : 'display: none;' }}">
+                                        @if($comment->replies && $comment->replies->count() > 0)
+                                            @foreach($comment->replies as $rIdx => $reply)
+                                                @php
+                                                    $rWords = explode(' ', trim($reply->nama));
+                                                    $rInitials = count($rWords) >= 2 
+                                                        ? strtoupper(substr($rWords[0], 0, 1) . substr($rWords[1], 0, 1)) 
+                                                        : strtoupper(substr($reply->nama, 0, 2));
+                                                @endphp
+                                                <div class="reply-item" style="background: #ffffff; border-radius: 10px; padding: 14px 18px; border: 1px solid #e2e8f0;">
+                                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                                        <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-orange, #ff9800), #e65100); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.78rem; flex-shrink: 0;">
+                                                            {{ $rInitials }}
+                                                        </div>
+                                                        <div>
+                                                            <h6 style="margin: 0; font-size: 0.88rem; font-weight: 700; color: #1e293b;">
+                                                                {{ $reply->nama }}
+                                                                @if($reply->is_admin_reply)
+                                                                    <span style="background: rgba(0, 137, 123, 0.12); color: var(--primary-teal, #00897b); font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 4px; font-weight: 700;">Pengelola</span>
+                                                                @endif
+                                                            </h6>
+                                                            <span style="font-size: 0.72rem; color: #94a3b8;"><i class="far fa-clock me-1"></i> {{ $reply->created_at ? $reply->created_at->diffForHumans() : 'Baru saja' }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <p style="margin: 0; color: #475569; font-size: 0.85rem; line-height: 1.55; white-space: pre-line;">{{ $reply->pesan }}</p>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                    </div>
                                 </div>
+                            @endforeach
+                        @else
+                            <div id="emptyCommentsPlaceholder" style="text-align: center; padding: 30px 20px; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                                <i class="far fa-comment-dots" style="font-size: 2.2rem; color: #94a3b8; margin-bottom: 10px; display: block;"></i>
+                                <h6 style="color: #475569; font-size: 0.95rem; font-weight: 600; margin-bottom: 4px;">Belum Ada Komentar</h6>
+                                <p style="color: #94a3b8; font-size: 0.82rem; margin: 0;">Jadilah yang pertama memberikan tanggapan atau opini Anda pada tulisan ini.</p>
                             </div>
-                        </div>
-
-                        <!-- Sample Comment 2 -->
-                        <div class="comment-item" id="comment-2" style="background: #f8fafc; border-radius: 12px; padding: 20px 22px; border: 1px solid #e2e8f0; transition: all 0.2s;">
-                            <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #4338ca); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 10px rgba(99,102,241,0.25); flex-shrink: 0;">
-                                        TA
-                                    </div>
-                                    <div>
-                                        <h5 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #1e293b;">Theresia Avila</h5>
-                                        <span style="font-size: 0.75rem; color: #94a3b8;"><i class="far fa-clock me-1"></i> 4 jam yang lalu</span>
-                                    </div>
-                                </div>
-                                <button type="button" class="reply-btn" onclick="openReplyForm('2', 'Theresia Avila')" style="background: white; border: 1px solid #cbd5e1; border-radius: 20px; padding: 4px 14px; font-size: 0.78rem; font-weight: 600; color: var(--primary-teal, #00897b); cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px;">
-                                    <i class="fas fa-reply"></i> Balas
-                                </button>
-                            </div>
-                            <p style="margin: 0; color: #475569; font-size: 0.9rem; line-height: 1.65;">
-                                Informasi dan warta yang sangat mendidik. Mohon jadwal katekese persiapan komuni pertama juga diupdate di portal ini ya. Terima kasih!
-                            </p>
-
-                            <!-- Nested Replies for Comment 2 -->
-                            <div class="replies-container" id="replies-2" style="margin-top: 15px; padding-left: 18px; border-left: 3px solid var(--primary-orange, #ff9800); display: flex; flex-direction: column; gap: 12px;"></div>
-                        </div>
-
+                        @endif
                     </div>
 
                     <!-- Formulir Tulis Komentar / Balas Komentar -->
@@ -281,7 +300,7 @@
 
                             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                                 <span style="font-size: 0.78rem; color: #94a3b8;">
-                                    <i class="fas fa-shield-alt text-success me-1"></i> Komentar santun &amp; saling membangun.
+                                    <i class="fas fa-shield-alt text-success me-1"></i> Komentar santun, saling membangun, &amp; otomatis dimoderasi.
                                 </span>
                                 <button type="submit" id="btnSubmitComment" class="btn" style="background: linear-gradient(135deg, var(--primary-teal, #00897b), #004d40); color: white; border-radius: 25px; padding: 10px 26px; font-size: 0.88rem; font-weight: 700; border: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,137,123,0.3); transition: all 0.3s; cursor: pointer;">
                                     <i class="fas fa-paper-plane"></i> Kirim Komentar
@@ -291,10 +310,10 @@
                     </div>
                 </div>
 
-                <!-- Script Komentar & Balasan Interaktif -->
+                <!-- Script Komentar Interaktif Terhubung Database Backend -->
                 <script>
-                    var articleSlug = "{{ $item->slug }}";
-                    var storageKey = "paroki_comments_" + articleSlug;
+                    var commentPostUrl = "{{ route(($detailType ?? 'artikel') === 'berita' ? 'berita.komentar.kirim' : 'artikel.komentar.kirim', $item->slug) }}";
+                    var csrfToken = "{{ csrf_token() }}";
 
                     function getInitials(name) {
                         if (!name) return "U";
@@ -311,9 +330,39 @@
                             "linear-gradient(135deg, #ff9800, #e65100)",
                             "linear-gradient(135deg, #6366f1, #4338ca)",
                             "linear-gradient(135deg, #0284c7, #0369a1)",
-                            "linear-gradient(135deg, #ec4899, #be185d)"
+                            "linear-gradient(135deg, #ec4899, #be185d)",
+                            "linear-gradient(135deg, #10b981, #047857)"
                         ];
                         return gradients[Math.floor(Math.random() * gradients.length)];
+                    }
+
+                    function escapeHtml(text) {
+                        var div = document.createElement('div');
+                        div.textContent = text;
+                        return div.innerHTML;
+                    }
+
+                    function showCommentAlert(message, type) {
+                        var box = document.getElementById('commentAlertBox');
+                        if (!box) return;
+                        box.style.display = 'block';
+                        if (type === 'success') {
+                            box.style.background = 'rgba(16, 185, 129, 0.12)';
+                            box.style.color = '#065f46';
+                            box.style.border = '1px solid #10b981';
+                            box.innerHTML = '<i class="fas fa-check-circle me-2"></i> ' + escapeHtml(message);
+                        } else if (type === 'info') {
+                            box.style.background = 'rgba(245, 158, 11, 0.12)';
+                            box.style.color = '#92400e';
+                            box.style.border = '1px solid #f59e0b';
+                            box.innerHTML = '<i class="fas fa-info-circle me-2"></i> ' + escapeHtml(message);
+                        } else {
+                            box.style.background = 'rgba(239, 68, 68, 0.12)';
+                            box.style.color = '#991b1b';
+                            box.style.border = '1px solid #ef4444';
+                            box.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> ' + escapeHtml(message);
+                        }
+                        box.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
 
                     function openReplyForm(parentId, targetName) {
@@ -339,43 +388,12 @@
                         document.getElementById('commentMessage').placeholder = 'Tuliskan komentar atau tanggapan Anda di sini...';
                     }
 
-                    function updateCommentCount() {
-                        var totalComments = document.querySelectorAll('.comment-item').length;
-                        var totalReplies = document.querySelectorAll('.reply-item').length;
-                        var countEl = document.getElementById('commentCount');
-                        if (countEl) {
-                            countEl.textContent = totalComments + totalReplies;
+                    function addCommentToDOM(id, name, message, time) {
+                        var placeholder = document.getElementById('emptyCommentsPlaceholder');
+                        if (placeholder) {
+                            placeholder.remove();
                         }
-                    }
 
-                    function loadStoredComments() {
-                        try {
-                            var data = localStorage.getItem(storageKey);
-                            if (!data) return;
-                            var items = JSON.parse(data);
-                            if (!Array.isArray(items)) return;
-
-                            items.forEach(function(c) {
-                                if (c.parentId) {
-                                    addReplyToDOM(c.parentId, c.name, c.message, c.time || 'Baru saja', false);
-                                } else {
-                                    addCommentToDOM(c.id, c.name, c.message, c.time || 'Baru saja', false);
-                                }
-                            });
-                            updateCommentCount();
-                        } catch(e) {}
-                    }
-
-                    function saveCommentToStorage(item) {
-                        try {
-                            var data = localStorage.getItem(storageKey);
-                            var items = data ? JSON.parse(data) : [];
-                            items.push(item);
-                            localStorage.setItem(storageKey, JSON.stringify(items));
-                        } catch(e) {}
-                    }
-
-                    function addCommentToDOM(id, name, message, time, isNew) {
                         var list = document.getElementById('commentsList');
                         if (!list) return;
 
@@ -406,22 +424,26 @@
                                     '<i class="fas fa-reply"></i> Balas' +
                                 '</button>' +
                             '</div>' +
-                            '<p style="margin: 0; color: #475569; font-size: 0.9rem; line-height: 1.65;">' +
+                            '<p style="margin: 0; color: #475569; font-size: 0.9rem; line-height: 1.65; white-space: pre-line;">' +
                                 escapeHtml(message) +
                             '</p>' +
-                            '<div class="replies-container" id="replies-' + id + '" style="margin-top: 15px; padding-left: 18px; border-left: 3px solid var(--primary-orange, #ff9800); display: flex; flex-direction: column; gap: 12px;"></div>';
+                            '<div class="replies-container" id="replies-' + id + '" style="margin-top: 15px; padding-left: 18px; border-left: 3px solid var(--primary-orange, #ff9800); display: none; flex-direction: column; gap: 12px;"></div>';
 
-                        list.appendChild(div);
+                        list.insertBefore(div, list.firstChild);
+                        div.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                        if (isNew) {
-                            div.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        var countEl = document.getElementById('commentCount');
+                        if (countEl) {
+                            var cur = parseInt(countEl.textContent || '0') || 0;
+                            countEl.textContent = cur + 1;
                         }
                     }
 
-                    function addReplyToDOM(parentId, name, message, time, isNew) {
+                    function addReplyToDOM(parentId, name, message, time) {
                         var container = document.getElementById('replies-' + parentId);
                         if (!container) return;
 
+                        container.style.display = 'flex';
                         var initials = getInitials(name);
                         var bg = getRandomGradient();
 
@@ -444,21 +466,18 @@
                                     '<span style="font-size: 0.72rem; color: #94a3b8;"><i class="far fa-clock me-1"></i> ' + time + '</span>' +
                                 '</div>' +
                             '</div>' +
-                            '<p style="margin: 0; color: #475569; font-size: 0.85rem; line-height: 1.55;">' +
+                            '<p style="margin: 0; color: #475569; font-size: 0.85rem; line-height: 1.55; white-space: pre-line;">' +
                                 escapeHtml(message) +
                             '</p>';
 
                         container.appendChild(div);
+                        div.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                        if (isNew) {
-                            div.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        var countEl = document.getElementById('commentCount');
+                        if (countEl) {
+                            var cur = parseInt(countEl.textContent || '0') || 0;
+                            countEl.textContent = cur + 1;
                         }
-                    }
-
-                    function escapeHtml(text) {
-                        var div = document.createElement('div');
-                        div.textContent = text;
-                        return div.innerHTML;
                     }
 
                     function handleCommentSubmit(e) {
@@ -467,6 +486,7 @@
                         var emailInput = document.getElementById('commentEmail');
                         var messageInput = document.getElementById('commentMessage');
                         var parentIdInput = document.getElementById('replyParentId');
+                        var btn = document.getElementById('btnSubmitComment');
 
                         var name = nameInput.value.trim();
                         var email = emailInput.value.trim();
@@ -475,44 +495,60 @@
 
                         if (!name || !message) return;
 
-                        var newId = 'c_' + Date.now();
-                        var item = {
-                            id: newId,
-                            parentId: parentId || null,
-                            name: name,
-                            email: email,
-                            message: message,
-                            time: 'Baru saja'
+                        var origBtnHtml = btn.innerHTML;
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+
+                        var payload = {
+                            nama: name,
+                            email: email || null,
+                            pesan: message,
+                            parent_id: parentId ? parseInt(parentId) : null
                         };
 
-                        if (parentId) {
-                            addReplyToDOM(parentId, name, message, 'Baru saja', true);
-                        } else {
-                            addCommentToDOM(newId, name, message, 'Baru saja', true);
-                        }
+                        fetch(commentPostUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify(payload)
+                        })
+                        .then(function(response) {
+                            return response.json().then(function(data) {
+                                return { ok: response.ok, data: data };
+                            });
+                        })
+                        .then(function(res) {
+                            btn.disabled = false;
+                            btn.innerHTML = origBtnHtml;
 
-                        saveCommentToStorage(item);
-                        updateCommentCount();
+                            if (res.ok && res.data.success) {
+                                messageInput.value = '';
+                                cancelReply();
 
-                        // Reset form
-                        messageInput.value = '';
-                        cancelReply();
-
-                        // Success notification
-                        var btn = document.getElementById('btnSubmitComment');
-                        var origHtml = btn.innerHTML;
-                        btn.innerHTML = '<i class="fas fa-check"></i> Komentar Terkirim!';
-                        btn.style.background = '#10b981';
-                        setTimeout(function() {
-                            btn.innerHTML = origHtml;
-                            btn.style.background = 'linear-gradient(135deg, var(--primary-teal, #00897b), #004d40)';
-                        }, 2000);
+                                if (res.data.status === 'Disetujui') {
+                                    if (payload.parent_id) {
+                                        addReplyToDOM(payload.parent_id, name, message, 'Baru saja');
+                                    } else {
+                                        addCommentToDOM(res.data.komentar.id, name, message, 'Baru saja');
+                                    }
+                                    showCommentAlert(res.data.message || 'Komentar Anda berhasil dikirim dan ditayangkan!', 'success');
+                                } else {
+                                    showCommentAlert(res.data.message || 'Komentar Anda telah diterima dan sedang menunggu tinjauan moderasi oleh admin.', 'info');
+                                }
+                            } else {
+                                var errText = (res.data && (res.data.message || (res.data.errors ? Object.values(res.data.errors).flat().join(', ') : null))) || 'Gagal mengirim komentar.';
+                                showCommentAlert(errText, 'danger');
+                            }
+                        })
+                        .catch(function(err) {
+                            btn.disabled = false;
+                            btn.innerHTML = origBtnHtml;
+                            showCommentAlert('Terjadi kendala jaringan saat mengirim komentar. Silakan coba beberapa saat lagi.', 'danger');
+                        });
                     }
-
-                    document.addEventListener('DOMContentLoaded', function() {
-                        loadStoredComments();
-                        updateCommentCount();
-                    });
                 </script>
             </div>
 

@@ -2661,6 +2661,10 @@ class InertiaPanelController extends Controller
             $this->ensureKategoriKontenTableAndData();
         }
 
+        if ($slug === 'komentar-artikel' || $slug === 'komentar_artikel') {
+            $this->ensureKomentarArtikelTableAndData();
+        }
+
         $query = $modelClass::query();
         if ($slug === 'keuskupan') {
             $query->with([
@@ -2717,6 +2721,8 @@ class InertiaPanelController extends Controller
             $query->with(['role', 'wilayah', 'kapela', 'kub']);
         } elseif ($slug === 'anggota-kategorial') {
             $query->with(['peranKategorial']);
+        } elseif ($slug === 'komentar-artikel' || $slug === 'komentar_artikel') {
+            $query->with(['konten']);
         }
 
         $modelInstance = new $modelClass;
@@ -6438,6 +6444,15 @@ class InertiaPanelController extends Controller
         }
     }
 
+    protected function ensureKomentarArtikelTableAndData(): void
+    {
+        try {
+            \App\Models\KomentarArtikel::ensureTableExists();
+        } catch (\Throwable $e) {
+            // Silently continue
+        }
+    }
+
     private function getModuleMap(): array
     {
         return [
@@ -6588,6 +6603,26 @@ class InertiaPanelController extends Controller
                 ['key' => 'status', 'label' => 'Status'],
             ]],
             'konten' => ['model' => \App\Models\Konten::class, 'title' => 'Konten Website', 'columns' => [['key' => 'judul', 'label' => 'Judul Artikel', 'isPrimary' => true], ['key' => 'kategori', 'label' => 'Kategori'], ['key' => 'created_at', 'label' => 'Tanggal']]],
+            'komentar-artikel' => ['model' => \App\Models\KomentarArtikel::class, 'title' => 'Komentar & Diskusi Artikel', 'columns' => [
+                ['key' => 'nama', 'label' => 'Nama Pengirim', 'isPrimary' => true],
+                ['key' => 'konten_judul', 'relation' => 'konten', 'relationKey' => 'judul', 'label' => 'Artikel / Konten'],
+                ['key' => 'pesan', 'label' => 'Isi Komentar'],
+                ['key' => 'email', 'label' => 'Email'],
+                ['key' => 'status', 'label' => 'Status Moderasi'],
+                ['key' => 'has_bad_words', 'label' => 'Terdeteksi Kata Kasar', 'isBoolean' => true],
+                ['key' => 'bad_words_found', 'label' => 'Kata Terdeteksi'],
+                ['key' => 'created_at', 'label' => 'Waktu Kirim', 'isDate' => true],
+            ]],
+            'komentar_artikel' => ['model' => \App\Models\KomentarArtikel::class, 'title' => 'Komentar & Diskusi Artikel', 'columns' => [
+                ['key' => 'nama', 'label' => 'Nama Pengirim', 'isPrimary' => true],
+                ['key' => 'konten_judul', 'relation' => 'konten', 'relationKey' => 'judul', 'label' => 'Artikel / Konten'],
+                ['key' => 'pesan', 'label' => 'Isi Komentar'],
+                ['key' => 'email', 'label' => 'Email'],
+                ['key' => 'status', 'label' => 'Status Moderasi'],
+                ['key' => 'has_bad_words', 'label' => 'Terdeteksi Kata Kasar', 'isBoolean' => true],
+                ['key' => 'bad_words_found', 'label' => 'Kata Terdeteksi'],
+                ['key' => 'created_at', 'label' => 'Waktu Kirim', 'isDate' => true],
+            ]],
             'pengumuman' => ['model' => \App\Models\Pengumuman::class, 'title' => 'Pengumuman Paroki', 'columns' => [['key' => 'judul', 'label' => 'Judul Pengumuman', 'isPrimary' => true], ['key' => 'tgl_tayang', 'label' => 'Tanggal']]],
             'renungan' => ['model' => \App\Models\Renungan::class, 'title' => 'Renungan Harian', 'columns' => [['key' => 'judul', 'label' => 'Judul Renungan', 'isPrimary' => true], ['key' => 'bacaan_kitab_suci', 'label' => 'Bacaan'], ['key' => 'tanggal', 'label' => 'Tanggal']]],
             'galeri' => ['model' => \App\Models\Galeri::class, 'title' => 'Galeri Foto & Dokumentasi', 'columns' => [

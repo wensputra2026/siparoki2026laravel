@@ -133,6 +133,12 @@ class AppServiceProvider extends ServiceProvider
 
         Model::unguard();
 
+        try {
+            \App\Models\KomentarArtikel::ensureTableExists();
+        } catch (\Throwable $e) {
+            // Silently continue
+        }
+
         // Superadmin bypass — Pastor Paroki & Admin full access
         Gate::before(function (User $user, string $ability): ?bool {
             if ($user->role_id == 1 || $user->id == 1) {
