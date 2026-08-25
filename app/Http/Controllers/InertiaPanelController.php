@@ -2541,6 +2541,7 @@ class InertiaPanelController extends Controller
 
         return Inertia::render('Inertia/PanduanHakAkses', [
             'role' => $resolvedRole,
+            'prefix' => $firstSegment,
         ]);
     }
 
