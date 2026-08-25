@@ -1,7 +1,19 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+
+const isReloading = ref(false);
+const reloadStats = () => {
+    isReloading.value = true;
+    router.reload({
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => {
+            isReloading.value = false;
+        },
+    });
+};
 
 const props = defineProps({
     role: { type: String, default: 'Super Admin' },
@@ -63,6 +75,18 @@ const printDemografi = () => {
                     </div>
 
                     <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+                        <!-- Segarkan Data (Database Reload) -->
+                        <button
+                            type="button"
+                            :disabled="isReloading"
+                            @click="reloadStats"
+                            class="px-4 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                            title="Segarkan data statistik dan grafik langsung dari database"
+                        >
+                            <i :class="['fa-solid fa-arrows-rotate', isReloading ? 'fa-spin' : '']"></i>
+                            <span>{{ isReloading ? 'Memuat...' : 'Segarkan Data' }}</span>
+                        </button>
+
                         <!-- Ekspor Excel -->
                         <a
                             :href="`/${prefix}/statistik/export/excel`"

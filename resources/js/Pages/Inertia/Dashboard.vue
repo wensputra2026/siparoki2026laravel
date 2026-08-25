@@ -1,9 +1,21 @@
 <script setup>
-import { computed } from 'vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const page = usePage();
+const isReloading = ref(false);
+
+const reloadDashboard = () => {
+    isReloading.value = true;
+    router.reload({
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => {
+            isReloading.value = false;
+        },
+    });
+};
 
 defineProps({
     stats: {
@@ -80,6 +92,17 @@ const basePrefix = computed(() => {
 
             <!-- Right Side: Quick Action Buttons -->
             <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                <button
+                    type="button"
+                    :disabled="isReloading"
+                    @click="reloadDashboard"
+                    title="Segarkan data statistik dan ringkasan dashboard"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs transition shadow-2xs cursor-pointer disabled:opacity-60"
+                >
+                    <i :class="['fa-solid fa-arrows-rotate text-blue-600', isReloading ? 'fa-spin' : '']"></i>
+                    <span>{{ isReloading ? 'Memuat...' : 'Segarkan Data' }}</span>
+                </button>
+
                 <Link
                     :href="`${basePrefix}/profil-paroki`"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs transition shadow-2xs cursor-pointer"

@@ -19,6 +19,18 @@ const props = defineProps({
     laravelVersion: { type: String, default: '' },
 });
 
+const isReloading = ref(false);
+const reloadSecurity = () => {
+    isReloading.value = true;
+    router.reload({
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => {
+            isReloading.value = false;
+        },
+    });
+};
+
 const activeTab = ref('audit'); // 'audit' | 'firewall' | 'logs' | 'policies'
 
 // Forms
@@ -173,6 +185,16 @@ const formatDate = (dateStr) => {
                     </div>
 
                     <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+                        <button
+                            type="button"
+                            :disabled="isReloading"
+                            @click="reloadSecurity"
+                            class="px-4 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                            title="Segarkan Log & Data Keamanan dari Database"
+                        >
+                            <i :class="['fa-solid fa-arrows-rotate', isReloading ? 'fa-spin' : '']"></i>
+                            <span>{{ isReloading ? 'Memuat...' : 'Segarkan Data' }}</span>
+                        </button>
                         <button
                             @click="handleClearCache"
                             class="px-4 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2 cursor-pointer"

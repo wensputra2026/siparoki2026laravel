@@ -60,12 +60,16 @@ const saveItem = () => {
     });
 };
 
-const deleteItem = (item) => {
-    if (confirm(`Yakin ingin menghapus item "${item.nilai}"?`)) {
-        router.delete(`/admin/master-referensi/master_referensi_item/${item.id}`, {
-            preserveScroll: true,
-        });
-    }
+const isReloading = ref(false);
+const reloadMaster = () => {
+    isReloading.value = true;
+    router.reload({
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => {
+            isReloading.value = false;
+        },
+    });
 };
 </script>
 
@@ -92,6 +96,17 @@ const deleteItem = (item) => {
                 </div>
 
                 <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        :disabled="isReloading"
+                        @click="reloadMaster"
+                        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-60"
+                        title="Segarkan data referensi langsung dari database"
+                    >
+                        <i :class="['fa-solid fa-arrows-rotate text-amber-600', isReloading ? 'fa-spin' : '']"></i>
+                        <span>{{ isReloading ? 'Memuat...' : 'Segarkan Data' }}</span>
+                    </button>
+
                     <Link
                         href="/admin/master-referensi/master_referensi"
                         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition"

@@ -418,6 +418,18 @@ watch(search, () => {
     debounce = setTimeout(applyFilters, 500);
 });
 
+const isReloadingData = ref(false);
+const reloadModuleData = () => {
+    isReloadingData.value = true;
+    router.reload({
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => {
+            isReloadingData.value = false;
+        },
+    });
+};
+
 watch(kabupatenFilter, () => {
     if (kecamatanFilter.value && !filteredKecamatansForFilter.value.some(k => String(k.id_kecamatan || k.id) === String(kecamatanFilter.value))) {
         kecamatanFilter.value = '';
@@ -1765,6 +1777,16 @@ const statusLabel = (item) => {
 
                 <!-- Right: Action Buttons Group -->
                 <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <!-- Reload Data Button -->
+                    <button
+                        @click="reloadModuleData"
+                        :disabled="isReloadingData"
+                        title="Muat ulang data dari database tanpa menyegarkan halaman"
+                        class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60"
+                    >
+                        <i class="fa-solid fa-rotate" :class="{ 'fa-spin': isReloadingData }"></i>
+                        <span>{{ isReloadingData ? 'Memuat...' : 'Reload' }}</span>
+                    </button>
                     <!-- 0. Read-Only Indicator for Wilayah / Kapela on KK & Umat Data -->
                     <div
                         v-if="isUmatReadOnlyRole"
@@ -1852,6 +1874,18 @@ const statusLabel = (item) => {
                         <i class="fa-solid fa-print text-[11px]"></i>
                         <span>Cetak / PDF</span>
                     </a>
+
+                    <!-- 6. Segarkan / Reload Data Database -->
+                    <button
+                        type="button"
+                        :disabled="isReloadingData"
+                        @click="reloadModuleData"
+                        title="Segarkan data tabel dari database (tanpa reload browser)"
+                        class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-300 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60 shadow-2xs"
+                    >
+                        <i :class="['fa-solid fa-arrows-rotate text-[11px]', isReloadingData ? 'fa-spin text-blue-600' : 'text-slate-600']"></i>
+                        <span>{{ isReloadingData ? 'Memuat...' : 'Segarkan' }}</span>
+                    </button>
                 </div>
             </div>
 
