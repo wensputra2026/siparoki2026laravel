@@ -246,12 +246,19 @@ const roleMenus = {
             section: 'Keuangan & Aset',
             menus: [
                 {
-                    name: 'Keuangan & Iuran',
-                    icon: 'fa-money-bill-wave',
+                    name: 'Iuran & Persembahan',
+                    icon: 'fa-money-bill-transfer',
                     submenus: [
-                        { name: 'Kas & Iuran Paroki', href: '/v2/keuangan', icon: 'fa-vault' },
+                        { name: 'Jenis Iuran', href: '/v2/jenis-iuran', icon: 'fa-tags' },
+                        { name: 'Iuran Umat', href: '/v2/iuran', icon: 'fa-receipt' },
+                        { name: 'Kolekte Misa', href: '/v2/kolekte', icon: 'fa-hand-holding-dollar' },
                         { name: 'Intensi Misa', href: '/v2/intensi-misa', icon: 'fa-heart' },
                     ],
+                },
+                {
+                    name: 'Kas & Transaksi Keuangan',
+                    icon: 'fa-vault',
+                    href: '/v2/keuangan',
                 },
                 {
                     name: 'Aset & Inventaris',
@@ -375,14 +382,25 @@ const roleMenus = {
             section: 'Keuangan & Aset',
             menus: [
                 {
-                    name: 'Keuangan & Iuran',
-                    icon: 'fa-money-bill-wave',
+                    name: 'Iuran & Persembahan',
+                    icon: 'fa-money-bill-transfer',
                     submenus: [
-                        { name: 'Kas & Iuran Paroki', href: '/v2/keuangan', icon: 'fa-vault' },
+                        { name: 'Jenis Iuran', href: '/v2/jenis-iuran', icon: 'fa-tags' },
+                        { name: 'Iuran Umat', href: '/v2/iuran', icon: 'fa-receipt' },
+                        { name: 'Kolekte Misa', href: '/v2/kolekte', icon: 'fa-hand-holding-dollar' },
                         { name: 'Intensi Misa', href: '/v2/intensi-misa', icon: 'fa-heart' },
                     ],
                 },
-                { name: 'Aset & Inventaris', href: '/v2/aset', icon: 'fa-boxes-stacked' },
+                {
+                    name: 'Kas & Transaksi Keuangan',
+                    icon: 'fa-vault',
+                    href: '/v2/keuangan',
+                },
+                {
+                    name: 'Aset & Inventaris',
+                    icon: 'fa-boxes-stacked',
+                    href: '/v2/aset',
+                },
             ],
         },
         {
@@ -467,14 +485,25 @@ const roleMenus = {
             section: 'Keuangan & Aset',
             menus: [
                 {
-                    name: 'Keuangan & Iuran',
-                    icon: 'fa-money-bill-wave',
+                    name: 'Iuran & Persembahan',
+                    icon: 'fa-money-bill-transfer',
                     submenus: [
-                        { name: 'Kas & Iuran Paroki', href: '/v2/keuangan', icon: 'fa-vault' },
+                        { name: 'Jenis Iuran', href: '/v2/jenis-iuran', icon: 'fa-tags' },
+                        { name: 'Iuran Umat', href: '/v2/iuran', icon: 'fa-receipt' },
+                        { name: 'Kolekte Misa', href: '/v2/kolekte', icon: 'fa-hand-holding-dollar' },
                         { name: 'Intensi Misa', href: '/v2/intensi-misa', icon: 'fa-heart' },
                     ],
                 },
-                { name: 'Aset & Inventaris', href: '/v2/aset', icon: 'fa-boxes-stacked' },
+                {
+                    name: 'Kas & Transaksi Keuangan',
+                    icon: 'fa-vault',
+                    href: '/v2/keuangan',
+                },
+                {
+                    name: 'Aset & Inventaris',
+                    icon: 'fa-boxes-stacked',
+                    href: '/v2/aset',
+                },
             ],
         },
         {
@@ -641,8 +670,18 @@ const roleMenus = {
         {
             section: 'Keuangan & Transaksi',
             menus: [
-                { name: 'Kas & Keuangan Paroki', href: '/v2/keuangan', icon: 'fa-vault' },
-                { name: 'Intensi Misa', href: '/v2/intensi-misa', icon: 'fa-heart' },
+                {
+                    name: 'Iuran & Persembahan',
+                    icon: 'fa-money-bill-transfer',
+                    submenus: [
+                        { name: 'Jenis Iuran', href: '/v2/jenis-iuran', icon: 'fa-tags' },
+                        { name: 'Iuran Umat', href: '/v2/iuran', icon: 'fa-receipt' },
+                        { name: 'Kolekte Misa', href: '/v2/kolekte', icon: 'fa-hand-holding-dollar' },
+                        { name: 'Intensi Misa', href: '/v2/intensi-misa', icon: 'fa-heart' },
+                    ],
+                },
+                { name: 'Kas & Transaksi Keuangan', href: '/v2/keuangan', icon: 'fa-vault' },
+                { name: 'Aset & Inventaris', href: '/v2/aset', icon: 'fa-boxes-stacked' },
             ],
         },
         {
@@ -736,6 +775,7 @@ const openGroups = ref({
     'Sekretariat Paroki': false,
     'Registrasi Surat': false,
     'Keuangan & Aset': false,
+    'Iuran & Persembahan': false,
     'Website Paroki': false,
     'Warta & Konten': false,
     'Pengaturan Web': false,

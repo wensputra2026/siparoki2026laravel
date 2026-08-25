@@ -132,11 +132,11 @@ class PanelAccess
 
         // Least-privilege module allow-list per (non-elevated) role prefix.
         $moduleAccess = [
-            'bendahara' => ['keuangan', 'aset', 'kategori-keuangan', 'lapak-produk'],
+            'bendahara' => ['keuangan', 'aset', 'kategori-keuangan', 'lapak-produk', 'jenis-iuran', 'iuran', 'kolekte', 'intensi-misa', 'intensi'],
             'penulis' => ['konten', 'kategori-konten', 'pengumuman', 'galeri', 'renungan', 'kegiatan', 'artikel', 'berita'],
-            'wilayah' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kegiatan'],
-            'kapela' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kapela', 'stasi', 'kegiatan'],
-            'kub' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'lingkungan', 'kub'],
+            'wilayah' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kegiatan', 'iuran', 'keuangan', 'aset'],
+            'kapela' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kapela', 'stasi', 'kegiatan', 'iuran', 'keuangan', 'aset'],
+            'kub' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'lingkungan', 'kub', 'iuran', 'keuangan', 'aset'],
             'umat' => [],
         ];
 

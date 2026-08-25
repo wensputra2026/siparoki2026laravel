@@ -1504,6 +1504,17 @@ const getFieldValue = (item, col) => {
     if (val !== '—' && (col.isDate || col.key.includes('tanggal') || col.key.includes('tgl'))) {
         return formatIndonesianDate(String(val));
     }
+    if (val !== '—' && (col.isCurrency || col.key.includes('nominal') || col.key.includes('jumlah') || col.key.includes('nilai_perolehan') || col.key.includes('total_jumlah') || col.key.includes('harga'))) {
+        if (!isNaN(val) && val !== '' && val !== null) {
+            return 'Rp ' + Number(val).toLocaleString('id-ID');
+        }
+    }
+    if (val !== '—' && col.key === 'wajib') {
+        return (val == 1 || val === '1' || val === true || val === 'Ya') ? 'Wajib' : 'Sukarela';
+    }
+    if (val !== '—' && col.key === 'status') {
+        return (val == 1 || val === '1' || val === true || val === 'Aktif') ? 'Aktif' : 'Non-Aktif';
+    }
     return val;
 };
 const isPromotedKuasi = (item) => {
