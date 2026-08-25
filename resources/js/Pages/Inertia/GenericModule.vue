@@ -513,27 +513,17 @@ const isUmatReadOnlyRole = computed(() => {
     const prefix = path.split('/').filter(Boolean)[0] || '';
     const roleSlug = String(props.role?.slug || props.role?.nama_role || props.role || '').toLowerCase();
     
-    // Wilayah, Kapela/Stasi are strictly VIEW ONLY for data KK, Umat, Wilayah, and KUB
+    // Wilayah, Kapela/Stasi are strictly VIEW ONLY for data KK, Umat, Wilayah, KUB, and Sakramen
     const isWilayahOrKapela = ['wilayah', 'kapela', 'stasi'].includes(prefix) || 
                               roleSlug.includes('wilayah') || 
                               roleSlug.includes('kapela') || 
                               roleSlug.includes('stasi');
                               
-    return ['umat', 'data-umat', 'data_umat', 'kk-katolik', 'kk', 'keluarga', 'wilayah', 'kub'].includes(props.moduleKey) && isWilayahOrKapela;
+    return ['umat', 'data-umat', 'data_umat', 'kk-katolik', 'kk', 'keluarga', 'wilayah', 'kub', 'sakramen', 'buku-sakramen'].includes(props.moduleKey) && isWilayahOrKapela;
 });
 
 const isViewAndEditOnlyRole = computed(() => {
-    const path = window.location.pathname;
-    const prefix = path.split('/').filter(Boolean)[0] || '';
-    const roleSlug = String(props.role?.slug || props.role?.nama_role || props.role || '').toLowerCase();
-    
-    // Wilayah, Kapela/Stasi are VIEW and EDIT ONLY for Sakramen (Create, Delete, Import are disabled)
-    const isWilayahOrKapela = ['wilayah', 'kapela', 'stasi'].includes(prefix) || 
-                              roleSlug.includes('wilayah') || 
-                              roleSlug.includes('kapela') || 
-                              roleSlug.includes('stasi');
-                              
-    return ['sakramen', 'buku-sakramen'].includes(props.moduleKey) && isWilayahOrKapela;
+    return false;
 });
 
 const generatePassword = () => {
@@ -1781,7 +1771,7 @@ const statusLabel = (item) => {
                         class="px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
                     >
                         <i class="fa-solid fa-eye text-blue-600 text-[11px]"></i>
-                        <span>{{ ['wilayah', 'kub'].includes(moduleKey) ? 'Mode Lihat Saja (Kelola di Paroki)' : 'Mode Lihat Saja (CRUD di KUB)' }}</span>
+                        <span>{{ ['wilayah', 'kub', 'sakramen', 'buku-sakramen'].includes(moduleKey) ? 'Mode Lihat Saja (Kelola di Paroki)' : 'Mode Lihat Saja (CRUD di KUB)' }}</span>
                     </div>
 
                     <!-- 0.1 View & Edit Only Indicator for Wilayah / Kapela on Sakramen Data -->

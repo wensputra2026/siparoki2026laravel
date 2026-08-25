@@ -3532,8 +3532,9 @@ class InertiaPanelController extends Controller
         }
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
-        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'wilayah', 'kub'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
-            return back()->with('error', 'Akses ditolak. Perubahan data struktur Wilayah & KUB hanya dapat dilakukan oleh Sekretariat Paroki / Super Admin.');
+        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'wilayah', 'kub', 'sakramen'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
+            return back()->with('error', 'Akses ditolak. Pengelolaan data (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
         }
 
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
