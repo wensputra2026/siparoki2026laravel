@@ -268,6 +268,9 @@ $legacyModuleAliases = [
 ];
 
 Route::middleware([\App\Http\Middleware\PanelAccess::class])->group(function () use ($rolePrefixes, $legacyModuleAliases) {
+    // Endpoint pencarian umat secara lazy (tenant-scoped) untuk SearchableSelect.
+    Route::get('/umat-options', [\App\Http\Controllers\InertiaPanelController::class, 'umatOptions'])->name('panel.umat.options');
+
 foreach ($rolePrefixes as $prefix => $roleTitle) {
     Route::prefix($prefix)->group(function () use ($prefix, $legacyModuleAliases) {
         Route::get('/', [\App\Http\Controllers\InertiaPanelController::class, 'dashboard'])->name("panel.{$prefix}");
@@ -367,6 +370,19 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::post('/pengaturan/seo/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveSeoMeta'])->name("panel.{$prefix}.pengaturan.seo.save");
         Route::post('/pengaturan/widget/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveWidgetSettings'])->name("panel.{$prefix}.pengaturan.widget.save");
         Route::post('/pengaturan/maintenance/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveMaintenanceSettings'])->name("panel.{$prefix}.pengaturan.maintenance.save");
+
+        // Pembersih Sistem
+        Route::get('/pembersih-sistem', [\App\Http\Controllers\InertiaPanelController::class, 'pembersihSistem'])->name("panel.{$prefix}.pembersih-sistem");
+        Route::post('/pembersih-sistem/aksi', [\App\Http\Controllers\InertiaPanelController::class, 'pembersihSistemAksi'])->name("panel.{$prefix}.pembersih-sistem.aksi");
+
+        // Master Referensi
+        Route::get('/master-referensi', [\App\Http\Controllers\MasterReferensiController::class, 'index'])->name("panel.{$prefix}.master-referensi.index");
+        Route::get('/master-referensi/{type}', [\App\Http\Controllers\MasterReferensiController::class, 'list'])->name("panel.{$prefix}.master-referensi.list");
+        Route::get('/master-referensi/options/{relTable}', [\App\Http\Controllers\MasterReferensiController::class, 'options'])->name("panel.{$prefix}.master-referensi.options");
+        Route::post('/master-referensi/{type}', [\App\Http\Controllers\MasterReferensiController::class, 'store'])->name("panel.{$prefix}.master-referensi.store");
+        Route::put('/master-referensi/{type}/{id}', [\App\Http\Controllers\MasterReferensiController::class, 'update'])->name("panel.{$prefix}.master-referensi.update");
+        Route::post('/master-referensi/{type}/{id}', [\App\Http\Controllers\MasterReferensiController::class, 'update'])->name("panel.{$prefix}.master-referensi.update.post");
+        Route::delete('/master-referensi/{type}/{id}', [\App\Http\Controllers\MasterReferensiController::class, 'destroy'])->name("panel.{$prefix}.master-referensi.destroy");
 
         Route::get('/jadwal-misa/bulan', fn () => redirect("/{$prefix}/jadwal-misa"));
         Route::get('/sakramen/daftar_pembayaran', fn () => redirect("/{$prefix}/pengajuan-sakramen"));

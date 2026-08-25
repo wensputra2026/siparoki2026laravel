@@ -37,6 +37,11 @@ export const roleMenus = {
                         { name: 'Desa / Kelurahan', href: '/v2/desa-kelurahan', icon: 'fa-location-dot' },
                     ],
                 },
+                {
+                    name: 'Master Referensi',
+                    icon: 'fa-tags',
+                    href: '/admin/master-referensi',
+                },
             ],
         },
         {
