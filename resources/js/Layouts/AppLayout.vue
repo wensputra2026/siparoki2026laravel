@@ -529,31 +529,26 @@ const roleMenus = {
         {
             section: 'Dashboard',
             menus: [
-                { name: 'Dashboard', href: '/v2/dashboard', icon: 'fa-gauge-high' },
-                { name: 'Panduan Hak Akses (RBAC)', href: '/v2/panduan-hak-akses', icon: 'fa-book-open' },
+                { name: 'Dashboard', href: '/wilayah/dashboard', icon: 'fa-gauge-high' },
+                { name: 'Panduan', href: '/wilayah/panduan-hak-akses', icon: 'fa-book-open' },
             ],
         },
         {
             section: 'Data Wilayah',
             menus: [
-                { name: 'Wilayah Saya', href: '/v2/wilayah', icon: 'fa-compass' },
-                { name: 'KUB', href: '/v2/kub', icon: 'fa-people-group' },
+                { name: 'Wilayah Saya', href: '/wilayah/wilayah', icon: 'fa-map-pin' },
+                { name: 'KUB', href: '/wilayah/kub', icon: 'fa-people-group' },
             ],
         },
         {
             section: 'Data Umat & Keluarga',
             menus: [
-                { name: 'Kartu Keluarga (KK)', href: '/v2/kk-katolik', icon: 'fa-house-chimney-user' },
-                { name: 'Data Umat / Jiwa', href: '/v2/umat', icon: 'fa-users' },
-                { name: 'Demografi & Statistik', href: '/v2/statistik', icon: 'fa-chart-pie' },
-                {
-                    name: 'Data Sakramen',
-                    icon: 'fa-book-bible',
-                    submenus: [
-                        { name: 'Buku Sakramen', href: '/v2/sakramen', icon: 'fa-book-bookmark' },
-                        { name: 'Pengajuan Sakramen', href: '/v2/pengajuan-sakramen', icon: 'fa-file-signature' },
-                    ],
-                },
+                { name: 'KK Katolik', href: '/wilayah/kk-katolik', icon: 'fa-credit-card' },
+                { name: 'Data Keluarga', href: '/wilayah/kk-katolik', icon: 'fa-users-rectangle' },
+                { name: 'Data Umat / Jiwa', href: '/wilayah/umat', icon: 'fa-user' },
+                { name: 'Demografi & Statistik', href: '/wilayah/statistik', icon: 'fa-chart-pie' },
+                { name: 'Data Sakramen', href: '/wilayah/sakramen', icon: 'fa-feather' },
+                { name: 'Pengajuan Sakramen', href: '/wilayah/pengajuan-sakramen', icon: 'fa-envelope-open-text' },
             ],
         },
         {
@@ -561,16 +556,20 @@ const roleMenus = {
             menus: [
                 {
                     name: 'Keuangan',
-                    icon: 'fa-money-bill-wave',
-                    href: '/v2/keuangan',
+                    icon: 'fa-hand-holding-dollar',
+                    submenus: [
+                        { name: 'Iuran Umat', href: '/wilayah/iuran', icon: 'fa-dollar-sign' },
+                        { name: 'Kolekte Misa', href: '/wilayah/kolekte', icon: 'fa-gift' },
+                    ],
                 },
-                { name: 'Aset & Inventaris', href: '/v2/aset', icon: 'fa-boxes-stacked' },
+                { name: 'Aset & Inventaris', href: '/wilayah/aset', icon: 'fa-box-open' },
             ],
         },
         {
             section: 'Akun Saya',
             menus: [
-                { name: 'Profil Saya', href: '/v2/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Manajemen User', href: '/wilayah/user', icon: 'fa-user-plus' },
+                { name: 'Profil Saya', href: '/wilayah/profil-saya', icon: 'fa-circle-user' },
             ],
         },
     ],

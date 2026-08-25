@@ -119,7 +119,7 @@ class PanelAccess
         // regardless of which panel prefix they use (privilege escalation /
         // account takeover / database backup abuse protection).
         $sensitiveModules = [
-            'user', 'role', 'roles',
+            'role', 'roles',
             'backup-database', 'security-settings', 'security-center',
             'pengaturan-aplikasi', 'pengaturan', 'settings',
         ];
@@ -134,8 +134,8 @@ class PanelAccess
         $moduleAccess = [
             'bendahara' => ['keuangan', 'aset', 'kategori-keuangan', 'lapak-produk', 'jenis-iuran', 'iuran', 'kolekte', 'intensi-misa', 'intensi', 'umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga'],
             'penulis' => ['konten', 'kategori-konten', 'pengumuman', 'galeri', 'renungan', 'kegiatan', 'artikel', 'berita', 'komentar-artikel', 'download'],
-            'wilayah' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kegiatan', 'iuran', 'keuangan', 'aset'],
-            'kapela' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kapela', 'stasi', 'kegiatan', 'iuran', 'keuangan', 'aset'],
+            'wilayah' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kegiatan', 'iuran', 'kolekte', 'keuangan', 'aset', 'user', 'users'],
+            'kapela' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kapela', 'stasi', 'kegiatan', 'iuran', 'kolekte', 'keuangan', 'aset', 'user', 'users'],
             'kub' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'lingkungan', 'kub', 'iuran', 'keuangan', 'aset', 'lapak-produk'],
             'umat' => ['kk-katolik', 'kk', 'keluarga', 'pengajuan-sakramen', 'lapak-produk', 'umat'],
         ];
