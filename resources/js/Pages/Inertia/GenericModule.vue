@@ -545,6 +545,23 @@ const pastorParokiOptions = computed(() => {
     });
 });
 
+const tipeSakramenOptions = [
+    { value: 'Baptis', label: 'Sakramen Baptis (Baptis Bayi / Dewasa / Katekumen)' },
+    { value: 'Komuni Pertama', label: 'Sakramen Ekaristi / Komuni Pertama (Ekaristi Maha Kudus)' },
+    { value: 'Krisma', label: 'Sakramen Krisma / Penguatan (Roh Kudus)' },
+    { value: 'Tobat', label: 'Sakramen Tobat / Rekonsiliasi (Pengakuan Dosa)' },
+    { value: 'Pernikahan', label: 'Sakramen Perkawinan / Pernikahan Suci' },
+    { value: 'Imamat', label: 'Sakramen Imamat / Tahbisan Suci (Diakon / Imam / Uskup)' },
+    { value: 'Perminyakan Suci', label: 'Sakramen Pengurapan Orang Sakit / Perminyakan Suci' },
+    { value: 'Sakramen Baptis', label: 'Sakramen Baptis' },
+    { value: 'Sakramen Komuni Pertama', label: 'Sakramen Komuni Pertama' },
+    { value: 'Sakramen Krisma', label: 'Sakramen Krisma' },
+    { value: 'Sakramen Pernikahan', label: 'Sakramen Pernikahan' },
+    { value: 'Sakramen Tobat', label: 'Sakramen Tobat' },
+    { value: 'Sakramen Imamat', label: 'Sakramen Imamat' },
+    { value: 'Sakramen Perminyakan', label: 'Sakramen Perminyakan' },
+];
+
 const togglePastorRekan = (name) => {
     if (!Array.isArray(formData.value.selected_pastor_rekan)) {
         formData.value.selected_pastor_rekan = [];
@@ -6018,6 +6035,164 @@ const statusLabel = (item) => {
                         </div>
                     </template>
 
+                    <!-- 16. BUKU SAKRAMEN & PENGAJUAN SAKRAMEN FORM -->
+                    <template v-else-if="moduleKey === 'sakramen' || moduleKey === 'pengajuan-sakramen'">
+                        <div class="space-y-4 text-xs">
+                            <div class="space-y-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Tipe Sakramen Suci <span class="text-rose-500">*</span>
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="formData.tipe_sakramen"
+                                        :options="tipeSakramenOptions"
+                                        valueKey="value"
+                                        labelKey="label"
+                                        placeholder="-- Pilih Tipe Sakramen Suci --"
+                                        searchPlaceholder="Ketik cari tipe sakramen..."
+                                        icon="fa-cross"
+                                        iconColor="text-amber-600"
+                                    />
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Tanggal Penerimaan Sakramen <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input
+                                            v-model="formData.tanggal"
+                                            type="date"
+                                            required
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Gereja / Tempat Penerimaan <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input
+                                            v-model="formData.tempat"
+                                            type="text"
+                                            placeholder="Contoh: Gereja Paroki Benlutu / Kapela St. Mikael"
+                                            required
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-semibold"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Pastor / Pelayan Sakramen</label>
+                                        <SearchableSelect
+                                            v-model="formData.pastor"
+                                            :options="pastorParokiOptions"
+                                            valueKey="name"
+                                            labelKey="name"
+                                            placeholder="-- Pilih Pastor Pelayan --"
+                                            searchPlaceholder="Ketik cari pastor..."
+                                            icon="fa-user-tie"
+                                            iconColor="text-amber-600"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">No. Surat / Nomor Akta Sakramen</label>
+                                        <input
+                                            v-model="formData.no_surat"
+                                            type="text"
+                                            placeholder="Contoh: 012/BAP/PRK/2026"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-mono text-[11px]"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div v-if="formData.tipe_sakramen === 'Baptis' || formData.tipe_sakramen === 'Sakramen Baptis'" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Wali Baptis (Pria / Wanita)</label>
+                                        <input
+                                            v-model="formData.wali_baptis"
+                                            type="text"
+                                            placeholder="Nama lengkap wali baptis"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Baptis / Santo Pelindung</label>
+                                        <input
+                                            v-model="formData.nama_pendamping"
+                                            type="text"
+                                            placeholder="Contoh: Fransiskus Xaverius"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div v-if="formData.tipe_sakramen === 'Pernikahan' || formData.tipe_sakramen === 'Sakramen Pernikahan'" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Pasangan</label>
+                                        <input
+                                            v-model="formData.nama_pasangan"
+                                            type="text"
+                                            placeholder="Nama lengkap pasangan suami/istri"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Saksi Perkawinan</label>
+                                        <input
+                                            v-model="formData.saksi_1"
+                                            type="text"
+                                            placeholder="Nama saksi pernikahan"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Buku Liber (Volume)</label>
+                                        <input
+                                            v-model="formData.liber_vol"
+                                            type="text"
+                                            placeholder="Contoh: Vol. IV"
+                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-mono text-[11px]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Halaman Buku (Hal)</label>
+                                        <input
+                                            v-model="formData.liber_hal"
+                                            type="text"
+                                            placeholder="Contoh: Hal. 88"
+                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-mono text-[11px]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Nomor Akta (No)</label>
+                                        <input
+                                            v-model="formData.liber_no"
+                                            type="text"
+                                            placeholder="Contoh: No. 124"
+                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-mono text-[11px]"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Catatan Tambahan / Keterangan</label>
+                                    <textarea
+                                        v-model="formData.keterangan"
+                                        rows="2"
+                                        placeholder="Catatan tambahan sakramen..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
                     <!-- 16. GENERIC FORM FOR OTHER MODULES -->
                     <template v-else>
                         <div v-for="col in columns" :key="col.key">
@@ -6059,7 +6234,18 @@ const statusLabel = (item) => {
                             <div v-else>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">{{ col.label }}</label>
                                 <SearchableSelect
-                                    v-if="moduleKey === 'desa-kelurahan' && col.relation === 'kecamatan'"
+                                    v-if="col.key === 'tipe_sakramen' || col.key === 'sakramen' || col.key === 'kategori_sakramen'"
+                                    v-model="formData[col.key]"
+                                    :options="tipeSakramenOptions"
+                                    valueKey="value"
+                                    labelKey="label"
+                                    placeholder="-- Pilih Tipe Sakramen Suci --"
+                                    searchPlaceholder="Ketik cari tipe sakramen..."
+                                    icon="fa-cross"
+                                    iconColor="text-amber-600"
+                                />
+                                <SearchableSelect
+                                    v-else-if="moduleKey === 'desa-kelurahan' && col.relation === 'kecamatan'"
                                     v-model="formData.kecamatan_id"
                                     :options="filteredKecamatansForFilter"
                                     value-key="id_kecamatan"
