@@ -2738,6 +2738,30 @@ class InertiaPanelController extends Controller
             $query->where('paroki_id', $defaultParokiId);
         }
 
+        // Automatic Scope Filtering based on Role (matches CI3 reference)
+        $authUser = auth()->user();
+        $userRoleSlug = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));
+
+        if (str_contains($userRoleSlug, 'wilayah') && !empty($authUser?->wilayah_id)) {
+            if ($slug === 'wilayah' && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->wilayah_id);
+            } elseif (in_array('wilayah_id', $tableColumns, true)) {
+                $query->where('wilayah_id', $authUser->wilayah_id);
+            }
+        } elseif ((str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) && !empty($authUser?->kapela_id)) {
+            if (in_array($slug, ['kapela', 'stasi']) && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->kapela_id);
+            } elseif (in_array('kapela_id', $tableColumns, true)) {
+                $query->where('kapela_id', $authUser->kapela_id);
+            }
+        } elseif (str_contains($userRoleSlug, 'kub') && !empty($authUser?->kub_id)) {
+            if ($slug === 'kub' && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->kub_id);
+            } elseif (in_array('kub_id', $tableColumns, true)) {
+                $query->where('kub_id', $authUser->kub_id);
+            }
+        }
+
         $keuskupanFilter = $request->input('keuskupan_id');
         $dekenatFilter = $request->input('dekenat_id');
         $provinsiFilter = $request->input('provinsi_id');
