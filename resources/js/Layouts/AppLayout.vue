@@ -2,10 +2,18 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 
-defineProps({
+const props = defineProps({
     title: {
         type: String,
         default: 'Dashboard',
+    },
+    role: {
+        type: String,
+        default: '',
+    },
+    prefix: {
+        type: String,
+        default: '',
     },
     fullWidth: {
         type: Boolean,
@@ -102,16 +110,34 @@ const isSuperAdmin = computed(() => {
     return r.includes('super');
 });
 
-const activeRole = ref(page.props.role || page.props.auth?.user?.role || 'Super Admin');
+const resolveRoleFromPath = () => {
+    if (typeof window === 'undefined') return '';
+    const path = window.location.pathname.toLowerCase();
+    if (path.startsWith('/wilayah')) return 'Admin Wilayah';
+    if (path.startsWith('/kapela') || path.startsWith('/stasi')) return 'Admin Kapela / Stasi';
+    if (path.startsWith('/kub')) return 'Ketua KUB';
+    if (path.startsWith('/bendahara')) return 'Bendahara';
+    if (path.startsWith('/penulis')) return 'Penulis';
+    if (path.startsWith('/umat')) return 'Umat';
+    if (path.startsWith('/pastor')) return 'Pastor';
+    if (path.startsWith('/paroki')) return 'Admin Paroki';
+    if (path.startsWith('/superadmin')) return 'Super Admin';
+    return '';
+};
 
-// Watch for prop role changes
+const activeRole = ref(props.role || page.props.role || resolveRoleFromPath() || page.props.auth?.user?.role || 'Super Admin');
+
+// Watch for prop role and URL changes
 watch(
-    () => page.props.role,
-    (newRole) => {
-        if (newRole && roleMenus[newRole]) {
-            activeRole.value = newRole;
+    () => [props.role, page.props.role, page.url],
+    ([newPropRole, newPageRole]) => {
+        const fromPath = resolveRoleFromPath();
+        const candidate = newPropRole || newPageRole || fromPath || page.props.auth?.user?.role;
+        if (candidate && roleMenus[candidate]) {
+            activeRole.value = candidate;
         }
-    }
+    },
+    { immediate: true }
 );
 
 const onRoleChange = () => {

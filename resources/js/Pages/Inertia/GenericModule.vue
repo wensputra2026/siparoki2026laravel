@@ -20,6 +20,10 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    role: {
+        type: String,
+        default: '',
+    },
     moduleKey: {
         type: String,
         required: true,
@@ -1579,7 +1583,7 @@ const statusLabel = (item) => {
 </script>
 
 <template>
-    <AppLayout :title="title">
+    <AppLayout :title="title" :role="role">
         <Head :title="`${title} - SIPAROKI`" />
 
         <!-- Responsive layout: natural flow on mobile/tablet, full-height pinned on desktop -->
