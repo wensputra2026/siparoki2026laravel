@@ -47,18 +47,50 @@ class InertiaPanelController extends Controller
         $currentPath = trim($request->path(), '/');
         $resolvedRole = $roleMap[$role] ?? $roleMap[$currentPath] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
+        $authUser = auth()->user();
+        $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));
+
+        $umatQuery = Umat::query();
+        $kkQuery = KkKatolik::query();
+        $kubQuery = \App\Models\Kub::query();
+        $kapelaQuery = Kapela::query();
+
+        if (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
+            $umatQuery->where(function($q) use ($authUser) {
+                $q->where('wilayah_id', $authUser->wilayah_id)
+                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
+            });
+            $kkQuery->where('wilayah_id', $authUser->wilayah_id);
+            $kubQuery->where('wilayah_id', $authUser->wilayah_id);
+        } elseif ((str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) && !empty($authUser?->kapela_id)) {
+            $umatQuery->where(function($q) use ($authUser) {
+                $q->where('kapela_id', $authUser->kapela_id)
+                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
+            });
+            $kkQuery->where('kapela_id', $authUser->kapela_id);
+            $kubQuery->where('kapela_id', $authUser->kapela_id);
+            $kapelaQuery->where('id', $authUser->kapela_id);
+        } elseif (str_contains($slugClean, 'kub') && !empty($authUser?->kub_id)) {
+            $umatQuery->where(function($q) use ($authUser) {
+                $q->where('kub_id', $authUser->kub_id)
+                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
+            });
+            $kkQuery->where('kub_id', $authUser->kub_id);
+            $kubQuery->where('id', $authUser->kub_id);
+        }
+
         $stats = [
             [
                 'title' => 'Total Umat',
-                'value' => Umat::count(),
+                'value' => $umatQuery->count(),
                 'icon' => 'fa-users',
-                'change' => '+12 bulan ini',
+                'change' => 'Umat terdata',
                 'trend' => 'up',
                 'color' => 'amber',
             ],
             [
                 'title' => 'Kepala Keluarga (KK)',
-                'value' => KkKatolik::count(),
+                'value' => $kkQuery->count(),
                 'icon' => 'fa-house-chimney-user',
                 'change' => 'Data KK terdata',
                 'trend' => 'neutral',
@@ -66,15 +98,15 @@ class InertiaPanelController extends Controller
             ],
             [
                 'title' => 'Komunitas KUB',
-                'value' => \App\Models\Kub::count(),
+                'value' => $kubQuery->count(),
                 'icon' => 'fa-church',
-                'change' => 'Komunitas basis paroki',
+                'change' => 'Komunitas basis',
                 'trend' => 'neutral',
                 'color' => 'emerald',
             ],
             [
                 'title' => 'Stasi / Kapela',
-                'value' => Kapela::count(),
+                'value' => $kapelaQuery->count(),
                 'icon' => 'fa-map-location-dot',
                 'change' => 'Wilayah pelayanan',
                 'trend' => 'neutral',
@@ -82,25 +114,27 @@ class InertiaPanelController extends Controller
             ],
         ];
 
-        $latestUmat = Umat::latest('id')
+        $latestUmat = (clone $umatQuery)->latest('id')
             ->take(6)
             ->get(['id', 'nama_lengkap', 'jenis_kelamin', 'status_umat', 'created_at']);
 
         $baptisTable = Sakramen::where('tipe_sakramen', 'like', '%Baptis%')->count();
-        $baptisUmat = Umat::whereNotNull('tgl_baptis')->orWhere('status_baptis', 'Sudah')->count();
+        $baptisUmat = (clone $umatQuery)->where(function($q) {
+            $q->whereNotNull('tgl_baptis')->orWhere('status_baptis', 'Sudah');
+        })->count();
 
         $komuniTable = Sakramen::where('tipe_sakramen', 'like', '%Komuni%')->count();
-        $komuniUmat = Umat::whereNotNull('tgl_komuni_1')->count();
+        $komuniUmat = (clone $umatQuery)->whereNotNull('tgl_komuni_1')->count();
 
         $krismaTable = Sakramen::where('tipe_sakramen', 'like', '%Krisma%')->count();
-        $krismaUmat = Umat::whereNotNull('tgl_krisma')->count();
+        $krismaUmat = (clone $umatQuery)->whereNotNull('tgl_krisma')->count();
 
         $nikahTable = Sakramen::where(function($q) {
             $q->where('tipe_sakramen', 'like', '%Nikah%')
               ->orWhere('tipe_sakramen', 'like', '%Kawin%')
               ->orWhere('tipe_sakramen', 'like', '%Perkawinan%');
         })->count();
-        $nikahUmat = Umat::whereNotNull('tgl_perkawinan')->count();
+        $nikahUmat = (clone $umatQuery)->whereNotNull('tgl_perkawinan')->count();
 
         $sakramenCount = [
             'baptis' => max($baptisTable, $baptisUmat),
@@ -137,12 +171,34 @@ class InertiaPanelController extends Controller
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
         $search = $request->input('search');
+        $authUser = auth()->user();
+        $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));
 
-        $umats = Umat::query()
-            ->when($search, function ($query, $search) {
-                $query->where('nama_lengkap', 'like', "%{$search}%")
-                    ->orWhere('nik', 'like', "%{$search}%")
-                    ->orWhere('tempat_lahir', 'like', "%{$search}%");
+        $query = Umat::query();
+        if (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('wilayah_id', $authUser->wilayah_id)
+                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
+            });
+        } elseif ((str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) && !empty($authUser?->kapela_id)) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('kapela_id', $authUser->kapela_id)
+                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
+            });
+        } elseif (str_contains($slugClean, 'kub') && !empty($authUser?->kub_id)) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('kub_id', $authUser->kub_id)
+                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
+            });
+        }
+
+        $umats = $query
+            ->when($search, function ($q, $search) {
+                $q->where(function($qq) use ($search) {
+                    $qq->where('nama_lengkap', 'like', "%{$search}%")
+                       ->orWhere('nik', 'like', "%{$search}%")
+                       ->orWhere('tempat_lahir', 'like', "%{$search}%");
+                });
             })
             ->latest('id')
             ->paginate(10)
@@ -2271,25 +2327,52 @@ class InertiaPanelController extends Controller
             ?? Paroki::first()
             ?? new Paroki(['nama_paroki' => 'Paroki St. Vinsensius a Paulo Benlutu']);
 
-        $totalUmat = \Illuminate\Support\Facades\Schema::hasTable('umat') ? \App\Models\Umat::count() : 5420;
-        $totalKk = \Illuminate\Support\Facades\Schema::hasTable('kk_katolik') ? \App\Models\KkKatolik::count() : (\Illuminate\Support\Facades\Schema::hasTable('keluarga') ? \App\Models\Keluarga::count() : 1250);
-        $totalKub = \Illuminate\Support\Facades\Schema::hasTable('kub') ? \App\Models\Kub::count() : 45;
-        $totalWilayah = \Illuminate\Support\Facades\Schema::hasTable('wilayah') ? \App\Models\Wilayah::count() : 8;
-        $totalKapela = \Illuminate\Support\Facades\Schema::hasTable('kapela') ? \App\Models\Kapela::count() : 12;
+        $authUser = auth()->user();
+        $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));
+
+        $umatQuery = \App\Models\Umat::query();
+        $kkQuery = \App\Models\KkKatolik::query();
+        $kubQuery = \App\Models\Kub::query();
+        $wilayahQuery = \App\Models\Wilayah::query();
+        $kapelaQuery = \App\Models\Kapela::query();
+
+        if (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
+            $umatQuery->where(function($q) use ($authUser) {
+                $q->where('wilayah_id', $authUser->wilayah_id)
+                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
+            });
+            $kkQuery->where('wilayah_id', $authUser->wilayah_id);
+            $kubQuery->where('wilayah_id', $authUser->wilayah_id);
+            $wilayahQuery->where('id', $authUser->wilayah_id);
+        } elseif ((str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) && !empty($authUser?->kapela_id)) {
+            $umatQuery->where(function($q) use ($authUser) {
+                $q->where('kapela_id', $authUser->kapela_id)
+                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
+            });
+            $kkQuery->where('kapela_id', $authUser->kapela_id);
+            $kubQuery->where('kapela_id', $authUser->kapela_id);
+            $kapelaQuery->where('id', $authUser->kapela_id);
+        } elseif (str_contains($slugClean, 'kub') && !empty($authUser?->kub_id)) {
+            $umatQuery->where(function($q) use ($authUser) {
+                $q->where('kub_id', $authUser->kub_id)
+                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
+            });
+            $kkQuery->where('kub_id', $authUser->kub_id);
+            $kubQuery->where('id', $authUser->kub_id);
+        }
+
+        $totalUmat = $umatQuery->count();
+        $totalKk = $kkQuery->count();
+        $totalKub = $kubQuery->count();
+        $totalWilayah = $wilayahQuery->count();
+        $totalKapela = $kapelaQuery->count();
 
         // Gender Stats
-        $pria = 0;
-        $wanita = 0;
-        if (\Illuminate\Support\Facades\Schema::hasTable('umat')) {
-            $pria = \App\Models\Umat::whereIn('jenis_kelamin', ['L', 'Laki-laki', 'LAKI-LAKI', 'Pria'])->count();
-            $wanita = \App\Models\Umat::whereIn('jenis_kelamin', ['P', 'Perempuan', 'PEREMPUAN', 'Wanita'])->count();
-            if ($pria === 0 && $wanita === 0 && $totalUmat > 0) {
-                $pria = (int) round($totalUmat * 0.49);
-                $wanita = $totalUmat - $pria;
-            }
-        } else {
-            $pria = 2650;
-            $wanita = 2770;
+        $pria = (clone $umatQuery)->whereIn('jenis_kelamin', ['L', 'Laki-laki', 'LAKI-LAKI', 'Pria'])->count();
+        $wanita = (clone $umatQuery)->whereIn('jenis_kelamin', ['P', 'Perempuan', 'PEREMPUAN', 'Wanita'])->count();
+        if ($pria === 0 && $wanita === 0 && $totalUmat > 0) {
+            $pria = (int) round($totalUmat * 0.49);
+            $wanita = $totalUmat - $pria;
         }
 
         // Age Group breakdown
@@ -3003,6 +3086,38 @@ class InertiaPanelController extends Controller
         $umatList = $needsUmatReferences
             ? \Illuminate\Support\Facades\Cache::remember('ref_umat_select_list_v1', 600, fn () => \App\Models\Umat::orderBy('nama_lengkap')->take(500)->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']))
             : [];
+
+        if (str_contains($userRoleSlug, 'wilayah') && !empty($authUser?->wilayah_id)) {
+            $wilayahList = $wilayahList->where('id', $authUser->wilayah_id)->values();
+            $kubList = $kubList->where('wilayah_id', $authUser->wilayah_id)->values();
+            $kapelaList = collect();
+            if ($needsUmatReferences) {
+                $umatList = \App\Models\Umat::where('wilayah_id', $authUser->wilayah_id)
+                    ->orWhereHas('kk', fn($kQ) => $kQ->where('wilayah_id', $authUser->wilayah_id))
+                    ->orderBy('nama_lengkap')
+                    ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
+            }
+        } elseif ((str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) && !empty($authUser?->kapela_id)) {
+            $kapelaList = $kapelaList->where('id', $authUser->kapela_id)->values();
+            $kubList = $kubList->where('kapela_id', $authUser->kapela_id)->values();
+            $wilayahList = collect();
+            if ($needsUmatReferences) {
+                $umatList = \App\Models\Umat::where('kapela_id', $authUser->kapela_id)
+                    ->orWhereHas('kk', fn($kQ) => $kQ->where('kapela_id', $authUser->kapela_id))
+                    ->orderBy('nama_lengkap')
+                    ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
+            }
+        } elseif (str_contains($userRoleSlug, 'kub') && !empty($authUser?->kub_id)) {
+            $kubList = $kubList->where('id', $authUser->kub_id)->values();
+            $wilayahList = collect();
+            $kapelaList = collect();
+            if ($needsUmatReferences) {
+                $umatList = \App\Models\Umat::where('kub_id', $authUser->kub_id)
+                    ->orWhereHas('kk', fn($kQ) => $kQ->where('kub_id', $authUser->kub_id))
+                    ->orderBy('nama_lengkap')
+                    ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
+            }
+        }
 
 
 
@@ -5207,6 +5322,77 @@ class InertiaPanelController extends Controller
             $defaultParokiId = $this->defaultParokiIdFromProfile();
             if ($defaultParokiId) {
                 $query->where('paroki_id', $defaultParokiId);
+            }
+        }
+
+        $authUser = auth()->user();
+        $userRoleSlug = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));
+
+        if (str_contains($userRoleSlug, 'wilayah') && !empty($authUser?->wilayah_id)) {
+            if ($slug === 'wilayah' && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->wilayah_id);
+            } elseif (in_array('wilayah_id', $tableColumns, true)) {
+                $query->where('wilayah_id', $authUser->wilayah_id);
+            } elseif (in_array($slug, ['umat', 'data-umat'], true)) {
+                $query->where(function ($q) use ($authUser, $tableColumns) {
+                    if (in_array('wilayah_id', $tableColumns, true)) {
+                        $q->where('wilayah_id', $authUser->wilayah_id);
+                    }
+                    $q->orWhereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
+                });
+            } elseif (in_array($slug, ['sakramen', 'pengajuan-sakramen'], true)) {
+                if (in_array('wilayah_id', $tableColumns, true)) {
+                    $query->where('wilayah_id', $authUser->wilayah_id);
+                } elseif (in_array('umat_id', $tableColumns, true)) {
+                    $query->whereHas('umat', function ($uQ) use ($authUser) {
+                        $uQ->where('wilayah_id', $authUser->wilayah_id)
+                           ->orWhereHas('kk', fn($kQ) => $kQ->where('wilayah_id', $authUser->wilayah_id));
+                    });
+                }
+            }
+        } elseif ((str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) && !empty($authUser?->kapela_id)) {
+            if (in_array($slug, ['kapela', 'stasi']) && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->kapela_id);
+            } elseif (in_array('kapela_id', $tableColumns, true)) {
+                $query->where('kapela_id', $authUser->kapela_id);
+            } elseif (in_array($slug, ['umat', 'data-umat'], true)) {
+                $query->where(function ($q) use ($authUser, $tableColumns) {
+                    if (in_array('kapela_id', $tableColumns, true)) {
+                        $q->where('kapela_id', $authUser->kapela_id);
+                    }
+                    $q->orWhereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
+                });
+            } elseif (in_array($slug, ['sakramen', 'pengajuan-sakramen'], true)) {
+                if (in_array('kapela_id', $tableColumns, true)) {
+                    $query->where('kapela_id', $authUser->kapela_id);
+                } elseif (in_array('umat_id', $tableColumns, true)) {
+                    $query->whereHas('umat', function ($uQ) use ($authUser) {
+                        $uQ->where('kapela_id', $authUser->kapela_id)
+                           ->orWhereHas('kk', fn($kQ) => $kQ->where('kapela_id', $authUser->kapela_id));
+                    });
+                }
+            }
+        } elseif (str_contains($userRoleSlug, 'kub') && !empty($authUser?->kub_id)) {
+            if ($slug === 'kub' && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->kub_id);
+            } elseif (in_array('kub_id', $tableColumns, true)) {
+                $query->where('kub_id', $authUser->kub_id);
+            } elseif (in_array($slug, ['umat', 'data-umat'], true)) {
+                $query->where(function ($q) use ($authUser, $tableColumns) {
+                    if (in_array('kub_id', $tableColumns, true)) {
+                        $q->where('kub_id', $authUser->kub_id);
+                    }
+                    $q->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
+                });
+            } elseif (in_array($slug, ['sakramen', 'pengajuan-sakramen'], true)) {
+                if (in_array('kub_id', $tableColumns, true)) {
+                    $query->where('kub_id', $authUser->kub_id);
+                } elseif (in_array('umat_id', $tableColumns, true)) {
+                    $query->whereHas('umat', function ($uQ) use ($authUser) {
+                        $uQ->where('kub_id', $authUser->kub_id)
+                           ->orWhereHas('kk', fn($kQ) => $kQ->where('kub_id', $authUser->kub_id));
+                    });
+                }
             }
         }
 
