@@ -366,11 +366,11 @@
                 </div>
             </div>
 
-            <!-- Visitor Stats Konoha Style -->
+            <!-- Visitor Stats Konoha Style (100% Database Driven) -->
             @php
-                $statUmat   = \Illuminate\Support\Facades\Schema::hasTable('sensus_umat')   ? (\Illuminate\Support\Facades\DB::table('sensus_umat')->count()   ?: 1250) : 1250;
-                $statStasi  = \Illuminate\Support\Facades\Schema::hasTable('stasi_kapela')  ? (\Illuminate\Support\Facades\DB::table('stasi_kapela')->count()  ?: 12)   : 12;
-                $statKub    = \Illuminate\Support\Facades\Schema::hasTable('kub')           ? (\Illuminate\Support\Facades\DB::table('kub')->count()           ?: 45)   : 45;
+                $statUmat   = $stats['total_umat'] ?? $global_stats['total_umat'] ?? (\Illuminate\Support\Facades\Schema::hasTable('umat') ? \Illuminate\Support\Facades\DB::table('umat')->count() : 0);
+                $statStasi  = $stats['total_kapela'] ?? $global_stats['total_kapela'] ?? ((\Illuminate\Support\Facades\Schema::hasTable('kapela') ? \Illuminate\Support\Facades\DB::table('kapela')->count() : 0) + (\Illuminate\Support\Facades\Schema::hasTable('stasi_kapela') ? \Illuminate\Support\Facades\DB::table('stasi_kapela')->count() : 0));
+                $statKub    = $stats['total_kub'] ?? $global_stats['total_kub'] ?? ((\Illuminate\Support\Facades\Schema::hasTable('kub') ? \Illuminate\Support\Facades\DB::table('kub')->count() : 0) + (\Illuminate\Support\Facades\Schema::hasTable('lingkungan') ? \Illuminate\Support\Facades\DB::table('lingkungan')->count() : 0));
             @endphp
             <div class="visitor-stats d-flex justify-content-center gap-3 flex-wrap">
                 <div class="visitor-item">

@@ -271,6 +271,37 @@ class PageController extends Controller
                     $pastorFotoUrl = asset('images/pastor-avatar.svg');
                 }
             }
+            $statsUmat = 0;
+            if (Schema::hasTable('umat')) {
+                $statsUmat = DB::table('umat')->count();
+            } elseif (Schema::hasTable('anggota_keluarga')) {
+                $statsUmat = DB::table('anggota_keluarga')->count();
+            }
+
+            $statsKk = Schema::hasTable('kk_katolik') ? DB::table('kk_katolik')->count() : 0;
+
+            $statsKapela = 0;
+            if (Schema::hasTable('kapela')) {
+                $statsKapela += DB::table('kapela')->count();
+            }
+            if (Schema::hasTable('stasi_kapela')) {
+                $statsKapela += DB::table('stasi_kapela')->count();
+            }
+
+            $statsKub = 0;
+            if (Schema::hasTable('kub')) {
+                $statsKub += DB::table('kub')->count();
+            }
+            if (Schema::hasTable('lingkungan')) {
+                $statsKub += DB::table('lingkungan')->count();
+            }
+
+            $globalStats = [
+                'total_kk' => $statsKk,
+                'total_umat' => $statsUmat,
+                'total_kapela' => $statsKapela,
+                'total_kub' => $statsKub,
+            ];
 
             return [
                 'profil' => $profil,
@@ -294,6 +325,12 @@ class PageController extends Controller
                 'pastor_paroki_obj' => $pastorParokiObj,
                 'pastor_rekan_obj' => $pastorRekanObj,
                 'frater_obj' => $fraterObj,
+                'stats' => $globalStats,
+                'global_stats' => $globalStats,
+                'totalUmat' => $statsUmat,
+                'totalKK' => $statsKk,
+                'totalKapela' => $statsKapela,
+                'totalKUB' => $statsKub,
             ];
         });
     }
