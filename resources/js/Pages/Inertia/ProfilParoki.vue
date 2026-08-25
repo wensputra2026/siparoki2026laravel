@@ -247,7 +247,15 @@ const saveParoki = () => {
                             </div>
 
                             <!-- Buttons -->
-                            <div class="flex items-center gap-2 shrink-0">
+                            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                <Link
+                                    href="/setup-paroki"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+                                    title="Pilih atau inisialisasi ulang Keuskupan & Paroki Default"
+                                >
+                                    <i class="fa-solid fa-sliders text-xs"></i>
+                                    <span>Ganti / Setup Paroki Default</span>
+                                </Link>
                                 <button
                                     type="button"
                                     @click="showImageModal = true"

@@ -376,6 +376,15 @@ const getYoutubeEmbed = (url) => {
                     <span>Mode Maintenance</span>
                     <span v-if="maintenanceForm.maintenance_mode === '1'" class="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-black uppercase tracking-wider animate-pulse">Aktif</span>
                 </button>
+
+                <Link
+                    href="/setup-paroki"
+                    class="px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20"
+                    title="Buka Wizard Setup & Inisialisasi Paroki Default"
+                >
+                    <i class="fa-solid fa-sliders text-amber-300"></i>
+                    <span>Setup Paroki Wizard</span>
+                </Link>
             </div>
 
             <!-- Tab 1: Pembayaran & QRIS -->

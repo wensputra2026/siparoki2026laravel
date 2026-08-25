@@ -39,6 +39,12 @@ if (!function_exists('siparoki_resolve_safe_file')) {
     }
 }
 
+// Inisialisasi & Setup Paroki Wizard (Untuk Instalasi Baru GitHub / Ganti Paroki)
+Route::get('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'index'])->name('setup.paroki');
+Route::post('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'save'])->name('setup.paroki.save');
+Route::get('/api/setup/hierarchy', [\App\Http\Controllers\SetupParokiController::class, 'getHierarchy'])->name('setup.paroki.hierarchy');
+Route::post('/admin/setup-paroki/reset', [\App\Http\Controllers\SetupParokiController::class, 'resetSetup'])->name('setup.paroki.reset');
+
 // Beranda
 Route::get('/', [PageController::class, 'beranda'])->name('beranda');
 

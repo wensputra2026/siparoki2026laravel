@@ -135,6 +135,7 @@ class AppServiceProvider extends ServiceProvider
 
         try {
             \App\Models\KomentarArtikel::ensureTableExists();
+            \App\Models\PengaturanAplikasi::ensureSetupColumns();
         } catch (\Throwable $e) {
             // Silently continue
         }

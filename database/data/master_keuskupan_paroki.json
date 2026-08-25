@@ -1,0 +1,3144 @@
+{
+    "keuskupan": [
+        {
+            "id_keuskupan": 1,
+            "nama_keuskupan": "Keuskupan Agats"
+        },
+        {
+            "id_keuskupan": 45,
+            "nama_keuskupan": "Keuskupan Agats"
+        },
+        {
+            "id_keuskupan": 2,
+            "nama_keuskupan": "Keuskupan Agung Dili"
+        },
+        {
+            "id_keuskupan": 3,
+            "nama_keuskupan": "Keuskupan Agung Ende"
+        },
+        {
+            "id_keuskupan": 4,
+            "nama_keuskupan": "Keuskupan Agung Jakarta"
+        },
+        {
+            "id_keuskupan": 5,
+            "nama_keuskupan": "Keuskupan Agung Kupang"
+        },
+        {
+            "id_keuskupan": 6,
+            "nama_keuskupan": "Keuskupan Agung Makassar"
+        },
+        {
+            "id_keuskupan": 7,
+            "nama_keuskupan": "Keuskupan Agung Medan"
+        },
+        {
+            "id_keuskupan": 8,
+            "nama_keuskupan": "Keuskupan Agung Merauke"
+        },
+        {
+            "id_keuskupan": 9,
+            "nama_keuskupan": "Keuskupan Agung Palembang"
+        },
+        {
+            "id_keuskupan": 10,
+            "nama_keuskupan": "Keuskupan Agung Pontianak"
+        },
+        {
+            "id_keuskupan": 11,
+            "nama_keuskupan": "Keuskupan Agung Samarinda"
+        },
+        {
+            "id_keuskupan": 12,
+            "nama_keuskupan": "Keuskupan Agung Semarang"
+        },
+        {
+            "id_keuskupan": 13,
+            "nama_keuskupan": "Keuskupan Amboina"
+        },
+        {
+            "id_keuskupan": 14,
+            "nama_keuskupan": "Keuskupan Atambua"
+        },
+        {
+            "id_keuskupan": 15,
+            "nama_keuskupan": "Keuskupan Bandung"
+        },
+        {
+            "id_keuskupan": 16,
+            "nama_keuskupan": "Keuskupan Banjarmasin"
+        },
+        {
+            "id_keuskupan": 17,
+            "nama_keuskupan": "Keuskupan Baucau"
+        },
+        {
+            "id_keuskupan": 18,
+            "nama_keuskupan": "Keuskupan Bogor"
+        },
+        {
+            "id_keuskupan": 19,
+            "nama_keuskupan": "Keuskupan Denpasar"
+        },
+        {
+            "id_keuskupan": 20,
+            "nama_keuskupan": "Keuskupan Jayapura"
+        },
+        {
+            "id_keuskupan": 21,
+            "nama_keuskupan": "Keuskupan Ketapang"
+        },
+        {
+            "id_keuskupan": 22,
+            "nama_keuskupan": "Keuskupan Labuan Bajo"
+        },
+        {
+            "id_keuskupan": 23,
+            "nama_keuskupan": "Keuskupan Larantuka"
+        },
+        {
+            "id_keuskupan": 24,
+            "nama_keuskupan": "Keuskupan Malang"
+        },
+        {
+            "id_keuskupan": 25,
+            "nama_keuskupan": "Keuskupan Maliana"
+        },
+        {
+            "id_keuskupan": 26,
+            "nama_keuskupan": "Keuskupan Manado"
+        },
+        {
+            "id_keuskupan": 27,
+            "nama_keuskupan": "Keuskupan Manokwari-Sorong"
+        },
+        {
+            "id_keuskupan": 28,
+            "nama_keuskupan": "Keuskupan Maumere"
+        },
+        {
+            "id_keuskupan": 29,
+            "nama_keuskupan": "Keuskupan Padang"
+        },
+        {
+            "id_keuskupan": 30,
+            "nama_keuskupan": "Keuskupan Palangka Raya"
+        },
+        {
+            "id_keuskupan": 31,
+            "nama_keuskupan": "Keuskupan Pangkalpinang"
+        },
+        {
+            "id_keuskupan": 32,
+            "nama_keuskupan": "Keuskupan Purwokerto"
+        },
+        {
+            "id_keuskupan": 33,
+            "nama_keuskupan": "Keuskupan Ruteng"
+        },
+        {
+            "id_keuskupan": 34,
+            "nama_keuskupan": "Keuskupan Sanggau"
+        },
+        {
+            "id_keuskupan": 35,
+            "nama_keuskupan": "Keuskupan Semarang"
+        },
+        {
+            "id_keuskupan": 36,
+            "nama_keuskupan": "Keuskupan Sibolga"
+        },
+        {
+            "id_keuskupan": 37,
+            "nama_keuskupan": "Keuskupan Sintang"
+        },
+        {
+            "id_keuskupan": 38,
+            "nama_keuskupan": "Keuskupan Surabaya"
+        },
+        {
+            "id_keuskupan": 39,
+            "nama_keuskupan": "Keuskupan Tanjung Selor"
+        },
+        {
+            "id_keuskupan": 40,
+            "nama_keuskupan": "Keuskupan Tanjungkarang"
+        },
+        {
+            "id_keuskupan": 41,
+            "nama_keuskupan": "Keuskupan Timika"
+        },
+        {
+            "id_keuskupan": 42,
+            "nama_keuskupan": "Keuskupan Weetebula"
+        },
+        {
+            "id_keuskupan": 43,
+            "nama_keuskupan": "Nuncius Apostolik"
+        },
+        {
+            "id_keuskupan": 44,
+            "nama_keuskupan": "Ordinariat Militer Indonesia"
+        }
+    ],
+    "paroki": [
+        {
+            "id_paroki": 499,
+            "keuskupan_id": 2,
+            "nama_paroki": "Aileu Gereja Santo Petrus dan Paulus",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 483,
+            "keuskupan_id": 2,
+            "nama_paroki": "Aimutin Gereja Santo Yosef",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 406,
+            "keuskupan_id": 5,
+            "nama_paroki": "Airmadidi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 482,
+            "keuskupan_id": 2,
+            "nama_paroki": "Atauro Gereja Bunda Rosario dari Fatima",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 495,
+            "keuskupan_id": 2,
+            "nama_paroki": "Atsabe Gereja Santo Yosef",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 154,
+            "keuskupan_id": 32,
+            "nama_paroki": "Ave Maria - Sulingan Tanjung",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 485,
+            "keuskupan_id": 2,
+            "nama_paroki": "Balide Gereja Maria Dikandung Tanpa Noda",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 486,
+            "keuskupan_id": 2,
+            "nama_paroki": "Becora Gereja Hati Kudus Yesus",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 487,
+            "keuskupan_id": 2,
+            "nama_paroki": "Bedois Gereja Santa Theresia dari Kanak-kanak Yesus",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 330,
+            "keuskupan_id": 33,
+            "nama_paroki": "Bintang Timur - Abmisibil",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 355,
+            "keuskupan_id": 33,
+            "nama_paroki": "Bunda Allah - Yuruf",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 300,
+            "keuskupan_id": 19,
+            "nama_paroki": "Bunda Hati Kudus - Kemakmuran",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 146,
+            "keuskupan_id": 32,
+            "nama_paroki": "Bunda Maria - Banjarbaru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 141,
+            "keuskupan_id": 12,
+            "nama_paroki": "Bunda Maria - Dukuh Semar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 343,
+            "keuskupan_id": 33,
+            "nama_paroki": "Bunda Maria - Pikhe",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 484,
+            "keuskupan_id": 2,
+            "nama_paroki": "Comoro Gereja Maria Penolong",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 293,
+            "keuskupan_id": 19,
+            "nama_paroki": "Damai Kristus - Kampung Duri",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 496,
+            "keuskupan_id": 2,
+            "nama_paroki": "Dare Gereja Santo Fransiskus Xaverius",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 231,
+            "keuskupan_id": 3,
+            "nama_paroki": "Emanuel - Mautenda",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 25,
+            "keuskupan_id": 18,
+            "nama_paroki": "Emmanuel - Elat \/ Kei Besar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 372,
+            "keuskupan_id": 28,
+            "nama_paroki": "Emmanuel - Sukadana",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 492,
+            "keuskupan_id": 2,
+            "nama_paroki": "Ermera Gereja Bunda dari Lourdes",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 329,
+            "keuskupan_id": 33,
+            "nama_paroki": "Gembala Baik - Abepura",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 479,
+            "keuskupan_id": 2,
+            "nama_paroki": "Gereja Katedral Dikandung Tanpa Noda",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 491,
+            "keuskupan_id": 2,
+            "nama_paroki": "Gleno Gereja Bunda Rahmat",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 232,
+            "keuskupan_id": 3,
+            "nama_paroki": "Hati Amat Kudus S.P. Maria - Moni",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 302,
+            "keuskupan_id": 19,
+            "nama_paroki": "Hati Kudus - Kramat",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 9,
+            "keuskupan_id": 4,
+            "nama_paroki": "Hati Kudus - Pirimapun",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 4,
+            "keuskupan_id": 4,
+            "nama_paroki": "Hati Kudus Maria - Basiem",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 367,
+            "keuskupan_id": 28,
+            "nama_paroki": "Hati Kudus Tuhan Yesus - Randau",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 252,
+            "keuskupan_id": 3,
+            "nama_paroki": "Hati Kudus Tuhan Yesus - Watuneso",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 29,
+            "keuskupan_id": 18,
+            "nama_paroki": "Hati Kudus Tuhan Yesus - Waur - Watuar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 258,
+            "keuskupan_id": 3,
+            "nama_paroki": "Hati Kudus Tuhan Yesus - Wolowaru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 39,
+            "keuskupan_id": 18,
+            "nama_paroki": "Hati Kudus Yesus - Arui \/ Saumlaki",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 15,
+            "keuskupan_id": 18,
+            "nama_paroki": "Hati Kudus Yesus - Batu Gantung",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 477,
+            "keuskupan_id": 18,
+            "nama_paroki": "Hati Kudus Yesus - Daruba (Kuasi Paroki)",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 424,
+            "keuskupan_id": 14,
+            "nama_paroki": "Hati Kudus Yesus - Laktutus",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 468,
+            "keuskupan_id": 14,
+            "nama_paroki": "Hati Kudus Yesus - Manumean",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 228,
+            "keuskupan_id": 3,
+            "nama_paroki": "Hati Kudus Yesus - Maunori",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 34,
+            "keuskupan_id": 18,
+            "nama_paroki": "Hati Kudus Yesus - Ohoidertutu \/ Kei Kecil",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 42,
+            "keuskupan_id": 18,
+            "nama_paroki": "Hati Kudus Yesus - Olilit Barat",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 193,
+            "keuskupan_id": 24,
+            "nama_paroki": "Hati Kudus Yesus - Palasari \/ Jembrana - Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 139,
+            "keuskupan_id": 12,
+            "nama_paroki": "Hati Kudus Yesus - Tasikmalaya",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 251,
+            "keuskupan_id": 3,
+            "nama_paroki": "Hati Kudus Yesus - Wangka",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 160,
+            "keuskupan_id": 38,
+            "nama_paroki": "Hati Maria Tak Bernoda - Cicurug",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 133,
+            "keuskupan_id": 12,
+            "nama_paroki": "Hati Tak Bernoda S. P. M. - Buah Batu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 391,
+            "keuskupan_id": 5,
+            "nama_paroki": "Hati Tersuci Maria - Oeekam",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 206,
+            "keuskupan_id": 3,
+            "nama_paroki": "Hati Yesus Dan Hati Maria - Boanio",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 463,
+            "keuskupan_id": 14,
+            "nama_paroki": "Hati Yesus yang Maha Kudus - Noemuti",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 147,
+            "keuskupan_id": 32,
+            "nama_paroki": "Hati Yesus Yang Maha Kudus - Veteran",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 493,
+            "keuskupan_id": 2,
+            "nama_paroki": "Hatolia Gereja Santo Fransiskus Xaverius",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 488,
+            "keuskupan_id": 2,
+            "nama_paroki": "Hera Gereja Santo Yakobus",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 276,
+            "keuskupan_id": 19,
+            "nama_paroki": "Ibu Teresa - Cikarang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 262,
+            "keuskupan_id": 3,
+            "nama_paroki": "Immaculati Cordis Mariae - Wudu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 305,
+            "keuskupan_id": 19,
+            "nama_paroki": "Kalvari - Lubang Buaya",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 362,
+            "keuskupan_id": 28,
+            "nama_paroki": "Kanak-kanak Yesus - Marau",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 480,
+            "keuskupan_id": 2,
+            "nama_paroki": "Katedral Gereja Katedral Dikandung Tanpa Noda",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 464,
+            "keuskupan_id": 14,
+            "nama_paroki": "Keluarga Kudus - Ainan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 159,
+            "keuskupan_id": 38,
+            "nama_paroki": "Keluarga Kudus - Cibinong",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 148,
+            "keuskupan_id": 32,
+            "nama_paroki": "Keluarga Kudus - Katedral Banjarmasin",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 312,
+            "keuskupan_id": 19,
+            "nama_paroki": "Keluarga Kudus - Pasar Minggu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 317,
+            "keuskupan_id": 19,
+            "nama_paroki": "Keluarga Kudus - Rawamangun",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 369,
+            "keuskupan_id": 28,
+            "nama_paroki": "Keluarga Kudus - Sepotong",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 254,
+            "keuskupan_id": 3,
+            "nama_paroki": "Keluarga Kudus Nazaret - Were",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 10,
+            "keuskupan_id": 4,
+            "nama_paroki": "Kristus Amore - Sawa-Erma",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 336,
+            "keuskupan_id": 33,
+            "nama_paroki": "Kristus Bangkit - Iwur",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 344,
+            "keuskupan_id": 33,
+            "nama_paroki": "Kristus Gembala Kita - Pugima",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 351,
+            "keuskupan_id": 33,
+            "nama_paroki": "Kristus Jaya - Wamena",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 339,
+            "keuskupan_id": 33,
+            "nama_paroki": "Kristus Juruselamat - Kotaraja",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 335,
+            "keuskupan_id": 33,
+            "nama_paroki": "Kristus Penebus - Hepuba",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 140,
+            "keuskupan_id": 12,
+            "nama_paroki": "Kristus Raja - Cigugur Kuningan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 213,
+            "keuskupan_id": 3,
+            "nama_paroki": "Kristus Raja - Ende",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 460,
+            "keuskupan_id": 14,
+            "nama_paroki": "Kristus Raja - Haumeni",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 215,
+            "keuskupan_id": 3,
+            "nama_paroki": "Kristus Raja - Jawakisa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 442,
+            "keuskupan_id": 14,
+            "nama_paroki": "Kristus Raja - Kamanasa",
+            "alamat": "Laenmanen Selatan, Kec. Laenmanen, Malaka, Prov. Nusa Tenggara Timur"
+        },
+        {
+            "id_paroki": 134,
+            "keuskupan_id": 12,
+            "nama_paroki": "Kristus Raja - Karawang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 377,
+            "keuskupan_id": 5,
+            "nama_paroki": "Kristus Raja - Katedral \/ Bonipoi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 337,
+            "keuskupan_id": 33,
+            "nama_paroki": "Kristus Raja - Katedral Jayapura",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 8,
+            "keuskupan_id": 4,
+            "nama_paroki": "Kristus Raja - Mbait",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 233,
+            "keuskupan_id": 3,
+            "nama_paroki": "Kristus Raja - Mukusaki",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 246,
+            "keuskupan_id": 3,
+            "nama_paroki": "Kristus Raja - Riti",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 436,
+            "keuskupan_id": 14,
+            "nama_paroki": "Kristus Raja - Seon",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 175,
+            "keuskupan_id": 38,
+            "nama_paroki": "Kristus Raja - Serang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 256,
+            "keuskupan_id": 3,
+            "nama_paroki": "Kristus Raja - Wolotolo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 313,
+            "keuskupan_id": 19,
+            "nama_paroki": "Kristus Raja (Grj Jl Danau Toba No.58) - Pejompongan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 383,
+            "keuskupan_id": 5,
+            "nama_paroki": "Kristus Raja Katedral",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 319,
+            "keuskupan_id": 19,
+            "nama_paroki": "Kristus Salvator - Slipi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 136,
+            "keuskupan_id": 12,
+            "nama_paroki": "Kristus Sang Penabur - Subang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 350,
+            "keuskupan_id": 33,
+            "nama_paroki": "Kristus Terang Dunia - Waena",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 354,
+            "keuskupan_id": 33,
+            "nama_paroki": "Kristus Terang Dunia - Yiwika",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 500,
+            "keuskupan_id": 14,
+            "nama_paroki": "Kuasi Paroki Tahon",
+            "alamat": null
+        },
+        {
+            "id_paroki": 498,
+            "keuskupan_id": 2,
+            "nama_paroki": "Lequidoe Gereja Bunda Maria dari Gunung Karmel",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 494,
+            "keuskupan_id": 2,
+            "nama_paroki": "Letefoho Gereja Bunda Maria dari Gunung Karmel",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 38,
+            "keuskupan_id": 18,
+            "nama_paroki": "Maria Assumpta - Alusi \/ Saumlaki",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 327,
+            "keuskupan_id": 19,
+            "nama_paroki": "Maria Bunda Karmel - Tomang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 137,
+            "keuskupan_id": 12,
+            "nama_paroki": "Maria Bunda Pembantu Abadi - Pamanukan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 169,
+            "keuskupan_id": 38,
+            "nama_paroki": "Maria Bunda Segala Bangsa - Kota Wisata",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 192,
+            "keuskupan_id": 24,
+            "nama_paroki": "Maria Bunda Segala Bangsa - Nusa Dua-Stasi \/ Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 225,
+            "keuskupan_id": 3,
+            "nama_paroki": "Maria Diangkat Ke Surga - Maronggela",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 260,
+            "keuskupan_id": 3,
+            "nama_paroki": "Maria Diangkat Ke Surga - Wonda",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 237,
+            "keuskupan_id": 3,
+            "nama_paroki": "Maria Immaculata - Ndona",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 452,
+            "keuskupan_id": 14,
+            "nama_paroki": "Maria Ratu - Oeolo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 356,
+            "keuskupan_id": 28,
+            "nama_paroki": "Maria Ratu Pencinta Damai - Air Upas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 7,
+            "keuskupan_id": 4,
+            "nama_paroki": "Martir-martir Uganda - Komor",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 53,
+            "keuskupan_id": 18,
+            "nama_paroki": "Mater Dei - Sanana",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 224,
+            "keuskupan_id": 3,
+            "nama_paroki": "Matris Dolorosae - Mangulewa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 97,
+            "keuskupan_id": 14,
+            "nama_paroki": "Mena - St. Filomena",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 489,
+            "keuskupan_id": 2,
+            "nama_paroki": "Metinaro Gereja Bunda Rahmat",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 481,
+            "keuskupan_id": 2,
+            "nama_paroki": "Motael Gereja Santo Antonius",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 62,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Ainan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 63,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Alas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 64,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Atapupu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 65,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Bakitolas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 66,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Besikama",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 67,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Betun",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 68,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Bijaepasu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 69,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Biudukfoho",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 70,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Bolan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 71,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Eban",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 72,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Fafinesu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 73,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Fatubenao",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 74,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Fatuketi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 75,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Fatuoni",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 76,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Fulur",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 77,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Haekesak",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 78,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Halilulik",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 79,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Haliwen",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 446,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Hanemasin",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 80,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Haumeni",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 81,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Jak",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 82,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Kada",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 83,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Kamanasa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 84,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Kaputu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 409,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Katedral Atambua",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 462,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Kefamenanu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 457,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Kiupukan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 86,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Kleseleon",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 87,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Kotafoun",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 426,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Labur",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 88,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Lahurus",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 89,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Laktutus",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 445,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Lakulo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 444,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Leon As Wekmidar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 90,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Lurasik",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 91,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Mamsena",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 92,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Manamas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 93,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Manufui",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 94,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Manumean",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 95,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Maubam",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 96,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Maubesi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 85,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Mena",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 98,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Naekake",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 99,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Naesleu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 100,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Nela",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 101,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Noemuti",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 102,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Nualain",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 438,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Nurobo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 461,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Oenopu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 104,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Oeolo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 105,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Ponu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 106,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Rafau",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 107,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Sadi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 478,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Santo Yosef Tublopo (termuda)",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 108,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Sasi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 109,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Seon",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 110,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Tukuneno",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 111,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Tunbaba",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 112,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Webora",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 113,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Webriamata",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 114,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Wedomu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 115,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Wekfau",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 116,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Weluli",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 117,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Wemasa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 118,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Weoe",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 119,
+            "keuskupan_id": 14,
+            "nama_paroki": "Paroki Wini",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 239,
+            "keuskupan_id": 3,
+            "nama_paroki": "Petrus Martir - Ndora",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 490,
+            "keuskupan_id": 2,
+            "nama_paroki": "Railaco Gereja Bunda dari Fatima",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 310,
+            "keuskupan_id": 19,
+            "nama_paroki": "Rasul Barnabas - Pamulang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 421,
+            "keuskupan_id": 14,
+            "nama_paroki": "Ratu Damai - Fulur",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 289,
+            "keuskupan_id": 19,
+            "nama_paroki": "Ratu Rosari - Jagakarsa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 43,
+            "keuskupan_id": 18,
+            "nama_paroki": "Ratu Rosario Suci - Olilit Timur",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 311,
+            "keuskupan_id": 19,
+            "nama_paroki": "Regina Caeli - Pantai Indah Kapuk",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 497,
+            "keuskupan_id": 2,
+            "nama_paroki": "Remexio Gereja Santo Yosef",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 179,
+            "keuskupan_id": 24,
+            "nama_paroki": "Roh Kudus - Babakan \/ Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 5,
+            "keuskupan_id": 4,
+            "nama_paroki": "Roh Kudus - Bayun",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 210,
+            "keuskupan_id": 3,
+            "nama_paroki": "Roh Kudus - Detukeli",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 423,
+            "keuskupan_id": 14,
+            "nama_paroki": "Roh Kudus - Halilulik",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 185,
+            "keuskupan_id": 24,
+            "nama_paroki": "Roh Kudus - Katedral Denpasar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 340,
+            "keuskupan_id": 33,
+            "nama_paroki": "Roh Kudus - Mabilabol\/Oksibil",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 226,
+            "keuskupan_id": 3,
+            "nama_paroki": "Roh Kudus - Mataloko",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 441,
+            "keuskupan_id": 14,
+            "nama_paroki": "Salib Suci - Alas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 281,
+            "keuskupan_id": 19,
+            "nama_paroki": "Salib Suci - Cilincing",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 123,
+            "keuskupan_id": 12,
+            "nama_paroki": "Salib Suci - Kamuning",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 1,
+            "keuskupan_id": 4,
+            "nama_paroki": "Salib Suci - Katedral Agats",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 229,
+            "keuskupan_id": 3,
+            "nama_paroki": "Salib Suci - Maurole",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 364,
+            "keuskupan_id": 28,
+            "nama_paroki": "Salib Suci - Menyumbung",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 135,
+            "keuskupan_id": 12,
+            "nama_paroki": "Salib Suci - Purwakarta",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 250,
+            "keuskupan_id": 3,
+            "nama_paroki": "Salib Suci - Soa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 434,
+            "keuskupan_id": 14,
+            "nama_paroki": "Salib Suci - Weoe",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 208,
+            "keuskupan_id": 3,
+            "nama_paroki": "Salvatoris Resurgentis - Boba",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 347,
+            "keuskupan_id": 33,
+            "nama_paroki": "Sang Penabur - Skamto",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 346,
+            "keuskupan_id": 33,
+            "nama_paroki": "Sang Penebus - Sentani",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 197,
+            "keuskupan_id": 24,
+            "nama_paroki": "Sang Penebus - Sumbawa Besar \/ Sumbawa NTB",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 465,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santa Filomena - Mena",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 138,
+            "keuskupan_id": 12,
+            "nama_paroki": "Santa Maria - Kota Bukit Indah",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 55,
+            "keuskupan_id": 18,
+            "nama_paroki": "Santa Maria - Tobelo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 466,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santa Maria Bunda Allah - Ponu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 412,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santa Maria Bunda Penebus - Fatuketi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 428,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santa Maria Fatima - Betun",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 453,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santa Perawan Maria diangkat ke Surga - Eban",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 149,
+            "keuskupan_id": 32,
+            "nama_paroki": "Santa Perawan Maria Yang Terkandung Tanpa Noda - Kelayan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 447,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santa Sisilia - Kotafoun",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 411,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Agustinus - Fatubenao",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 419,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Aloysius Gonzaga - Haekesak",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 458,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Andreas Rasul - Tunbaba",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 474,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Antonius Padua - Fafinesu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 430,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Antonius Padua - Kleseleon",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 422,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Antonius Padua - Nela",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 449,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Antonius Padua - Sasi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 459,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Arnoldus Yansen - Jak",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 454,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Bernardus - Naekake",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 456,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Fransiskus Asisi - Mamsena",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 429,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Fransiskus Xaverius - Bolan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 467,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Fransiskus Xaverius - Fatuoni",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 471,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Fransiskus Xaverius - Wini",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 420,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Gerardus - Nualain",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 440,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Laurensius - Wemasa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 439,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Lukas - Wekfau",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 44,
+            "keuskupan_id": 18,
+            "nama_paroki": "Santo Mathias - Saumlaki",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 432,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Michael - Biudukfoho",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 443,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Mikhael - Kada",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 425,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Mikhael - Webora",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 451,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Nikolas - Bijaepasu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 450,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Paulus - Maubam",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 416,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Paulus - Wedomu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 417,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Petrus - Lahurus",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 410,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Petrus - Tukuneno",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 469,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Petrus dan Paulus - Lurasik",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 470,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Petrus Kanisius - Manufui",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 418,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Theodorus - Weluli",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 431,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Yohanes Baptista - Besikama",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 21,
+            "keuskupan_id": 18,
+            "nama_paroki": "Santo Yohanes Maria Vianney - Tantui-Halong",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 473,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Yohanes Pemandi - Bakitolas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 413,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Yohanes Pemandi - Haliwen",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 437,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Yohanes Pemandi - Kaputu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 448,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Yohanes Pemandi - Naesleu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 435,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Yohanes Rasul - Rafau",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 433,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Yohanes Rasul - Webriamata",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 455,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Yohannes Maria Vianney - Maubesi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 472,
+            "keuskupan_id": 14,
+            "nama_paroki": "Santo Yosef - Manamas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 296,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Agustinus - Karawaci",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 366,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Agustinus - Paya Kumang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 288,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Albertus Agung - Harapan Indah",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 275,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Aloysius Gonzaga - Cijantung",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 309,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Alphonsus Rodriguez - Pademangan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 328,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Ambrosius - Vila Melati Mas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 161,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Andreas - Ciluar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 51,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Andreas - Kao - Malifut",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 298,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Andreas - Kedoya",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 286,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Anna - Duren Sawit",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 13,
+            "keuskupan_id": 4,
+            "nama_paroki": "St. Anna - Yaosakor",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 178,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Antonius - Ampenan \/ Lombok Barat",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 59,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Antonius - Namrole",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 345,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Antonius - Sarmi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 103,
+            "keuskupan_id": 15,
+            "nama_paroki": "St. Antonius Maria Claret - Denopu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 266,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Antonius Padua - Bidaracina",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 264,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Arnoldus - Bekasi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 387,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Arnoldus-Josef (Aryos) - Niki - Niki",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 321,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Bartolomeus - Taman Galaksi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 279,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Bernadet - Ciledug",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 316,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Bonaventura - Pulomas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 349,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Bonifasius - Ubrub",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 186,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Caecilia - Klungkung - Stasi \/ Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 374,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Carolus Borromeus - Tembelina",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 348,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Clara - Taja",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 398,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Columba - Putain",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 220,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Dominikus - Kotabaru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 235,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Eduardus - Nangapanda",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 334,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Emanuel - Elagaima",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 400,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Familia - Sikumana",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 389,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Fransiskus - Noetoko \/ TTS",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 331,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Fransiskus Asisi - A.P.O\/Jayapura",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 177,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Fransiskus Asisi - Amlapura \/ Karangasem",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 214,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Fransiskus Asisi - Gako",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 341,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Fransiskus Asisi - Musatfak",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 324,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Fransiskus Asisi - Tebet",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 202,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Fransiskus Asisi dan St. Clara - Aimere \/ Kombos",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 158,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Fransiskus Assisi - Cibadak",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 378,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Fransiskus dari Asisi - BTN Kolhua",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 156,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Fransiskus dari Asisi - Sukasari",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 207,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Fransiskus Xaverius - Boawae",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 50,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Fransiskus Xaverius - Jailolo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 17,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Fransiskus Xaverius - Katedral Ambon",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 188,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Fransiskus Xaverius - Kuta \/ Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 238,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Fransiskus Xaverius - Ndondo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 323,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Fransiskus Xaverius - Tanjung Priok",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 37,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Fransiskus Xaverius - Tual (Kota Tual)",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 257,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Fransiskus Xaverius - Wolotopo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 315,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Gabriel - Pulogebang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 368,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Gabriel - Sandai",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 129,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Gabriel - Sumber Sari",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 361,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Gemma Galgani - Katedral Ketapang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 304,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Gregorius - Kotabumi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 392,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Gregorius Agung - Oeleta",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 381,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Helena - Camplong",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 284,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Helena - Curug",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 164,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Herkulanus - Depok Jaya",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 253,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Hubertus - Wekaseko",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 127,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Ignatius - Cimahi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 290,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Ignatius - Jalan Malang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 18,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Ignatius - Laha",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 173,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Ignatius Loyola - Semplak",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 171,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Joannes Baptista - Parung",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 28,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Joseph - Uwat Bombay \/ Kei Besar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 265,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Klara - Bekasi Utara",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 287,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Kristoforus - Grogol",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 376,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Kristoforus BAA \/ P. Rote",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 263,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Laurensius - Alam Sutera",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 126,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Laurentius - Sukajadi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 291,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Leo Agung - Jatiwaringin",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 259,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Longinus - Wolowio",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 31,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Ludovikus - Faan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 320,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Lukas - Sunter",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 181,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Maria - St. Yoseph - Dompu \/ Sumbawa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 322,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Maria - Tangerang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 261,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Maria - Worhonio",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 373,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Maria Assumpta (maria Diangkat Ke Surga) - Tanjung Ketapang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 16,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Maria Bintang Laut - Benteng",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 58,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Maria Bintang Laut - Namlea \/ P. Buru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 26,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Maria Bunda Allah - Haar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 22,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Maria Bunda Hati Kudus - Bemun \/ Aru Selatan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 244,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Maria Bunda Karmel - Rajawawo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 390,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Maria Bunda Orang Miskin - Noelmina",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 274,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Maria Bunda Perantara - Cideng",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 326,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Maria De Fatima - Toasebio",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 382,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Maria Dolorosa - Soe",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 125,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Maria Fatima - Lembang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 174,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Maria Fatima - Sentul City",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 405,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Maria Gunung Karmel - Tumu \/ Putain",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 189,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Maria Immaculata - Mataram \/ Lombok Barat",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 198,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Maria Immaculata - Tabanan \/ Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 292,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Maria Immakulata - Kalideres",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 308,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Maria Kusuma Karmel - Meruya",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 219,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Maria Magdalena Sophia Barat - Kombandaru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 203,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Maria Mater Boni Consili (Bunda Penasihat Baik) - Bajawa I",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 393,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Maria Mater Dei - Oepoli",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 184,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Maria Ratu - Gumbrih \/ Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 163,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Maria Ratu Para Malaikat - Cipanas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 183,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Maria Ratu Rosari - Gianyar \/ Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 61,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Maria Ratu Rosario - Waisarissa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 172,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Maria Tak Bernoda - Rangkasbitung",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 223,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Mariae Matris Salvatoris - Langa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 167,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Markus - Depok Timur",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 357,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Martinus - Balai Berkuak",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 130,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Martinus - Margahayu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 236,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Martinus - Nangaroro",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 248,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Martinus - Roworeke",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 249,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Martinus - Ruto",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 3,
+            "keuskupan_id": 4,
+            "nama_paroki": "St. Martinus De Pores - Ayam",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 166,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Matheus - Depok Tengah",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 162,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Matias - Cinere",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 301,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Matias Rasul - Kosambi Baru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 404,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Matias Rasul - Tofa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 267,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Matius Penginjil - Bintaro",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 122,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Melania - Melania",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 131,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Michael - Waringin",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 143,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Mikael - Indramayu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 303,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Mikael - Kranji",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 227,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Mikael - Maukeli",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 352,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Mikael - Waris",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 234,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Mikhael - Mundemi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 371,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Mikhael - Simpang Dua",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 282,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Nikodemus - Ciputat",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 121,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Odilia - Cicadas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 283,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Odilia - Citra Raya",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 272,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Paskalis - Cempaka Putih",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 2,
+            "keuskupan_id": 4,
+            "nama_paroki": "St. Paulus - Atsy",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 165,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Paulus - Depok Lama",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 216,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Paulus - Jerebuu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 187,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Paulus - Kulibul \/ Badung, Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 132,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Paulus - Mohammad Toha",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 394,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Paulus - Oinlasi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 399,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Paulus - Seba \/ Sabu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 196,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Paulus - Singaraja \/ Buleleng - Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 353,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Paulus - Welesi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 375,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Paulus Rasul - Tumbang Titi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 155,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Perawan Maria - Katedral Bogor",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 24,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Perawan Maria de Fatima - Dobo \/ P. Aru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 297,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Perawan Maria Diangkat Ke Surga - Katedral Jakarta",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 218,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Perawan Maria Ine Wea - Kisaraghe",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 270,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Perawan Maria Ratu - Blok Q",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 124,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Perawan Maria Sapta Kedukaan - Pandu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 32,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Perawan Maria Yang Tak Bernoda - Langgur \/ Kei Kecil",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 144,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Perawan Maria Yang Terkandung Tak Bernoda - Garut",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 217,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Perawan Maria Yang Terkandung Tanpa Noda - Jopu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 157,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Petrus - Cianjur",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 6,
+            "keuskupan_id": 4,
+            "nama_paroki": "St. Petrus - Ewer",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 120,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Petrus - Katedral Bandung",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 30,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Petrus - Kelanit \/ Kei Kecil",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 190,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Petrus - Monang Maning \/ Denpasar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 191,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Petrus - Negara \/ Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 342,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Petrus - Oklip",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 396,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Petrus - Pante Baru \/ Rote",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 401,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Petrus - Sulamu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 476,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Petrus - Wabar (Kuasi Paroki)",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 46,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Petrus - Wonreli",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 332,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Petrus Dan Paulus - Argapura",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 205,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Petrus Dan Paulus - Bekek",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 27,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Petrus Dan Paulus - Hollat \/ Kei Besar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 41,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Petrus Dan Paulus - Lorulun \/ Pp. Tanimbar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 306,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Petrus dan Paulus - Mangga Besar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 33,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Petrus dan Paulus - Namar \/ Kei Kecil",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 365,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Petrus Dan Paulus - Nanga Tayap",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 36,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Petrus dan Paulus - Rumaat \/ Kei Kecil",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 475,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Petrus dan Paulus - Seira (Kuasi Paroki)",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 295,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Philipus Rasul - Kapuk",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 40,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Pius X. - Larat \/ Pp. Tanimbar",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 280,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Robertus Bellarminus - Cililitan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 294,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Servatius - Kampung Sawah",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 12,
+            "keuskupan_id": 4,
+            "nama_paroki": "St. Silvia - Yamas",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 403,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Simon Petrus - Tarus",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 360,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Stefanus - Kendawangan",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 277,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Stephanus - Cilandak",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 338,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Stephanus - Kimbim \/ Woogi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 386,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Stephanus - Naikliu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 388,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Stephanus - Noehaen",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 152,
+            "keuskupan_id": 32,
+            "nama_paroki": "St. Theresia - Pelaihari",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 199,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Theresia - Tangeb \/ Tangeb - Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 395,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Theresia Dari Kanak-kanak Yesus - Panite",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 240,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Theresia Kanak-kanak Yesus - Nggela",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 168,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Thomas - Kelapa Dua",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 271,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Thomas Rasul - Bojong Indah",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 150,
+            "keuskupan_id": 32,
+            "nama_paroki": "St. Vincentius a Paulo - Batulicin",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 245,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Vincentius A Paulo - Ratesuba",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 380,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Vinsensius a Paulo - Benlutu",
+            "alamat": "Benlutu"
+        },
+        {
+            "id_paroki": 333,
+            "keuskupan_id": 33,
+            "nama_paroki": "St. Willibrordus - Arso",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 54,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Willibrordus - Ternate",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 14,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Yakobus - Ahuru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 299,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Yakobus - Kelapa Gading",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 170,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Yakobus - Mega Mendung",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 379,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Yakobus Rasul - Bukapiting \/ Alor",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 145,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Yohanes - Ciamis",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 255,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Yohanes Baptista - Wolosambi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 285,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Yohanes Bosco - Danau Sunter",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 56,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Yohanes Maria Vianney - Bula-Wahai",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 278,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Yohanes Maria Vianney - Cilangkap",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 182,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Yohanes Maria Vianney - Donggo \/ Bima - Sumbawa - NTB",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 247,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Yohanes Paulus II - Ropa",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 52,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Yohanes Pemandi - Labuha (Bacan - Obi)",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 194,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Yohanes Pemandi - Praya \/ Lombok Tengah",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 269,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Yohanes Penginjil - Blok B",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 57,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Yohanes Penginjil - Masohi \/ P. Seram",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 358,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Yohanes Rasul - Balai Semandang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 23,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Yosafat - Berdafan \/ Aru Utara",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 204,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Yosef - Bajawa II",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 211,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Yosef - Detusoko",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 212,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Yosef - Dhoki",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 222,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Yosef - Laja",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 241,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Yosef - Onekore",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 243,
+            "keuskupan_id": 3,
+            "nama_paroki": "St. Yosef - Raja",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 35,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Yosep - Ohoijang",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 11,
+            "keuskupan_id": 4,
+            "nama_paroki": "St. Yosep - Senggo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 180,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Yoseph - Denpasar \/ Bali",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 307,
+            "keuskupan_id": 19,
+            "nama_paroki": "St. Yoseph - Matraman",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 19,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Yoseph - Passo",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 20,
+            "keuskupan_id": 18,
+            "nama_paroki": "St. Yoseph - Poka Rumah Tiga",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 195,
+            "keuskupan_id": 24,
+            "nama_paroki": "St. Yoseph - Raba \/ Bima NTB",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 370,
+            "keuskupan_id": 28,
+            "nama_paroki": "St. Yoseph - Serengkah",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 176,
+            "keuskupan_id": 38,
+            "nama_paroki": "St. Yoseph - Sukabumi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 385,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Yoseph Naikoten",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 397,
+            "keuskupan_id": 5,
+            "nama_paroki": "St. Yoseph Pekerja - Penfui",
+            "alamat": "Penfui, Kupang, Nusa Tenggara Timur"
+        },
+        {
+            "id_paroki": 142,
+            "keuskupan_id": 12,
+            "nama_paroki": "St. Yusuf - Yos Sudarso",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 151,
+            "keuskupan_id": 32,
+            "nama_paroki": "St. Yusup - Kota Baru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 230,
+            "keuskupan_id": 3,
+            "nama_paroki": "St.Yosef Frainademetz - Mautapaga",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 407,
+            "keuskupan_id": 5,
+            "nama_paroki": "Sta Maria Reinha Rosari Siolais",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 359,
+            "keuskupan_id": 28,
+            "nama_paroki": "Sta. Maria - Botong (Pra Paroki)",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 363,
+            "keuskupan_id": 28,
+            "nama_paroki": "Sta. Maria - Meraban (Pra Paroki)",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 384,
+            "keuskupan_id": 5,
+            "nama_paroki": "Sta. Maria Assumpta Kota Baru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 402,
+            "keuskupan_id": 5,
+            "nama_paroki": "Sta. Maria Fatima - Taklale",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 49,
+            "keuskupan_id": 18,
+            "nama_paroki": "Sta. Maria Immaculata - Falabisahaya",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 268,
+            "keuskupan_id": 19,
+            "nama_paroki": "Sta. Maria Regina - Bintaro Jaya",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 318,
+            "keuskupan_id": 19,
+            "nama_paroki": "Sta. Monika - Serpong",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 60,
+            "keuskupan_id": 18,
+            "nama_paroki": "Sta. Theresia - Piru",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 325,
+            "keuskupan_id": 19,
+            "nama_paroki": "Sta. Theresia - Theresia",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 415,
+            "keuskupan_id": 14,
+            "nama_paroki": "Stella Maris - Atapupu",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 209,
+            "keuskupan_id": 3,
+            "nama_paroki": "Stella Maris - Danga",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 153,
+            "keuskupan_id": 32,
+            "nama_paroki": "Stella Maris - Sungai Danau",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 314,
+            "keuskupan_id": 19,
+            "nama_paroki": "Stella Maris (Grj. Jl Taman Pluit Permai Timur 17) - Pluit",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 273,
+            "keuskupan_id": 19,
+            "nama_paroki": "Trinitas - Cengkareng",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 200,
+            "keuskupan_id": 24,
+            "nama_paroki": "Tritunggal Maha Kudus - Tuka (Badung-Bali)",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 414,
+            "keuskupan_id": 14,
+            "nama_paroki": "Tritunggal Mahakudus - Sadi",
+            "alamat": ""
+        },
+        {
+            "id_paroki": 408,
+            "keuskupan_id": 2,
+            "nama_paroki": "UPDATED - Test 2025-11-28 09:26:33",
+            "alamat": "Jl. Test No. 456 - UPDATED"
+        },
+        {
+            "id_paroki": 201,
+            "keuskupan_id": 3,
+            "nama_paroki": "Yesus Kerahiman Ilahi - Aeramo",
+            "alamat": ""
+        }
+    ]
+}

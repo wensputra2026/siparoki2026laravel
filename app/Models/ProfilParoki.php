@@ -11,11 +11,16 @@ class ProfilParoki extends Model
     protected $fillable = [
         'nama_paroki',
         'keuskupan',
+        'keuskupan_id',
+        'dekenat_id',
+        'paroki_id',
+        'pelindung',
         'alamat',
         'telepon',
         'email',
         'website',
         'pastor_paroki',
         'pastor_email',
+        'logo',
     ];
 }
