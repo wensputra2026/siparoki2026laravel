@@ -9,6 +9,7 @@ const isReloading = ref(false);
 const reloadDashboard = () => {
     isReloading.value = true;
     router.reload({
+        only: ['stats', 'latestUmat', 'sakramenCount'],
         preserveScroll: true,
         preserveState: true,
         onFinish: () => {
