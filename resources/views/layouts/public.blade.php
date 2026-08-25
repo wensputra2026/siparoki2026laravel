@@ -242,33 +242,61 @@
                         <div class="dropdown ms-3">
                             @php
                                 $currentUser = auth()->user();
-                                $dashboardUrl = '/admin';
-                                if ($currentUser->hasRole(['pastor-paroki', 'pastor'])) {
+                                $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $currentUser?->role?->slug ?? $currentUser?->role?->nama_role ?? ''));
+                                
+                                $dashboardUrl = '/superadmin';
+                                $roleLabel = 'Dashboard';
+                                
+                                if (str_contains($slugClean, 'wilayah')) {
+                                    $dashboardUrl = '/wilayah';
+                                    $roleLabel = 'Dashboard Wilayah';
+                                } elseif (str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) {
+                                    $dashboardUrl = '/kapela';
+                                    $roleLabel = 'Dashboard Stasi / Kapela';
+                                } elseif (str_contains($slugClean, 'kub')) {
+                                    $dashboardUrl = '/kub';
+                                    $roleLabel = 'Dashboard KUB';
+                                } elseif (str_contains($slugClean, 'pastor')) {
                                     $dashboardUrl = '/pastor';
-                                } elseif ($currentUser->hasRole('sekretariat')) {
-                                    $dashboardUrl = '/sekretariat';
-                                } elseif ($currentUser->hasRole('bendahara')) {
+                                    $roleLabel = 'Dashboard Pastor';
+                                } elseif (str_contains($slugClean, 'bendahara')) {
                                     $dashboardUrl = '/bendahara';
-                                } elseif ($currentUser->hasRole('umat')) {
+                                    $roleLabel = 'Dashboard Keuangan';
+                                } elseif (str_contains($slugClean, 'penulis') || str_contains($slugClean, 'komsos')) {
+                                    $dashboardUrl = '/penulis';
+                                    $roleLabel = 'Dashboard Penulis';
+                                } elseif (str_contains($slugClean, 'umat')) {
                                     $dashboardUrl = '/umat';
+                                    $roleLabel = 'Dashboard Umat';
+                                } elseif (str_contains($slugClean, 'paroki') || str_contains($slugClean, 'sekretariat')) {
+                                    $dashboardUrl = '/paroki';
+                                    $roleLabel = 'Dashboard Sekretariat';
+                                } elseif (str_contains($slugClean, 'super')) {
+                                    $dashboardUrl = '/superadmin';
+                                    $roleLabel = 'Dashboard Super Admin';
                                 }
                             @endphp
                             <button class="btn btn-apply dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-th-large me-1"></i> {{ $currentUser->nama_lengkap ?? $currentUser->username ?? 'User' }}
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ $dashboardUrl }}">Buka Dashboard</a></li>
-                                @if($currentUser->hasRole(['superadmin', 'admin']))
-                                    <li><a class="dropdown-item" href="/admin">Admin Utama</a></li>
-                                    <li><a class="dropdown-item" href="/pastor">Portal Pastor</a></li>
-                                    <li><a class="dropdown-item" href="/sekretariat">Sekretariat</a></li>
-                                    <li><a class="dropdown-item" href="/bendahara">Bendahara</a></li>
-                                    <li><a class="dropdown-item" href="/umat">Portal Umat</a></li>
-                                @endif
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li>
+                                    <a class="dropdown-item fw-semibold" href="{{ $dashboardUrl }}">
+                                        <i class="fas fa-gauge-high me-2 text-primary"></i> {{ $roleLabel }}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ $dashboardUrl }}/profil-saya">
+                                        <i class="fas fa-user-circle me-2 text-muted"></i> Profil Saya
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="/logout" method="POST" style="display:inline;">
                                         @csrf
-                                        <button type="submit" class="dropdown-item">Keluar (Logout)</button>
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt me-2"></i> Keluar (Logout)
+                                        </button>
                                     </form>
                                 </li>
                             </ul>
