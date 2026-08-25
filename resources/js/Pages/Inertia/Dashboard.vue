@@ -48,7 +48,7 @@ const basePrefix = computed(() => {
 </script>
 
 <template>
-    <AppLayout title="Dashboard">
+    <AppLayout title="Dashboard" :role="role">
         <Head title="Dashboard - SIPAROKI" />
 
         <!-- EXECUTIVE GREETING HEADER CARD -->

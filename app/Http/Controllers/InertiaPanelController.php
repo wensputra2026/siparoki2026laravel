@@ -32,8 +32,10 @@ class InertiaPanelController extends Controller
      */
     public function dashboard(Request $request, ?string $role = null): Response
     {
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? '';
         $roleMap = [
             'superadmin' => 'Super Admin',
+            'v2' => 'Super Admin',
             'paroki' => 'Admin Paroki',
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
@@ -44,8 +46,7 @@ class InertiaPanelController extends Controller
             'umat' => 'Umat',
         ];
 
-        $currentPath = trim($request->path(), '/');
-        $resolvedRole = $roleMap[$role] ?? $roleMap[$currentPath] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
+        $resolvedRole = $roleMap[$role] ?? $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
         $authUser = auth()->user();
         $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));

@@ -111,8 +111,8 @@ const isSuperAdmin = computed(() => {
 });
 
 const resolveRoleFromPath = () => {
-    if (typeof window === 'undefined') return '';
-    const path = window.location.pathname.toLowerCase();
+    const rawUrl = page.url || (typeof window !== 'undefined' ? window.location.pathname : '') || '';
+    const path = rawUrl.toLowerCase();
     if (path.startsWith('/wilayah')) return 'Admin Wilayah';
     if (path.startsWith('/kapela') || path.startsWith('/stasi')) return 'Admin Kapela / Stasi';
     if (path.startsWith('/kub')) return 'Ketua KUB';
@@ -121,21 +121,35 @@ const resolveRoleFromPath = () => {
     if (path.startsWith('/umat')) return 'Umat';
     if (path.startsWith('/pastor')) return 'Pastor';
     if (path.startsWith('/paroki')) return 'Admin Paroki';
-    if (path.startsWith('/superadmin')) return 'Super Admin';
+    if (path.startsWith('/superadmin') || path.startsWith('/v2')) return 'Super Admin';
     return '';
 };
 
-const activeRole = ref(props.role || page.props.role || resolveRoleFromPath() || page.props.auth?.user?.role || 'Super Admin');
+const resolveActiveRole = () => {
+    const fromPath = resolveRoleFromPath();
+    if (fromPath && roleMenus[fromPath]) {
+        return fromPath;
+    }
+    if (props.role && roleMenus[props.role]) {
+        return props.role;
+    }
+    if (page.props.role && roleMenus[page.props.role]) {
+        return page.props.role;
+    }
+    const userRole = page.props.auth?.user?.role;
+    if (userRole && roleMenus[userRole]) {
+        return userRole;
+    }
+    return 'Super Admin';
+};
+
+const activeRole = ref(resolveActiveRole());
 
 // Watch for prop role and URL changes
 watch(
     () => [props.role, page.props.role, page.url],
-    ([newPropRole, newPageRole]) => {
-        const fromPath = resolveRoleFromPath();
-        const candidate = newPropRole || newPageRole || fromPath || page.props.auth?.user?.role;
-        if (candidate && roleMenus[candidate]) {
-            activeRole.value = candidate;
-        }
+    () => {
+        activeRole.value = resolveActiveRole();
     },
     { immediate: true }
 );
@@ -905,9 +919,6 @@ onMounted(() => {
         if (saved.openGroups && typeof saved.openGroups === 'object') {
             openGroups.value = { ...openGroups.value, ...saved.openGroups };
         }
-        if (saved.activeRole && roleMenus[saved.activeRole]) {
-            activeRole.value = saved.activeRole;
-        }
     } catch (error) {
         sessionStorage.removeItem(layoutStorageKey);
     }
@@ -916,13 +927,12 @@ onMounted(() => {
 });
 
 watch(
-    [isSidebarOpen, openGroups, activeRole],
+    [isSidebarOpen, openGroups],
     () => {
         try {
             sessionStorage.setItem(layoutStorageKey, JSON.stringify({
                 isSidebarOpen: isSidebarOpen.value,
                 openGroups: openGroups.value,
-                activeRole: activeRole.value,
             }));
         } catch (error) {
             // Storage can fail in private mode; navigation still works normally.
@@ -1055,7 +1065,7 @@ watch(
                 <!-- Static Role Badge for Non-Super Admin (Admin Paroki, Pastor, Wilayah, etc.) -->
                 <div v-else class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80 text-xs font-bold text-amber-900 shadow-2xs">
                     <i class="fa-solid fa-user-shield text-amber-600 text-[11px]"></i>
-                    <span>{{ userActualRole || activeRole }}</span>
+                    <span>{{ activeRole }}</span>
                 </div>
 
                 <Link
