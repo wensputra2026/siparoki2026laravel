@@ -2213,6 +2213,7 @@ const statusLabel = (item) => {
                             <!-- Row Actions -->
                             <td class="px-3.5 py-2.5 text-right">
                                 <div class="flex items-center justify-end gap-1">
+                                    <!-- 1. Detail / Preview Button (Exactly ONE view icon per row) -->
                                     <Link
                                         v-if="moduleKey === 'konten'"
                                         :href="`${basePrefix}/konten/${item.id || item.slug}/preview`"
@@ -2229,6 +2230,17 @@ const statusLabel = (item) => {
                                     >
                                         <i class="fa-solid fa-eye text-[10px]"></i>
                                     </Link>
+                                    <button
+                                        v-else
+                                        type="button"
+                                        @click="openDetailModal(item)"
+                                        title="Lihat Detail"
+                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                    >
+                                        <i class="fa-solid fa-eye text-[10px]"></i>
+                                    </button>
+
+                                    <!-- 2. Cetak Button (Only for KK, and only for non-read-only roles) -->
                                     <a
                                         v-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) && !isUmatReadOnlyRole"
                                         :href="`${basePrefix}/kk-katolik/${item.id || item.no_kk_kw}/cetak`"
@@ -2238,15 +2250,6 @@ const statusLabel = (item) => {
                                     >
                                         <i class="fa-solid fa-print text-[10px]"></i>
                                     </a>
-                                    <button
-                                        v-else-if="moduleKey !== 'konten'"
-                                        type="button"
-                                        @click="openDetailModal(item)"
-                                        title="Lihat Detail"
-                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
-                                    >
-                                        <i class="fa-solid fa-eye text-[10px]"></i>
-                                    </button>
                                     <!-- Edit Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
                                     <template v-if="!isUmatReadOnlyRole">
                                         <Link
