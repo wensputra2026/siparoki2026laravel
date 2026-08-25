@@ -93,6 +93,15 @@ const kapelaList = computed(() => page.props.scopeOptions?.kapela || []);
 const kubList = computed(() => page.props.scopeOptions?.kub || []);
 
 // Current authenticated user role or active preview role
+const userActualRole = computed(() => {
+    return page.props.auth?.user?.role || '';
+});
+
+const isSuperAdmin = computed(() => {
+    const r = (userActualRole.value || '').toLowerCase();
+    return r.includes('super');
+});
+
 const activeRole = ref(page.props.role || page.props.auth?.user?.role || 'Super Admin');
 
 // Watch for prop role changes
@@ -933,8 +942,8 @@ watch(
 
             <!-- Right: Role Switcher & Action Buttons -->
             <div class="flex items-center gap-2.5">
-                <!-- Role Preview Selector -->
-                <div class="hidden md:flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-xl border border-slate-200 text-xs">
+                <!-- Role Preview Selector (ONLY for Super Admin) -->
+                <div v-if="isSuperAdmin" class="hidden md:flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-xl border border-slate-200 text-xs">
                     <span class="text-[10px] font-bold uppercase text-slate-500 pl-1.5 pr-0.5">Peran:</span>
                     <select
                         v-model="activeRole"
@@ -1001,6 +1010,12 @@ watch(
                             </option>
                         </select>
                     </template>
+                </div>
+
+                <!-- Static Role Badge for Non-Super Admin (Admin Paroki, Pastor, Wilayah, etc.) -->
+                <div v-else class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80 text-xs font-bold text-amber-900 shadow-2xs">
+                    <i class="fa-solid fa-user-shield text-amber-600 text-[11px]"></i>
+                    <span>{{ userActualRole || activeRole }}</span>
                 </div>
 
                 <Link
