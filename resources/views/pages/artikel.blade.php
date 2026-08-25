@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Page Header / Breadcrumb Konoha Style -->
-<section class="page-header" style="background: linear-gradient(rgba(10, 30, 25, 0.75), rgba(10, 30, 25, 0.85)), url('{{ $globalHeroBg ?? '/assets/uploads/profil/hero_bg.jpg' }}') center/cover; padding: 90px 0 50px; color: white; text-align: center;">
+<section class="page-header">
     <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
         <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Artikel & Katekese</h1>
         <nav aria-label="breadcrumb">
@@ -69,7 +69,7 @@
                             {{ $item->ringkasan ?? $item->excerpt ?? Str::limit(strip_tags($item->konten ?? $item->isi ?? ''), 120) }}
                         </p>
                         <div>
-                            <a href="/artikel/{{ $item->slug }}" class="btn-news" style="display: inline-flex; align-items: center; gap: 6px; color: var(--primary-teal, #00897b); font-weight: 700; font-size: 0.88rem; text-decoration: none; transition: transform 0.2s;">
+                            <a href="/artikel/{{ $item->slug }}" class="btn-news">
                                 Selengkapnya <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>

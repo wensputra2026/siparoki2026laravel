@@ -40,7 +40,7 @@
 
 <div class="jm-page">
     <!-- Page Header / Breadcrumb Konoha Style -->
-    <section class="page-header" style="background: linear-gradient(rgba(10, 30, 25, 0.75), rgba(10, 30, 25, 0.85)), url('{{ $globalHeroBg ?? '/assets/uploads/profil/hero_bg.jpg' }}') center/cover; padding: 90px 0 50px; color: white; text-align: center;">
+    <section class="page-header">
         <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
             <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Jadwal Perayaan Ekaristi</h1>
             <nav aria-label="breadcrumb">

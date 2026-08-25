@@ -298,33 +298,92 @@
 
 <!-- Section Berita & Artikel Terbaru -->
 <section id="artikel" class="py-16 bg-slate-50 dark:bg-[#090e1a]">
-    <div class="max-w-6xl mx-auto px-4">
-        <div class="section-title">
-            <span class="st-badge">Berita &amp; Artikel</span>
-            <h2>Berita &amp; <span class="text-gradient">Artikel Terkini</span></h2>
-            <p>Informasi terbaru, warta paroki, dan artikel rohani seputar pelayanan serta kegiatan umat.</p>
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 15px;">
+        <div class="section-title text-center mb-5">
+            <span class="badge mb-2 px-3 py-2" style="background: rgba(0, 137, 123, 0.1); color: var(--primary-teal); font-weight: 700; border-radius: 20px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Berita &amp; Artikel</span>
+            <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b;">Berita &amp; <span style="color: var(--primary-orange);">Artikel Terkini</span></h2>
+            <p style="color: #64748b; font-size: 0.95rem; max-width: 680px; margin: 8px auto 0;">Informasi terbaru, warta paroki, dan artikel rohani seputar pelayanan serta kegiatan umat.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        @php
+            $newsImageUrl = function ($path) {
+                if (empty($path)) {
+                    return asset('images/news-placeholder.svg');
+                }
+
+                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                    return $path;
+                }
+
+                $clean = ltrim($path, '/');
+                $base = basename($clean);
+
+                if (file_exists(public_path('assets/uploads/konten/' . $base))) {
+                    return asset('assets/uploads/konten/' . $base);
+                }
+                if (file_exists(public_path('assets/uploads/berita/' . $base))) {
+                    return asset('assets/uploads/berita/' . $base);
+                }
+                if (file_exists(public_path('uploads/konten/' . $base))) {
+                    return asset('uploads/konten/' . $base);
+                }
+                if (file_exists(public_path('uploads/berita/' . $base))) {
+                    return asset('uploads/berita/' . $base);
+                }
+                if (str_starts_with($clean, 'storage/') || str_starts_with($clean, 'assets/') || str_starts_with($clean, 'uploads/')) {
+                    return asset($clean);
+                }
+
+                return asset('assets/uploads/konten/' . $base);
+            };
+        @endphp
+
+        <div class="row g-4">
             @forelse($artikel ?? [] as $item)
-            <div class="bg-white dark:bg-[#101d31] border border-slate-200 dark:border-[#263a55] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition">
-                <div class="p-6">
-                    <span class="text-xs font-bold text-sky-600 bg-sky-50 dark:bg-sky-950 px-2.5 py-1 rounded-full">{{ $item->kategori ?? 'WARTA' }}</span>
-                    <h3 class="font-bold text-lg text-slate-900 dark:text-white mt-3 line-clamp-2">{{ $item->judul }}</h3>
-                    <p class="text-xs text-slate-500 mt-2 line-clamp-3">{{ $item->ringkasan ?? Str::limit(strip_tags($item->konten ?? $item->isi ?? $item->isi_konten ?? $item->deskripsi ?? ''), 120) }}</p>
-                    <a href="/artikel/{{ $item->slug }}" class="inline-block mt-4 text-xs font-bold text-sky-600 hover:text-sky-700">Baca Selengkapnya &rarr;</a>
+                @php
+                    $publishedAt = $item->tanggal_publish ?? $item->created_at ?? now();
+                    $excerpt = $item->excerpt ?? $item->ringkasan ?? Str::limit(strip_tags($item->konten ?? $item->isi ?? $item->isi_konten ?? $item->deskripsi ?? ''), 120);
+                    $catRaw = strtolower($item->kategori ?? $item->tipe ?? 'berita');
+                    $isPengumuman = str_contains($catRaw, 'pengum') || str_contains($catRaw, 'pengumuman');
+                    $catClass = $isPengumuman ? 'category-announcement' : 'category-news';
+                    $catIcon = $isPengumuman ? 'fa-megaphone' : 'fa-newspaper';
+                @endphp
+                <div class="col-lg-4 col-md-6">
+                    <div class="card news-card h-100 shadow-sm" style="border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); transition: transform 0.3s, box-shadow 0.3s; background: #ffffff;">
+                        <div class="position-relative" style="height: 210px; overflow: hidden; background: #e2e8f0;">
+                            <span class="news-category {{ $catClass }}" style="position: absolute; top: 12px; left: 12px; z-index: 2; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; color: white; background: var(--primary-teal);">
+                                <i class="fas {{ $catIcon }} me-1"></i>
+                                {{ $item->kategori ?? $item->tipe ?? 'Berita Paroki' }}
+                            </span>
+                            <img src="{{ $newsImageUrl($item->gambar ?? null) }}" class="card-img-top w-100 h-100" alt="{{ $item->judul }}" loading="lazy" style="object-fit: cover; transition: transform 0.5s;">
+                        </div>
+                        <div class="card-body d-flex flex-column p-4">
+                            <span class="news-date mb-2" style="display: inline-block; padding: 4px 10px; border-radius: 6px; background: var(--primary-orange); color: white; font-size: 12px; font-weight: 600; width: fit-content;">
+                                <i class="far fa-calendar me-1"></i> {{ \Carbon\Carbon::parse($publishedAt)->translatedFormat('j F Y') }}
+                            </span>
+                            <h5 class="card-title fw-bold mb-2" style="font-size: 1.05rem; line-height: 1.4; color: #1e293b; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ $item->judul }}
+                            </h5>
+                            <p class="card-text text-muted mb-3 flex-grow-1" style="font-size: 0.85rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ $excerpt }}
+                            </p>
+                            <a href="/artikel/{{ $item->slug }}" class="btn-news">
+                                Baca Selengkapnya <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
             @empty
-            <div class="col-span-3 text-center py-8 text-slate-400">
-                <p>Artikel belum tersedia.</p>
-            </div>
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="far fa-newspaper fa-3x mb-3 text-secondary"></i>
+                    <p class="mb-0">Artikel & Berita belum tersedia.</p>
+                </div>
             @endforelse
         </div>
 
-        <div class="text-center mt-8">
-            <a href="/berita" class="inline-flex items-center gap-2 border border-slate-300 dark:border-slate-700 hover:border-sky-600 text-slate-700 dark:text-slate-200 px-6 py-2.5 rounded-full text-sm font-semibold transition">
-                Lihat Semua Berita &amp; Artikel <i class="fas fa-arrow-right text-xs"></i>
+        <div class="text-center mt-5">
+            <a href="/berita" class="btn btn-outline-teal px-4 py-2" style="border: 2px solid var(--primary-teal); color: var(--primary-teal); border-radius: 30px; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;">
+                Lihat Semua Berita &amp; Artikel <i class="fas fa-arrow-right ms-2 text-xs"></i>
             </a>
         </div>
     </div>
@@ -357,13 +416,23 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             @forelse($galeri ?? [] as $item)
             @php $imgUrl = $galleryImage($item); @endphp
-            <div class="rounded-2xl overflow-hidden aspect-square bg-slate-200 dark:bg-slate-800 shadow-sm hover:shadow-md transition">
-                @if($imgUrl)
-                    <img src="{{ $imgUrl }}" alt="{{ $item->judul ?? 'Galeri Foto' }}" class="w-full h-full object-cover" loading="lazy">
-                @else
-                    <div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fa-regular fa-image text-2xl"></i></div>
-                @endif
-            </div>
+            @if($imgUrl)
+                <a href="{{ $imgUrl }}" class="group relative rounded-2xl overflow-hidden aspect-square bg-slate-200 dark:bg-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 block" data-lightbox="galeri-beranda" data-title="{{ $item->judul ?? 'Dokumentasi Paroki' }}">
+                    <img src="{{ $imgUrl }}" alt="{{ $item->judul ?? 'Galeri Foto' }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy">
+                    <div class="absolute inset-0 bg-gradient-to-t from-teal-950/80 via-teal-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-end p-3 text-white text-center">
+                        <div class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
+                            <i class="fas fa-search-plus text-base text-white"></i>
+                        </div>
+                        @if(!empty($item->judul))
+                            <p class="text-xs font-semibold line-clamp-1 text-white/95">{{ $item->judul }}</p>
+                        @endif
+                    </div>
+                </a>
+            @else
+                <div class="rounded-2xl overflow-hidden aspect-square bg-slate-200 dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-400">
+                    <i class="far fa-image text-2xl"></i>
+                </div>
+            @endif
             @empty
             <div class="col-span-4 text-center py-8 text-slate-400">
                 <p>Dokumentasi galeri belum tersedia.</p>

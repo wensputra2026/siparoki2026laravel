@@ -1,4 +1,4 @@
-﻿// Dark Mode & Mobile Nav Logic
+// Dark Mode & Mobile Nav Logic
 (function() {
             var navToggle = document.getElementById('navToggle');
             var darkToggle = document.getElementById('darkToggle');
@@ -98,3 +98,40 @@
                 });
             }
         })();
+
+// Konoha Sticky Navbar on Scroll
+(function() {
+    function initStickyNav() {
+        var navbar = document.querySelector('.navbar');
+        var topBar = document.querySelector('.top-bar');
+        if (!navbar) return;
+
+        function updateNav() {
+            var scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            var threshold = topBar ? topBar.offsetHeight : 36;
+
+            if (scrollY > threshold) {
+                if (!navbar.classList.contains('is-sticky')) {
+                    navbar.classList.add('is-sticky');
+                    document.body.style.paddingTop = navbar.offsetHeight + 'px';
+                }
+            } else {
+                if (navbar.classList.contains('is-sticky')) {
+                    navbar.classList.remove('is-sticky');
+                    document.body.style.paddingTop = '0px';
+                }
+            }
+        }
+
+        window.addEventListener('scroll', updateNav, { passive: true });
+        window.addEventListener('resize', updateNav, { passive: true });
+        document.addEventListener('livewire:navigated', updateNav);
+        updateNav();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initStickyNav);
+    } else {
+        initStickyNav();
+    }
+})();

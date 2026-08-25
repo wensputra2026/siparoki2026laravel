@@ -61,7 +61,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/css/konoha-theme.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/konoha-theme.css') }}?v={{ @filemtime(public_path('assets/css/konoha-theme.css')) ?: time() }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/css/lightbox.min.css">
 
     <!-- Local Vendor Icons -->
@@ -91,7 +91,38 @@
 </head>
 <body class="public-portal">
 
-    <header class="header" role="banner">
+    @php
+        $topAlamat = !empty($pengaturan->alamat) ? $pengaturan->alamat : (!empty($alamat) ? $alamat : (!empty($globalProfil->alamat) ? $globalProfil->alamat : 'Benlutu, TTS, NTT'));
+        $topEmail = !empty($pengaturan->email) ? $pengaturan->email : (!empty($email) ? $email : (!empty($globalProfil->email) ? $globalProfil->email : 'info@parokibenlutu.org'));
+        $topTelepon = !empty($pengaturan->telepon) ? $pengaturan->telepon : (!empty($telepon) ? $telepon : (!empty($globalProfil->telepon) ? $globalProfil->telepon : '0812-3456-7890'));
+        $topWa = !empty($pengaturan->whatsapp) ? $pengaturan->whatsapp : (!empty($whatsapp) ? $whatsapp : (!empty($globalProfil->whatsapp) ? $globalProfil->whatsapp : $topTelepon));
+        $topWaClean = preg_replace('/[^0-9]/', '', $topWa);
+    @endphp
+
+    <!-- Top Bar Konoha Style -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 col-12">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start">
+                        <span class="follow-us me-2">Follow Us:</span>
+                        <div class="social-icons">
+                            <a href="{{ $pengaturan->facebook_url ?? '#' }}" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="{{ $pengaturan->instagram_url ?? '#' }}" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="{{ $pengaturan->youtube_url ?? '#' }}" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                            <a href="https://wa.me/{{ $topWaClean }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-12 text-end d-none d-md-block">
+                    <a href="/kontak" class="text-white me-3"><i class="fas fa-map-marker-alt me-1"></i> {{ $topAlamat }}</a>
+                    <a href="mailto:{{ $topEmail }}" class="text-white me-3"><i class="fas fa-envelope me-1"></i> {{ $topEmail }}</a>
+                    <a href="tel:{{ $topTelepon }}" class="text-white"><i class="fas fa-phone me-1"></i> {{ $topTelepon }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
         <!-- Navbar -->
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container">
@@ -210,7 +241,6 @@
                 </div>
             </div>
         </nav>
-    </header>
 
     {{-- MAIN CONTENT --}}
     <main>
@@ -304,6 +334,19 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/js/lightbox.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            if (typeof lightbox !== 'undefined') {
+                lightbox.option({
+                    'resizeDuration': 200,
+                    'wrapAround': true,
+                    'albumLabel': 'Foto %1 dari %2',
+                    'fadeDuration': 250,
+                    'imageFadeDuration': 250
+                });
+            }
+        });
+    </script>
     @if(request()->is('/') || request()->is('kontak*') || request()->is('peta-kapela*'))
         <script src="/vendor/leaflet/leaflet.js"></script>
     @endif

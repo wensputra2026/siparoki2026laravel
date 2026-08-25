@@ -14,20 +14,7 @@ body {
 }
 
 .portal-shell-ready .header {
-    border-top: 4px solid #f59e0b !important;
-    background: rgba(7, 19, 38, 0.96) !important;
-}
-
-.portal-shell-ready .header {
-    will-change: transform, box-shadow;
-}
-
-.portal-shell-ready .header.is-scrolled {
-    box-shadow: 0 18px 42px -20px rgba(2, 8, 23, 0.8) !important;
-}
-
-.portal-shell-ready .header.is-scrolled .header-inner {
-    height: 66px;
+    border: none !important;
 }
 
 .portal-shell-ready main {
