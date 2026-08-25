@@ -102,29 +102,41 @@ Aplikasi ini **Universal Multi-Parish Ready**, artinya dapat digunakan oleh **se
 
 ## 🚀 Panduan Instalasi (Installation Guide)
 
-### Metode 1: Web Installer Wizard (Sangat Mudah & Direkomendasikan)
+SIPAROKI 2026 telah dilengkapi dengan **Interactive Web Installer Wizard** yang langsung aktif secara otomatis saat aplikasi pertama kali dijalankan oleh paroki baru.
 
-Metode ini sangat cocok untuk pengguna **Localhost (Laragon/XAMPP)** maupun **Shared Hosting (cPanel)**:
+---
+
+### 🌟 Metode 1: Web Installer Wizard Otomatis (Plug & Play - Sangat Mudah)
+
+Cocok untuk pengguna **Laragon, XAMPP, Shared Hosting (cPanel), maupun Localhost**:
 
 1. **Unduh / Klon Repositori**:
    ```bash
    git clone https://github.com/wensputra2026/siparoki2026laravel.git
    ```
-   *(Atau unduh file ZIP dari GitHub dan ekstrak ke folder web server Anda, misal `c:/laragon/www/siparoki` atau `public_html`).*
+   *(Atau klik tombol **Code > Download ZIP** di GitHub dan ekstrak ke folder web server Anda, contoh: `C:/laragon/www/siparoki` atau `public_html`).*
 
-2. **Buka Web Installer di Browser**:
-   - Jika di Localhost: Buka `http://localhost/siparoki/install.php` atau `http://127.0.0.1:8000/install.php`
-   - Jika di Hosting/Domain: Buka `http://namadomainparoki.org/install.php`
+2. **Buka Aplikasi di Browser**:
+   - Jika menggunakan Laragon / PHP built-in server: Buka `http://127.0.0.1:8000` atau `http://localhost/siparoki/public`
+   - Jika menggunakan Domain Hosting: Buka `https://namadomainparoki.org`
+   - *Sistem secara otomatis mendeteksi instalasi baru dan langsung mengarahkan Anda ke antarmuka **Web Installer Wizard (`/installer`)**.*
 
-3. **Ikuti 4 Langkah Setup Wizard**:
-   - **Langkah 1 (Pemeriksaan Syarat)**: Installer memeriksa otomatis kesiapan PHP dan folder `storage/`.
-   - **Langkah 2 (Koneksi Database)**: Masukkan Host, Port, Nama DB, Username, dan Password MySQL, lalu klik **"Uji Koneksi & Lanjut"**.
-   - **Langkah 3 (Pilih Keuskupan & Paroki)**: Pilih Keuskupan Anda (se-Indonesia), pilih Dekenat & Paroki Anda, serta tentukan username/password Super Administrator.
-   - **Langkah 4 (Selesai)**: Sistem secara otomatis mengimpor master database, menyusun konfigurasi `.env`, dan mengarahkan Anda ke halaman login.
+3. **Ikuti 5 Langkah Mudah Installer Wizard**:
+   - 🔍 **Langkah 1 (Pemeriksaan Server)**: Sistem memeriksa otomatis versi PHP (`>= 8.2`), 12 ekstensi PHP penting, serta izin tulis folder. Klik **"Lanjut"**.
+   - 🗄️ **Langkah 2 (Konfigurasi Database)**: Masukkan Host (`127.0.0.1`), Port (`3306`), Nama Database (`siparoki_db`), Username (`root`), dan Password MySQL Anda. Klik tombol **"Uji Koneksi Database"** untuk memastikan koneksi berhasil.
+   - ⛪ **Langkah 3 (Pilih Keuskupan & Paroki)**: 
+     - Pilih **Keuskupan** Anda dari daftar master referensi seluruh Keuskupan di Indonesia.
+     - Pilih **Paroki** yang tersedia atau pilih opsi *"+ Paroki Baru"* untuk mengetik nama paroki Anda.
+     - Masukkan nama **Pastor Paroki** dan alamat sekretariat paroki.
+   - 🛡️ **Langkah 4 (Akun Super Admin Pertama)**: Masukkan Nama Lengkap, Username, Email, dan Password untuk akun Super Administrator utama Anda.
+   - 🚀 **Langkah 5 (Mulai Instalasi)**: Klik **"Mulai Instalasi Sekarang"**. Sistem akan otomatis menyusun file konfigurasi `.env`, menjalankan seluruh migrasi database, menetapkan identitas paroki Anda, membuat akun Super Admin, dan mengunci file installer demi keamanan.
+
+4. **Selesai & Siap Digunakan**:
+   Klik tombol **"Masuk ke Panel SIPAROKI"** untuk langsung login ke dashboard administrator paroki Anda!
 
 ---
 
-### Metode 2: Instalasi Manual via Terminal / VPS Linux
+### 💻 Metode 2: Instalasi Manual via Terminal / VPS Linux (Untuk Pengembang)
 
 Untuk instalasi di server VPS (Ubuntu / Debian / CentOS / Nginx / Apache):
 
