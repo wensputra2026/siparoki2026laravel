@@ -179,11 +179,13 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user() ? [
-                    'id'    => $request->user()->id,
-                    'name'  => $request->user()->nama_lengkap ?? $request->user()->name,
-                    'email' => $request->user()->email,
-                    'foto'  => $request->user()->foto ?? null,
-                    'role'  => $request->user()->role->nama_role ?? 'Pengguna',
+                    'id'             => $request->user()->id,
+                    'name'           => $request->user()->nama_lengkap ?? $request->user()->name,
+                    'email'          => $request->user()->email,
+                    'foto'           => $request->user()->foto ?? null,
+                    'role_id'        => (int) ($request->user()->role_id ?? 0),
+                    'role'           => $request->user()->role?->nama_role ?? 'Pengguna',
+                    'is_super_admin' => (int) ($request->user()->role_id ?? 0) === 1 || in_array(strtolower(preg_replace('/[^a-z]/', '', $request->user()->role?->nama_role ?? '')), ['superadmin', 'superadministrator'], true),
                 ] : null,
             ],
             'scopeOptions' => $scopeOptions,
