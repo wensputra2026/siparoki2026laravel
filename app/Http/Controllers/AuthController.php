@@ -309,6 +309,10 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        if ($request->header('X-Inertia')) {
+            return Inertia::location(url('/login'));
+        }
+
         return redirect('/login')->with('status', 'Anda telah berhasil keluar dari sistem.');
     }
 }

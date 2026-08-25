@@ -62,7 +62,7 @@ watch(
 
 const confirmLogout = () => {
     showLogoutModal.value = false;
-    router.post('/logout');
+    window.location.href = '/logout';
 };
 
 const userAvatar = computed(() => {
