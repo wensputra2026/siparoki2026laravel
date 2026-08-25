@@ -12,10 +12,23 @@ export const RoleMenuKey = Symbol('roleMenu');
 
 export function useRoleMenu(props) {
     const page = usePage();
-    const isSidebarOpen = ref(true);
+    const layoutStorageKey = 'siparoki.backend.layout';
+
+    // Baca state layout SEBELUM paint agar lebar sidebar tidak berubah
+    // mendadak saat mount (penyebab halaman "lompat" saat refresh).
+    const initialLayout = (() => {
+        try {
+            return JSON.parse(sessionStorage.getItem(layoutStorageKey) || '{}');
+        } catch (e) {
+            return {};
+        }
+    })();
+
+    const isSidebarOpen = ref(
+        typeof initialLayout.isSidebarOpen === 'boolean' ? initialLayout.isSidebarOpen : true
+    );
     const isMobileOpen = ref(false);
     const showLogoutModal = ref(false);
-    const layoutStorageKey = 'siparoki.backend.layout';
 
     const toggleSidebar = () => {
         isSidebarOpen.value = !isSidebarOpen.value;
@@ -163,6 +176,7 @@ export function useRoleMenu(props) {
         'Pengaturan Web': false,
         'Wilayah Paroki': false,
         'Wilayah & KUB': false,
+        ...(initialLayout.openGroups && typeof initialLayout.openGroups === 'object' ? initialLayout.openGroups : {}),
     });
 
     const toggleGroup = (groupName) => {
@@ -230,49 +244,24 @@ export function useRoleMenu(props) {
         return current === rolePrefix.value;
     };
 
-    const scrollToActiveItem = () => {
+    const syncActiveGroup = () => {
         if (isDashboardPage()) {
             closeAllGroups();
+            return;
         }
 
         currentMenuTree.value.forEach((section) => {
             section.menus.forEach((menu) => {
-                if (menu.submenus) {
-                    if (isGroupActive(menu)) {
-                        openGroups.value[menu.name] = true;
-                    }
+                if (menu.submenus && isGroupActive(menu)) {
+                    openGroups.value[menu.name] = true;
                 }
             });
         });
-
-        setTimeout(() => {
-            const activeLink = document.querySelector('aside a[data-active="true"]');
-            const scrollContainer = activeLink?.closest('.overflow-y-auto');
-            if (activeLink && scrollContainer) {
-                const containerRect = scrollContainer.getBoundingClientRect();
-                const linkRect = activeLink.getBoundingClientRect();
-                if (linkRect.top < containerRect.top || linkRect.bottom > containerRect.bottom) {
-                    scrollContainer.scrollTop = Math.max(0, (activeLink.offsetTop - scrollContainer.offsetTop) - 40);
-                }
-            }
-        }, 50);
     };
 
-    // Automatically expand and scroll to active menu on load & page transitions
+    // Synchronize active group on initial mount & route transitions
     onMounted(() => {
-        try {
-            const saved = JSON.parse(sessionStorage.getItem(layoutStorageKey) || '{}');
-            if (typeof saved.isSidebarOpen === 'boolean') {
-                isSidebarOpen.value = saved.isSidebarOpen;
-            }
-            if (saved.openGroups && typeof saved.openGroups === 'object') {
-                openGroups.value = { ...openGroups.value, ...saved.openGroups };
-            }
-        } catch (error) {
-            sessionStorage.removeItem(layoutStorageKey);
-        }
-
-        scrollToActiveItem();
+        syncActiveGroup();
     });
 
     watch(
@@ -293,7 +282,7 @@ export function useRoleMenu(props) {
     watch(
         () => [page.url, activeRole.value],
         () => {
-            scrollToActiveItem();
+            syncActiveGroup();
         }
     );
 
