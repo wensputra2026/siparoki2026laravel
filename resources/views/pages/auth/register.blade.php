@@ -257,13 +257,13 @@
         $(document).ready(function() {
             // Initialize Select2 on all three dropdowns
             $('#select_wilayah').select2({
-                placeholder: '-- Semua Wilayah --',
+                placeholder: '-- Pilih Wilayah --',
                 allowClear: true,
                 width: '100%'
             });
 
             $('#select_kapela').select2({
-                placeholder: '-- Semua Stasi / Kapela --',
+                placeholder: '-- Pilih Stasi / Kapela --',
                 allowClear: true,
                 width: '100%'
             });
@@ -287,15 +287,15 @@
                 }
             });
 
+            let isSyncing = false;
+
             function filterKubSelect2() {
                 const wId = $('#select_wilayah').val();
                 const kId = $('#select_kapela').val();
                 const currentKubVal = $('#select_kub').val();
 
                 let filtered = allKubOptions;
-                if (wId && kId) {
-                    filtered = allKubOptions.filter(k => k.wilayah == wId || k.kapela == kId);
-                } else if (wId) {
+                if (wId) {
                     filtered = allKubOptions.filter(k => k.wilayah == wId);
                 } else if (kId) {
                     filtered = allKubOptions.filter(k => k.kapela == kId);
@@ -312,12 +312,47 @@
             }
 
             $('#select_wilayah').on('change', function() {
+                if (isSyncing) return;
+                const wId = $(this).val();
+
+                if (wId) {
+                    // Wilayah dipilih -> Kapela dikosongkan dan dinonaktifkan
+                    isSyncing = true;
+                    $('#select_kapela').val('').prop('disabled', true).trigger('change.select2');
+                    isSyncing = false;
+                } else {
+                    // Wilayah dihapus -> Kapela diaktifkan kembali
+                    $('#select_kapela').prop('disabled', false).trigger('change.select2');
+                }
+
                 filterKubSelect2();
             });
 
             $('#select_kapela').on('change', function() {
+                if (isSyncing) return;
+                const kId = $(this).val();
+
+                if (kId) {
+                    // Kapela dipilih -> Wilayah dikosongkan dan dinonaktifkan
+                    isSyncing = true;
+                    $('#select_wilayah').val('').prop('disabled', true).trigger('change.select2');
+                    isSyncing = false;
+                } else {
+                    // Kapela dihapus -> Wilayah diaktifkan kembali
+                    $('#select_wilayah').prop('disabled', false).trigger('change.select2');
+                }
+
                 filterKubSelect2();
             });
+
+            // Initial check if old values exist
+            if ($('#select_wilayah').val()) {
+                $('#select_kapela').prop('disabled', true).trigger('change.select2');
+                filterKubSelect2();
+            } else if ($('#select_kapela').val()) {
+                $('#select_wilayah').prop('disabled', true).trigger('change.select2');
+                filterKubSelect2();
+            }
         });
     </script>
 </body>

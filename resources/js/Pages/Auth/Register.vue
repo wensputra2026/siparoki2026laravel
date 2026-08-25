@@ -41,13 +41,31 @@ const form = useForm({
     password_confirmation: '',
 });
 
+const handleWilayahChange = (val) => {
+    if (val) {
+        form.kapela_id = '';
+    }
+    form.kub_id = '';
+};
+
+const handleKapelaChange = (val) => {
+    if (val) {
+        form.wilayah_id = '';
+    }
+    form.kub_id = '';
+};
+
+const isWilayahDisabled = computed(() => !!form.kapela_id);
+const isKapelaDisabled = computed(() => !!form.wilayah_id);
+
 const filteredKubs = computed(() => {
-    if (!form.wilayah_id && !form.kapela_id) return props.kubs;
-    return props.kubs.filter((k) => {
-        if (form.wilayah_id && k.wilayah_id && k.wilayah_id == form.wilayah_id) return true;
-        if (form.kapela_id && k.kapela_id && k.kapela_id == form.kapela_id) return true;
-        return !k.wilayah_id && !k.kapela_id;
-    });
+    if (form.wilayah_id) {
+        return props.kubs.filter((k) => k.wilayah_id == form.wilayah_id);
+    }
+    if (form.kapela_id) {
+        return props.kubs.filter((k) => k.kapela_id == form.kapela_id);
+    }
+    return props.kubs;
 });
 
 const submit = () => {
@@ -169,30 +187,38 @@ const submit = () => {
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Wilayah</label>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center justify-between">
+                                    <span>Wilayah</span>
+                                    <span v-if="isWilayahDisabled" class="text-[9px] text-slate-400 font-normal italic">(Stasi aktif)</span>
+                                </label>
                                 <SearchableSelect
                                     v-model="form.wilayah_id"
                                     :options="wilayahs"
+                                    :disabled="isWilayahDisabled"
                                     value-key="id"
                                     label-key="nama_wilayah"
-                                    placeholder="-- Wilayah --"
+                                    placeholder="-- Pilih Wilayah --"
                                     search-placeholder="Cari wilayah..."
                                     icon="fa-location-dot"
-                                    @change="form.kub_id = ''"
+                                    @change="handleWilayahChange"
                                 />
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Stasi / Kapela</label>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center justify-between">
+                                    <span>Stasi / Kapela</span>
+                                    <span v-if="isKapelaDisabled" class="text-[9px] text-slate-400 font-normal italic">(Wilayah aktif)</span>
+                                </label>
                                 <SearchableSelect
                                     v-model="form.kapela_id"
                                     :options="kapelas"
+                                    :disabled="isKapelaDisabled"
                                     value-key="id"
                                     label-key="nama_kapela"
-                                    placeholder="-- Stasi / Kapela --"
+                                    placeholder="-- Pilih Stasi / Kapela --"
                                     search-placeholder="Cari stasi..."
                                     icon="fa-church"
-                                    @change="form.kub_id = ''"
+                                    @change="handleKapelaChange"
                                 />
                             </div>
 
