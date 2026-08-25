@@ -163,7 +163,7 @@ const roleMenus = {
             section: 'Dashboard',
             menus: [
                 { name: 'Dashboard', href: '/v2/dashboard', icon: 'fa-gauge-high' },
-                { name: 'Panduan Hak Akses (RBAC)', href: '/v2/panduan-hak-akses', icon: 'fa-book-open' },
+                { name: 'Panduan', href: '/v2/panduan-hak-akses', icon: 'fa-book-open' },
             ],
         },
         {
@@ -175,7 +175,8 @@ const roleMenus = {
                     submenus: [
                         { name: 'Keuskupan', href: '/v2/keuskupan', icon: 'fa-building-columns' },
                         { name: 'Dekenat', href: '/v2/dekenat', icon: 'fa-building' },
-                        { name: 'Kuasi Paroki', href: '/v2/kuasi-paroki', icon: 'fa-place-of-worship' },
+                        { name: 'Paroki', href: '/v2/paroki', icon: 'fa-place-of-worship' },
+                        { name: 'Kuasi Paroki', href: '/v2/kuasi-paroki', icon: 'fa-cross' },
                         { name: 'Stasi / Kapela', href: '/v2/kapela', icon: 'fa-map-location-dot' },
                         { name: 'Wilayah', href: '/v2/wilayah', icon: 'fa-compass' },
                         { name: 'KUB', href: '/v2/kub', icon: 'fa-people-group' },
@@ -194,7 +195,7 @@ const roleMenus = {
                 {
                     name: 'Data Referensi',
                     icon: 'fa-tags',
-                    href: '/admin/master-referensi',
+                    href: '/v2/wilayah',
                 },
             ],
         },
@@ -209,33 +210,42 @@ const roleMenus = {
                         { name: 'Direktori Katekis', href: '/v2/direktori-katekis', icon: 'fa-book-open-reader' },
                         { name: 'Direktori Misdinar', href: '/v2/direktori-misdinar', icon: 'fa-hands-praying' },
                         { name: 'Riwayat Pastor', href: '/v2/riwayat-pastor', icon: 'fa-user-tie' },
-                        { name: 'Kronik Paroki', href: '/v2/kronik', icon: 'fa-timeline' },
+                        { name: 'Kronik Paroki', href: '/v2/kronik-paroki', icon: 'fa-timeline' },
                         { name: 'Peran Kategorial', href: '/v2/peran-kategorial', icon: 'fa-layer-group' },
                         { name: 'Anggota Kategorial', href: '/v2/anggota-kategorial', icon: 'fa-user-check' },
-                        { name: 'Jadwal Misa', href: '/v2/jadwal-misa', icon: 'fa-calendar-check' },
                     ],
                 },
                 {
-                    name: 'Kartu Keluarga (KK)',
+                    name: 'Jadwal Misa',
+                    icon: 'fa-calendar-check',
+                    submenus: [
+                        { name: 'Daftar Jadwal Misa', href: '/v2/jadwal-misa', icon: 'fa-calendar-day' },
+                        { name: 'Master Pastor & Kontak', href: '/v2/master-pastor', icon: 'fa-address-book' },
+                        { name: 'Notifikasi WhatsApp OTP', href: '/v2/pengaturan-otp', icon: 'fa-comment-sms' },
+                        { name: 'Pengaturan Jadwal', href: '/v2/pengaturan-aplikasi', icon: 'fa-gear' },
+                    ],
+                },
+                {
+                    name: 'Data KK',
                     icon: 'fa-house-chimney-user',
-                    href: '/v2/kk-katolik',
-                },
-                {
-                    name: 'Data Umat / Jiwa',
-                    icon: 'fa-users',
-                    href: '/v2/umat',
-                },
-                {
-                    name: 'Demografi & Statistik',
-                    icon: 'fa-chart-pie',
-                    href: '/v2/statistik',
+                    submenus: [
+                        { name: 'KK Katolik', href: '/v2/kk-katolik', icon: 'fa-credit-card' },
+                        { name: 'Mutasi Massal KUB', href: '/v2/kk-katolik', icon: 'fa-arrows-split-up-and-left' },
+                        { name: 'Data Keluarga', href: '/v2/kk-katolik', icon: 'fa-users-rectangle' },
+                        { name: 'Data Umat / Jiwa', href: '/v2/umat', icon: 'fa-user' },
+                        { name: 'Demografi & Statistik', href: '/v2/statistik', icon: 'fa-chart-pie' },
+                    ],
                 },
                 {
                     name: 'Data Sakramen',
                     icon: 'fa-book-bible',
                     submenus: [
-                        { name: 'Buku Sakramen', href: '/v2/sakramen', icon: 'fa-book-bookmark' },
+                        { name: 'Buku Besar Sakramen', href: '/v2/sakramen', icon: 'fa-book-bookmark' },
+                        { name: 'Pemeriksaan Kanonikal', href: '/v2/sakramen', icon: 'fa-stamp' },
+                        { name: 'Verifikasi Cetak Surat', href: '/v2/sakramen', icon: 'fa-print' },
                         { name: 'Pengajuan Sakramen', href: '/v2/pengajuan-sakramen', icon: 'fa-file-signature' },
+                        { name: 'Katekumen & Pembinaan', href: '/v2/pengajuan-sakramen', icon: 'fa-graduation-cap' },
+                        { name: 'Pengaturan Pembayaran', href: '/v2/metode-pembayaran', icon: 'fa-qrcode' },
                     ],
                 },
                 {
@@ -264,7 +274,7 @@ const roleMenus = {
                 {
                     name: 'Rapat & Notulen',
                     icon: 'fa-handshake',
-                    href: '/v2/rapat-notulen',
+                    href: '/v2/rapat',
                 },
             ],
         },
@@ -272,19 +282,15 @@ const roleMenus = {
             section: 'Keuangan & Aset',
             menus: [
                 {
-                    name: 'Iuran & Persembahan',
+                    name: 'Keuangan & Iuran',
                     icon: 'fa-money-bill-transfer',
                     submenus: [
                         { name: 'Jenis Iuran', href: '/v2/jenis-iuran', icon: 'fa-tags' },
                         { name: 'Iuran Umat', href: '/v2/iuran', icon: 'fa-receipt' },
                         { name: 'Kolekte Misa', href: '/v2/kolekte', icon: 'fa-hand-holding-dollar' },
                         { name: 'Intensi Misa', href: '/v2/intensi-misa', icon: 'fa-heart' },
+                        { name: 'Keuangan Paroki', href: '/v2/keuangan', icon: 'fa-vault' },
                     ],
-                },
-                {
-                    name: 'Kas & Transaksi Keuangan',
-                    icon: 'fa-vault',
-                    href: '/v2/keuangan',
                 },
                 {
                     name: 'Aset & Inventaris',
@@ -301,13 +307,10 @@ const roleMenus = {
                     icon: 'fa-newspaper',
                     submenus: [
                         { name: 'Kategori Konten', href: '/v2/kategori-konten', icon: 'fa-folder-open' },
-                        { name: 'Berita & Artikel', href: '/v2/konten', icon: 'fa-newspaper' },
-                        { name: 'Komentar Artikel', href: '/v2/komentar-artikel', icon: 'fa-comments' },
-                        { name: 'Halaman Website', href: '/v2/konten?tipe=Halaman', icon: 'fa-file-lines' },
+                        { name: 'Berita / Artikel', href: '/v2/konten', icon: 'fa-newspaper' },
                         { name: 'Agenda Kegiatan', href: '/v2/kegiatan', icon: 'fa-calendar-check' },
-                        { name: 'Pengumuman Paroki', href: '/v2/pengumuman', icon: 'fa-bullhorn' },
-                        { name: 'Renungan Harian', href: '/v2/renungan', icon: 'fa-book-open' },
                         { name: 'Galeri Foto', href: '/v2/galeri', icon: 'fa-images' },
+                        { name: 'Sambutan Pastor', href: '/v2/profil-paroki', icon: 'fa-comment-dots' },
                         { name: 'Pusat Unduhan', href: '/v2/download', icon: 'fa-cloud-arrow-down' },
                     ],
                 },
@@ -315,11 +318,15 @@ const roleMenus = {
                     name: 'Pengaturan Web',
                     icon: 'fa-globe',
                     submenus: [
-                        { name: 'Pengaturan Web (Hub)', href: '/v2/pengaturan-aplikasi', icon: 'fa-sliders' },
-                        { name: 'Video Header Beranda', href: '/v2/video-header', icon: 'fa-youtube' },
-                        { name: 'Banner Slider', href: '/v2/slider', icon: 'fa-images' },
-                        { name: 'Mode Maintenance', href: '/v2/pengaturan/maintenance', icon: 'fa-screwdriver-wrench' },
-                        { name: 'Security & Keamanan', href: '/v2/security-settings', icon: 'fa-shield-halved' },
+                        { name: 'Identitas Paroki', href: '/v2/pengaturan-aplikasi', icon: 'fa-sliders' },
+                        { name: 'Widget Web', href: '/v2/widget', icon: 'fa-table-cells-large' },
+                        { name: 'Meta Tag & SEO', href: '/v2/pengaturan-aplikasi', icon: 'fa-magnifying-glass' },
+                        { name: 'Menu Website', href: '/v2/menu', icon: 'fa-bars' },
+                        { name: 'Banner Slider', href: '/v2/slider', icon: 'fa-panorama' },
+                        { name: 'Video Background', href: '/v2/video-header', icon: 'fa-video' },
+                        { name: 'Mode Maintenance', href: '/v2/maintenance', icon: 'fa-screwdriver-wrench' },
+                        { name: 'Pengaturan OTP WA', href: '/v2/pengaturan-otp', icon: 'fa-comments' },
+                        { name: 'Pembayaran / QRIS', href: '/v2/metode-pembayaran', icon: 'fa-qrcode' },
                     ],
                 },
             ],
@@ -330,142 +337,10 @@ const roleMenus = {
                 { name: 'Profil Paroki', href: '/v2/profil-paroki', icon: 'fa-church' },
                 { name: 'Manajemen User', href: '/v2/user', icon: 'fa-user-gear' },
                 { name: 'Role & Permission', href: '/v2/role', icon: 'fa-lock' },
-                { name: 'Backup Database', href: '/v2/backup-database', icon: 'fa-database' },
+                { name: 'Security Center', href: '/v2/security-settings', icon: 'fa-shield-halved' },
+                { name: 'Backup & Restore', href: '/v2/backup-database', icon: 'fa-database' },
                 { name: 'Profil Saya', href: '/v2/profil-saya', icon: 'fa-circle-user' },
-            ],
-        },
-    ],
-    'Admin Paroki': [
-        {
-            section: 'Dashboard',
-            menus: [
-                { name: 'Dashboard', href: '/v2/dashboard', icon: 'fa-gauge-high' },
-                { name: 'Panduan Hak Akses (RBAC)', href: '/v2/panduan-hak-akses', icon: 'fa-book-open' },
-            ],
-        },
-        {
-            section: 'Wilayah Paroki',
-            menus: [
-                {
-                    name: 'Stasi & KUB',
-                    icon: 'fa-church',
-                    submenus: [
-                        { name: 'Stasi / Kapela', href: '/v2/kapela', icon: 'fa-map-location-dot' },
-                        { name: 'Wilayah', href: '/v2/wilayah', icon: 'fa-compass' },
-                        { name: 'KUB', href: '/v2/kub', icon: 'fa-people-group' },
-                    ],
-                },
-                { name: 'Data Referensi', href: '/admin/master-referensi', icon: 'fa-tags' },
-            ],
-        },
-        {
-            section: 'Umat & Pelayanan',
-            menus: [
-                {
-                    name: 'Pelayanan Paroki',
-                    icon: 'fa-hands-holding-child',
-                    submenus: [
-                        { name: 'Direktori DPP', href: '/v2/direktori-dpp', icon: 'fa-users-gear' },
-                        { name: 'Direktori Katekis', href: '/v2/direktori-katekis', icon: 'fa-book-open-reader' },
-                        { name: 'Direktori Misdinar', href: '/v2/direktori-misdinar', icon: 'fa-hands-praying' },
-                        { name: 'Riwayat Pastor', href: '/v2/riwayat-pastor', icon: 'fa-user-tie' },
-                        { name: 'Kronik Paroki', href: '/v2/kronik', icon: 'fa-timeline' },
-                        { name: 'Peran Kategorial', href: '/v2/peran-kategorial', icon: 'fa-layer-group' },
-                        { name: 'Anggota Kategorial', href: '/v2/anggota-kategorial', icon: 'fa-user-check' },
-                        { name: 'Jadwal Misa', href: '/v2/jadwal-misa', icon: 'fa-calendar-check' },
-                    ],
-                },
-                { name: 'Kartu Keluarga (KK)', href: '/v2/kk-katolik', icon: 'fa-house-chimney-user' },
-                { name: 'Data Umat / Jiwa', href: '/v2/umat', icon: 'fa-users' },
-                { name: 'Demografi & Statistik', href: '/v2/statistik', icon: 'fa-chart-pie' },
-                {
-                    name: 'Data Sakramen',
-                    icon: 'fa-book-bible',
-                    submenus: [
-                        { name: 'Buku Sakramen', href: '/v2/sakramen', icon: 'fa-book-bookmark' },
-                        { name: 'Pengajuan Sakramen', href: '/v2/pengajuan-sakramen', icon: 'fa-file-signature' },
-                    ],
-                },
-                { name: 'Lapak & Toko', href: '/v2/lapak-produk', icon: 'fa-shop' },
-            ],
-        },
-        {
-            section: 'Sekretariat Paroki',
-            menus: [
-                {
-                    name: 'Registrasi Surat',
-                    icon: 'fa-envelope-open-text',
-                    submenus: [
-                        { name: 'Surat Masuk', href: '/v2/surat-masuk', icon: 'fa-inbox' },
-                        { name: 'Surat Keluar', href: '/v2/surat-keluar', icon: 'fa-paper-plane' },
-                    ],
-                },
-                { name: 'Arsip Digital Paroki', href: '/v2/arsip-digital', icon: 'fa-folder-tree' },
-                { name: 'Rapat & Notulen', href: '/v2/rapat-notulen', icon: 'fa-handshake' },
-            ],
-        },
-        {
-            section: 'Keuangan & Aset',
-            menus: [
-                {
-                    name: 'Iuran & Persembahan',
-                    icon: 'fa-money-bill-transfer',
-                    submenus: [
-                        { name: 'Jenis Iuran', href: '/v2/jenis-iuran', icon: 'fa-tags' },
-                        { name: 'Iuran Umat', href: '/v2/iuran', icon: 'fa-receipt' },
-                        { name: 'Kolekte Misa', href: '/v2/kolekte', icon: 'fa-hand-holding-dollar' },
-                        { name: 'Intensi Misa', href: '/v2/intensi-misa', icon: 'fa-heart' },
-                    ],
-                },
-                {
-                    name: 'Kas & Transaksi Keuangan',
-                    icon: 'fa-vault',
-                    href: '/v2/keuangan',
-                },
-                {
-                    name: 'Aset & Inventaris',
-                    icon: 'fa-boxes-stacked',
-                    href: '/v2/aset',
-                },
-            ],
-        },
-        {
-            section: 'Website Paroki',
-            menus: [
-                {
-                    name: 'Konten Website',
-                    icon: 'fa-newspaper',
-                    submenus: [
-                        { name: 'Kategori Konten', href: '/v2/kategori-konten', icon: 'fa-folder-open' },
-                        { name: 'Berita & Artikel', href: '/v2/konten', icon: 'fa-newspaper' },
-                        { name: 'Komentar Artikel', href: '/v2/komentar-artikel', icon: 'fa-comments' },
-                        { name: 'Halaman Website', href: '/v2/konten?tipe=Halaman', icon: 'fa-file-lines' },
-                        { name: 'Agenda Kegiatan', href: '/v2/kegiatan', icon: 'fa-calendar-check' },
-                        { name: 'Pengumuman Paroki', href: '/v2/pengumuman', icon: 'fa-bullhorn' },
-                        { name: 'Renungan Harian', href: '/v2/renungan', icon: 'fa-book-open' },
-                        { name: 'Galeri Foto', href: '/v2/galeri', icon: 'fa-images' },
-                        { name: 'Pusat Unduhan', href: '/v2/download', icon: 'fa-cloud-arrow-down' },
-                    ],
-                },
-                {
-                    name: 'Pengaturan Web',
-                    icon: 'fa-globe',
-                    submenus: [
-                        { name: 'Pengaturan Web (Hub)', href: '/v2/pengaturan-aplikasi', icon: 'fa-sliders' },
-                        { name: 'Video Header Beranda', href: '/v2/video-header', icon: 'fa-youtube' },
-                        { name: 'Banner Slider', href: '/v2/slider', icon: 'fa-images' },
-                        { name: 'Mode Maintenance', href: '/v2/pengaturan/maintenance', icon: 'fa-screwdriver-wrench' },
-                        { name: 'Security & Keamanan', href: '/v2/security-settings', icon: 'fa-shield-halved' },
-                    ],
-                },
-            ],
-        },
-        {
-            section: 'Sistem & Aplikasi',
-            menus: [
-                { name: 'Profil Paroki', href: '/v2/profil-paroki', icon: 'fa-church' },
-                { name: 'Manajemen User', href: '/v2/user', icon: 'fa-user-gear' },
-                { name: 'Profil Saya', href: '/v2/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -473,8 +348,8 @@ const roleMenus = {
         {
             section: 'Dashboard',
             menus: [
-                { name: 'Dashboard', href: '/v2/dashboard', icon: 'fa-gauge-high' },
-                { name: 'Panduan Hak Akses (RBAC)', href: '/v2/panduan-hak-akses', icon: 'fa-book-open' },
+                { name: 'Dashboard', href: '/pastor/dashboard', icon: 'fa-gauge-high' },
+                { name: 'Panduan', href: '/pastor/panduan-hak-akses', icon: 'fa-book-open' },
             ],
         },
         {
@@ -484,70 +359,236 @@ const roleMenus = {
                     name: 'Pelayanan Paroki',
                     icon: 'fa-hands-holding-child',
                     submenus: [
-                        { name: 'Direktori DPP', href: '/v2/direktori-dpp', icon: 'fa-users-gear' },
-                        { name: 'Direktori Katekis', href: '/v2/direktori-katekis', icon: 'fa-book-open-reader' },
-                        { name: 'Direktori Misdinar', href: '/v2/direktori-misdinar', icon: 'fa-hands-praying' },
-                        { name: 'Riwayat Pastor', href: '/v2/riwayat-pastor', icon: 'fa-user-tie' },
-                        { name: 'Kronik Paroki', href: '/v2/kronik', icon: 'fa-timeline' },
-                        { name: 'Peran Kategorial', href: '/v2/peran-kategorial', icon: 'fa-layer-group' },
-                        { name: 'Anggota Kategorial', href: '/v2/anggota-kategorial', icon: 'fa-user-check' },
-                        { name: 'Jadwal Misa', href: '/v2/jadwal-misa', icon: 'fa-calendar-check' },
+                        { name: 'Direktori DPP', href: '/pastor/direktori-dpp', icon: 'fa-users-gear' },
+                        { name: 'Direktori Katekis', href: '/pastor/direktori-katekis', icon: 'fa-book-open-reader' },
+                        { name: 'Direktori Misdinar', href: '/pastor/direktori-misdinar', icon: 'fa-hands-praying' },
+                        { name: 'Riwayat Pastor', href: '/pastor/riwayat-pastor', icon: 'fa-user-tie' },
+                        { name: 'Kronik Paroki', href: '/pastor/kronik-paroki', icon: 'fa-timeline' },
+                        { name: 'Jadwal Misa', href: '/pastor/jadwal-misa', icon: 'fa-calendar-check' },
+                        { name: 'Peran & Anggota Kategorial', href: '/pastor/anggota-kategorial', icon: 'fa-user-check' },
                     ],
                 },
-                { name: 'Kartu Keluarga (KK)', href: '/v2/kk-katolik', icon: 'fa-house-chimney-user' },
-                { name: 'Data Umat / Jiwa', href: '/v2/umat', icon: 'fa-users' },
-                { name: 'Demografi & Statistik', href: '/v2/statistik', icon: 'fa-chart-pie' },
-                {
-                    name: 'Data Sakramen',
-                    icon: 'fa-book-bible',
-                    submenus: [
-                        { name: 'Buku Sakramen', href: '/v2/sakramen', icon: 'fa-book-bookmark' },
-                        { name: 'Pengajuan Sakramen', href: '/v2/pengajuan-sakramen', icon: 'fa-file-signature' },
-                    ],
-                },
+                { name: 'KK Katolik', href: '/pastor/kk-katolik', icon: 'fa-credit-card' },
+                { name: 'Data Keluarga', href: '/pastor/kk-katolik', icon: 'fa-users-rectangle' },
+                { name: 'Data Umat / Jiwa', href: '/pastor/umat', icon: 'fa-user' },
+                { name: 'Demografi & Statistik', href: '/pastor/statistik', icon: 'fa-chart-pie' },
+                { name: 'Data Sakramen', href: '/pastor/sakramen', icon: 'fa-book-bible' },
+                { name: 'Verifikasi Cetak Sakramen', href: '/pastor/sakramen', icon: 'fa-print' },
+                { name: 'Pengajuan Sakramen', href: '/pastor/pengajuan-sakramen', icon: 'fa-file-signature' },
+                { name: 'Katekumen & Pembinaan', href: '/pastor/pengajuan-sakramen', icon: 'fa-graduation-cap' },
             ],
         },
         {
             section: 'Keuangan & Aset',
             menus: [
                 {
-                    name: 'Iuran & Persembahan',
+                    name: 'Keuangan & Iuran',
                     icon: 'fa-money-bill-transfer',
                     submenus: [
-                        { name: 'Jenis Iuran', href: '/v2/jenis-iuran', icon: 'fa-tags' },
-                        { name: 'Iuran Umat', href: '/v2/iuran', icon: 'fa-receipt' },
-                        { name: 'Kolekte Misa', href: '/v2/kolekte', icon: 'fa-hand-holding-dollar' },
-                        { name: 'Intensi Misa', href: '/v2/intensi-misa', icon: 'fa-heart' },
+                        { name: 'Iuran Umat', href: '/pastor/iuran', icon: 'fa-receipt' },
+                        { name: 'Kolekte', href: '/pastor/kolekte', icon: 'fa-hand-holding-dollar' },
+                        { name: 'Intensi', href: '/pastor/intensi-misa', icon: 'fa-heart' },
+                        { name: 'Keuangan Paroki', href: '/pastor/keuangan', icon: 'fa-vault' },
                     ],
                 },
-                {
-                    name: 'Kas & Transaksi Keuangan',
-                    icon: 'fa-vault',
-                    href: '/v2/keuangan',
-                },
-                {
-                    name: 'Aset & Inventaris',
-                    icon: 'fa-boxes-stacked',
-                    href: '/v2/aset',
-                },
+                { name: 'Aset & Inventaris', href: '/pastor/aset', icon: 'fa-boxes-stacked' },
             ],
         },
         {
             section: 'Warta & Konten',
             menus: [
-                { name: 'Kategori Konten', href: '/v2/kategori-konten', icon: 'fa-folder-open' },
-                { name: 'Berita & Artikel', href: '/v2/konten', icon: 'fa-newspaper' },
-                { name: 'Komentar Artikel', href: '/v2/komentar-artikel', icon: 'fa-comments' },
-                { name: 'Halaman Website', href: '/v2/konten?tipe=Halaman', icon: 'fa-file-lines' },
-                { name: 'Agenda Kegiatan', href: '/v2/kegiatan', icon: 'fa-calendar-check' },
-                { name: 'Pengumuman Paroki', href: '/v2/pengumuman', icon: 'fa-bullhorn' },
-                { name: 'Renungan Harian', href: '/v2/renungan', icon: 'fa-book-open' },
+                { name: 'Berita & Artikel', href: '/pastor/konten', icon: 'fa-newspaper' },
+                { name: 'Sambutan Pastor', href: '/pastor/profil-paroki', icon: 'fa-comment-dots' },
+                { name: 'Agenda Kegiatan', href: '/pastor/kegiatan', icon: 'fa-calendar-check' },
             ],
         },
         {
             section: 'Akun Saya',
             menus: [
-                { name: 'Profil Saya', href: '/v2/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Profil Saya', href: '/pastor/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
+            ],
+        },
+    ],
+    'Admin Paroki': [
+        {
+            section: 'Dashboard',
+            menus: [
+                { name: 'Dashboard', href: '/paroki/dashboard', icon: 'fa-gauge-high' },
+                { name: 'Panduan', href: '/paroki/panduan-hak-akses', icon: 'fa-book-open' },
+            ],
+        },
+        {
+            section: 'Wilayah & Referensi',
+            menus: [
+                {
+                    name: 'Data Gerejawi',
+                    icon: 'fa-church',
+                    submenus: [
+                        { name: 'Keuskupan', href: '/paroki/keuskupan', icon: 'fa-building-columns' },
+                        { name: 'Dekenat', href: '/paroki/dekenat', icon: 'fa-building' },
+                        { name: 'Paroki', href: '/paroki/paroki', icon: 'fa-place-of-worship' },
+                        { name: 'Kuasi Paroki', href: '/paroki/kuasi-paroki', icon: 'fa-cross' },
+                        { name: 'Stasi / Kapela', href: '/paroki/kapela', icon: 'fa-map-location-dot' },
+                        { name: 'Wilayah', href: '/paroki/wilayah', icon: 'fa-compass' },
+                        { name: 'KUB', href: '/paroki/kub', icon: 'fa-people-group' },
+                    ],
+                },
+                {
+                    name: 'Wilayah Sipil',
+                    icon: 'fa-map',
+                    submenus: [
+                        { name: 'Provinsi', href: '/paroki/provinsi', icon: 'fa-map' },
+                        { name: 'Kabupaten / Kota', href: '/paroki/kabupaten', icon: 'fa-city' },
+                        { name: 'Kecamatan', href: '/paroki/kecamatan', icon: 'fa-map-pin' },
+                        { name: 'Desa / Kelurahan', href: '/paroki/desa-kelurahan', icon: 'fa-location-dot' },
+                    ],
+                },
+                { name: 'Data Referensi', href: '/paroki/wilayah', icon: 'fa-tags' },
+            ],
+        },
+        {
+            section: 'Umat & Pelayanan',
+            menus: [
+                {
+                    name: 'Pelayanan Paroki',
+                    icon: 'fa-hands-holding-child',
+                    submenus: [
+                        { name: 'Direktori DPP', href: '/paroki/direktori-dpp', icon: 'fa-users-gear' },
+                        { name: 'Direktori Katekis', href: '/paroki/direktori-katekis', icon: 'fa-book-open-reader' },
+                        { name: 'Direktori Misdinar', href: '/paroki/direktori-misdinar', icon: 'fa-hands-praying' },
+                        { name: 'Riwayat Pastor', href: '/paroki/riwayat-pastor', icon: 'fa-user-tie' },
+                        { name: 'Kronik Paroki', href: '/paroki/kronik-paroki', icon: 'fa-timeline' },
+                        { name: 'Peran & Anggota Kategorial', href: '/paroki/anggota-kategorial', icon: 'fa-user-check' },
+                    ],
+                },
+                {
+                    name: 'Jadwal Misa',
+                    icon: 'fa-calendar-check',
+                    submenus: [
+                        { name: 'Daftar Jadwal Misa', href: '/paroki/jadwal-misa', icon: 'fa-calendar-day' },
+                        { name: 'Master Pastor', href: '/paroki/master-pastor', icon: 'fa-address-book' },
+                        { name: 'Notifikasi WA', href: '/paroki/pengaturan-otp', icon: 'fa-comment-sms' },
+                        { name: 'Pengaturan Jadwal', href: '/paroki/pengaturan-aplikasi', icon: 'fa-gear' },
+                    ],
+                },
+                {
+                    name: 'Data KK',
+                    icon: 'fa-house-chimney-user',
+                    submenus: [
+                        { name: 'KK Katolik', href: '/paroki/kk-katolik', icon: 'fa-credit-card' },
+                        { name: 'Mutasi Massal KUB', href: '/paroki/kk-katolik', icon: 'fa-arrows-split-up-and-left' },
+                        { name: 'Data Keluarga', href: '/paroki/kk-katolik', icon: 'fa-users-rectangle' },
+                        { name: 'Data Umat / Jiwa', href: '/paroki/umat', icon: 'fa-user' },
+                        { name: 'Demografi & Statistik', href: '/paroki/statistik', icon: 'fa-chart-pie' },
+                    ],
+                },
+                {
+                    name: 'Data Sakramen',
+                    icon: 'fa-book-bible',
+                    submenus: [
+                        { name: 'Buku Besar Sakramen', href: '/paroki/sakramen', icon: 'fa-book-bookmark' },
+                        { name: 'Pemeriksaan Kanonikal', href: '/paroki/sakramen', icon: 'fa-stamp' },
+                        { name: 'Verifikasi Cetak', href: '/paroki/sakramen', icon: 'fa-print' },
+                        { name: 'Pengajuan Sakramen', href: '/paroki/pengajuan-sakramen', icon: 'fa-file-signature' },
+                        { name: 'Katekumen & Pembinaan', href: '/paroki/pengajuan-sakramen', icon: 'fa-graduation-cap' },
+                        { name: 'Pengaturan Pembayaran', href: '/paroki/metode-pembayaran', icon: 'fa-qrcode' },
+                    ],
+                },
+                { name: 'Lapak & Toko', href: '/paroki/lapak-produk', icon: 'fa-shop' },
+            ],
+        },
+        {
+            section: 'Sekretariat Paroki',
+            menus: [
+                {
+                    name: 'Registrasi Surat',
+                    icon: 'fa-envelope-open-text',
+                    submenus: [
+                        { name: 'Surat Masuk', href: '/paroki/surat-masuk', icon: 'fa-inbox' },
+                        { name: 'Surat Keluar', href: '/paroki/surat-keluar', icon: 'fa-paper-plane' },
+                    ],
+                },
+                { name: 'Arsip Digital Paroki', href: '/paroki/arsip-digital', icon: 'fa-folder-tree' },
+                { name: 'Rapat & Notulen', href: '/paroki/rapat', icon: 'fa-handshake' },
+            ],
+        },
+        {
+            section: 'Keuangan & Aset',
+            menus: [
+                {
+                    name: 'Keuangan & Iuran',
+                    icon: 'fa-money-bill-transfer',
+                    submenus: [
+                        { name: 'Jenis Iuran', href: '/paroki/jenis-iuran', icon: 'fa-tags' },
+                        { name: 'Iuran Umat', href: '/paroki/iuran', icon: 'fa-receipt' },
+                        { name: 'Kolekte Misa', href: '/paroki/kolekte', icon: 'fa-hand-holding-dollar' },
+                        { name: 'Intensi Misa', href: '/paroki/intensi-misa', icon: 'fa-heart' },
+                        { name: 'Keuangan Paroki', href: '/paroki/keuangan', icon: 'fa-vault' },
+                    ],
+                },
+                { name: 'Aset & Inventaris', href: '/paroki/aset', icon: 'fa-boxes-stacked' },
+            ],
+        },
+        {
+            section: 'Website Paroki',
+            menus: [
+                {
+                    name: 'Konten Website',
+                    icon: 'fa-newspaper',
+                    submenus: [
+                        { name: 'Kategori Konten', href: '/paroki/kategori-konten', icon: 'fa-folder-open' },
+                        { name: 'Berita / Artikel', href: '/paroki/konten', icon: 'fa-newspaper' },
+                        { name: 'Agenda Kegiatan', href: '/paroki/kegiatan', icon: 'fa-calendar-check' },
+                        { name: 'Galeri Foto', href: '/paroki/galeri', icon: 'fa-images' },
+                        { name: 'Video Background', href: '/paroki/video-header', icon: 'fa-video' },
+                        { name: 'Sambutan Pastor', href: '/paroki/profil-paroki', icon: 'fa-comment-dots' },
+                        { name: 'Pusat Unduhan', href: '/paroki/download', icon: 'fa-cloud-arrow-down' },
+                    ],
+                },
+            ],
+        },
+        {
+            section: 'Sistem & Aplikasi',
+            menus: [
+                { name: 'Profil Paroki', href: '/paroki/profil-paroki', icon: 'fa-church' },
+                { name: 'Manajemen User', href: '/paroki/user', icon: 'fa-user-gear' },
+                { name: 'Profil Saya', href: '/paroki/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
+            ],
+        },
+    ],
+    'Bendahara': [
+        {
+            section: 'Dashboard',
+            menus: [
+                { name: 'Dashboard', href: '/bendahara/dashboard', icon: 'fa-gauge-high' },
+                { name: 'Panduan', href: '/bendahara/panduan-hak-akses', icon: 'fa-book-open' },
+            ],
+        },
+        {
+            section: 'Keuangan & Transaksi',
+            menus: [
+                { name: 'Jenis Iuran', href: '/bendahara/jenis-iuran', icon: 'fa-tags' },
+                { name: 'Iuran Umat', href: '/bendahara/iuran', icon: 'fa-receipt' },
+                { name: 'Kolekte Misa', href: '/bendahara/kolekte', icon: 'fa-hand-holding-dollar' },
+                { name: 'Intensi Misa', href: '/bendahara/intensi-misa', icon: 'fa-heart' },
+                { name: 'Keuangan & Kas Paroki', href: '/bendahara/keuangan', icon: 'fa-vault' },
+                { name: 'Aset & Inventaris', href: '/bendahara/aset', icon: 'fa-boxes-stacked' },
+            ],
+        },
+        {
+            section: 'Referensi Umat',
+            menus: [
+                { name: 'Data Umat', href: '/bendahara/umat', icon: 'fa-users' },
+                { name: 'Data Keluarga (KK)', href: '/bendahara/kk-katolik', icon: 'fa-house-chimney-user' },
+            ],
+        },
+        {
+            section: 'Akun Saya',
+            menus: [
+                { name: 'Profil Saya', href: '/bendahara/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -675,77 +716,26 @@ const roleMenus = {
             ],
         },
     ],
-    'Bendahara': [
-        {
-            section: 'Dashboard',
-            menus: [
-                { name: 'Dashboard', href: '/v2/dashboard', icon: 'fa-gauge-high' },
-                { name: 'Panduan Hak Akses (RBAC)', href: '/v2/panduan-hak-akses', icon: 'fa-book-open' },
-            ],
-        },
-        {
-            section: 'Keuangan & Transaksi',
-            menus: [
-                {
-                    name: 'Iuran & Persembahan',
-                    icon: 'fa-money-bill-transfer',
-                    submenus: [
-                        { name: 'Jenis Iuran', href: '/v2/jenis-iuran', icon: 'fa-tags' },
-                        { name: 'Iuran Umat', href: '/v2/iuran', icon: 'fa-receipt' },
-                        { name: 'Kolekte Misa', href: '/v2/kolekte', icon: 'fa-hand-holding-dollar' },
-                        { name: 'Intensi Misa', href: '/v2/intensi-misa', icon: 'fa-heart' },
-                    ],
-                },
-                { name: 'Kas & Transaksi Keuangan', href: '/v2/keuangan', icon: 'fa-vault' },
-                { name: 'Aset & Inventaris', href: '/v2/aset', icon: 'fa-boxes-stacked' },
-            ],
-        },
-        {
-            section: 'Referensi Umat',
-            menus: [
-                { name: 'Data Umat', href: '/v2/umat', icon: 'fa-users' },
-                { name: 'Kartu Keluarga (KK)', href: '/v2/kk-katolik', icon: 'fa-house-chimney-user' },
-            ],
-        },
-        {
-            section: 'Aset',
-            menus: [
-                { name: 'Aset & Inventaris', href: '/v2/aset', icon: 'fa-boxes-stacked' },
-            ],
-        },
-        {
-            section: 'Akun Saya',
-            menus: [
-                { name: 'Profil Saya', href: '/v2/profil-saya', icon: 'fa-circle-user' },
-            ],
-        },
-    ],
     'Penulis': [
         {
             section: 'Dashboard',
             menus: [
-                { name: 'Dashboard', href: '/v2/dashboard', icon: 'fa-gauge-high' },
-                { name: 'Panduan Hak Akses (RBAC)', href: '/v2/panduan-hak-akses', icon: 'fa-book-open' },
+                { name: 'Dashboard', href: '/penulis/dashboard', icon: 'fa-gauge-high' },
+                { name: 'Panduan', href: '/penulis/panduan-hak-akses', icon: 'fa-book-open' },
             ],
         },
         {
             section: 'Media & Publikasi',
             menus: [
-                { name: 'Kategori Konten', href: '/v2/kategori-konten', icon: 'fa-folder-open' },
-                { name: 'Berita & Artikel', href: '/v2/konten', icon: 'fa-newspaper' },
-                { name: 'Komentar Artikel', href: '/v2/komentar-artikel', icon: 'fa-comments' },
-                { name: 'Halaman Website', href: '/v2/konten?tipe=Halaman', icon: 'fa-file-lines' },
-                { name: 'Agenda Kegiatan', href: '/v2/kegiatan', icon: 'fa-calendar-check' },
-                { name: 'Pengumuman Paroki', href: '/v2/pengumuman', icon: 'fa-bullhorn' },
-                { name: 'Renungan Harian', href: '/v2/renungan', icon: 'fa-book-open' },
-                { name: 'Galeri Foto', href: '/v2/galeri', icon: 'fa-images' },
-                { name: 'Pusat Unduhan', href: '/v2/download', icon: 'fa-cloud-arrow-down' },
+                { name: 'Kategori Konten', href: '/penulis/kategori-konten', icon: 'fa-folder-open' },
+                { name: 'Berita & Artikel', href: '/penulis/konten', icon: 'fa-newspaper' },
             ],
         },
         {
             section: 'Akun Saya',
             menus: [
-                { name: 'Profil Saya', href: '/v2/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Profil Saya', href: '/penulis/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -753,22 +743,29 @@ const roleMenus = {
         {
             section: 'Beranda',
             menus: [
-                { name: 'Dashboard', href: '/v2/dashboard', icon: 'fa-gauge-high' },
-                { name: 'Panduan Hak Akses (RBAC)', href: '/v2/panduan-hak-akses', icon: 'fa-book-open' },
+                { name: 'Dashboard', href: '/umat/dashboard', icon: 'fa-gauge-high' },
+                { name: 'Panduan', href: '/umat/panduan-hak-akses', icon: 'fa-book-open' },
             ],
         },
         {
             section: 'Data Saya',
             menus: [
-                { name: 'Keluarga Saya (KK)', href: '/v2/kk-katolik', icon: 'fa-house-chimney-user' },
-                { name: 'Pengajuan Sakramen', href: '/v2/pengajuan-sakramen', icon: 'fa-file-signature' },
-                { name: 'Lapak & Toko', href: '/v2/lapak-produk', icon: 'fa-shop' },
+                { name: 'Keluarga Saya', href: '/umat/kk-katolik', icon: 'fa-house-chimney-user' },
+                { name: 'Pengajuan Sakramen', href: '/umat/pengajuan-sakramen', icon: 'fa-file-signature' },
+                { name: 'Lapak & Toko', href: '/umat/lapak-produk', icon: 'fa-shop' },
+            ],
+        },
+        {
+            section: 'Informasi Paroki',
+            menus: [
+                { name: 'Website Paroki', href: '/', icon: 'fa-globe', isExternal: true },
             ],
         },
         {
             section: 'Akun Saya',
             menus: [
-                { name: 'Profil Saya', href: '/v2/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Profil Saya', href: '/umat/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -827,7 +824,7 @@ const getHref = (rawHref) => {
     const clean = rawHref.replace(/^\/(v2|superadmin|paroki|pastor|wilayah|kapela|kub|bendahara|penulis|umat)/, '');
 
     if (clean === '/dashboard' || clean === '') {
-        return rolePrefix.value;
+        return `${rolePrefix.value}/dashboard`;
     }
 
     return `${rolePrefix.value}${clean.startsWith('/') ? clean : '/' + clean}`;
