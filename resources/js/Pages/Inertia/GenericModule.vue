@@ -513,13 +513,13 @@ const isUmatReadOnlyRole = computed(() => {
     const prefix = path.split('/').filter(Boolean)[0] || '';
     const roleSlug = String(props.role?.slug || props.role?.nama_role || props.role || '').toLowerCase();
     
-    // Wilayah, Kapela/Stasi are strictly VIEW ONLY for data Umat (CRUD is done at KUB & Paroki/Superadmin)
+    // Wilayah, Kapela/Stasi are strictly VIEW ONLY for data KK & Umat (CRUD is done at KUB & Paroki/Superadmin)
     const isWilayahOrKapela = ['wilayah', 'kapela', 'stasi'].includes(prefix) || 
                               roleSlug.includes('wilayah') || 
                               roleSlug.includes('kapela') || 
                               roleSlug.includes('stasi');
                               
-    return ['umat', 'data-umat', 'data_umat'].includes(props.moduleKey) && isWilayahOrKapela;
+    return ['umat', 'data-umat', 'data_umat', 'kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey) && isWilayahOrKapela;
 });
 
 const generatePassword = () => {
