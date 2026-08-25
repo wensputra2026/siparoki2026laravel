@@ -19,6 +19,8 @@ const props = defineProps({
 });
 
 const page = usePage();
+const showPassword = ref(false);
+const showPasswordConfirmation = ref(false);
 const appName = computed(() => page.props.app?.name || 'SIPAROKI');
 const parokiName = computed(() => page.props.app?.nama_paroki || page.props.app?.paroki || 'Paroki St. Vinsensius a Paulo - Benlutu');
 const logoUrl = computed(() => {
@@ -243,13 +245,23 @@ const submit = () => {
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
                                 Kata Sandi <span class="text-rose-500">*</span>
                             </label>
-                            <input
-                                v-model="form.password"
-                                type="password"
-                                required
-                                placeholder="Minimal 6 karakter"
-                                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
-                            />
+                            <div class="relative">
+                                <input
+                                    v-model="form.password"
+                                    :type="showPassword ? 'text' : 'password'"
+                                    required
+                                    placeholder="Minimal 6 karakter"
+                                    class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                />
+                                <button
+                                    type="button"
+                                    @click="showPassword = !showPassword"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-amber-600 text-xs cursor-pointer focus:outline-none transition"
+                                    title="Tampilkan/Sembunyikan Kata Sandi"
+                                >
+                                    <i :class="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                                </button>
+                            </div>
                             <p v-if="form.errors.password" class="mt-1 text-xs font-semibold text-rose-600">
                                 {{ form.errors.password }}
                             </p>
@@ -259,13 +271,23 @@ const submit = () => {
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
                                 Konfirmasi Kata Sandi <span class="text-rose-500">*</span>
                             </label>
-                            <input
-                                v-model="form.password_confirmation"
-                                type="password"
-                                required
-                                placeholder="Ulangi kata sandi"
-                                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
-                            />
+                            <div class="relative">
+                                <input
+                                    v-model="form.password_confirmation"
+                                    :type="showPasswordConfirmation ? 'text' : 'password'"
+                                    required
+                                    placeholder="Ulangi kata sandi"
+                                    class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                />
+                                <button
+                                    type="button"
+                                    @click="showPasswordConfirmation = !showPasswordConfirmation"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-amber-600 text-xs cursor-pointer focus:outline-none transition"
+                                    title="Tampilkan/Sembunyikan Kata Sandi"
+                                >
+                                    <i :class="showPasswordConfirmation ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
