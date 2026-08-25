@@ -20,7 +20,7 @@ class CheckInstalled
         $isInstallerRoute = $request->is('installer') || $request->is('installer/*');
 
         // Allow static assets
-        if ($request->is('build/*') || $request->is('assets/*') || $request->is('fonts/*') || $request->is('images/*') || $request->is('favicon.ico') || $request->is('env.js')) {
+        if ($request->is('build/*') || $request->is('assets/*') || $request->is('fonts/*') || $request->is('images/*') || $request->is('favicon.ico') || $request->is('env.js') || $request->is('css/*') || $request->is('js/*')) {
             return $next($request);
         }
 
