@@ -596,6 +596,7 @@ const roleMenus = {
             menus: [
                 { name: 'Manajemen User', href: '/wilayah/user', icon: 'fa-user-plus' },
                 { name: 'Profil Saya', href: '/wilayah/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -635,6 +636,7 @@ const roleMenus = {
             section: 'Akun Saya',
             menus: [
                 { name: 'Profil Saya', href: '/kapela/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -670,6 +672,7 @@ const roleMenus = {
             section: 'Akun Saya',
             menus: [
                 { name: 'Profil Saya', href: '/kub/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
