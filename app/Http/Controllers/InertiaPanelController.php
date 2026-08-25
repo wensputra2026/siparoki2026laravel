@@ -3381,7 +3381,7 @@ class InertiaPanelController extends Controller
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'sakramen', 'wilayah'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi', 'kub'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi') || str_contains($userRoleSlug, 'kub'))) {
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'sakramen', 'wilayah', 'kub'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
             return back()->with('error', 'Akses ditolak. Penambahan data hanya dapat dilakukan oleh Sekretariat Paroki / Super Admin.');
         }
 
@@ -3526,9 +3526,8 @@ class InertiaPanelController extends Controller
         }
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
-        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'wilayah'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi', 'kub'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi') || str_contains($userRoleSlug, 'kub'))) {
-            return back()->with('error', 'Akses ditolak. Perubahan data struktur Wilayah hanya dapat dilakukan oleh Sekretariat Paroki / Super Admin.');
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'wilayah', 'kub'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
+            return back()->with('error', 'Akses ditolak. Perubahan data struktur Wilayah & KUB hanya dapat dilakukan oleh Sekretariat Paroki / Super Admin.');
         }
 
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
@@ -3651,8 +3650,8 @@ class InertiaPanelController extends Controller
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($slug, ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'wilayah'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi', 'kub'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi') || str_contains($userRoleSlug, 'kub'))) {
-            return back()->with('error', 'Akses ditolak. Penghapusan data struktur Wilayah hanya dapat dilakukan oleh Sekretariat Paroki / Super Admin.');
+        if (in_array($slug, ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'wilayah', 'kub'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
+            return back()->with('error', 'Akses ditolak. Penghapusan data struktur Wilayah & KUB hanya dapat dilakukan oleh Sekretariat Paroki / Super Admin.');
         }
 
         if ($slug === 'user' && auth()->id() && (int) auth()->id() === (int) $item->getKey()) {
@@ -4710,8 +4709,7 @@ class InertiaPanelController extends Controller
     public function importModule(Request $request, string $slug)
     {
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
-        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'sakramen', 'wilayah'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi', 'kub'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi') || str_contains($userRoleSlug, 'kub'))) {
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'sakramen', 'wilayah', 'kub'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
             return back()->with('error', 'Akses ditolak. Pengelolaan data (tambah/edit/hapus/impor) hanya dapat dilakukan oleh Sekretariat Paroki / Super Admin.');
         }
 
@@ -7191,6 +7189,29 @@ class InertiaPanelController extends Controller
             'pengaturan-aplikasi' => ['model' => \App\Models\PengaturanAplikasi::class, 'title' => 'Pengaturan Aplikasi', 'columns' => [['key' => 'nama_aplikasi', 'label' => 'Nama Aplikasi', 'isPrimary' => true], ['key' => 'email', 'label' => 'Email']]],
             'security-settings' => ['model' => \App\Models\SecuritySettings::class, 'title' => 'Security Settings', 'columns' => [['key' => 'setting_key', 'label' => 'Kunci Pengaturan', 'isPrimary' => true], ['key' => 'setting_value', 'label' => 'Nilai']]],
             'backup-database' => ['model' => \App\Models\BackupDatabase::class, 'title' => 'Backup Database', 'columns' => [['key' => 'nama_file', 'label' => 'File Backup', 'isPrimary' => true], ['key' => 'created_at', 'label' => 'Tanggal Backup']]],
+            'defunctorum' => ['model' => \App\Models\Defunctorum::class, 'title' => 'Data Umat Meninggal (Defunctorum)', 'columns' => [
+                ['key' => 'foto', 'label' => 'Foto', 'isImage' => true],
+                ['key' => 'nama_lengkap', 'label' => 'Nama Lengkap', 'isPrimary' => true],
+                ['key' => 'nama_baptis', 'label' => 'Nama Baptis'],
+                ['key' => 'jenis_kelamin', 'label' => 'L/P'],
+                ['key' => 'tanggal_meninggal', 'label' => 'Tgl Meninggal', 'isDate' => true],
+                ['key' => 'tempat_meninggal', 'label' => 'Tempat Meninggal'],
+                ['key' => 'status', 'label' => 'Status'],
+            ]],
+            'jadwal-petugas-liturgi' => ['model' => \App\Models\JadwalPetugasLiturgi::class, 'title' => 'Jadwal Petugas Liturgi', 'columns' => [
+                ['key' => 'tanggal', 'label' => 'Tanggal', 'isDate' => true, 'isPrimary' => true],
+                ['key' => 'judul_misa', 'label' => 'Misa / Perayaan'],
+                ['key' => 'peran_tugas', 'label' => 'Tugas / Peran'],
+                ['key' => 'nama_petugas', 'label' => 'Nama Petugas'],
+                ['key' => 'keterangan', 'label' => 'Keterangan'],
+                ['key' => 'status', 'label' => 'Status'],
+            ]],
+            'sambutan-pastor' => ['model' => \App\Models\SambutanPastor::class, 'title' => 'Sambutan Pastor', 'columns' => [
+                ['key' => 'foto', 'label' => 'Foto', 'isImage' => true],
+                ['key' => 'nama_pastor', 'label' => 'Nama Pastor', 'isPrimary' => true],
+                ['key' => 'jabatan', 'label' => 'Jabatan'],
+                ['key' => 'status', 'label' => 'Status'],
+            ]],
         ];
     }
 
