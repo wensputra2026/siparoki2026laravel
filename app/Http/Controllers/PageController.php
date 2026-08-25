@@ -91,10 +91,14 @@ class PageController extends Controller
             $pastorParokiObj = null;
             $pastorRekanObj = null;
             $fraterObj = null;
+            $activeParokiId = $activeParoki->id_paroki ?? $profil->paroki_id ?? 1;
 
             if (Schema::hasTable('master_pastor')) {
                 try {
-                    $pastorParokiObj = DB::table('master_pastor')
+                    $hasParokiCol = Schema::hasColumn('master_pastor', 'paroki_id');
+
+                    // 1. Resolve Pastor Paroki for active paroki
+                    $pastorParokiQuery = DB::table('master_pastor')
                         ->where(function($q) {
                             $q->where('jabatan', 'like', '%Pastor Paroki%')
                               ->orWhere('jabatan', 'Pastor Paroki');
@@ -103,22 +107,39 @@ class PageController extends Controller
                             $q->where('status', '1')
                               ->orWhere('status', 'like', '%aktif%')
                               ->orWhere('status', 1);
-                        })
-                        ->orderBy('urutan')
-                        ->orderByDesc('id')
-                        ->first();
+                        });
+
+                    if ($hasParokiCol && !empty($activeParokiId)) {
+                        $pastorParokiObj = (clone $pastorParokiQuery)
+                            ->where('paroki_id', $activeParokiId)
+                            ->orderByRaw("CASE WHEN nama_pastor LIKE '%Herman%' THEN 0 ELSE 1 END")
+                            ->orderBy('urutan')
+                            ->orderByDesc('id')
+                            ->first();
+                    }
+
+                    if (!$pastorParokiObj) {
+                        $pastorParokiObj = $pastorParokiQuery
+                            ->orderByRaw("CASE WHEN nama_pastor LIKE '%Herman%' THEN 0 ELSE 1 END")
+                            ->orderBy('urutan')
+                            ->orderByDesc('id')
+                            ->first();
+                    }
 
                     if (!$pastorParokiObj) {
                         $pastorParokiObj = DB::table('master_pastor')
                             ->where(function($q) {
-                                $q->where('jabatan', 'like', '%Pastor Paroki%')
+                                $q->where('nama_pastor', 'like', '%Herman%')
+                                  ->orWhere('jabatan', 'like', '%Pastor Paroki%')
                                   ->orWhere('jabatan', 'Pastor Paroki');
                             })
+                            ->orderByRaw("CASE WHEN nama_pastor LIKE '%Herman%' THEN 0 ELSE 1 END")
                             ->orderBy('urutan')
                             ->first();
                     }
 
-                    $pastorRekanObj = DB::table('master_pastor')
+                    // 2. Resolve Pastor Rekan
+                    $pastorRekanQuery = DB::table('master_pastor')
                         ->where(function($q) {
                             $q->where('jabatan', 'like', '%Rekan%')
                               ->orWhere('jabatan', 'like', '%Vikaris%');
@@ -127,17 +148,40 @@ class PageController extends Controller
                             $q->where('status', '1')
                               ->orWhere('status', 'like', '%aktif%')
                               ->orWhere('status', 1);
-                        })
-                        ->orderBy('urutan')
-                        ->first();
+                        });
 
-                    $fraterObj = DB::table('master_pastor')
+                    if ($hasParokiCol && !empty($activeParokiId)) {
+                        $pastorRekanObj = (clone $pastorRekanQuery)
+                            ->where('paroki_id', $activeParokiId)
+                            ->orderBy('urutan')
+                            ->first();
+                    }
+
+                    if (!$pastorRekanObj) {
+                        $pastorRekanObj = $pastorRekanQuery
+                            ->orderBy('urutan')
+                            ->first();
+                    }
+
+                    // 3. Resolve Frater
+                    $fraterQuery = DB::table('master_pastor')
                         ->where(function($q) {
                             $q->where('jabatan', 'like', '%Frater%')
                               ->orWhere('jabatan', 'like', '%Katekis%');
-                        })
-                        ->orderBy('urutan')
-                        ->first();
+                        });
+
+                    if ($hasParokiCol && !empty($activeParokiId)) {
+                        $fraterObj = (clone $fraterQuery)
+                            ->where('paroki_id', $activeParokiId)
+                            ->orderBy('urutan')
+                            ->first();
+                    }
+
+                    if (!$fraterObj) {
+                        $fraterObj = $fraterQuery
+                            ->orderBy('urutan')
+                            ->first();
+                    }
                 } catch (\Throwable $e) {}
             }
 
