@@ -4965,8 +4965,8 @@ const statusLabel = (item) => {
                                             <input v-model="formData.username" type="text" autocomplete="new-password" placeholder="username login" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono focus:outline-none focus:border-amber-500" />
                                         </div>
                                         <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Email *</label>
-                                            <input v-model="formData.email" type="email" placeholder="alamat@email.com" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-amber-500" />
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Email</label>
+                                            <input v-model="formData.email" type="email" placeholder="alamat@email.com (opsional)" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-amber-500" />
                                         </div>
                                         <div>
                                             <label class="block text-[11px] font-bold text-slate-700 mb-1">No. HP / WhatsApp</label>

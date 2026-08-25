@@ -4222,6 +4222,45 @@ class InertiaPanelController extends Controller
             $data['no_hp'] = $data['handphone'];
         }
 
+        // Ensure email is never null/empty on create to prevent Integrity Constraint Violation
+        if (empty($data['email']) || $data['email'] === 'null' || trim((string)$data['email']) === '') {
+            if ($isCreate) {
+                $baseEmail = !empty($data['username']) ? Str::slug($data['username']) : (!empty($data['nama_lengkap']) ? Str::slug($data['nama_lengkap']) : 'user');
+                $genEmail = strtolower($baseEmail) . '@siparoki.local';
+                $counter = 1;
+                while (\App\Models\User::where('email', $genEmail)->exists()) {
+                    $genEmail = strtolower($baseEmail) . $counter . '@siparoki.local';
+                    $counter++;
+                }
+                $data['email'] = $genEmail;
+            } else {
+                unset($data['email']);
+            }
+        }
+
+        // Ensure username is never null/empty on create
+        if (empty($data['username']) || $data['username'] === 'null' || trim((string)$data['username']) === '') {
+            if ($isCreate) {
+                $baseUser = !empty($data['nama_lengkap']) ? Str::slug($data['nama_lengkap'], '') : 'user';
+                $genUser = strtolower($baseUser);
+                $counter = 1;
+                while (\App\Models\User::where('username', $genUser)->exists()) {
+                    $genUser = strtolower($baseUser) . $counter;
+                    $counter++;
+                }
+                $data['username'] = $genUser;
+            } else {
+                unset($data['username']);
+            }
+        }
+
+        // Compatibility between name and nama_lengkap
+        if (empty($data['name']) && !empty($data['nama_lengkap'])) {
+            $data['name'] = $data['nama_lengkap'];
+        } elseif (empty($data['nama_lengkap']) && !empty($data['name'])) {
+            $data['nama_lengkap'] = $data['name'];
+        }
+
         if (array_key_exists('status', $data)) {
             $data['status'] = in_array((string) $data['status'], ['1', 'true', 'Aktif', 'aktif'], true) ? 1 : 0;
         } elseif ($isCreate) {
