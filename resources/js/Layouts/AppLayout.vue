@@ -110,66 +110,6 @@ const isSuperAdmin = computed(() => {
     return r.includes('super');
 });
 
-const resolveRoleFromPath = () => {
-    const rawUrl = page.url || (typeof window !== 'undefined' ? window.location.pathname : '') || '';
-    const path = rawUrl.toLowerCase();
-    if (path.startsWith('/wilayah')) return 'Admin Wilayah';
-    if (path.startsWith('/kapela') || path.startsWith('/stasi')) return 'Admin Kapela / Stasi';
-    if (path.startsWith('/kub')) return 'Ketua KUB';
-    if (path.startsWith('/bendahara')) return 'Bendahara';
-    if (path.startsWith('/penulis')) return 'Penulis';
-    if (path.startsWith('/umat')) return 'Umat';
-    if (path.startsWith('/pastor')) return 'Pastor';
-    if (path.startsWith('/paroki')) return 'Admin Paroki';
-    if (path.startsWith('/superadmin') || path.startsWith('/v2')) return 'Super Admin';
-    return '';
-};
-
-const resolveActiveRole = () => {
-    const fromPath = resolveRoleFromPath();
-    if (fromPath && roleMenus[fromPath]) {
-        return fromPath;
-    }
-    if (props.role && roleMenus[props.role]) {
-        return props.role;
-    }
-    if (page.props.role && roleMenus[page.props.role]) {
-        return page.props.role;
-    }
-    const userRole = page.props.auth?.user?.role;
-    if (userRole && roleMenus[userRole]) {
-        return userRole;
-    }
-    return 'Super Admin';
-};
-
-const activeRole = ref(resolveActiveRole());
-
-// Watch for prop role and URL changes
-watch(
-    () => [props.role, page.props.role, page.url],
-    () => {
-        activeRole.value = resolveActiveRole();
-    },
-    { immediate: true }
-);
-
-const onRoleChange = () => {
-    const map = {
-        'Super Admin': '/superadmin',
-        'Admin Paroki': '/paroki',
-        'Pastor': '/pastor',
-        'Admin Wilayah': '/wilayah',
-        'Admin Kapela / Stasi': '/kapela',
-        'Ketua KUB': '/kub',
-        'Bendahara': '/bendahara',
-        'Penulis': '/penulis',
-        'Umat': '/umat',
-    };
-    const targetUrl = map[activeRole.value] || '/superadmin';
-    router.visit(targetUrl);
-};
-
 // Exact 9-Role Sidebar Hierarchies (Bagian -> Menu Utama -> Submenu)
 const roleMenus = {
     'Super Admin': [
@@ -783,6 +723,66 @@ const roleMenus = {
             ],
         },
     ],
+};
+
+const resolveRoleFromPath = () => {
+    const rawUrl = page.url || (typeof window !== 'undefined' ? window.location.pathname : '') || '';
+    const path = rawUrl.toLowerCase();
+    if (path.startsWith('/wilayah')) return 'Admin Wilayah';
+    if (path.startsWith('/kapela') || path.startsWith('/stasi')) return 'Admin Kapela / Stasi';
+    if (path.startsWith('/kub')) return 'Ketua KUB';
+    if (path.startsWith('/bendahara')) return 'Bendahara';
+    if (path.startsWith('/penulis')) return 'Penulis';
+    if (path.startsWith('/umat')) return 'Umat';
+    if (path.startsWith('/pastor')) return 'Pastor';
+    if (path.startsWith('/paroki')) return 'Admin Paroki';
+    if (path.startsWith('/superadmin') || path.startsWith('/v2')) return 'Super Admin';
+    return '';
+};
+
+const resolveActiveRole = () => {
+    const fromPath = resolveRoleFromPath();
+    if (fromPath && roleMenus[fromPath]) {
+        return fromPath;
+    }
+    if (props.role && roleMenus[props.role]) {
+        return props.role;
+    }
+    if (page.props.role && roleMenus[page.props.role]) {
+        return page.props.role;
+    }
+    const userRole = page.props.auth?.user?.role;
+    if (userRole && roleMenus[userRole]) {
+        return userRole;
+    }
+    return 'Super Admin';
+};
+
+const activeRole = ref(resolveActiveRole());
+
+// Watch for prop role and URL changes
+watch(
+    () => [props.role, page.props.role, page.url],
+    () => {
+        activeRole.value = resolveActiveRole();
+    },
+    { immediate: true }
+);
+
+const onRoleChange = () => {
+    const map = {
+        'Super Admin': '/superadmin',
+        'Admin Paroki': '/paroki',
+        'Pastor': '/pastor',
+        'Admin Wilayah': '/wilayah',
+        'Admin Kapela / Stasi': '/kapela',
+        'Ketua KUB': '/kub',
+        'Bendahara': '/bendahara',
+        'Penulis': '/penulis',
+        'Umat': '/umat',
+    };
+    const targetUrl = map[activeRole.value] || '/superadmin';
+    router.visit(targetUrl);
 };
 
 // Compute current active menu tree based on selected role
