@@ -206,6 +206,62 @@ class InertiaPanelController extends Controller
     }
 
     /**
+     * Pencarian umat secara lazy & tenant-scoped untuk SearchableSelect.
+     * Menggantikan pengiriman seluruh daftar umat (umatList) yang berat.
+     * Parameter: q (string pencarian) atau id (resolve 1 record terpilih).
+     */
+    public function umatOptions(Request $request)
+    {
+        $authUser = auth()->user();
+        $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));
+        $q = trim((string) $request->input('q', ''));
+        $id = $request->input('id');
+
+        $query = \App\Models\Umat::query();
+
+        if (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
+            $query->where(function ($qq) use ($authUser) {
+                $qq->where('wilayah_id', $authUser->wilayah_id)
+                    ->orWhereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
+            });
+        } elseif ((str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) && !empty($authUser?->kapela_id)) {
+            $query->where(function ($qq) use ($authUser) {
+                $qq->where('kapela_id', $authUser->kapela_id)
+                    ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
+            });
+        } elseif (str_contains($slugClean, 'kub') && !empty($authUser?->kub_id)) {
+            $query->where(function ($qq) use ($authUser) {
+                $qq->where('kub_id', $authUser->kub_id)
+                    ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
+            });
+        }
+
+        if ($id) {
+            $query->where('id', $id);
+        } elseif ($q !== '') {
+            $query->where(function ($qq) use ($q) {
+                $qq->where('nama_lengkap', 'like', "%{$q}%")
+                    ->orWhere('nik', 'like', "%{$q}%");
+            });
+        }
+
+        $results = $query->orderBy('nama_lengkap')->limit(25)->get(['id', 'nama_lengkap', 'nik', 'handphone']);
+
+        return response()->json($results->map(function ($u) {
+            $label = trim($u->nama_lengkap ?? '');
+            if (!empty($u->nik)) {
+                $label .= ' (NIK: ' . $u->nik . ')';
+            }
+            return [
+                'id' => $u->id,
+                'name' => $label,
+                'nama_lengkap' => $u->nama_lengkap,
+                'handphone' => $u->handphone,
+            ];
+        }));
+    }
+
+    /**
      * Dedicated Full Page for Creating KK Katolik.
      */
     public function createKk(Request $request): Response
@@ -2349,26 +2405,17 @@ class InertiaPanelController extends Controller
         $kapelaQuery = \App\Models\Kapela::query();
 
         if (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
-            $umatQuery->where(function($q) use ($authUser) {
-                $q->where('wilayah_id', $authUser->wilayah_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
-            });
+            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
             $kkQuery->where('wilayah_id', $authUser->wilayah_id);
             $kubQuery->where('wilayah_id', $authUser->wilayah_id);
             $wilayahQuery->where('id', $authUser->wilayah_id);
         } elseif ((str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) && !empty($authUser?->kapela_id)) {
-            $umatQuery->where(function($q) use ($authUser) {
-                $q->where('kapela_id', $authUser->kapela_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
-            });
+            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
             $kkQuery->where('kapela_id', $authUser->kapela_id);
             $kubQuery->where('kapela_id', $authUser->kapela_id);
             $kapelaQuery->where('id', $authUser->kapela_id);
         } elseif (str_contains($slugClean, 'kub') && !empty($authUser?->kub_id)) {
-            $umatQuery->where(function($q) use ($authUser) {
-                $q->where('kub_id', $authUser->kub_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
-            });
+            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
             $kkQuery->where('kub_id', $authUser->kub_id);
             $kubQuery->where('id', $authUser->kub_id);
         }
@@ -2818,6 +2865,8 @@ class InertiaPanelController extends Controller
             $query->with(['peranKategorial']);
         } elseif ($slug === 'komentar-artikel' || $slug === 'komentar_artikel') {
             $query->with(['konten']);
+        } elseif ($slug === 'iuran' || $slug === 'iuran-umat') {
+            $query->with(['kk', 'jenisIuran']);
         }
 
         $modelInstance = new $modelClass;
@@ -3095,36 +3144,30 @@ class InertiaPanelController extends Controller
         $wilayahList = \Illuminate\Support\Facades\Cache::remember('ref_wilayah_list_v2', 1800, fn () => \App\Models\Wilayah::orderBy('nama_wilayah')->get());
         $kapelaList = \Illuminate\Support\Facades\Cache::remember('ref_kapela_list_v2', 1800, fn () => \App\Models\Kapela::orderBy('nama_kapela')->get());
         $kubList = \Illuminate\Support\Facades\Cache::remember('ref_kub_list_v2', 1800, fn () => \App\Models\Kub::orderBy('nama_kub')->get());
-        $umatList = $needsUmatReferences
-            ? \Illuminate\Support\Facades\Cache::remember('ref_umat_select_list_v1', 600, fn () => \App\Models\Umat::orderBy('nama_lengkap')->take(500)->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']))
-            : [];
+        // Daftar umat kini diambil lazy via endpoint /umat-options (tenant-scoped)
+        // agar tidak memuat ratusan baris umat setiap buka modul.
+        $umatList = [];
 
         if (str_contains($userRoleSlug, 'wilayah') && !empty($authUser?->wilayah_id)) {
             $wilayahList = $wilayahList->where('id', $authUser->wilayah_id)->values();
             $kubList = $kubList->where('wilayah_id', $authUser->wilayah_id)->values();
             $kapelaList = collect();
             if ($needsUmatReferences) {
-                $umatList = \App\Models\Umat::whereHas('kk', fn($kQ) => $kQ->where('wilayah_id', $authUser->wilayah_id))
-                    ->orderBy('nama_lengkap')
-                    ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
+                $umatList = collect([]);
             }
         } elseif ((str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) && !empty($authUser?->kapela_id)) {
             $kapelaList = $kapelaList->where('id', $authUser->kapela_id)->values();
             $kubList = $kubList->where('kapela_id', $authUser->kapela_id)->values();
             $wilayahList = collect();
             if ($needsUmatReferences) {
-                $umatList = \App\Models\Umat::whereHas('kk', fn($kQ) => $kQ->where('kapela_id', $authUser->kapela_id))
-                    ->orderBy('nama_lengkap')
-                    ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
+                $umatList = collect([]);
             }
         } elseif (str_contains($userRoleSlug, 'kub') && !empty($authUser?->kub_id)) {
             $kubList = $kubList->where('id', $authUser->kub_id)->values();
             $wilayahList = collect();
             $kapelaList = collect();
             if ($needsUmatReferences) {
-                $umatList = \App\Models\Umat::whereHas('kk', fn($kQ) => $kQ->where('kub_id', $authUser->kub_id))
-                    ->orderBy('nama_lengkap')
-                    ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
+                $umatList = collect([]);
             }
         }
 
@@ -3353,22 +3396,7 @@ class InertiaPanelController extends Controller
             $data = $this->normalizeKuasiParokiPayload($data);
         }
         if ($slug === 'iuran') {
-            if (isset($data['id_kk'])) {
-                $data['id_kk'] = !empty($data['id_kk']) ? (int) $data['id_kk'] : null;
-            } elseif (isset($data['kk_id'])) {
-                $data['id_kk'] = !empty($data['kk_id']) ? (int) $data['kk_id'] : null;
-            }
-            if (isset($data['total_jumlah']) && !isset($data['jumlah'])) {
-                $data['jumlah'] = $data['total_jumlah'];
-            } elseif (isset($data['jumlah']) && !isset($data['total_jumlah'])) {
-                $data['total_jumlah'] = $data['jumlah'];
-            }
-            if (isset($data['bulan_lunas']) && !isset($data['bulan'])) {
-                $data['bulan'] = $data['bulan_lunas'];
-            }
-            if (isset($data['status_bayar']) && !isset($data['status'])) {
-                $data['status'] = $data['status_bayar'];
-            }
+            $data = $this->normalizeIuranPayload($data);
         }
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
@@ -3508,22 +3536,7 @@ class InertiaPanelController extends Controller
             $data = $this->normalizeKuasiParokiPayload($data, $item);
         }
         if ($slug === 'iuran') {
-            if (isset($data['id_kk'])) {
-                $data['id_kk'] = !empty($data['id_kk']) ? (int) $data['id_kk'] : null;
-            } elseif (isset($data['kk_id'])) {
-                $data['id_kk'] = !empty($data['kk_id']) ? (int) $data['kk_id'] : null;
-            }
-            if (isset($data['total_jumlah']) && !isset($data['jumlah'])) {
-                $data['jumlah'] = $data['total_jumlah'];
-            } elseif (isset($data['jumlah']) && !isset($data['total_jumlah'])) {
-                $data['total_jumlah'] = $data['jumlah'];
-            }
-            if (isset($data['bulan_lunas']) && !isset($data['bulan'])) {
-                $data['bulan'] = $data['bulan_lunas'];
-            }
-            if (isset($data['status_bayar']) && !isset($data['status'])) {
-                $data['status'] = $data['status_bayar'];
-            }
+            $data = $this->normalizeIuranPayload($data);
         }
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
@@ -7141,5 +7154,78 @@ class InertiaPanelController extends Controller
             'security-settings' => ['model' => \App\Models\SecuritySettings::class, 'title' => 'Security Settings', 'columns' => [['key' => 'setting_key', 'label' => 'Kunci Pengaturan', 'isPrimary' => true], ['key' => 'setting_value', 'label' => 'Nilai']]],
             'backup-database' => ['model' => \App\Models\BackupDatabase::class, 'title' => 'Backup Database', 'columns' => [['key' => 'nama_file', 'label' => 'File Backup', 'isPrimary' => true], ['key' => 'created_at', 'label' => 'Tanggal Backup']]],
         ];
+    }
+
+    private function normalizeIuranPayload(array $data): array
+    {
+        if (isset($data['id_kk'])) {
+            $data['id_kk'] = !empty($data['id_kk']) ? (int) $data['id_kk'] : null;
+        } elseif (isset($data['kk_id'])) {
+            $data['id_kk'] = !empty($data['kk_id']) ? (int) $data['kk_id'] : null;
+        }
+
+        if (isset($data['jenis_iuran_id'])) {
+            $data['jenis_iuran_id'] = !empty($data['jenis_iuran_id']) ? (int) $data['jenis_iuran_id'] : null;
+        }
+
+        if (isset($data['total_jumlah']) && !isset($data['jumlah'])) {
+            $data['jumlah'] = (float) $data['total_jumlah'];
+        } elseif (isset($data['jumlah'])) {
+            $data['jumlah'] = (float) $data['jumlah'];
+        } else {
+            $data['jumlah'] = 0.00;
+        }
+
+        // Map month names to 2-digit numbers: varchar(2)
+        $rawBulan = $data['bulan'] ?? $data['bulan_lunas'] ?? date('m');
+        $monthMap = [
+            'januari' => '01', 'january' => '01', 'jan' => '01', '1' => '01', '01' => '01',
+            'februari' => '02', 'february' => '02', 'feb' => '02', '2' => '02', '02' => '02',
+            'maret' => '03', 'march' => '03', 'mar' => '03', '3' => '03', '03' => '03',
+            'april' => '04', 'apr' => '04', '4' => '04', '04' => '04',
+            'mei' => '05', 'may' => '05', '5' => '05', '05' => '05',
+            'juni' => '06', 'june' => '06', 'jun' => '06', '6' => '06', '06' => '06',
+            'juli' => '07', 'july' => '07', 'jul' => '07', '7' => '07', '07' => '07',
+            'agustus' => '08', 'august' => '08', 'aug' => '08', 'ags' => '08', '8' => '08', '08' => '08',
+            'september' => '09', 'sep' => '09', '9' => '09', '09' => '09',
+            'oktober' => '10', 'october' => '10', 'okt' => '10', 'oct' => '10', '10' => '10',
+            'november' => '11', 'nov' => '11', '11' => '11',
+            'desember' => '12', 'december' => '12', 'des' => '12', 'dec' => '12', '12' => '12',
+        ];
+        $cleanBulanKey = strtolower(trim((string) $rawBulan));
+        $data['bulan'] = $monthMap[$cleanBulanKey] ?? str_pad((string) (int) $rawBulan, 2, '0', STR_PAD_LEFT);
+        if ($data['bulan'] === '00' || strlen($data['bulan']) > 2) {
+            $data['bulan'] = date('m');
+        }
+
+        // Normalize status: enum('lunas','belum_lunas')
+        $rawStatus = strtolower(trim((string) ($data['status'] ?? $data['status_bayar'] ?? 'lunas')));
+        if (str_contains($rawStatus, 'belum') || str_contains($rawStatus, 'pending') || str_contains($rawStatus, 'cicil')) {
+            $data['status'] = 'belum_lunas';
+        } else {
+            $data['status'] = 'lunas';
+        }
+
+        // Normalize metode_bayar: enum('tunai','transfer','lainnya')
+        $rawMetode = strtolower(trim((string) ($data['metode_bayar'] ?? $data['metode_pembayaran'] ?? 'tunai')));
+        if (str_contains($rawMetode, 'trans') || str_contains($rawMetode, 'bank') || str_contains($rawMetode, 'qris')) {
+            $data['metode_bayar'] = 'transfer';
+        } elseif (str_contains($rawMetode, 'tunai') || str_contains($rawMetode, 'cash') || str_contains($rawMetode, 'kolektor')) {
+            $data['metode_bayar'] = 'tunai';
+        } else {
+            $data['metode_bayar'] = 'lainnya';
+        }
+
+        if (empty($data['tanggal_bayar'])) {
+            $data['tanggal_bayar'] = date('Y-m-d');
+        }
+        if (empty($data['tahun'])) {
+            $data['tahun'] = (int) date('Y');
+        }
+        if (auth()->id()) {
+            $data['created_by'] = auth()->id();
+        }
+
+        return $data;
     }
 }

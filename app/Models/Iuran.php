@@ -30,11 +30,20 @@ class Iuran extends Model
         'is_deleted',
     ];
 
+    protected $appends = [
+        'no_kk',
+        'nama_kepala',
+        'nama_iuran',
+        'total_jumlah',
+        'bulan_lunas',
+        'status_bayar',
+    ];
+
     protected function casts(): array
     {
         return [
             'tahun' => 'integer',
-            'bulan' => 'integer',
+            'bulan' => 'string',
             'jumlah' => 'decimal:2',
             'total_jumlah' => 'decimal:2',
             'tanggal_bayar' => 'date',
@@ -82,11 +91,27 @@ class Iuran extends Model
 
     public function getBulanLunasAttribute()
     {
-        return $this->attributes['bulan'] ?? $this->attributes['bulan_lunas'] ?? '-';
+        $bulanMap = [
+            '01' => 'Januari', '1' => 'Januari',
+            '02' => 'Februari', '2' => 'Februari',
+            '03' => 'Maret', '3' => 'Maret',
+            '04' => 'April', '4' => 'April',
+            '05' => 'Mei', '5' => 'Mei',
+            '06' => 'Juni', '6' => 'Juni',
+            '07' => 'Juli', '7' => 'Juli',
+            '08' => 'Agustus', '8' => 'Agustus',
+            '09' => 'September', '9' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember',
+        ];
+        $b = (string) ($this->attributes['bulan'] ?? $this->attributes['bulan_lunas'] ?? '');
+        return $bulanMap[$b] ?? $b ?: '-';
     }
 
     public function getStatusBayarAttribute()
     {
-        return $this->attributes['status'] ?? $this->attributes['status_bayar'] ?? 'Lunas';
+        $st = strtolower((string) ($this->attributes['status'] ?? $this->attributes['status_bayar'] ?? 'lunas'));
+        return ($st === 'lunas' || $st === 'aktif') ? 'Lunas' : 'Belum Lunas';
     }
 }

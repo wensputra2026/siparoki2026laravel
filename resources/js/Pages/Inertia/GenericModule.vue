@@ -595,6 +595,9 @@ const umatSelectOptions = computed(() => {
     }));
 });
 
+// Endpoint pencarian umat lazy (tenant-scoped) untuk SearchableSelect.
+const umatSearchUrl = '/umat-options';
+
 const onIuranKkChange = (selectedKkId) => {
     const found = (props.kkList || []).find(k => String(k.id) === String(selectedKkId));
     if (found) {
@@ -617,18 +620,18 @@ const onIuranJenisChange = (selectedJenisId) => {
 };
 
 const bulanOptions = [
-    { value: 'Januari', label: 'Januari' },
-    { value: 'Februari', label: 'Februari' },
-    { value: 'Maret', label: 'Maret' },
-    { value: 'April', label: 'April' },
-    { value: 'Mei', label: 'Mei' },
-    { value: 'Juni', label: 'Juni' },
-    { value: 'Juli', label: 'Juli' },
-    { value: 'Agustus', label: 'Agustus' },
-    { value: 'September', label: 'September' },
-    { value: 'Oktober', label: 'Oktober' },
-    { value: 'November', label: 'November' },
-    { value: 'Desember', label: 'Desember' },
+    { value: '01', label: 'Januari' },
+    { value: '02', label: 'Februari' },
+    { value: '03', label: 'Maret' },
+    { value: '04', label: 'April' },
+    { value: '05', label: 'Mei' },
+    { value: '06', label: 'Juni' },
+    { value: '07', label: 'Juli' },
+    { value: '08', label: 'Agustus' },
+    { value: '09', label: 'September' },
+    { value: '10', label: 'Oktober' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'Desember' },
 ];
 
 const tahunOptions = [
@@ -730,13 +733,20 @@ watch(() => formData.value.kabupaten_id, (newVal) => {
 
 watch(() => formData.value.umat_id, (newVal) => {
     if (props.moduleKey === 'pengajuan-sakramen' && newVal) {
-        const found = (props.umatList || []).find(u => String(u.id) === String(newVal));
-        if (found) {
-            formData.value.nama_lengkap = found.nama_lengkap || '';
-            if (found.handphone) {
-                formData.value.whatsapp = found.handphone;
-            }
-        }
+        fetch(`/umat-options?id=${encodeURIComponent(newVal)}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+        })
+            .then((r) => r.json())
+            .then((data) => {
+                const found = Array.isArray(data) ? data[0] : null;
+                if (found) {
+                    formData.value.nama_lengkap = found.nama_lengkap || found.name || '';
+                    if (found.handphone) {
+                        formData.value.whatsapp = found.handphone;
+                    }
+                }
+            })
+            .catch(() => {});
     }
 });
 
@@ -1016,8 +1026,7 @@ const openCreateModal = () => {
     if (props.moduleKey === 'iuran' || props.moduleKey === 'iuran-umat') {
         const today = new Date().toISOString().split('T')[0];
         const currentYear = new Date().getFullYear();
-        const currentMonthIdx = new Date().getMonth();
-        const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
         
         formData.value = {
             id_kk: '',
@@ -1026,7 +1035,8 @@ const openCreateModal = () => {
             jenis_iuran_id: props.jenisIuranList?.[0]?.id || '',
             nama_iuran: props.jenisIuranList?.[0]?.nama_iuran || '',
             tahun: currentYear,
-            bulan_lunas: monthNames[currentMonthIdx] || 'Januari',
+            bulan: currentMonth,
+            bulan_lunas: currentMonth,
             total_jumlah: props.jenisIuranList?.[0]?.nominal_default || '',
             jumlah: props.jenisIuranList?.[0]?.nominal_default || '',
             status_bayar: 'Lunas',
@@ -1429,6 +1439,15 @@ const openEditModal = (item) => {
     if (props.moduleKey === 'iuran' || props.moduleKey === 'iuran-umat') {
         let tgl = item.tanggal_bayar || item.tanggal || '';
         if (tgl && tgl.includes('T')) tgl = tgl.split('T')[0];
+
+        let rawB = String(item.bulan || item.bulan_lunas || '01');
+        const monthNames = {
+            'januari': '01', 'februari': '02', 'maret': '03', 'april': '04',
+            'mei': '05', 'juni': '06', 'juli': '07', 'agustus': '08',
+            'september': '09', 'oktober': '10', 'november': '11', 'desember': '12'
+        };
+        const cleanB = monthNames[rawB.toLowerCase()] || (rawB.length <= 2 ? rawB.padStart(2, '0') : '01');
+
         formData.value = {
             id: item.id,
             id_kk: item.id_kk || item.kk_id || '',
@@ -1437,13 +1456,14 @@ const openEditModal = (item) => {
             jenis_iuran_id: item.jenis_iuran_id || '',
             nama_iuran: item.nama_iuran || '',
             tahun: item.tahun || 2026,
-            bulan_lunas: item.bulan_lunas || item.bulan || 'Januari',
+            bulan: cleanB,
+            bulan_lunas: cleanB,
             total_jumlah: item.total_jumlah || item.jumlah || '',
             jumlah: item.jumlah || item.total_jumlah || '',
-            status_bayar: item.status_bayar || item.status || 'Lunas',
-            status: item.status || item.status_bayar || 'Lunas',
+            status_bayar: (item.status_bayar === 'lunas' || item.status === 'lunas') ? 'Lunas' : (item.status_bayar || item.status || 'Lunas'),
+            status: item.status || 'lunas',
             tanggal_bayar: tgl,
-            metode_bayar: item.metode_bayar || item.metode_pembayaran || 'Tunai',
+            metode_bayar: (item.metode_bayar === 'tunai' ? 'Tunai' : (item.metode_bayar === 'transfer' ? 'Transfer Bank' : (item.metode_bayar || 'Tunai'))),
             kolektor: item.kolektor || item.petugas || '',
             keterangan: item.keterangan || '',
         };
@@ -6375,9 +6395,10 @@ const statusLabel = (item) => {
                                     </div>
                                     <SearchableSelect
                                         v-model="formData.umat_id"
-                                        :options="umatSelectOptions"
-                                        valueKey="id"
-                                        labelKey="name"
+                                        :options="[]"
+                                        :search-url="umatSearchUrl"
+                                        value-key="id"
+                                        label-key="name"
                                         placeholder="-- Cari nama / NIK umat --"
                                         searchPlaceholder="Ketik cari nama / NIK..."
                                         icon="fa-user-check"
@@ -6636,11 +6657,13 @@ const statusLabel = (item) => {
                                         </label>
                                         <select
                                             v-model="formData.bulan_lunas"
+                                            @change="formData.bulan = formData.bulan_lunas"
                                             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         >
                                             <option value="">-- Pilih Bulan --</option>
                                             <option v-for="b in bulanOptions" :key="b.value" :value="b.value">{{ b.label }}</option>
                                         </select>
+                                        <input type="hidden" v-model="formData.bulan" />
                                     </div>
                                 </div>
 
