@@ -577,43 +577,38 @@ const roleMenus = {
         {
             section: 'Dashboard',
             menus: [
-                { name: 'Dashboard', href: '/v2/dashboard', icon: 'fa-gauge-high' },
-                { name: 'Panduan Hak Akses (RBAC)', href: '/v2/panduan-hak-akses', icon: 'fa-book-open' },
+                { name: 'Dashboard', href: '/kapela/dashboard', icon: 'fa-gauge-high' },
+                { name: 'Panduan', href: '/kapela/panduan-hak-akses', icon: 'fa-book-open' },
             ],
         },
         {
             section: 'Data Kapela / Stasi',
             menus: [
-                { name: 'Stasi / Kapela Saya', href: '/v2/kapela', icon: 'fa-church' },
-                { name: 'KUB', href: '/v2/kub', icon: 'fa-people-group' },
+                { name: 'Stasi / Kapela Saya', href: '/kapela/kapela', icon: 'fa-church' },
+                { name: 'KUB', href: '/kapela/kub', icon: 'fa-people-group' },
             ],
         },
         {
             section: 'Data Umat',
             menus: [
-                { name: 'Kartu Keluarga (KK)', href: '/v2/kk-katolik', icon: 'fa-house-chimney-user' },
-                { name: 'Data Umat / Jiwa', href: '/v2/umat', icon: 'fa-users' },
-                { name: 'Demografi & Grafik', href: '/v2/statistik', icon: 'fa-chart-pie' },
-                {
-                    name: 'Data Sakramen',
-                    icon: 'fa-book-bible',
-                    submenus: [
-                        { name: 'Buku Sakramen', href: '/v2/sakramen', icon: 'fa-book-bookmark' },
-                        { name: 'Pengajuan Sakramen', href: '/v2/pengajuan-sakramen', icon: 'fa-file-signature' },
-                    ],
-                },
+                { name: 'KK Katolik', href: '/kapela/kk-katolik', icon: 'fa-credit-card' },
+                { name: 'Data Keluarga', href: '/kapela/kk-katolik', icon: 'fa-users-rectangle' },
+                { name: 'Data Umat / Jiwa', href: '/kapela/umat', icon: 'fa-user' },
+                { name: 'Demografi & Grafik', href: '/kapela/statistik', icon: 'fa-chart-pie' },
+                { name: 'Data Sakramen', href: '/kapela/sakramen', icon: 'fa-feather' },
+                { name: 'Pengajuan Sakramen', href: '/kapela/pengajuan-sakramen', icon: 'fa-envelope-open-text' },
             ],
         },
         {
             section: 'Aset & Inventaris',
             menus: [
-                { name: 'Aset & Inventaris', href: '/v2/aset', icon: 'fa-boxes-stacked' },
+                { name: 'Aset & Inventaris', href: '/kapela/aset', icon: 'fa-box-open' },
             ],
         },
         {
             section: 'Akun Saya',
             menus: [
-                { name: 'Profil Saya', href: '/v2/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Profil Saya', href: '/kapela/profil-saya', icon: 'fa-circle-user' },
             ],
         },
     ],
@@ -621,39 +616,34 @@ const roleMenus = {
         {
             section: 'Dashboard',
             menus: [
-                { name: 'Dashboard', href: '/v2/dashboard', icon: 'fa-gauge-high' },
-                { name: 'Panduan Hak Akses (RBAC)', href: '/v2/panduan-hak-akses', icon: 'fa-book-open' },
+                { name: 'Dashboard', href: '/kub/dashboard', icon: 'fa-gauge-high' },
+                { name: 'Panduan', href: '/kub/panduan-hak-akses', icon: 'fa-book-open' },
             ],
         },
         {
             section: 'Data KUB Saya',
             menus: [
-                { name: 'KUB Saya', href: '/v2/kub', icon: 'fa-people-group' },
-                { name: 'Kartu Keluarga (KK)', href: '/v2/kk-katolik', icon: 'fa-house-chimney-user' },
-                { name: 'Data Umat / Jiwa', href: '/v2/umat', icon: 'fa-users' },
-                { name: 'Demografi & Statistik', href: '/v2/statistik', icon: 'fa-chart-pie' },
-                {
-                    name: 'Data Sakramen',
-                    icon: 'fa-book-bible',
-                    submenus: [
-                        { name: 'Buku Sakramen', href: '/v2/sakramen', icon: 'fa-book-bookmark' },
-                        { name: 'Pengajuan Sakramen', href: '/v2/pengajuan-sakramen', icon: 'fa-file-signature' },
-                    ],
-                },
+                { name: 'KUB Saya', href: '/kub/kub', icon: 'fa-people-group' },
+                { name: 'KK Katolik', href: '/kub/kk-katolik', icon: 'fa-credit-card' },
+                { name: 'Data Keluarga', href: '/kub/kk-katolik', icon: 'fa-users-rectangle' },
+                { name: 'Data Umat / Jiwa', href: '/kub/umat', icon: 'fa-user' },
+                { name: 'Demografi & Statistik', href: '/kub/statistik', icon: 'fa-chart-pie' },
+                { name: 'Data Sakramen', href: '/kub/sakramen', icon: 'fa-feather' },
+                { name: 'Pengajuan Sakramen', href: '/kub/pengajuan-sakramen', icon: 'fa-envelope-open-text' },
             ],
         },
         {
             section: 'Iuran & Aset KUB',
             menus: [
-                { name: 'Iuran KUB', href: '/v2/keuangan', icon: 'fa-hand-holding-dollar' },
-                { name: 'Lapak & Usaha Umat', href: '/v2/lapak-produk', icon: 'fa-shop' },
-                { name: 'Aset & Inventaris', href: '/v2/aset', icon: 'fa-boxes-stacked' },
+                { name: 'Iuran KUB', href: '/kub/iuran', icon: 'fa-dollar-sign' },
+                { name: 'Lapak & Usaha Umat', href: '/kub/lapak-produk', icon: 'fa-shop' },
+                { name: 'Aset & Inventaris', href: '/kub/aset', icon: 'fa-box-open' },
             ],
         },
         {
             section: 'Akun Saya',
             menus: [
-                { name: 'Profil Saya', href: '/v2/profil-saya', icon: 'fa-circle-user' },
+                { name: 'Profil Saya', href: '/kub/profil-saya', icon: 'fa-circle-user' },
             ],
         },
     ],
