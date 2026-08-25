@@ -79,8 +79,20 @@ class PanelAccess
             return redirect()->route('login');
         }
 
-        $user = Auth::user();
-        $slug = $this->roleSlug($user);
+        $isSuper = in_array($slug, ['superadmin', 'superadministrator'], true);
+        $superOnlyModules = [
+            'keuskupan', 'dekenat', 'kevikepan', 'kuasi-paroki',
+            'provinsi', 'kabupaten', 'kecamatan', 'desa-kelurahan',
+            'role', 'roles', 'backup-database'
+        ];
+
+        $segments = explode('/', trim($request->path(), '/'));
+        $segment = $segments[0] ?? '';
+        $module = $segments[1] ?? null;
+
+        if (!$isSuper && $module !== null && in_array($module, $superOnlyModules, true)) {
+            abort(403, 'Modul ' . $module . ' hanya dapat diakses dan dikelola oleh Super Administrator.');
+        }
 
         if ($this->isElevated($slug)) {
             return $next($request);

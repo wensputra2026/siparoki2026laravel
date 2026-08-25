@@ -317,22 +317,9 @@ const roleMenus = {
                     name: 'Stasi & KUB',
                     icon: 'fa-church',
                     submenus: [
-                        { name: 'Keuskupan', href: '/v2/keuskupan', icon: 'fa-building-columns' },
-                        { name: 'Dekenat', href: '/v2/dekenat', icon: 'fa-building' },
-                        { name: 'Kuasi Paroki', href: '/v2/kuasi-paroki', icon: 'fa-place-of-worship' },
                         { name: 'Stasi / Kapela', href: '/v2/kapela', icon: 'fa-map-location-dot' },
                         { name: 'Wilayah', href: '/v2/wilayah', icon: 'fa-compass' },
                         { name: 'KUB', href: '/v2/kub', icon: 'fa-people-group' },
-                    ],
-                },
-                {
-                    name: 'Wilayah Sipil',
-                    icon: 'fa-map',
-                    submenus: [
-                        { name: 'Provinsi', href: '/v2/provinsi', icon: 'fa-map' },
-                        { name: 'Kabupaten / Kota', href: '/v2/kabupaten', icon: 'fa-city' },
-                        { name: 'Kecamatan', href: '/v2/kecamatan', icon: 'fa-map-pin' },
-                        { name: 'Kelurahan / Desa', href: '/v2/desa-kelurahan', icon: 'fa-location-dot' },
                     ],
                 },
                 { name: 'Data Referensi', href: '/admin/master-referensi', icon: 'fa-tags' },
