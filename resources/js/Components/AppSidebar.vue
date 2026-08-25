@@ -223,7 +223,7 @@ const {
                         v-if="item.action === 'logout'"
                         type="button"
                         @click="showLogoutModal = true"
-                        class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all duration-150 group text-left cursor-pointer"
+                        class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all duration-150 group text-left cursor-pointer"
                         title="Keluar / Logout"
                     >
                         <i class="fa-solid fa-arrow-right-from-bracket text-center w-4 text-sm text-rose-500 group-hover:scale-110 transition-transform"></i>
@@ -236,7 +236,7 @@ const {
                         :href="getHref(item.href)"
                         :data-active="isItemActive(item.href)"
                         :class="[
-                            'flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 group',
+                            'flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 group',
                             isItemActive(item.href)
                                 ? 'bg-amber-50 text-amber-800 border border-amber-300/80 shadow-xs font-bold'
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80',
@@ -255,7 +255,7 @@ const {
                         <button
                             @click="toggleGroup(item.name)"
                             :class="[
-                                'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 text-left group',
+                                'w-full flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 text-left group',
                                 isGroupActive(item)
                                     ? 'text-amber-900 font-bold bg-amber-50/60'
                                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80',
@@ -289,7 +289,7 @@ const {
                                 :href="getHref(sub.href)"
                                 :data-active="isItemActive(sub.href)"
                                 :class="[
-                                    'flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 group',
+                                    'flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[12.5px] font-medium transition-all duration-150 group',
                                     isItemActive(sub.href)
                                         ? 'bg-amber-50 text-amber-800 font-bold border border-amber-200'
                                         : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70',
