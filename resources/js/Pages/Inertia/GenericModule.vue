@@ -522,6 +522,20 @@ const isUmatReadOnlyRole = computed(() => {
     return ['umat', 'data-umat', 'data_umat', 'kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey) && isWilayahOrKapela;
 });
 
+const isViewAndEditOnlyRole = computed(() => {
+    const path = window.location.pathname;
+    const prefix = path.split('/').filter(Boolean)[0] || '';
+    const roleSlug = String(props.role?.slug || props.role?.nama_role || props.role || '').toLowerCase();
+    
+    // Wilayah, Kapela/Stasi are VIEW and EDIT ONLY for Sakramen (Create, Delete, Import are disabled)
+    const isWilayahOrKapela = ['wilayah', 'kapela', 'stasi'].includes(prefix) || 
+                              roleSlug.includes('wilayah') || 
+                              roleSlug.includes('kapela') || 
+                              roleSlug.includes('stasi');
+                              
+    return ['sakramen', 'buku-sakramen'].includes(props.moduleKey) && isWilayahOrKapela;
+});
+
 const generatePassword = () => {
     const suffix = Math.random().toString(36).slice(2, 8).toUpperCase();
     formData.value.password = `SIP-${suffix}`;
@@ -1761,7 +1775,7 @@ const statusLabel = (item) => {
 
                 <!-- Right: Action Buttons Group -->
                 <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                    <!-- 0. Read-Only Indicator for Wilayah / Kapela on Umat Data -->
+                    <!-- 0. Read-Only Indicator for Wilayah / Kapela on KK & Umat Data -->
                     <div
                         v-if="isUmatReadOnlyRole"
                         class="px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
@@ -1770,8 +1784,17 @@ const statusLabel = (item) => {
                         <span>Mode Lihat Saja (CRUD di KUB)</span>
                     </div>
 
-                    <!-- 1. Tambah Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
-                    <template v-if="!isUmatReadOnlyRole">
+                    <!-- 0.1 View & Edit Only Indicator for Wilayah / Kapela on Sakramen Data -->
+                    <div
+                        v-else-if="isViewAndEditOnlyRole"
+                        class="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1.5 shrink-0"
+                    >
+                        <i class="fa-solid fa-pen-to-square text-amber-600 text-[11px]"></i>
+                        <span>Mode Lihat & Ubah (Tambah/Hapus di Paroki)</span>
+                    </div>
+
+                    <!-- 1. Tambah Button (Hidden for Read-Only or View/Edit Only on Wilayah/Kapela) -->
+                    <template v-if="!isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <Link
                             v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
                             :href="moduleKey === 'konten' ? `${basePrefix}/konten/create` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/kk-katolik/create` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/create` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/create` : `${basePrefix}/role/create`)))"
@@ -1791,8 +1814,8 @@ const statusLabel = (item) => {
                         </button>
                     </template>
 
-                    <!-- 2. Import Excel Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
-                    <template v-if="!isUmatReadOnlyRole">
+                    <!-- 2. Import Excel Button (Hidden for Read-Only or View/Edit Only on Wilayah/Kapela) -->
+                    <template v-if="!isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <input
                             ref="importFileInput"
                             type="file"
@@ -2244,9 +2267,9 @@ const statusLabel = (item) => {
                                         <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
                                     </button>
 
-                                    <!-- Delete Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
+                                    <!-- Delete Button (Hidden for Read-Only and View/Edit Only roles) -->
                                     <button
-                                        v-if="!isUmatReadOnlyRole"
+                                        v-if="!isUmatReadOnlyRole && !isViewAndEditOnlyRole"
                                         type="button"
                                         @click="openDeleteModal(item)"
                                         :disabled="isSelfUser(item)"

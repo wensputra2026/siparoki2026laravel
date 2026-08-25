@@ -2876,6 +2876,8 @@ class InertiaPanelController extends Controller
             $query->with(['konten']);
         } elseif ($slug === 'iuran' || $slug === 'iuran-umat') {
             $query->with(['kk', 'jenisIuran']);
+        } elseif ($slug === 'sakramen') {
+            $query->with(['umat']);
         }
 
         $modelInstance = new $modelClass;
@@ -3378,8 +3380,8 @@ class InertiaPanelController extends Controller
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
-            return back()->with('error', 'Akses ditolak. Pengelolaan data (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'sakramen'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
+            return back()->with('error', 'Akses ditolak. Penambahan data hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
         }
 
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
@@ -3648,8 +3650,8 @@ class InertiaPanelController extends Controller
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($slug, ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
-            return back()->with('error', 'Akses ditolak. Pengelolaan data (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
+        if (in_array($slug, ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
+            return back()->with('error', 'Akses ditolak. Pengelolaan data (hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
         }
 
         if ($slug === 'user' && auth()->id() && (int) auth()->id() === (int) $item->getKey()) {
@@ -4708,7 +4710,7 @@ class InertiaPanelController extends Controller
     {
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'sakramen'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
             return back()->with('error', 'Akses ditolak. Pengelolaan data (tambah/edit/hapus/impor) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
         }
 
@@ -6923,7 +6925,15 @@ class InertiaPanelController extends Controller
                 ['key' => 'status_menikah', 'label' => 'Status Perkawinan'],
                 ['key' => 'status_umat', 'altKey' => 'status_aktif', 'label' => 'Status'],
             ]],
-            'sakramen' => ['model' => \App\Models\Sakramen::class, 'title' => 'Buku Sakramen', 'columns' => [['key' => 'tipe_sakramen', 'label' => 'Tipe Sakramen', 'isPrimary' => true], ['key' => 'tanggal', 'label' => 'Tanggal'], ['key' => 'tempat', 'label' => 'Tempat']]],
+            'sakramen' => ['model' => \App\Models\Sakramen::class, 'title' => 'Buku Sakramen', 'columns' => [
+                ['key' => 'tipe_sakramen', 'label' => 'Tipe Sakramen', 'isPrimary' => true],
+                ['key' => 'umat_nama', 'relation' => 'umat', 'relationKey' => 'nama_lengkap', 'label' => 'Nama Penerima / Umat'],
+                ['key' => 'tanggal', 'label' => 'Tanggal Penerimaan', 'isDate' => true],
+                ['key' => 'tempat', 'label' => 'Gereja / Tempat'],
+                ['key' => 'pelaksana', 'altKey' => 'pastor', 'label' => 'Pastor Pelayan'],
+                ['key' => 'no_surat', 'label' => 'No Akta / Surat'],
+                ['key' => 'status', 'label' => 'Status'],
+            ]],
             'pengajuan-sakramen' => [
                 'model' => \App\Models\PengajuanSakramen::class,
                 'title' => 'Pengajuan & Administrasi Sakramen',
