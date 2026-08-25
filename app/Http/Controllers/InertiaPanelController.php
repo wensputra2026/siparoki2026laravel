@@ -1030,9 +1030,16 @@ class InertiaPanelController extends Controller
     /**
      * Profil Paroki SPA.
      */
-    public function profilParoki(Request $request): Response
+    public function profilParoki(Request $request)
     {
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
+        $isSuperAdmin = in_array($firstSegment, ['superadmin', 'v2', 'admin'], true) || str_contains($userRoleSlug, 'superadmin') || str_contains($userRoleSlug, 'super admin');
+
+        if (!$isSuperAdmin) {
+            return redirect("/{$firstSegment}/dashboard")->with('error', 'Akses ditolak. Pengaturan Profil Paroki hanya dapat dikelola oleh Super Admin.');
+        }
+
         $roleMap = [
             'superadmin' => 'Super Admin',
             'paroki' => 'Admin Paroki',
@@ -1051,11 +1058,15 @@ class InertiaPanelController extends Controller
             ->get(['id_paroki', 'nama_paroki', 'kode_paroki', 'keuskupan_id', 'dekenat_id', 'status_paroki', 'status']);
 
         $selectedParokiId = $request->query('paroki_id')
-            ?? $request->session()->get('default_paroki_id')
+            ?? ($request->hasSession() ? $request->session()->get('default_paroki_id') : session('default_paroki_id'))
             ?? (Paroki::where('nama_paroki', 'like', '%Benlutu%')->value('id_paroki') ?? Paroki::value('id_paroki'));
 
         if ($request->query('set_default') && $request->query('paroki_id')) {
-            $request->session()->put('default_paroki_id', (int) $request->query('paroki_id'));
+            if ($request->hasSession()) {
+                $request->session()->put('default_paroki_id', (int) $request->query('paroki_id'));
+            } else {
+                session(['default_paroki_id' => (int) $request->query('paroki_id')]);
+            }
             $selectedParokiId = (int) $request->query('paroki_id');
 
             // Safe auto-sync selected default paroki to global settings
@@ -2149,6 +2160,213 @@ class InertiaPanelController extends Controller
         }
 
         return back()->with('success', 'Pengaturan SEO & Meta Tags berhasil disimpan.');
+    }
+
+    /**
+     * Resolve active panel prefix from request path.
+     */
+    public function resolvePanelPrefix(Request $request): string
+    {
+        return explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+    }
+
+    /**
+     * Resolve active human readable panel role name.
+     */
+    public function resolvePanelRole(Request $request): string
+    {
+        $firstSegment = $this->resolvePanelPrefix($request);
+        $roleMap = [
+            'superadmin' => 'Super Admin',
+            'v2' => 'Super Admin',
+            'admin' => 'Super Admin',
+            'paroki' => 'Admin Paroki',
+            'pastor' => 'Pastor',
+            'wilayah' => 'Admin Wilayah',
+            'kapela' => 'Admin Kapela / Stasi',
+            'kub' => 'Ketua KUB',
+            'bendahara' => 'Bendahara',
+            'penulis' => 'Penulis',
+            'umat' => 'Umat',
+        ];
+        return $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
+    }
+
+    /**
+     * Pembersih Sistem - scan orphan uploads & system cache management.
+     */
+    public function pembersihSistem(Request $request): Response
+    {
+        $prefix = $this->resolvePanelPrefix($request);
+        $role = $this->resolvePanelRole($request);
+        $uploadDir = public_path('uploads');
+
+        $orphans = [];
+        $totalFiles = 0;
+        $totalSize = 0;
+        $scanned = false;
+
+        if (is_dir($uploadDir)) {
+            $scanned = true;
+            $referenced = $this->getReferencedUploadBasenames();
+            $rii = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($uploadDir, \FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($rii as $file) {
+                if (!$file->isFile()) {
+                    continue;
+                }
+                $rel = ltrim(str_replace('\\', '/', str_replace($uploadDir, '', $file->getPathname())), '/');
+                $totalFiles++;
+                $totalSize += $file->getSize();
+                if (!isset($referenced[strtolower($file->getBasename())])) {
+                    $orphans[] = [
+                        'path' => 'uploads/' . $rel,
+                        'name' => $file->getBasename(),
+                        'size' => $file->getSize(),
+                        'mtime' => $file->getMTime(),
+                    ];
+                }
+            }
+            usort($orphans, fn($a, $b) => strcmp($a['path'], $b['path']));
+        }
+
+        $cacheInfo = [
+            'cache' => $this->dirSize(storage_path('framework/cache')),
+            'views' => $this->dirSize(storage_path('framework/views')),
+            'sessions' => $this->dirSize(storage_path('framework/sessions')),
+            'logs' => $this->dirSize(storage_path('logs')),
+        ];
+
+        return Inertia::render('Inertia/PembersihSistem', [
+            'role' => $role,
+            'prefix' => $prefix,
+            'orphans' => $orphans,
+            'totalFiles' => $totalFiles,
+            'totalSize' => $totalSize,
+            'scanned' => $scanned,
+            'cacheInfo' => $cacheInfo,
+        ]);
+    }
+
+    /**
+     * Pembersih Sistem - execute clear cache / delete orphan files.
+     */
+    public function pembersihSistemAksi(Request $request)
+    {
+        $action = $request->input('action');
+
+        if ($action === 'clear_cache') {
+            try {
+                \Illuminate\Support\Facades\Artisan::call('cache:clear');
+                \Illuminate\Support\Facades\Artisan::call('config:clear');
+                \Illuminate\Support\Facades\Artisan::call('route:clear');
+                \Illuminate\Support\Facades\Artisan::call('view:clear');
+                \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            } catch (\Throwable $e) {
+                // ignore artisan errors in restricted environments
+            }
+            return back()->with('success', 'Cache sistem berhasil dibersihkan.');
+        }
+
+        if ($action === 'delete_orphans') {
+            $paths = (array) $request->input('paths', []);
+            $uploadDir = public_path('uploads');
+            $base = realpath($uploadDir);
+            $deleted = 0;
+            foreach ($paths as $p) {
+                $p = str_replace('\\', '/', (string) $p);
+                if (!str_starts_with($p, 'uploads/')) {
+                    continue;
+                }
+                $full = public_path($p);
+                $real = realpath($full);
+                if ($real && $base && str_starts_with($real, $base) && is_file($real)) {
+                    @unlink($real);
+                    $deleted++;
+                }
+            }
+            return back()->with('success', $deleted . ' file yatim (orphan) berhasil dihapus.');
+        }
+
+        return back()->with('error', 'Aksi pembersih sistem tidak dikenali.');
+    }
+
+    /**
+     * Build a lowercase set of all file basenames referenced across DB columns.
+     */
+    private function getReferencedUploadBasenames(): array
+    {
+        $set = [];
+        try {
+            $tables = DB::select('SHOW TABLES');
+        } catch (\Throwable $e) {
+            return $set;
+        }
+        $patterns = [
+            'foto', 'gambar', 'file', 'logo', 'dokumen', 'path', 'image', 'banner',
+            'qris', 'ktp', 'ijazah', 'sertifikat', 'surat', 'lampiran', 'avatar',
+            'cover', 'foto_', 'dokumen_', 'berkas', 'bukti',
+        ];
+        foreach ($tables as $row) {
+            $tableName = array_values((array) $row)[0];
+            if (!Schema::hasTable($tableName)) {
+                continue;
+            }
+            $cols = Schema::getColumnListing($tableName);
+            $fileCols = [];
+            foreach ($cols as $c) {
+                $cl = strtolower((string) $c);
+                foreach ($patterns as $p) {
+                    if (str_contains($cl, $p)) {
+                        $fileCols[] = $c;
+                        break;
+                    }
+                }
+            }
+            if (empty($fileCols)) {
+                continue;
+            }
+            try {
+                $rows = DB::table($tableName)->select($fileCols)->get();
+            } catch (\Throwable $e) {
+                continue;
+            }
+            foreach ($rows as $r) {
+                foreach ($fileCols as $c) {
+                    $val = $r->{$c} ?? null;
+                    if (!$val) {
+                        continue;
+                    }
+                    $path = parse_url((string) $val, PHP_URL_PATH) ?: (string) $val;
+                    $bn = strtolower(basename($path));
+                    if ($bn !== '' && $bn !== '.') {
+                        $set[$bn] = true;
+                    }
+                }
+            }
+        }
+        return $set;
+    }
+
+    /**
+     * Recursively calculate directory size in bytes.
+     */
+    private function dirSize(string $dir): int
+    {
+        if (!is_dir($dir)) {
+            return 0;
+        }
+        $size = 0;
+        $rii = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($rii as $f) {
+            if ($f->isFile()) {
+                $size += $f->getSize();
+            }
+        }
+        return $size;
     }
 
     /**

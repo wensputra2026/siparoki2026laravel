@@ -57,6 +57,12 @@ const basePrefix = computed(() => {
     const parts = page.url.split('?')[0].split('/').filter(Boolean);
     return parts.length > 0 ? '/' + parts[0] : '/superadmin';
 });
+
+const isSuperAdminRole = computed(() => {
+    const r = String(props.role || page.props.role || '').toLowerCase();
+    const p = basePrefix.value.toLowerCase();
+    return r.includes('superadmin') || r.includes('super admin') || p === '/superadmin' || p === '/v2' || p === '/admin';
+});
 </script>
 
 <template>
@@ -96,14 +102,15 @@ const basePrefix = computed(() => {
                     type="button"
                     :disabled="isReloading"
                     @click="reloadDashboard"
-                    title="Segarkan data statistik dan ringkasan dashboard"
+                    title="Reload data statistik dan ringkasan dashboard"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs transition shadow-2xs cursor-pointer disabled:opacity-60"
                 >
                     <i :class="['fa-solid fa-arrows-rotate text-blue-600', isReloading ? 'fa-spin' : '']"></i>
-                    <span>{{ isReloading ? 'Memuat...' : 'Segarkan Data' }}</span>
+                    <span>{{ isReloading ? 'Memuat...' : 'Reload' }}</span>
                 </button>
 
                 <Link
+                    v-if="isSuperAdminRole"
                     :href="`${basePrefix}/profil-paroki`"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs transition shadow-2xs cursor-pointer"
                 >
