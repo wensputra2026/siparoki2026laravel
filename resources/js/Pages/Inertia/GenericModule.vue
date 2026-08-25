@@ -2206,7 +2206,7 @@ const statusLabel = (item) => {
                                         <i class="fa-solid fa-eye text-[10px]"></i>
                                     </Link>
                                     <a
-                                        v-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey)"
+                                        v-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) && !isUmatReadOnlyRole"
                                         :href="`${basePrefix}/kk-katolik/${item.id || item.no_kk_kw}/cetak`"
                                         target="_blank"
                                         title="Cetak Kartu Keluarga (PDF / Print)"

@@ -42,6 +42,11 @@ const calculateAge = (d) => {
         return null;
     }
 };
+const isReadOnlyRole = computed(() => {
+    const p = String(props.prefix || '').toLowerCase();
+    const r = String(props.role || '').toLowerCase();
+    return ['wilayah', 'kapela', 'stasi'].includes(p) || r.includes('wilayah') || r.includes('kapela') || r.includes('stasi');
+});
 </script>
 
 <template>
@@ -87,21 +92,30 @@ const calculateAge = (d) => {
 
                     <!-- Action Buttons -->
                     <div class="flex items-center gap-2 shrink-0">
-                        <Link
-                            :href="editUrl"
-                            class="px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        <template v-if="!isReadOnlyRole">
+                            <Link
+                                :href="editUrl"
+                                class="px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                            >
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                <span>Edit Data KK</span>
+                            </Link>
+                            <a
+                                :href="printUrl"
+                                target="_blank"
+                                class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition flex items-center gap-1.5 cursor-pointer"
+                            >
+                                <i class="fa-solid fa-print text-xs"></i>
+                                <span>Cetak KK (PDF / Print)</span>
+                            </a>
+                        </template>
+                        <div
+                            v-else
+                            class="px-3.5 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5"
                         >
-                            <i class="fa-solid fa-pen-to-square text-xs"></i>
-                            <span>Edit Data KK</span>
-                        </Link>
-                        <a
-                            :href="printUrl"
-                            target="_blank"
-                            class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition flex items-center gap-1.5 cursor-pointer"
-                        >
-                            <i class="fa-solid fa-print text-xs"></i>
-                            <span>Cetak KK (PDF / Print)</span>
-                        </a>
+                            <i class="fa-solid fa-eye text-blue-600 text-xs"></i>
+                            <span>Mode Lihat Saja (Cetak di KUB / Paroki)</span>
+                        </div>
                     </div>
                 </div>
             </div>

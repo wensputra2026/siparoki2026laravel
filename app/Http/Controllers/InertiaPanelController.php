@@ -931,6 +931,12 @@ class InertiaPanelController extends Controller
      */
     public function exportKkPdf(Request $request, string|int $id)
     {
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
+        if (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) {
+            return redirect("/{$firstSegment}/kk-katolik")->with('error', 'Akses ditolak. Pencetakan resmi Kartu Keluarga (KK) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
+        }
+
         $kk = is_numeric($id)
             ? \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->find($id)
             : \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->where('no_kk_kw', $id)->first();
