@@ -673,6 +673,51 @@ const metodeBayarOptions = [
     { value: 'Kolektor KUB', label: 'Setoran Melalui Kolektor KUB' },
 ];
 
+const kategoriMisaOptions = [
+    { value: 'Misa Hari Minggu I (Pagi)', label: 'Misa Hari Minggu I (Pagi)' },
+    { value: 'Misa Hari Minggu II (Sore)', label: 'Misa Hari Minggu II (Sore)' },
+    { value: 'Misa Harian (Pagi / Sore)', label: 'Misa Harian (Pagi / Sore)' },
+    { value: 'Misa Jumat Pertama (Jumper)', label: 'Misa Jumat Pertama (Jumper)' },
+    { value: 'Misa Hari Raya Natal', label: 'Misa Hari Raya Natal' },
+    { value: 'Misa Hari Raya Paskah / Trihari Suci', label: 'Misa Hari Raya Paskah / Trihari Suci' },
+    { value: 'Misa Hari Raya Pentakosta', label: 'Misa Hari Raya Pentakosta' },
+    { value: 'Misa Stasi / Kapela', label: 'Misa Stasi / Kapela' },
+    { value: 'Misa Lingkungan / KUB', label: 'Misa Lingkungan / KUB' },
+    { value: 'Misa Sakramen Krisma / Komuni Pertama', label: 'Misa Sakramen Krisma / Komuni Pertama' },
+    { value: 'Misa Perkawinan (Matrimonium)', label: 'Misa Perkawinan (Matrimonium)' },
+    { value: 'Misa Arwah / Requiem', label: 'Misa Arwah / Requiem' },
+    { value: 'Misa Syukur / Pesta Pelindung', label: 'Misa Syukur / Pesta Pelindung' },
+];
+
+const lokasiMisaOptions = computed(() => {
+    const list = [
+        { value: 'Gereja Paroki Benlutu', label: 'Gereja Paroki Benlutu (Pusat Paroki)' },
+    ];
+    if (props.kapelaList && props.kapelaList.length > 0) {
+        props.kapelaList.forEach(k => {
+            const name = k.nama_kapela || k.name || '';
+            if (name) {
+                list.push({
+                    value: name,
+                    label: `Kapela / Stasi: ${name}`,
+                });
+            }
+        });
+    }
+    if (props.wilayahList && props.wilayahList.length > 0) {
+        props.wilayahList.forEach(w => {
+            const name = w.nama_wilayah || w.name || '';
+            if (name) {
+                list.push({
+                    value: `Wilayah: ${name}`,
+                    label: `Wilayah: ${name}`,
+                });
+            }
+        });
+    }
+    return list;
+});
+
 const togglePastorRekan = (name) => {
     if (!Array.isArray(formData.value.selected_pastor_rekan)) {
         formData.value.selected_pastor_rekan = [];
@@ -1026,6 +1071,17 @@ const openCreateModal = () => {
         formData.value.lokasi = '';
         formData.value.AlamatKuasiParoki = '';
         formData.value.keterangan = '';
+    }
+
+    if (props.moduleKey === 'kolekte') {
+        formData.value = {
+            tanggal: new Date().toISOString().split('T')[0],
+            kategori_misa: 'Misa Hari Minggu I (Pagi)',
+            lokasi_misa: 'Gereja Paroki Benlutu',
+            nominal: '',
+            petugas_penghitung: '',
+            keterangan: '',
+        };
     }
 
     if (props.moduleKey === 'rapat' || props.moduleKey === 'rapat-notulen') {
@@ -1389,6 +1445,19 @@ const openEditModal = (item) => {
             foto: item.foto || item.gambar || '',
         };
         previewImage.value = item.gambar ? getImageUrl(item.gambar) : (item.foto ? getImageUrl(item.foto) : null);
+    }
+    if (props.moduleKey === 'kolekte') {
+        let tgl = item.tanggal || '';
+        if (tgl && tgl.includes('T')) tgl = tgl.split('T')[0];
+        formData.value = {
+            id: item.id,
+            tanggal: tgl,
+            kategori_misa: item.kategori_misa || 'Misa Hari Minggu I (Pagi)',
+            lokasi_misa: item.lokasi_misa || 'Gereja Paroki Benlutu',
+            nominal: item.nominal || '',
+            petugas_penghitung: item.petugas_penghitung || '',
+            keterangan: item.keterangan || '',
+        };
     }
     if (props.moduleKey === 'konten') {
         const publishDate = item.tanggal_publish
@@ -6801,7 +6870,122 @@ const statusLabel = (item) => {
                         </div>
                     </template>
 
-                    <!-- 16. GENERIC FORM FOR OTHER MODULES -->
+                    <!-- 18. KOLEKTE MISA FORM (Dropdowns from Database: Kategori Misa & Lokasi Gereja) -->
+                    <template v-else-if="moduleKey === 'kolekte'">
+                        <div class="space-y-4 text-xs">
+                            <!-- Header Info Card -->
+                            <div class="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200/80 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                                </div>
+                                <div class="text-xs text-slate-700">
+                                    <h5 class="font-bold text-amber-900">Formulir Pencatatan Kolekte Persembahan Misa</h5>
+                                    <p class="text-[11px] text-slate-600">Pilih kategori perayaan misa dan lokasi gereja/stasi dari database untuk mencatat perolehan kolekte.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3.5">
+                                <!-- Row 1: Tanggal Misa & Kategori Misa -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Tanggal Misa <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input
+                                            v-model="formData.tanggal"
+                                            type="date"
+                                            required
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Kategori / Perayaan Misa <span class="text-rose-500">*</span>
+                                        </label>
+                                        <SearchableSelect
+                                            v-model="formData.kategori_misa"
+                                            :options="kategoriMisaOptions"
+                                            valueKey="value"
+                                            labelKey="label"
+                                            placeholder="-- Pilih / Cari Kategori Misa --"
+                                            searchPlaceholder="Ketik cari perayaan misa..."
+                                            icon="fa-cross"
+                                            iconColor="text-amber-600"
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- Row 2: Jumlah Kolekte (Rp) & Lokasi Gereja / Tempat -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Jumlah Kolekte (Rp) <span class="text-rose-500">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xs">Rp</span>
+                                            <input
+                                                v-model="formData.nominal"
+                                                type="number"
+                                                required
+                                                min="0"
+                                                step="1000"
+                                                placeholder="Contoh: 1500000"
+                                                class="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 font-mono"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Gereja / Tempat Misa <span class="text-rose-500">*</span>
+                                        </label>
+                                        <SearchableSelect
+                                            v-model="formData.lokasi_misa"
+                                            :options="lokasiMisaOptions"
+                                            valueKey="value"
+                                            labelKey="label"
+                                            placeholder="-- Pilih Gereja / Kapela / Stasi --"
+                                            searchPlaceholder="Ketik cari nama gereja/stasi..."
+                                            icon="fa-church"
+                                            iconColor="text-blue-600"
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- Row 3: Petugas Penghitung -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Petugas Penghitung / Kolektor
+                                    </label>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-user-shield absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <input
+                                            v-model="formData.petugas_penghitung"
+                                            type="text"
+                                            placeholder="Contoh: Tim Kolekte DPP, Misdinar, atau Bendahara Stasi..."
+                                            class="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 font-medium"
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- Row 4: Keterangan / Catatan Tambahan -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Keterangan Tambahan
+                                    </label>
+                                    <textarea
+                                        v-model="formData.keterangan"
+                                        rows="2"
+                                        placeholder="Contoh: Kolekte kantong pertama untuk operasional paroki / persembahan khusus stasi..."
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 19. GENERIC FORM FOR OTHER MODULES -->
                     <template v-else>
                         <div v-for="col in columns" :key="col.key">
                             <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto'" class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
@@ -6911,6 +7095,15 @@ const statusLabel = (item) => {
                                     icon="fa-church"
                                     icon-color="text-blue-600"
                                 />
+                                <!-- Enum dropdown detection (e.g. jenis_tugas) -->
+                                <select
+                                    v-else-if="col.enumOptions && col.enumOptions.length"
+                                    v-model="formData[col.key]"
+                                    class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                >
+                                    <option value="" disabled>Pilih {{ col.label }}...</option>
+                                    <option v-for="opt in col.enumOptions" :key="opt" :value="opt">{{ opt }}</option>
+                                </select>
                                 <!-- Date input detection -->
                                 <input
                                     v-else-if="col.isDate || col.key.includes('tanggal') || col.key.includes('tgl') || col.key.endsWith('_at')"
