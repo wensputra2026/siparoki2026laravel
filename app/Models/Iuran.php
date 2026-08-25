@@ -49,6 +49,44 @@ class Iuran extends Model
 
     public function kk()
     {
-        return $this->belongsTo(KkKatolik::class, 'kk_id');
+        return $this->belongsTo(KkKatolik::class, 'id_kk');
+    }
+
+    public function getNoKkAttribute()
+    {
+        return $this->kk?->no_kk_kw ?: $this->kk?->no_kk_dukcapil ?: ($this->attributes['no_kk'] ?? '-');
+    }
+
+    public function getNamaKepalaAttribute()
+    {
+        if ($this->kk) {
+            $baptis = trim($this->kk->nama_baptis_pemilik ?? '');
+            $lahir = trim($this->kk->nama_lahir_pemilik ?? '');
+            if ($baptis && !str_contains(strtolower($lahir), strtolower($baptis))) {
+                return "{$baptis} {$lahir}";
+            }
+            return $lahir ?: $baptis ?: ($this->attributes['nama_kepala'] ?? '-');
+        }
+        return $this->attributes['nama_kepala'] ?? '-';
+    }
+
+    public function getNamaIuranAttribute()
+    {
+        return $this->jenisIuran?->nama_iuran ?: ($this->attributes['nama_iuran'] ?? '-');
+    }
+
+    public function getTotalJumlahAttribute()
+    {
+        return $this->attributes['jumlah'] ?? $this->attributes['total_jumlah'] ?? 0;
+    }
+
+    public function getBulanLunasAttribute()
+    {
+        return $this->attributes['bulan'] ?? $this->attributes['bulan_lunas'] ?? '-';
+    }
+
+    public function getStatusBayarAttribute()
+    {
+        return $this->attributes['status'] ?? $this->attributes['status_bayar'] ?? 'Lunas';
     }
 }

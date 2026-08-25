@@ -104,6 +104,14 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    kkList: {
+        type: Array,
+        default: () => [],
+    },
+    jenisIuranList: {
+        type: Array,
+        default: () => [],
+    },
     filters: {
         type: Object,
         default: () => ({ search: '' }),
@@ -573,6 +581,64 @@ const umatSelectOptions = computed(() => {
     }));
 });
 
+const onIuranKkChange = (selectedKkId) => {
+    const found = (props.kkList || []).find(k => String(k.id) === String(selectedKkId));
+    if (found) {
+        formData.value.id_kk = found.id;
+        formData.value.no_kk = found.no_kk;
+        formData.value.nama_kepala = found.nama_kepala;
+    }
+};
+
+const onIuranJenisChange = (selectedJenisId) => {
+    const found = (props.jenisIuranList || []).find(j => String(j.id) === String(selectedJenisId));
+    if (found) {
+        formData.value.jenis_iuran_id = found.id;
+        formData.value.nama_iuran = found.nama_iuran;
+        if (found.nominal_default) {
+            formData.value.total_jumlah = found.nominal_default;
+            formData.value.jumlah = found.nominal_default;
+        }
+    }
+};
+
+const bulanOptions = [
+    { value: 'Januari', label: 'Januari' },
+    { value: 'Februari', label: 'Februari' },
+    { value: 'Maret', label: 'Maret' },
+    { value: 'April', label: 'April' },
+    { value: 'Mei', label: 'Mei' },
+    { value: 'Juni', label: 'Juni' },
+    { value: 'Juli', label: 'Juli' },
+    { value: 'Agustus', label: 'Agustus' },
+    { value: 'September', label: 'September' },
+    { value: 'Oktober', label: 'Oktober' },
+    { value: 'November', label: 'November' },
+    { value: 'Desember', label: 'Desember' },
+];
+
+const tahunOptions = [
+    { value: 2024, label: '2024' },
+    { value: 2025, label: '2025' },
+    { value: 2026, label: '2026' },
+    { value: 2027, label: '2027' },
+    { value: 2028, label: '2028' },
+];
+
+const statusBayarOptions = [
+    { value: 'Lunas', label: 'Lunas' },
+    { value: 'Belum Lunas', label: 'Belum Lunas' },
+    { value: 'Cicilan', label: 'Cicilan / Sebagian' },
+    { value: 'Pending', label: 'Menunggu Verifikasi' },
+];
+
+const metodeBayarOptions = [
+    { value: 'Tunai', label: 'Tunai / Cash' },
+    { value: 'Transfer Bank', label: 'Transfer Bank' },
+    { value: 'QRIS', label: 'QRIS Paroki' },
+    { value: 'Kolektor KUB', label: 'Setoran Melalui Kolektor KUB' },
+];
+
 const togglePastorRekan = (name) => {
     if (!Array.isArray(formData.value.selected_pastor_rekan)) {
         formData.value.selected_pastor_rekan = [];
@@ -930,6 +996,31 @@ const openCreateModal = () => {
             lokasi: 'Aula Paroki',
             notulen: '',
             status: 'Aktif',
+        };
+    }
+
+    if (props.moduleKey === 'iuran' || props.moduleKey === 'iuran-umat') {
+        const today = new Date().toISOString().split('T')[0];
+        const currentYear = new Date().getFullYear();
+        const currentMonthIdx = new Date().getMonth();
+        const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        
+        formData.value = {
+            id_kk: '',
+            no_kk: '',
+            nama_kepala: '',
+            jenis_iuran_id: props.jenisIuranList?.[0]?.id || '',
+            nama_iuran: props.jenisIuranList?.[0]?.nama_iuran || '',
+            tahun: currentYear,
+            bulan_lunas: monthNames[currentMonthIdx] || 'Januari',
+            total_jumlah: props.jenisIuranList?.[0]?.nominal_default || '',
+            jumlah: props.jenisIuranList?.[0]?.nominal_default || '',
+            status_bayar: 'Lunas',
+            status: 'Lunas',
+            tanggal_bayar: today,
+            metode_bayar: 'Tunai',
+            kolektor: '',
+            keterangan: '',
         };
     }
 
@@ -1319,6 +1410,28 @@ const openEditModal = (item) => {
             penulis: item.penulis || 'Sekretariat Paroki',
             status_publish: item.status_publish || item.status || 'Publish',
             deskripsi: item.deskripsi || item.isi || item.uraian || '',
+        };
+    }
+    if (props.moduleKey === 'iuran' || props.moduleKey === 'iuran-umat') {
+        let tgl = item.tanggal_bayar || item.tanggal || '';
+        if (tgl && tgl.includes('T')) tgl = tgl.split('T')[0];
+        formData.value = {
+            id: item.id,
+            id_kk: item.id_kk || item.kk_id || '',
+            no_kk: item.no_kk || item.no_kk_kw || '',
+            nama_kepala: item.nama_kepala || '',
+            jenis_iuran_id: item.jenis_iuran_id || '',
+            nama_iuran: item.nama_iuran || '',
+            tahun: item.tahun || 2026,
+            bulan_lunas: item.bulan_lunas || item.bulan || 'Januari',
+            total_jumlah: item.total_jumlah || item.jumlah || '',
+            jumlah: item.jumlah || item.total_jumlah || '',
+            status_bayar: item.status_bayar || item.status || 'Lunas',
+            status: item.status || item.status_bayar || 'Lunas',
+            tanggal_bayar: tgl,
+            metode_bayar: item.metode_bayar || item.metode_pembayaran || 'Tunai',
+            kolektor: item.kolektor || item.petugas || '',
+            keterangan: item.keterangan || '',
         };
     }
     if (props.moduleKey === 'user') {
@@ -6409,6 +6522,176 @@ const statusLabel = (item) => {
                                         <p class="text-[10px] text-slate-400">
                                             Format: JPG, PNG, PDF (Maks. 2MB)
                                         </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 17. IURAN UMAT FORM (100% Select from Database: KK, Jenis Iuran, Tahun, Bulan, Status) -->
+                    <template v-else-if="moduleKey === 'iuran' || moduleKey === 'iuran-umat'">
+                        <div class="space-y-4 text-xs">
+                            <!-- Card Info -->
+                            <div class="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200/80 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                                </div>
+                                <div class="text-xs text-slate-700">
+                                    <h5 class="font-bold text-amber-900">Formulir Pencatatan Iuran Umat</h5>
+                                    <p class="text-[11px] text-slate-600">Pilih Kartu Keluarga dan Jenis Iuran dari database untuk mencatat setoran iuran.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3.5">
+                                <!-- 1. Pilih No KK / Kepala Keluarga -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Pilih Kartu Keluarga (KK) Terdaftar <span class="text-rose-500">*</span>
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="formData.id_kk"
+                                        :options="kkList"
+                                        valueKey="id"
+                                        labelKey="label"
+                                        placeholder="-- Cari / Pilih No KK atau Kepala Keluarga --"
+                                        searchPlaceholder="Ketik No KK atau nama kepala keluarga..."
+                                        icon="fa-address-card"
+                                        iconColor="text-amber-600"
+                                        @update:modelValue="onIuranKkChange"
+                                    />
+                                    <input type="hidden" v-model="formData.no_kk" />
+                                    <input type="hidden" v-model="formData.nama_kepala" />
+                                </div>
+
+                                <!-- 2. Jenis Iuran -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Jenis Iuran Gerejawi <span class="text-rose-500">*</span>
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="formData.jenis_iuran_id"
+                                        :options="jenisIuranList"
+                                        valueKey="id"
+                                        labelKey="nama_iuran"
+                                        placeholder="-- Pilih Jenis Iuran dari Database --"
+                                        searchPlaceholder="Ketik cari nama jenis iuran..."
+                                        icon="fa-coins"
+                                        iconColor="text-emerald-600"
+                                        @update:modelValue="onIuranJenisChange"
+                                    />
+                                    <input type="hidden" v-model="formData.nama_iuran" />
+                                </div>
+
+                                <!-- 3. Tahun & Bulan -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Tahun <span class="text-rose-500">*</span>
+                                        </label>
+                                        <select
+                                            v-model="formData.tahun"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        >
+                                            <option v-for="t in tahunOptions" :key="t.value" :value="t.value">{{ t.label }}</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Bulan Lunas <span class="text-rose-500">*</span>
+                                        </label>
+                                        <select
+                                            v-model="formData.bulan_lunas"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        >
+                                            <option value="">-- Pilih Bulan --</option>
+                                            <option v-for="b in bulanOptions" :key="b.value" :value="b.value">{{ b.label }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 4. Total Bayar & Status -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Total Bayar (Rp) <span class="text-rose-500">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">Rp</span>
+                                            <input
+                                                v-model="formData.total_jumlah"
+                                                type="number"
+                                                placeholder="Contoh: 50000"
+                                                required
+                                                class="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Status Pembayaran <span class="text-rose-500">*</span>
+                                        </label>
+                                        <select
+                                            v-model="formData.status_bayar"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        >
+                                            <option v-for="st in statusBayarOptions" :key="st.value" :value="st.value">{{ st.label }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 5. Tgl Bayar & Metode Bayar -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Tanggal Bayar <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input
+                                            v-model="formData.tanggal_bayar"
+                                            type="date"
+                                            required
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Metode Pembayaran
+                                        </label>
+                                        <select
+                                            v-model="formData.metode_bayar"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        >
+                                            <option v-for="m in metodeBayarOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 6. Petugas / Kolektor & Catatan -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Petugas / Kolektor Penerima
+                                        </label>
+                                        <input
+                                            v-model="formData.kolektor"
+                                            type="text"
+                                            placeholder="Nama petugas / kolektor KUB"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Keterangan / Catatan
+                                        </label>
+                                        <input
+                                            v-model="formData.keterangan"
+                                            type="text"
+                                            placeholder="Catatan tambahan (opsional)"
+                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
                                     </div>
                                 </div>
                             </div>

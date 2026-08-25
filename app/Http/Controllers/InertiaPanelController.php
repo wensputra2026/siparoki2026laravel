@@ -3175,6 +3175,48 @@ class InertiaPanelController extends Controller
             })
             : [];
 
+        $kkList = [];
+        if ($slug === 'iuran' || in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            $kkQuery = \App\Models\KkKatolik::when(Schema::hasColumn('kk_katolik', 'is_deleted'), fn ($q) => $q->where(function ($qq) {
+                $qq->where('is_deleted', 0)->orWhereNull('is_deleted');
+            }));
+            if (str_contains($userRoleSlug, 'wilayah') && !empty($authUser?->wilayah_id)) {
+                $kkQuery->where('wilayah_id', $authUser->wilayah_id);
+            } elseif ((str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) && !empty($authUser?->kapela_id)) {
+                $kkQuery->where('kapela_id', $authUser->kapela_id);
+            } elseif (str_contains($userRoleSlug, 'kub') && !empty($authUser?->kub_id)) {
+                $kkQuery->where('kub_id', $authUser->kub_id);
+            }
+            $kkList = $kkQuery->orderBy('nama_lahir_pemilik')->get(['id', 'no_kk_kw', 'no_kk_dukcapil', 'nama_lahir_pemilik', 'nama_baptis_pemilik', 'wilayah_id', 'kub_id', 'kapela_id'])
+                ->map(function ($k) {
+                    $baptis = trim($k->nama_baptis_pemilik ?? '');
+                    $lahir = trim($k->nama_lahir_pemilik ?? '');
+                    $fullName = $lahir;
+                    if ($baptis && !str_contains(strtolower($lahir), strtolower($baptis))) {
+                        $fullName = "{$baptis} {$lahir}";
+                    }
+                    $noKk = $k->no_kk_kw ?: $k->no_kk_dukcapil ?: ('KK#' . $k->id);
+                    return [
+                        'id' => $k->id,
+                        'no_kk' => $noKk,
+                        'nama_kepala' => $fullName,
+                        'label' => "[{$noKk}] {$fullName}",
+                    ];
+                });
+        }
+
+        $jenisIuranList = ($slug === 'iuran' || $slug === 'jenis-iuran') && Schema::hasTable('jenis_iuran')
+            ? DB::table('jenis_iuran')
+                ->when(Schema::hasColumn('jenis_iuran', 'is_deleted'), fn ($q) => $q->where(function ($qq) {
+                    $qq->where('is_deleted', 0)->orWhereNull('is_deleted');
+                }))
+                ->when(Schema::hasColumn('jenis_iuran', 'status'), fn ($q) => $q->where(function ($qq) {
+                    $qq->where('status', 1)->orWhere('status', 'Aktif')->orWhereNull('status');
+                }))
+                ->orderBy('nama_iuran')
+                ->get(['id', 'nama_iuran', 'nominal_default', 'periode', 'kategori_iuran'])
+            : [];
+
         return Inertia::render('Inertia/GenericModule', [
             'title' => $config['title'],
             'moduleKey' => $slug,
@@ -3196,6 +3238,8 @@ class InertiaPanelController extends Controller
             'kapelaList' => $kapelaList,
             'kubList' => $kubList,
             'umatList' => $umatList,
+            'kkList' => $kkList,
+            'jenisIuranList' => $jenisIuranList,
             'kategoriKontenList' => $kategoriKontenList,
             'penulisList' => $penulisList,
             'filters' => [
@@ -3287,6 +3331,24 @@ class InertiaPanelController extends Controller
 
         if ($slug === 'kuasi-paroki') {
             $data = $this->normalizeKuasiParokiPayload($data);
+        }
+        if ($slug === 'iuran') {
+            if (isset($data['id_kk'])) {
+                $data['id_kk'] = !empty($data['id_kk']) ? (int) $data['id_kk'] : null;
+            } elseif (isset($data['kk_id'])) {
+                $data['id_kk'] = !empty($data['kk_id']) ? (int) $data['kk_id'] : null;
+            }
+            if (isset($data['total_jumlah']) && !isset($data['jumlah'])) {
+                $data['jumlah'] = $data['total_jumlah'];
+            } elseif (isset($data['jumlah']) && !isset($data['total_jumlah'])) {
+                $data['total_jumlah'] = $data['jumlah'];
+            }
+            if (isset($data['bulan_lunas']) && !isset($data['bulan'])) {
+                $data['bulan'] = $data['bulan_lunas'];
+            }
+            if (isset($data['status_bayar']) && !isset($data['status'])) {
+                $data['status'] = $data['status_bayar'];
+            }
         }
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
@@ -3424,6 +3486,24 @@ class InertiaPanelController extends Controller
 
         if ($slug === 'kuasi-paroki') {
             $data = $this->normalizeKuasiParokiPayload($data, $item);
+        }
+        if ($slug === 'iuran') {
+            if (isset($data['id_kk'])) {
+                $data['id_kk'] = !empty($data['id_kk']) ? (int) $data['id_kk'] : null;
+            } elseif (isset($data['kk_id'])) {
+                $data['id_kk'] = !empty($data['kk_id']) ? (int) $data['kk_id'] : null;
+            }
+            if (isset($data['total_jumlah']) && !isset($data['jumlah'])) {
+                $data['jumlah'] = $data['total_jumlah'];
+            } elseif (isset($data['jumlah']) && !isset($data['total_jumlah'])) {
+                $data['total_jumlah'] = $data['jumlah'];
+            }
+            if (isset($data['bulan_lunas']) && !isset($data['bulan'])) {
+                $data['bulan'] = $data['bulan_lunas'];
+            }
+            if (isset($data['status_bayar']) && !isset($data['status'])) {
+                $data['status'] = $data['status_bayar'];
+            }
         }
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
