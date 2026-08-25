@@ -120,13 +120,14 @@ class PanelAccess
         // account takeover / database backup abuse protection).
         $sensitiveModules = [
             'role', 'roles',
+            'profil-paroki',
             'backup-database', 'security-settings', 'security-center',
             'pengaturan-aplikasi', 'pengaturan', 'settings',
         ];
 
         // Pages that any authenticated user may open inside their own panel.
         $safeModules = [
-            'profil-saya', 'profil-paroki', 'panduan-hak-akses',
+            'profil-saya', 'panduan-hak-akses',
             'statistik', 'demografi', 'dashboard',
         ];
 

@@ -294,8 +294,9 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::post('/master-pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name("panel.{$prefix}.master-pastor.store");
         Route::post('/pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name("panel.{$prefix}.pastor.store");
         Route::post('/master-pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-pastor.update");
-        Route::post('/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.pastor.update");
-        Route::get('/profil-paroki', [\App\Http\Controllers\InertiaPanelController::class, 'profilParoki'])->name("panel.{$prefix}.profil-paroki");
+        if (in_array($prefix, ['superadmin', 'admin'], true)) {
+            Route::get('/profil-paroki', [\App\Http\Controllers\InertiaPanelController::class, 'profilParoki'])->name("panel.{$prefix}.profil-paroki");
+        }
         Route::get('/profil-saya', [\App\Http\Controllers\InertiaPanelController::class, 'profilSaya'])->name("panel.{$prefix}.profil-saya");
         Route::post('/profil-saya', [\App\Http\Controllers\InertiaPanelController::class, 'updateProfilSaya'])->name("panel.{$prefix}.profil-saya.update");
         Route::put('/profil-saya', [\App\Http\Controllers\InertiaPanelController::class, 'updateProfilSaya'])->name("panel.{$prefix}.profil-saya.update.put");

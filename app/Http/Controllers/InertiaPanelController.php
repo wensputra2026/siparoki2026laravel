@@ -1033,11 +1033,12 @@ class InertiaPanelController extends Controller
     public function profilParoki(Request $request)
     {
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
-        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        $isSuperAdmin = in_array($firstSegment, ['superadmin', 'v2', 'admin'], true) || str_contains($userRoleSlug, 'superadmin') || str_contains($userRoleSlug, 'super admin');
+        $authUser = auth()->user();
+        $userRoleSlug = strtolower($authUser?->role?->slug ?? $authUser?->role?->nama_role ?? '');
+        $isSuperAdmin = in_array($firstSegment, ['superadmin', 'admin', 'v2'], true) && ($authUser?->id_role == 1 || $authUser?->role_id == 1 || str_contains($userRoleSlug, 'superadmin') || str_contains($userRoleSlug, 'super admin'));
 
         if (!$isSuperAdmin) {
-            return redirect("/{$firstSegment}/dashboard")->with('error', 'Akses ditolak. Pengaturan Profil Paroki hanya dapat dikelola oleh Super Admin.');
+            return redirect("/{$firstSegment}/dashboard")->with('error', 'Akses ditolak. Pengaturan Profil Paroki hanya dapat diakses dan dikelola oleh Super Admin.');
         }
 
         $roleMap = [
