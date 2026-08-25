@@ -271,38 +271,38 @@ const displayedColumns = computed(() => {
         <!-- Table -->
         <div class="flex-1 min-h-0 rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-2xs flex flex-col">
             <div class="flex-1 overflow-auto custom-scrollbar">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50/90 text-slate-600 uppercase tracking-wider text-[10px] font-bold border-b border-slate-200/80 sticky top-0 z-10">
+                <table class="w-full text-left text-xs sm:text-[12.5px]">
+                    <thead class="bg-slate-100/90 text-slate-700 uppercase tracking-wider text-[11px] sm:text-[11.5px] font-bold border-b border-slate-200/90 sticky top-0 z-10">
                         <tr>
-                            <th class="px-3 py-2 w-10 text-center">#</th>
-                            <th v-for="col in displayedColumns" :key="col.name" class="px-3.5 py-2">
+                            <th class="px-3.5 py-3 w-12 text-center">#</th>
+                            <th v-for="col in displayedColumns" :key="col.name" class="px-4 py-3">
                                 {{ col.label }}
                             </th>
-                            <th class="px-3 py-2 text-center">Status</th>
-                            <th class="px-3.5 py-2 text-right w-24">Aksi</th>
+                            <th class="px-3.5 py-3 text-center">Status</th>
+                            <th class="px-4 py-3 text-right w-28">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-slate-700 text-xs">
+                    <tbody class="divide-y divide-slate-100 text-slate-700 text-xs sm:text-[12.5px]">
                         <tr
                             v-for="(item, idx) in rows.data"
                             :key="item._pk || idx"
                             class="hover:bg-slate-50/80 transition-colors group"
                         >
-                            <td class="px-3 py-2.5 text-center font-bold text-slate-400 text-[11px]">
+                            <td class="px-3.5 py-3 text-center font-bold text-slate-400 text-xs">
                                 {{ (rows.from || 1) + idx }}
                             </td>
-                            <td v-for="col in displayedColumns" :key="col.name" class="px-3.5 py-2.5">
+                            <td v-for="col in displayedColumns" :key="col.name" class="px-4 py-3">
                                 <div v-if="['foto', 'logo', 'gambar', 'avatar'].includes(col.name) && item[col.name]" class="flex items-center gap-2">
-                                    <img :src="item[col.name]" class="w-8 h-8 rounded-xl object-cover border border-slate-200 shrink-0 shadow-2xs" />
+                                    <img :src="item[col.name]" class="w-8.5 h-8.5 rounded-xl object-cover border border-slate-200 shrink-0 shadow-2xs" />
                                 </div>
-                                <span v-else-if="col.fk" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                <span v-else-if="col.fk" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                                     {{ cellValue(item, col) }}
                                 </span>
-                                <span v-else class="text-slate-600 text-xs">{{ cellValue(item, col) }}</span>
+                                <span v-else class="text-slate-700 font-medium text-xs sm:text-[12.5px]">{{ cellValue(item, col) }}</span>
                             </td>
-                            <td class="px-3 py-2.5 text-center">
+                            <td class="px-3.5 py-3 text-center">
                                 <span :class="[
-                                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border',
+                                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border',
                                     statusIsActive(item.status)
                                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                         : 'bg-rose-50 text-rose-700 border-rose-200'
@@ -311,15 +311,15 @@ const displayedColumns = computed(() => {
                                     {{ statusText(item.status) }}
                                 </span>
                             </td>
-                            <td class="px-3.5 py-2.5 text-right">
-                                <div class="flex items-center justify-end gap-1">
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-1.5">
                                     <button type="button" @click="openEditModal(item)" title="Ubah"
-                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer">
-                                        <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs">
+                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
                                     </button>
                                     <button type="button" @click="openDeleteModal(item)" title="Hapus"
-                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-rose-50 hover:text-rose-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer">
-                                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-rose-50 hover:text-rose-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </div>
                             </td>
@@ -337,9 +337,9 @@ const displayedColumns = computed(() => {
             </div>
 
             <div v-if="rows.links && rows.links.length > 3"
-                class="shrink-0 px-4 py-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 bg-slate-50/50">
-                <span class="text-xs text-slate-500">
-                    Menampilkan <b class="text-slate-800">{{ rows.from || 0 }}</b> - <b class="text-slate-800">{{ rows.to || 0 }}</b> dari <b class="text-slate-800">{{ rows.total || 0 }}</b>
+                class="shrink-0 px-4 py-2.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 bg-slate-50/50">
+                <span class="text-xs sm:text-[12.5px] text-slate-600 font-medium">
+                    Menampilkan <b class="text-slate-900">{{ rows.from || 0 }}</b> - <b class="text-slate-900">{{ rows.to || 0 }}</b> dari <b class="text-slate-900">{{ rows.total || 0 }}</b>
                 </span>
                 <div class="flex items-center gap-1">
                     <Link
@@ -348,8 +348,8 @@ const displayedColumns = computed(() => {
                         :href="link.url || '#'"
                         :disabled="!link.url"
                         :class="[
-                            'px-2.5 py-1 rounded-lg text-[11px] font-bold transition',
-                            link.active ? 'bg-amber-500 text-white shadow-xs shadow-amber-500/30' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                            'px-3 py-1.5 rounded-lg text-xs font-bold transition',
+                            link.active ? 'bg-amber-500 text-white shadow-xs shadow-amber-500/30' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900',
                             !link.url ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
                         ]"
                         v-html="formatPaginationLabel(link.label)"

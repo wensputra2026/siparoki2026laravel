@@ -1889,7 +1889,7 @@ const statusLabel = (item) => {
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
                 <!-- 0. Filter Level / Role -->
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filter Level</label>
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Filter Level</label>
                     <SearchableSelect
                         v-model="roleFilter"
                         :options="roleList"
@@ -1904,9 +1904,9 @@ const statusLabel = (item) => {
 
                 <!-- 1. Filter Wilayah -->
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
                         Filter Wilayah
-                        <span v-if="kapelaFilter" class="text-rose-500 text-[9px] font-normal lowercase">(stasi aktif)</span>
+                        <span v-if="kapelaFilter" class="text-rose-500 text-[10px] font-normal lowercase">(stasi aktif)</span>
                     </label>
                     <SearchableSelect
                         v-model="wilayahFilter"
@@ -1923,9 +1923,9 @@ const statusLabel = (item) => {
 
                 <!-- 2. Filter Kapela / Stasi -->
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
                         Filter Kapela / Stasi
-                        <span v-if="wilayahFilter" class="text-rose-500 text-[9px] font-normal lowercase">(wilayah aktif)</span>
+                        <span v-if="wilayahFilter" class="text-rose-500 text-[10px] font-normal lowercase">(wilayah aktif)</span>
                     </label>
                     <SearchableSelect
                         v-model="kapelaFilter"
@@ -1942,7 +1942,7 @@ const statusLabel = (item) => {
 
                 <!-- 3. Filter KUB -->
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filter KUB</label>
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Filter KUB</label>
                     <SearchableSelect
                         v-model="kubFilter"
                         :options="filteredKubsForFilter"
@@ -1957,7 +1957,7 @@ const statusLabel = (item) => {
 
                 <!-- Status Verifikasi -->
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Status Verifikasi</label>
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Status Verifikasi</label>
                     <SearchableSelect
                         v-model="statusFilter"
                         :options="statusOptions"
@@ -1972,14 +1972,14 @@ const statusLabel = (item) => {
 
                 <!-- Cari Data -->
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Cari Data</label>
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Cari Data</label>
                     <div class="relative">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                         <input
                             v-model="search"
                             type="text"
                             placeholder="Kata kunci..."
-                            class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 min-h-[38px]"
+                            class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-[12.5px] text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 min-h-[40px]"
                         />
                     </div>
                 </div>
@@ -1989,25 +1989,25 @@ const statusLabel = (item) => {
         <!-- Table Container: flex-1 so it fills remaining height, with internal scroll on desktop, natural scroll on mobile -->
         <div class="flex-1 min-h-[380px] lg:min-h-0 rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-2xs flex flex-col">
             <div class="flex-1 overflow-auto custom-scrollbar">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50/90 text-slate-600 uppercase tracking-wider text-[10px] font-bold border-b border-slate-200/80 sticky top-0 z-10">
+                <table class="w-full text-left text-xs sm:text-[12.5px]">
+                    <thead class="bg-slate-100/90 text-slate-700 uppercase tracking-wider text-[11px] sm:text-[11.5px] font-bold border-b border-slate-200/90 sticky top-0 z-10">
                         <tr>
-                            <th class="px-3 py-2 w-10 text-center">#</th>
-                            <th v-for="col in columns" :key="col.key" class="px-3.5 py-2">
+                            <th class="px-3.5 py-3 w-12 text-center">#</th>
+                            <th v-for="col in columns" :key="col.key" class="px-4 py-3">
                                 {{ col.label }}
                             </th>
-                            <th class="px-3 py-2 text-center">Status</th>
-                            <th class="px-3.5 py-2 text-right w-24">Aksi</th>
+                            <th class="px-3.5 py-3 text-center">Status</th>
+                            <th class="px-4 py-3 text-right w-28">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-slate-700 text-xs">
+                    <tbody class="divide-y divide-slate-100 text-slate-700 text-xs sm:text-[12.5px]">
                         <tr
                             v-for="(item, idx) in items.data"
                             :key="item.id || item.id_keuskupan || item.id_dekenat || item.id_paroki || idx"
                             class="hover:bg-slate-50/80 transition-colors group"
                         >
                             <!-- Row Number -->
-                            <td class="px-3 py-2.5 text-center font-bold text-slate-400 text-[11px]">
+                            <td class="px-3.5 py-3 text-center font-bold text-slate-400 text-xs">
                                 {{ (items.from || 1) + idx }}
                             </td>
 
@@ -2015,10 +2015,10 @@ const statusLabel = (item) => {
                             <td
                                 v-for="col in columns"
                                 :key="col.key"
-                                class="px-3.5 py-2.5"
+                                class="px-4 py-3"
                             >
                                 <!-- Image / Logo Column -->
-                                <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto' || isImageField(col, getFieldValue(item, col))" class="w-8 h-8 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5">
+                                <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto' || isImageField(col, getFieldValue(item, col))" class="w-8.5 h-8.5 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5">
                                     <img
                                         v-if="getFieldValue(item, col) !== '—' && getFieldValue(item, col)"
                                         :src="getImageUrl(getFieldValue(item, col))"
@@ -2033,7 +2033,7 @@ const statusLabel = (item) => {
 
                                 <!-- Dedicated Icon Column (isIcon) -->
                                 <div v-else-if="col.isIcon" :class="[
-                                    'w-8 h-8 rounded-lg border flex items-center justify-center text-sm shadow-2xs',
+                                    'w-8.5 h-8.5 rounded-lg border flex items-center justify-center text-sm shadow-2xs',
                                     col.iconColor || (
                                         (moduleKey === 'provinsi') ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
                                         (moduleKey === 'kabupaten') ? 'bg-sky-50 text-sky-700 border-sky-200' :
@@ -2070,7 +2070,7 @@ const statusLabel = (item) => {
                                         <Link
                                             :href="getRelationHref(col, item)"
                                             :class="[
-                                                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition hover:opacity-80 cursor-pointer',
+                                                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition hover:opacity-80 cursor-pointer',
                                                 col.color === 'blue' ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' :
                                                 col.color === 'emerald' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' :
                                                 col.color === 'purple' ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100' :
@@ -2085,16 +2085,16 @@ const statusLabel = (item) => {
                                             <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-60"></i>
                                         </Link>
                                     </template>
-                                    <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-50 text-slate-400 border border-slate-200">
+                                    <span v-else class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-50 text-slate-400 border border-slate-200">
                                         <i v-if="col.icon" :class="`fa-solid ${col.icon} text-[9px]`"></i>
                                         <span>0 {{ col.label }}</span>
                                     </span>
                                 </div>
 
-                                <div v-else-if="col.isPrimary" class="flex items-center gap-2">
+                                <div v-else-if="col.isPrimary" class="flex items-center gap-2.5">
                                     <!-- Only show inline icon if there's no dedicated logo/icon column -->
                                     <div v-if="!columns.some(c => c.key === 'logo' || c.isImage || c.isIcon)" :class="[
-                                        'w-6 h-6 rounded-md border flex items-center justify-center text-[10px] font-bold shrink-0',
+                                        'w-7 h-7 rounded-lg border flex items-center justify-center text-xs font-bold shrink-0',
                                         (moduleKey === 'dekenat' || moduleKey === 'kevikepan') ? 'bg-blue-50 text-blue-600 border-blue-200' :
                                         (moduleKey === 'paroki') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                                         (moduleKey === 'kuasi-paroki') ? 'bg-purple-50 text-purple-700 border-purple-200' :
@@ -2104,84 +2104,84 @@ const statusLabel = (item) => {
                                         'bg-amber-50 text-amber-700 border-amber-200'
                                     ]">
                                         <i :class="
-                                            (moduleKey === 'keuskupan') ? 'fa-solid fa-church text-[10px]' :
-                                            (moduleKey === 'dekenat' || moduleKey === 'kevikepan') ? 'fa-solid fa-layer-group text-[10px]' :
-                                            (moduleKey === 'paroki') ? 'fa-solid fa-place-of-worship text-[10px]' :
-                                            (moduleKey === 'kuasi-paroki') ? 'fa-solid fa-location-dot text-[10px]' :
-                                            (moduleKey === 'kapela' || moduleKey === 'stasi') ? 'fa-solid fa-gopuram text-[10px]' :
-                                            (moduleKey === 'wilayah') ? 'fa-solid fa-map-location-dot text-[10px]' :
-                                            (moduleKey === 'kub') ? 'fa-solid fa-people-group text-[10px]' :
-                                            'fa-solid fa-landmark text-[10px]'
+                                            (moduleKey === 'keuskupan') ? 'fa-solid fa-church text-[11px]' :
+                                            (moduleKey === 'dekenat' || moduleKey === 'kevikepan') ? 'fa-solid fa-layer-group text-[11px]' :
+                                            (moduleKey === 'paroki') ? 'fa-solid fa-place-of-worship text-[11px]' :
+                                            (moduleKey === 'kuasi-paroki') ? 'fa-solid fa-location-dot text-[11px]' :
+                                            (moduleKey === 'kapela' || moduleKey === 'stasi') ? 'fa-solid fa-gopuram text-[11px]' :
+                                            (moduleKey === 'wilayah') ? 'fa-solid fa-map-location-dot text-[11px]' :
+                                            (moduleKey === 'kub') ? 'fa-solid fa-people-group text-[11px]' :
+                                            'fa-solid fa-landmark text-[11px]'
                                         "></i>
                                     </div>
                                     <div class="min-w-0">
-                                        <span class="font-bold text-slate-900 group-hover:text-amber-600 transition block leading-snug">
+                                        <span class="font-bold text-slate-900 group-hover:text-amber-600 transition block leading-snug text-xs sm:text-[13px]">
                                             {{ getFieldValue(item, col) }}
                                         </span>
                                         <!-- Sub-info line for dekenat: show keuskupan name -->
-                                        <span v-if="(moduleKey === 'dekenat' || moduleKey === 'kevikepan') && item.keuskupan" class="text-[10px] text-amber-700 font-semibold flex items-center gap-1 mt-0.5">
-                                            <i class="fa-solid fa-church text-[9px]"></i>
+                                        <span v-if="(moduleKey === 'dekenat' || moduleKey === 'kevikepan') && item.keuskupan" class="text-[11px] text-amber-700 font-semibold flex items-center gap-1 mt-0.5">
+                                            <i class="fa-solid fa-church text-[10px]"></i>
                                             {{ item.keuskupan.nama_keuskupan }}
                                         </span>
                                         <!-- Sub-info for kapela/stasi: show paroki name -->
-                                        <span v-if="(moduleKey === 'kapela' || moduleKey === 'stasi') && item.paroki" class="text-[10px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
-                                            <i class="fa-solid fa-place-of-worship text-[9px]"></i>
+                                        <span v-if="(moduleKey === 'kapela' || moduleKey === 'stasi') && item.paroki" class="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
+                                            <i class="fa-solid fa-place-of-worship text-[10px]"></i>
                                             {{ item.paroki.nama_paroki }}
                                         </span>
                                         <!-- Sub-info for wilayah: show paroki name -->
-                                        <span v-if="moduleKey === 'wilayah' && item.paroki" class="text-[10px] text-sky-700 font-semibold flex items-center gap-1 mt-0.5">
-                                            <i class="fa-solid fa-place-of-worship text-[9px]"></i>
+                                        <span v-if="moduleKey === 'wilayah' && item.paroki" class="text-[11px] text-sky-700 font-semibold flex items-center gap-1 mt-0.5">
+                                            <i class="fa-solid fa-place-of-worship text-[10px]"></i>
                                             {{ item.paroki.nama_paroki }}
                                         </span>
                                         <!-- Sub-info for kub: show wilayah name -->
-                                        <span v-if="moduleKey === 'kub' && item.wilayah" class="text-[10px] text-teal-700 font-semibold flex items-center gap-1 mt-0.5">
-                                            <i class="fa-solid fa-map-location-dot text-[9px]"></i>
+                                        <span v-if="moduleKey === 'kub' && item.wilayah" class="text-[11px] text-teal-700 font-semibold flex items-center gap-1 mt-0.5">
+                                            <i class="fa-solid fa-map-location-dot text-[10px]"></i>
                                             {{ item.wilayah.nama_wilayah }}
                                         </span>
-                                        <span v-if="moduleKey === 'user'" class="text-[10px] text-slate-500 font-semibold flex items-center gap-1 mt-0.5">
-                                            <i class="fa-solid fa-at text-[9px]"></i>
+                                        <span v-if="moduleKey === 'user'" class="text-[11px] text-slate-500 font-semibold flex items-center gap-1 mt-0.5">
+                                            <i class="fa-solid fa-at text-[10px]"></i>
                                             {{ item.username || 'username' }}
-                                            <span v-if="isSelfUser(item)" class="ml-1 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[9px]">Anda</span>
+                                            <span v-if="isSelfUser(item)" class="ml-1 px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px]">Anda</span>
                                         </span>
                                     </div>
                                 </div>
 
                                 <!-- Code Badge Column -->
-                                <span v-else-if="col.key === 'kode_keuskupan' || col.key === 'kode_kevikepan' || col.key === 'kode_dekenat' || col.key === 'kode_paroki' || col.key === 'kode_kapela' || col.key === 'kode_wilayah' || col.key === 'kode_kub' || col.key === 'kode'" class="inline-block px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[10px] font-semibold border border-slate-200">
+                                <span v-else-if="col.key === 'kode_keuskupan' || col.key === 'kode_kevikepan' || col.key === 'kode_dekenat' || col.key === 'kode_paroki' || col.key === 'kode_kapela' || col.key === 'kode_wilayah' || col.key === 'kode_kub' || col.key === 'kode'" class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[11px] font-semibold border border-slate-200">
                                     {{ getFieldValue(item, col) }}
                                 </span>
 
                                 <!-- Latin Name Column -->
-                                <span v-else-if="col.key === 'nama_latin' || col.key === 'nama_keuskupan_latin'" class="italic text-slate-600 font-serif text-[11px]">
+                                <span v-else-if="col.key === 'nama_latin' || col.key === 'nama_keuskupan_latin'" class="italic text-slate-600 font-serif text-xs">
                                     {{ getFieldValue(item, col) }}
                                 </span>
 
                                 <!-- General Text Column -->
                                 <span v-else-if="moduleKey === 'user' && col.relation === 'role'" :class="[
-                                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold',
+                                    'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px] font-bold',
                                     roleBadgeClass(item.role)
                                 ]">
-                                    <i class="fa-solid fa-shield-halved text-[9px]"></i>
+                                    <i class="fa-solid fa-shield-halved text-[10px]"></i>
                                     {{ getFieldValue(item, col) }}
                                 </span>
 
                                 <!-- General Text Column -->
-                                <span v-else class="text-slate-600 text-xs">
+                                <span v-else class="text-slate-700 font-medium text-xs sm:text-[12.5px]">
                                     {{ getFieldValue(item, col) }}
                                 </span>
                             </td>
 
                             <!-- Status Badge -->
-                            <td class="px-3 py-2.5 text-center">
+                            <td class="px-3.5 py-3 text-center">
                                 <!-- Dekenat: show paroki count badge -->
                                 <template v-if="moduleKey === 'dekenat' || moduleKey === 'kevikepan'">
                                     <div class="flex flex-col items-center gap-1">
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                                            <i class="fa-solid fa-church text-[8px]"></i>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                            <i class="fa-solid fa-church text-[9px]"></i>
                                             <span>{{ (item.parokis && item.parokis.length) ? item.parokis.length : 0 }} Paroki</span>
                                         </span>
                                         <span :class="[
-                                            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border',
+                                            'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border',
                                             statusBadgeClass(item)
                                         ]">
                                             <span :class="[
@@ -2194,7 +2194,7 @@ const statusLabel = (item) => {
                                 </template>
                                 <template v-else>
                                     <span :class="[
-                                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border',
+                                        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border',
                                         statusBadgeClass(item)
                                     ]">
                                         <span :class="[
@@ -2207,33 +2207,33 @@ const statusLabel = (item) => {
                             </td>
 
                             <!-- Row Actions -->
-                            <td class="px-3.5 py-2.5 text-right">
-                                <div class="flex items-center justify-end gap-1">
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end gap-1.5">
                                     <!-- 1. Detail / Preview Button (Exactly ONE view icon per row) -->
                                     <Link
                                         v-if="moduleKey === 'konten'"
                                         :href="`${basePrefix}/konten/${item.id || item.slug}/preview`"
                                         title="Preview Konten"
-                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                     >
-                                        <i class="fa-solid fa-eye text-[10px]"></i>
+                                        <i class="fa-solid fa-eye text-xs"></i>
                                     </Link>
                                     <Link
                                         v-else-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey)"
                                         :href="`${basePrefix}/kk-katolik/${item.id || item.no_kk_kw}/view`"
                                         title="Lihat Detail Kartu Keluarga"
-                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                     >
-                                        <i class="fa-solid fa-eye text-[10px]"></i>
+                                        <i class="fa-solid fa-eye text-xs"></i>
                                     </Link>
                                     <button
                                         v-else
                                         type="button"
                                         @click="openDetailModal(item)"
                                         title="Lihat Detail"
-                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                     >
-                                        <i class="fa-solid fa-eye text-[10px]"></i>
+                                        <i class="fa-solid fa-eye text-xs"></i>
                                     </button>
 
                                     <!-- 2. Cetak Button (Only for KK, and only for non-read-only roles) -->
@@ -2242,9 +2242,9 @@ const statusLabel = (item) => {
                                         :href="`${basePrefix}/kk-katolik/${item.id || item.no_kk_kw}/cetak`"
                                         target="_blank"
                                         title="Cetak Kartu Keluarga (PDF / Print)"
-                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                     >
-                                        <i class="fa-solid fa-print text-[10px]"></i>
+                                        <i class="fa-solid fa-print text-xs"></i>
                                     </a>
                                     <!-- Edit Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
                                     <template v-if="!isUmatReadOnlyRole">
@@ -2252,18 +2252,18 @@ const statusLabel = (item) => {
                                             v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
                                             :href="moduleKey === 'konten' ? `${basePrefix}/konten/${item.id || item.slug}/edit` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/${moduleKey}/${item.id || item.slug || item.no_kk_kw}/edit` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/${item.id}/edit` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/${item.id}/edit` : `${basePrefix}/role/${item.id || item.id_role || item.slug}/edit`)))"
                                             title="Ubah Data"
-                                            class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                            class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         >
-                                            <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                                            <i class="fa-solid fa-pen-to-square text-xs"></i>
                                         </Link>
                                         <button
                                             v-else
                                             type="button"
                                             @click="openEditModal(item)"
                                             title="Ubah Data"
-                                            class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                            class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         >
-                                            <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                                            <i class="fa-solid fa-pen-to-square text-xs"></i>
                                         </button>
                                     </template>
 
@@ -2272,9 +2272,9 @@ const statusLabel = (item) => {
                                         type="button"
                                         @click="resetUserPassword(item)"
                                         title="Reset Password"
-                                        class="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer"
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                     >
-                                        <i class="fa-solid fa-key text-[10px]"></i>
+                                        <i class="fa-solid fa-key text-xs"></i>
                                     </button>
                                     <button
                                         v-if="moduleKey === 'user'"
@@ -2283,11 +2283,11 @@ const statusLabel = (item) => {
                                         :disabled="isSelfUser(item)"
                                         title="Ubah Status"
                                         :class="[
-                                            'w-6.5 h-6.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 flex items-center justify-center transition',
+                                            'w-7.5 h-7.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 flex items-center justify-center transition shadow-2xs',
                                             isSelfUser(item) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-cyan-50 hover:text-cyan-700 cursor-pointer'
                                         ]"
                                     >
-                                        <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                                        <i class="fa-solid fa-arrows-rotate text-xs"></i>
                                     </button>
 
                                     <!-- Delete Button (Hidden for Read-Only and View/Edit Only roles) -->
@@ -2298,11 +2298,11 @@ const statusLabel = (item) => {
                                         :disabled="isSelfUser(item)"
                                         title="Hapus Data"
                                         :class="[
-                                            'w-6.5 h-6.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 flex items-center justify-center transition',
+                                            'w-7.5 h-7.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 flex items-center justify-center transition shadow-2xs',
                                             isSelfUser(item) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-rose-50 hover:text-rose-700 cursor-pointer'
                                         ]"
                                     >
-                                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </div>
                             </td>
@@ -2325,10 +2325,10 @@ const statusLabel = (item) => {
             <!-- Pagination Bar: outside scroll area, always visible at bottom -->
             <div
                 v-if="items.links && items.links.length > 3"
-                class="shrink-0 px-4 py-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 bg-slate-50/50"
+                class="shrink-0 px-4 py-2.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 bg-slate-50/50"
             >
-                <span class="text-xs text-slate-500">
-                    Menampilkan <b class="text-slate-800">{{ items.from || 0 }}</b> - <b class="text-slate-800">{{ items.to || 0 }}</b> dari <b class="text-slate-800">{{ items.total || 0 }}</b> total data
+                <span class="text-xs sm:text-[12.5px] text-slate-600 font-medium">
+                    Menampilkan <b class="text-slate-900">{{ items.from || 0 }}</b> - <b class="text-slate-900">{{ items.to || 0 }}</b> dari <b class="text-slate-900">{{ items.total || 0 }}</b> total data
                 </span>
 
                 <div class="flex items-center gap-1">
@@ -2341,10 +2341,10 @@ const statusLabel = (item) => {
                         preserve-scroll
                         :disabled="!link.url"
                         :class="[
-                            'px-2.5 py-1 rounded-lg text-[11px] font-bold transition',
+                            'px-3 py-1.5 rounded-lg text-xs font-bold transition',
                             link.active
                                 ? 'bg-amber-500 text-white shadow-xs shadow-amber-500/30'
-                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900',
                             !link.url ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
                         ]"
                         v-html="formatPaginationLabel(link.label)"

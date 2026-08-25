@@ -42,6 +42,20 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    // Mode pencarian remote (lazy). Bila diisi, opsi diambil dari endpoint
+    // berdasarkan query (searchParam) atau id (untuk resolve nilai terpilih).
+    searchUrl: {
+        type: String,
+        default: '',
+    },
+    searchParam: {
+        type: String,
+        default: 'q',
+    },
+    searchDebounce: {
+        type: Number,
+        default: 250,
+    },
 });
 
 const emit = defineEmits(['update:modelValue', 'change']);
@@ -50,6 +64,12 @@ const isOpen = ref(false);
 const searchQuery = ref('');
 const containerRef = ref(null);
 const searchInputRef = ref(null);
+
+// Remote search state
+const remoteOptions = ref([]);
+const isFetching = ref(false);
+const selectedRemote = ref(null);
+let debounceTimer = null;
 
 const getItemValue = (item) => {
     if (typeof item !== 'object' || item === null) return item;
@@ -72,12 +92,62 @@ const isSelected = (opt) => {
     return String(val) === String(props.modelValue);
 };
 
+const fetchRemote = (q) => {
+    if (!props.searchUrl) return;
+    isFetching.value = true;
+    let url;
+    try {
+        url = new URL(props.searchUrl, window.location.origin);
+    } catch (e) {
+        url = new URL(props.searchUrl, 'http://localhost');
+    }
+    if (q) url.searchParams.set(props.searchParam, q);
+    fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+        .then((r) => r.json())
+        .then((data) => { remoteOptions.value = Array.isArray(data) ? data : []; })
+        .catch(() => { remoteOptions.value = []; })
+        .finally(() => { isFetching.value = false; });
+};
+
+const scheduleFetch = (q) => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => fetchRemote(q), props.searchDebounce);
+};
+
+const resolveSelected = () => {
+    if (!props.searchUrl || props.modelValue === '' || props.modelValue === null || props.modelValue === undefined) {
+        selectedRemote.value = null;
+        return;
+    }
+    if (remoteOptions.value.some((o) => isSelected(o))) {
+        return;
+    }
+    let url;
+    try {
+        url = new URL(props.searchUrl, window.location.origin);
+    } catch (e) {
+        url = new URL(props.searchUrl, 'http://localhost');
+    }
+    url.searchParams.set('id', props.modelValue);
+    fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+        .then((r) => r.json())
+        .then((data) => { selectedRemote.value = Array.isArray(data) && data.length ? data[0] : null; })
+        .catch(() => { selectedRemote.value = null; });
+};
+
 const selectedOption = computed(() => {
     if (props.modelValue === '' || props.modelValue === null || props.modelValue === undefined) return null;
+    if (props.searchUrl) {
+        if (selectedRemote.value && String(getItemValue(selectedRemote.value)) === String(props.modelValue)) {
+            return selectedRemote.value;
+        }
+        return remoteOptions.value.find((opt) => isSelected(opt)) || null;
+    }
     return props.options.find((opt) => isSelected(opt)) || null;
 });
 
 const filteredOptions = computed(() => {
+    if (props.searchUrl) return remoteOptions.value;
     if (!searchQuery.value.trim()) return props.options;
     const q = searchQuery.value.toLowerCase().trim();
     return props.options.filter((opt) => {
@@ -102,11 +172,24 @@ const toggleDropdown = () => {
     isOpen.value = !isOpen.value;
     if (isOpen.value) {
         searchQuery.value = '';
+        if (props.searchUrl) {
+            fetchRemote('');
+        }
         setTimeout(() => {
             searchInputRef.value?.focus();
         }, 50);
     }
 };
+
+watch(searchQuery, (q) => {
+    if (props.searchUrl && isOpen.value) {
+        scheduleFetch(q);
+    }
+});
+
+watch(() => props.modelValue, () => {
+    resolveSelected();
+});
 
 const selectOption = (opt) => {
     const val = opt ? getItemValue(opt) : '';
@@ -131,6 +214,7 @@ const handleClickOutside = (e) => {
 
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);
+    resolveSelected();
 });
 
 onBeforeUnmount(() => {
@@ -139,14 +223,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div ref="containerRef" class="relative inline-block w-full text-left text-xs select-none">
+    <div ref="containerRef" class="relative inline-block w-full text-left text-xs sm:text-[12.5px] select-none">
         <!-- Trigger Button -->
         <button
             type="button"
             @click="toggleDropdown"
             :disabled="disabled"
             :class="[
-                'min-h-[38px] px-3.5 py-2 rounded-xl border flex items-center justify-between gap-1.5 transition-all shadow-2xs cursor-pointer text-left w-full text-xs',
+                'min-h-[40px] px-3.5 py-2 rounded-xl border flex items-center justify-between gap-1.5 transition-all shadow-2xs cursor-pointer text-left w-full text-xs sm:text-[12.5px]',
                 isOpen
                     ? 'bg-white border-blue-500 ring-2 ring-blue-500/15'
                     : 'bg-slate-50 hover:bg-white border-slate-200 text-slate-700',
@@ -154,7 +238,7 @@ onBeforeUnmount(() => {
             ]"
         >
             <div class="flex items-center gap-2 min-w-0 flex-1">
-                <i v-if="icon" :class="[formattedIcon, iconColor, 'text-[11px] shrink-0']"></i>
+                <i v-if="icon" :class="[formattedIcon, iconColor, 'text-xs shrink-0']"></i>
                 <span :class="[
                     'truncate font-semibold',
                     selectedOption ? 'text-slate-900' : 'text-slate-400 font-medium'
@@ -171,13 +255,13 @@ onBeforeUnmount(() => {
                     class="text-slate-400 hover:text-rose-600 transition p-0.5 rounded-md hover:bg-slate-100 cursor-pointer"
                     title="Hapus pilihan"
                 >
-                    <i class="fa-solid fa-xmark text-[10px]"></i>
+                    <i class="fa-solid fa-xmark text-xs"></i>
                 </span>
 
                 <!-- Caret Arrow -->
                 <i
                     :class="[
-                        'fa-solid fa-chevron-down text-[9px] text-slate-400 transition-transform duration-200',
+                        'fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200',
                         isOpen ? 'rotate-180 text-amber-600' : ''
                     ]"
                 ></i>
@@ -254,9 +338,17 @@ onBeforeUnmount(() => {
                         ></i>
                     </button>
 
+                    <!-- Loading State (remote) -->
+                    <div
+                        v-if="isFetching"
+                        class="py-4 text-center text-slate-400 text-xs"
+                    >
+                        <i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Mencari...
+                    </div>
+
                     <!-- Empty State -->
                     <div
-                        v-if="!filteredOptions.length"
+                        v-else-if="!filteredOptions.length"
                         class="py-4 text-center text-slate-400 text-xs"
                     >
                         <p class="font-medium">Tidak ada hasil ditemukan</p>
