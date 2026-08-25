@@ -492,7 +492,58 @@ Route::middleware([\App\Http\Middleware\PanelAccess::class])->prefix('admin')->g
     Route::post('/{slug}/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updateModule'])->name('admin.module.update.post');
     Route::delete('/{slug}/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'destroyModule'])->name('admin.module.destroy');
 });
-Route::get('/admin', fn () => redirect('/admin/master-referensi'))->name('admin');
+
+Route::get('/admin', function () {
+    $authUser = auth()->user();
+    if (!$authUser) {
+        return redirect('/login');
+    }
+    $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser->role?->slug ?? $authUser->role?->nama_role ?? ''));
+    if (str_contains($slugClean, 'wilayah')) {
+        return redirect('/wilayah');
+    } elseif (str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) {
+        return redirect('/kapela');
+    } elseif (str_contains($slugClean, 'kub')) {
+        return redirect('/kub');
+    } elseif (str_contains($slugClean, 'pastor')) {
+        return redirect('/pastor');
+    } elseif (str_contains($slugClean, 'bendahara')) {
+        return redirect('/bendahara');
+    } elseif (str_contains($slugClean, 'penulis') || str_contains($slugClean, 'komsos')) {
+        return redirect('/penulis');
+    } elseif (str_contains($slugClean, 'umat')) {
+        return redirect('/umat');
+    } elseif (str_contains($slugClean, 'paroki') || str_contains($slugClean, 'sekretariat')) {
+        return redirect('/paroki');
+    }
+    return redirect('/superadmin');
+})->name('admin');
+
+Route::get('/dashboard', function () {
+    $authUser = auth()->user();
+    if (!$authUser) {
+        return redirect('/login');
+    }
+    $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser->role?->slug ?? $authUser->role?->nama_role ?? ''));
+    if (str_contains($slugClean, 'wilayah')) {
+        return redirect('/wilayah');
+    } elseif (str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) {
+        return redirect('/kapela');
+    } elseif (str_contains($slugClean, 'kub')) {
+        return redirect('/kub');
+    } elseif (str_contains($slugClean, 'pastor')) {
+        return redirect('/pastor');
+    } elseif (str_contains($slugClean, 'bendahara')) {
+        return redirect('/bendahara');
+    } elseif (str_contains($slugClean, 'penulis') || str_contains($slugClean, 'komsos')) {
+        return redirect('/penulis');
+    } elseif (str_contains($slugClean, 'umat')) {
+        return redirect('/umat');
+    } elseif (str_contains($slugClean, 'paroki') || str_contains($slugClean, 'sekretariat')) {
+        return redirect('/paroki');
+    }
+    return redirect('/superadmin');
+})->name('dashboard');
 
 // Backward compatibility for /v2/
 Route::middleware([\App\Http\Middleware\PanelAccess::class])->prefix('v2')->group(function () {

@@ -91,21 +91,25 @@ class AuthController extends Controller
 
             if (str_contains($roleSlug, 'super')) {
                 return redirect('/superadmin')->with('success', 'Selamat datang kembali, Super Admin!');
-            } elseif (str_contains($roleSlug, 'paroki') || str_contains($roleSlug, 'pastor')) {
-                return redirect('/paroki')->with('success', 'Selamat datang di Panel Paroki!');
+            } elseif (str_contains($roleSlug, 'pastor')) {
+                return redirect('/pastor')->with('success', 'Selamat datang di Panel Pastor Paroki!');
+            } elseif (str_contains($roleSlug, 'paroki') || str_contains($roleSlug, 'sekretariat')) {
+                return redirect('/paroki')->with('success', 'Selamat datang di Panel Sekretariat Paroki!');
             } elseif (str_contains($roleSlug, 'wilayah')) {
                 return redirect('/wilayah')->with('success', 'Selamat datang di Panel Admin Wilayah!');
             } elseif (str_contains($roleSlug, 'kapela') || str_contains($roleSlug, 'stasi')) {
-                return redirect('/kapela')->with('success', 'Selamat datang di Panel Admin Kapela!');
+                return redirect('/kapela')->with('success', 'Selamat datang di Panel Admin Kapela / Stasi!');
             } elseif (str_contains($roleSlug, 'kub')) {
                 return redirect('/kub')->with('success', 'Selamat datang di Panel Pengurus KUB!');
             } elseif (str_contains($roleSlug, 'bendahara')) {
                 return redirect('/bendahara')->with('success', 'Selamat datang di Panel Bendahara!');
             } elseif (str_contains($roleSlug, 'penulis') || str_contains($roleSlug, 'komsos')) {
                 return redirect('/penulis')->with('success', 'Selamat datang di Panel Redaksi / Komsos!');
+            } elseif (str_contains($roleSlug, 'umat')) {
+                return redirect('/umat')->with('success', 'Selamat datang di Portal Umat!');
             }
 
-            return redirect('/dashboard')->with('success', 'Selamat datang kembali di SIPAROKI!');
+            return redirect('/superadmin')->with('success', 'Selamat datang kembali di SIPAROKI!');
         }
 
         // Log failed login attempt
