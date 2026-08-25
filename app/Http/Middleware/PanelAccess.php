@@ -79,6 +79,9 @@ class PanelAccess
             return redirect()->route('login');
         }
 
+        $user = Auth::user();
+        $slug = $this->roleSlug($user);
+
         $isSuper = in_array($slug, ['superadmin', 'superadministrator'], true);
         $superOnlyModules = [
             'keuskupan', 'dekenat', 'kevikepan', 'kuasi-paroki',
