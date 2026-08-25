@@ -207,13 +207,23 @@
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                             Kata Sandi <span class="text-red-500">*</span>
                         </label>
-                        <input type="password" name="password" required placeholder="Minimal 6 karakter" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+                        <div class="relative">
+                            <input type="password" name="password" id="reg_password" required placeholder="Minimal 6 karakter" class="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+                            <button type="button" onclick="toggleRegPassword('reg_password', 'icon_reg_pwd')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer transition focus:outline-none">
+                                <i class="fa-solid fa-eye text-xs" id="icon_reg_pwd"></i>
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                             Konfirmasi Sandi <span class="text-red-500">*</span>
                         </label>
-                        <input type="password" name="password_confirmation" required placeholder="Ulangi kata sandi" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+                        <div class="relative">
+                            <input type="password" name="password_confirmation" id="reg_password_confirmation" required placeholder="Ulangi kata sandi" class="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+                            <button type="button" onclick="toggleRegPassword('reg_password_confirmation', 'icon_reg_pwd_confirm')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer transition focus:outline-none">
+                                <i class="fa-solid fa-eye text-xs" id="icon_reg_pwd_confirm"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -354,6 +364,21 @@
                 filterKubSelect2();
             }
         });
+
+        function toggleRegPassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (!input || !icon) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
     </script>
 </body>
 </html>

@@ -122,20 +122,46 @@
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                             <i class="fa-solid fa-lock text-xs"></i>
                         </div>
-                        <input type="password" name="password" required placeholder="••••••••" class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+                        <input type="password" name="password" id="input_password" required placeholder="••••••••" class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
+                        <button type="button" id="btn_toggle_password" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer transition focus:outline-none" title="Tampilkan/Sembunyikan Kata Sandi">
+                            <i class="fa-solid fa-eye text-xs" id="icon_toggle_password"></i>
+                        </button>
                     </div>
                 </div>
 
                 <div class="flex items-center">
-                    <input type="checkbox" name="remember" id="remember" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500">
-                    <label for="remember" class="ml-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">Ingat saya</label>
+                    <input type="checkbox" name="remember" id="remember" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
+                    <label for="remember" class="ml-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none">Ingat saya</label>
                 </div>
 
-                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-sm font-semibold shadow-md shadow-amber-500/20 transition flex items-center justify-center gap-2">
+                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-sm font-semibold shadow-md shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i>
                     <span>Masuk ke Akun</span>
                 </button>
             </form>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const btnToggle = document.getElementById('btn_toggle_password');
+                    const inputPassword = document.getElementById('input_password');
+                    const iconToggle = document.getElementById('icon_toggle_password');
+
+                    if (btnToggle && inputPassword && iconToggle) {
+                        btnToggle.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            if (inputPassword.type === 'password') {
+                                inputPassword.type = 'text';
+                                iconToggle.classList.remove('fa-eye');
+                                iconToggle.classList.add('fa-eye-slash');
+                            } else {
+                                inputPassword.type = 'password';
+                                iconToggle.classList.remove('fa-eye-slash');
+                                iconToggle.classList.add('fa-eye');
+                            }
+                        });
+                    }
+                });
+            </script>
 
             <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
                 <p class="text-xs text-slate-500 dark:text-slate-400">
