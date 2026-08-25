@@ -163,7 +163,7 @@
             <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" alt="Pastor Paroki {{ $globalNamaParoki ?? 'SIPAROKI' }}">
         </div>
         <div class="sambutan-pastor-body">
-            <h3>Pastor Paroki</h3>
+            <h3>{{ $pastor_paroki ?? 'RD. Herman Hilers Penga' }}</h3>
             <span class="sambutan-pastor-role">Pastor Paroki {{ $globalNamaParoki ?? 'SIPAROKI' }}</span>
             <p>Salve, Salam Sehat dan Berkah Dalem. Selamat Datang di Website Resmi {{ $globalNamaParoki ?? 'SIPAROKI' }}.</p>
             <div>
