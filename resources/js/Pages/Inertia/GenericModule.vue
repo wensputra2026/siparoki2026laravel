@@ -2281,13 +2281,13 @@ const statusLabel = (item) => {
                                         type="button"
                                         @click="toggleUserStatus(item)"
                                         :disabled="isSelfUser(item)"
-                                        title="Ubah Status"
+                                        title="Aktifkan / Nonaktifkan Akun Pengguna"
                                         :class="[
                                             'w-7.5 h-7.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 flex items-center justify-center transition shadow-2xs',
                                             isSelfUser(item) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-cyan-50 hover:text-cyan-700 cursor-pointer'
                                         ]"
                                     >
-                                        <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                                        <i class="fa-solid fa-toggle-on text-xs"></i>
                                     </button>
 
                                     <!-- Delete Button (Hidden for Read-Only and View/Edit Only roles) -->

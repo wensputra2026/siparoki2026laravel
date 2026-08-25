@@ -132,7 +132,7 @@ const handleClearLogs = () => {
 };
 
 const handleClearCache = () => {
-    if (confirm('Segarkan seluruh cache sistem, konfigurasi, dan sesi keamanan?')) {
+    if (confirm('Reload seluruh cache sistem, konfigurasi, dan sesi keamanan?')) {
         router.post(`/${props.prefix}/security/clear-cache`, {}, {
             preserveScroll: true,
         });
@@ -190,17 +190,17 @@ const formatDate = (dateStr) => {
                             :disabled="isReloading"
                             @click="reloadSecurity"
                             class="px-4 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
-                            title="Segarkan Log & Data Keamanan dari Database"
+                            title="Reload Log & Data Keamanan dari Database"
                         >
                             <i :class="['fa-solid fa-arrows-rotate', isReloading ? 'fa-spin' : '']"></i>
-                            <span>{{ isReloading ? 'Memuat...' : 'Segarkan Data' }}</span>
+                            <span>{{ isReloading ? 'Memuat...' : 'Reload' }}</span>
                         </button>
                         <button
                             @click="handleClearCache"
                             class="px-4 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2 cursor-pointer"
-                            title="Segarkan Cache & Sesi Keamanan"
+                            title="Bersihkan Cache & Sesi Keamanan Sistem"
                         >
-                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <i class="fa-solid fa-broom"></i>
                             <span>Flush Cache</span>
                         </button>
                         <button

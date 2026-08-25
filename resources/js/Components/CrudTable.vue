@@ -32,6 +32,19 @@ watch(search, () => {
 });
 watch(perPage, () => applyFilters());
 
+const isReloading = ref(false);
+const reloadCrudTable = () => {
+    isReloading.value = true;
+    router.reload({
+        only: ['rows'],
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => {
+            isReloading.value = false;
+        },
+    });
+};
+
 const showFormModal = ref(false);
 const showDeleteModal = ref(false);
 const modalMode = ref('create');
@@ -255,6 +268,17 @@ const displayedColumns = computed(() => {
                         <option :value="25">25 / hal</option>
                         <option :value="50">50 / hal</option>
                     </select>
+
+                    <button
+                        type="button"
+                        :disabled="isReloading"
+                        @click="reloadCrudTable"
+                        title="Reload data tabel dari database"
+                        class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs shrink-0 disabled:opacity-60"
+                    >
+                        <i :class="['fa-solid fa-arrows-rotate text-xs', isReloading ? 'fa-spin text-amber-600' : 'text-slate-600']"></i>
+                        <span>{{ isReloading ? 'Memuat...' : 'Reload' }}</span>
+                    </button>
 
                     <button
                         type="button"
