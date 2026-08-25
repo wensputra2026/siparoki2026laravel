@@ -550,23 +550,6 @@ const pastorParokiOptions = computed(() => {
 });
 
 const tipeSakramenOptions = [
-    { value: 'Baptis', label: 'Sakramen Baptis (Baptis Bayi / Dewasa / Katekumen)' },
-    { value: 'Komuni Pertama', label: 'Sakramen Ekaristi / Komuni Pertama (Ekaristi Maha Kudus)' },
-    { value: 'Krisma', label: 'Sakramen Krisma / Penguatan (Roh Kudus)' },
-    { value: 'Tobat', label: 'Sakramen Tobat / Rekonsiliasi (Pengakuan Dosa)' },
-    { value: 'Pernikahan', label: 'Sakramen Perkawinan / Pernikahan Suci' },
-    { value: 'Imamat', label: 'Sakramen Imamat / Tahbisan Suci (Diakon / Imam / Uskup)' },
-    { value: 'Perminyakan Suci', label: 'Sakramen Pengurapan Orang Sakit / Perminyakan Suci' },
-    { value: 'Sakramen Baptis', label: 'Sakramen Baptis' },
-    { value: 'Sakramen Komuni Pertama', label: 'Sakramen Komuni Pertama' },
-    { value: 'Sakramen Krisma', label: 'Sakramen Krisma' },
-    { value: 'Sakramen Pernikahan', label: 'Sakramen Pernikahan' },
-    { value: 'Sakramen Tobat', label: 'Sakramen Tobat' },
-    { value: 'Sakramen Imamat', label: 'Sakramen Imamat' },
-    { value: 'Sakramen Perminyakan', label: 'Sakramen Perminyakan' },
-];
-
-const tipeSakramenPengajuanOptions = [
     { value: 'Baptis', label: 'Sakramen Baptis (Sacramentum Baptismi)' },
     { value: 'Komuni Pertama', label: 'Sakramen Ekaristi / Komuni Suci (Sacramentum Eucharistiae)' },
     { value: 'Krisma', label: 'Sakramen Krisma / Penguatan (Sacramentum Confirmationis)' },
@@ -6258,7 +6241,7 @@ const statusLabel = (item) => {
                                     </label>
                                     <SearchableSelect
                                         v-model="formData.tipe_sakramen"
-                                        :options="tipeSakramenPengajuanOptions"
+                                        :options="tipeSakramenOptions"
                                         valueKey="value"
                                         labelKey="label"
                                         placeholder="-- Pilih Tipe Sakramen --"
