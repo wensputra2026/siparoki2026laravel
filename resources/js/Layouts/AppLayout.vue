@@ -140,7 +140,6 @@ const roleMenus = {
                     submenus: [
                         { name: 'Keuskupan', href: '/v2/keuskupan', icon: 'fa-building-columns' },
                         { name: 'Dekenat', href: '/v2/dekenat', icon: 'fa-building' },
-                        { name: 'Paroki', href: '/v2/paroki', icon: 'fa-landmark' },
                         { name: 'Kuasi Paroki', href: '/v2/kuasi-paroki', icon: 'fa-place-of-worship' },
                         { name: 'Stasi / Kapela', href: '/v2/kapela', icon: 'fa-map-location-dot' },
                         { name: 'Wilayah', href: '/v2/wilayah', icon: 'fa-compass' },
@@ -273,7 +272,10 @@ const roleMenus = {
                     name: 'Pengaturan Web',
                     icon: 'fa-globe',
                     submenus: [
-                        { name: 'Pengaturan Aplikasi & Web', href: '/v2/pengaturan-aplikasi', icon: 'fa-sliders' },
+                        { name: 'Pengaturan Web (Hub)', href: '/v2/pengaturan-aplikasi', icon: 'fa-sliders' },
+                        { name: 'Video Header Beranda', href: '/v2/video-header', icon: 'fa-youtube' },
+                        { name: 'Banner Slider', href: '/v2/slider', icon: 'fa-images' },
+                        { name: 'Mode Maintenance', href: '/v2/pengaturan/maintenance', icon: 'fa-screwdriver-wrench' },
                         { name: 'Security & Keamanan', href: '/v2/security-settings', icon: 'fa-shield-halved' },
                     ],
                 },
@@ -307,7 +309,6 @@ const roleMenus = {
                     submenus: [
                         { name: 'Keuskupan', href: '/v2/keuskupan', icon: 'fa-building-columns' },
                         { name: 'Dekenat', href: '/v2/dekenat', icon: 'fa-building' },
-                        { name: 'Paroki', href: '/v2/paroki', icon: 'fa-landmark' },
                         { name: 'Kuasi Paroki', href: '/v2/kuasi-paroki', icon: 'fa-place-of-worship' },
                         { name: 'Stasi / Kapela', href: '/v2/kapela', icon: 'fa-map-location-dot' },
                         { name: 'Wilayah', href: '/v2/wilayah', icon: 'fa-compass' },
@@ -402,6 +403,17 @@ const roleMenus = {
                         { name: 'Renungan Harian', href: '/v2/renungan', icon: 'fa-book-open' },
                         { name: 'Galeri Foto', href: '/v2/galeri', icon: 'fa-images' },
                         { name: 'Pusat Unduhan', href: '/v2/download', icon: 'fa-cloud-arrow-down' },
+                    ],
+                },
+                {
+                    name: 'Pengaturan Web',
+                    icon: 'fa-globe',
+                    submenus: [
+                        { name: 'Pengaturan Web (Hub)', href: '/v2/pengaturan-aplikasi', icon: 'fa-sliders' },
+                        { name: 'Video Header Beranda', href: '/v2/video-header', icon: 'fa-youtube' },
+                        { name: 'Banner Slider', href: '/v2/slider', icon: 'fa-images' },
+                        { name: 'Mode Maintenance', href: '/v2/pengaturan/maintenance', icon: 'fa-screwdriver-wrench' },
+                        { name: 'Security & Keamanan', href: '/v2/security-settings', icon: 'fa-shield-halved' },
                     ],
                 },
             ],

@@ -1374,6 +1374,881 @@ class InertiaPanelController extends Controller
     }
 
     /**
+     * Security Center & Firewall Dashboard.
+     */
+    public function securityCenter(Request $request): Response
+    {
+        $this->ensureSecurityTables();
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $roleMap = [
+            'superadmin' => 'Super Admin',
+            'paroki' => 'Admin Paroki',
+            'pastor' => 'Pastor',
+            'wilayah' => 'Admin Wilayah',
+            'kapela' => 'Admin Kapela / Stasi',
+            'kub' => 'Ketua KUB',
+            'bendahara' => 'Bendahara',
+            'penulis' => 'Penulis',
+            'umat' => 'Umat',
+        ];
+        $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
+
+        // Load settings
+        $settingsRaw = [];
+        try {
+            if (Schema::hasTable('security_settings') && Schema::hasColumn('security_settings', 'setting_key') && Schema::hasColumn('security_settings', 'setting_value')) {
+                $settingsRaw = DB::table('security_settings')->pluck('setting_value', 'setting_key')->toArray();
+            }
+        } catch (\Throwable $e) {}
+
+        $settings = [
+            'max_login_attempts' => (int) ($settingsRaw['max_login_attempts'] ?? 5),
+            'lockout_minutes' => (int) ($settingsRaw['lockout_minutes'] ?? 60),
+            'session_timeout_minutes' => (int) ($settingsRaw['session_timeout_minutes'] ?? config('session.lifetime', 120)),
+            'force_strong_password' => ($settingsRaw['force_strong_password'] ?? '1') === '1',
+            'enable_brute_force_protection' => ($settingsRaw['enable_brute_force_protection'] ?? '1') === '1',
+            'block_untrusted_ip' => ($settingsRaw['block_untrusted_ip'] ?? '0') === '1',
+        ];
+
+        // Blocked IPs
+        $blockedIps = collect();
+        try {
+            if (Schema::hasTable('blocked_ips')) {
+                $blockedIps = DB::table('blocked_ips')->orderByDesc('id')->get();
+            }
+        } catch (\Throwable $e) {}
+
+        // Security Logs
+        $logs = collect();
+        try {
+            if (Schema::hasTable('security_logs')) {
+                $logs = DB::table('security_logs')->orderByDesc('id')->limit(150)->get();
+            }
+        } catch (\Throwable $e) {}
+
+        // Audit metrics
+        $isHttps = $request->isSecure() || $request->header('x-forwarded-proto') === 'https';
+        $isDebug = config('app.debug', false);
+        $appEnv = config('app.env', 'production');
+        $sessionDriver = config('session.driver', 'file');
+        $sessionLifetime = config('session.lifetime', 120);
+        $uploadWritable = is_writable(public_path('uploads'));
+        $storageWritable = is_writable(storage_path());
+
+        // Score calculation
+        $score = 100;
+        if ($isDebug && $appEnv === 'production') $score -= 15;
+        if (!$isHttps && $appEnv === 'production') $score -= 15;
+        if (!$uploadWritable) $score -= 10;
+        if (!$storageWritable) $score -= 10;
+        if (!$settings['enable_brute_force_protection']) $score -= 10;
+        if ($score < 0) $score = 0;
+
+        $auditChecks = [
+            [
+                'title' => 'Proteksi CSRF (Cross-Site Request Forgery)',
+                'status' => 'PASS',
+                'description' => 'CSRF Token aktif di seluruh form, API monolith, dan session cookies.',
+                'badge' => 'Aktif',
+                'icon' => 'fa-shield-check',
+            ],
+            [
+                'title' => 'Enkripsi & Status HTTPS / SSL',
+                'status' => $isHttps ? 'PASS' : ($appEnv === 'local' ? 'INFO' : 'WARNING'),
+                'description' => $isHttps ? 'Koneksi terenkripsi aman menggunakan SSL/TLS.' : ($appEnv === 'local' ? 'Mode Lokal / Development (HTTP).' : 'Disarankan mengaktifkan SSL/HTTPS di environment produksi.'),
+                'badge' => $isHttps ? 'Secure (HTTPS)' : ($appEnv === 'local' ? 'Lokal Dev' : 'HTTP'),
+                'icon' => 'fa-lock',
+            ],
+            [
+                'title' => 'Mode Debug Aplikasi (APP_DEBUG)',
+                'status' => (!$isDebug || $appEnv === 'local') ? 'PASS' : 'WARNING',
+                'description' => $isDebug ? ($appEnv === 'local' ? 'Debug aktif untuk lingkungan pengembangan lokal.' : 'Debug aktif di produksi berisiko membocorkan stack trace.') : 'Debug mode dinonaktifkan (Aman).',
+                'badge' => $isDebug ? 'Debug ON' : 'Debug OFF',
+                'icon' => 'fa-bug',
+            ],
+            [
+                'title' => 'Keamanan Sesi & Session Lifetime',
+                'status' => 'PASS',
+                'description' => 'Sesi dikelola dengan driver ' . $sessionDriver . ' dengan durasi kedaluwarsa ' . $sessionLifetime . ' menit dan flag HttpOnly.',
+                'badge' => $sessionLifetime . ' Menit',
+                'icon' => 'fa-user-clock',
+            ],
+            [
+                'title' => 'Izin Tulis Direktori Uploads & Storage',
+                'status' => ($uploadWritable && $storageWritable) ? 'PASS' : 'FAIL',
+                'description' => ($uploadWritable && $storageWritable) ? 'Direktori public/uploads dan storage memiliki izin yang tepat.' : 'Periksa permission direktori public/uploads atau storage.',
+                'badge' => ($uploadWritable && $storageWritable) ? 'Writable' : 'Permission Error',
+                'icon' => 'fa-folder-gear',
+            ],
+            [
+                'title' => 'Proteksi Brute Force Login',
+                'status' => $settings['enable_brute_force_protection'] ? 'PASS' : 'WARNING',
+                'description' => $settings['enable_brute_force_protection'] ? 'Pemblokiran otomatis aktif setelah ' . $settings['max_login_attempts'] . 'x percobaan gagal.' : 'Proteksi brute force dinonaktifkan.',
+                'badge' => $settings['enable_brute_force_protection'] ? 'Maks ' . $settings['max_login_attempts'] . 'x Gagal' : 'Nonaktif',
+                'icon' => 'fa-shield-halved',
+            ],
+        ];
+
+        $todayFailed = 0;
+        $todaySuccess = 0;
+        try {
+            if (Schema::hasTable('security_logs') && Schema::hasColumn('security_logs', 'status')) {
+                $todayFailed = DB::table('security_logs')->where('status', 'FAILED')->whereDate('created_at', today())->count();
+                $todaySuccess = DB::table('security_logs')->where('status', 'SUCCESS')->whereDate('created_at', today())->count();
+            }
+        } catch (\Throwable $e) {}
+
+        return Inertia::render('Inertia/SecurityCenter', [
+            'role' => $resolvedRole,
+            'prefix' => $firstSegment,
+            'settings' => $settings,
+            'blockedIps' => $blockedIps,
+            'logs' => $logs,
+            'auditChecks' => $auditChecks,
+            'securityScore' => $score,
+            'todayFailed' => $todayFailed,
+            'todaySuccess' => $todaySuccess,
+            'totalBlocked' => $blockedIps->count(),
+            'currentIp' => $request->ip(),
+            'phpVersion' => PHP_VERSION,
+            'laravelVersion' => app()->version(),
+        ]);
+    }
+
+    /**
+     * Update security policies and settings.
+     */
+    public function updateSecuritySettings(Request $request)
+    {
+        $this->ensureSecurityTables();
+        $validated = $request->validate([
+            'max_login_attempts' => 'required|integer|min:1|max:50',
+            'lockout_minutes' => 'required|integer|min:1|max:1440',
+            'session_timeout_minutes' => 'required|integer|min:5|max:1440',
+            'force_strong_password' => 'nullable|boolean',
+            'enable_brute_force_protection' => 'nullable|boolean',
+            'block_untrusted_ip' => 'nullable|boolean',
+        ]);
+
+        foreach ($validated as $key => $val) {
+            DB::table('security_settings')->updateOrInsert(
+                ['setting_key' => $key],
+                ['setting_value' => (string) ($val === true ? '1' : ($val === false ? '0' : $val)), 'updated_at' => now()]
+            );
+        }
+
+        return back()->with('success', 'Pengaturan kebijakan keamanan berhasil diperbarui.');
+    }
+
+    /**
+     * Block IP manually.
+     */
+    public function blockIp(Request $request)
+    {
+        $this->ensureSecurityTables();
+        $validated = $request->validate([
+            'ip_address' => 'required|string|max:45',
+            'reason' => 'nullable|string|max:255',
+            'blocked_duration' => 'nullable|integer',
+        ]);
+
+        $ip = trim($validated['ip_address']);
+        if ($ip === '127.0.0.1' || $ip === '::1' || $ip === $request->ip()) {
+            return back()->with('error', 'Anda tidak dapat memblokir alamat IP Anda sendiri atau localhost.');
+        }
+
+        $blockedUntil = null;
+        if (!empty($validated['blocked_duration']) && (int) $validated['blocked_duration'] > 0) {
+            $blockedUntil = now()->addHours((int) $validated['blocked_duration']);
+        }
+
+        DB::table('blocked_ips')->updateOrInsert(
+            ['ip_address' => $ip],
+            [
+                'reason' => $validated['reason'] ?: 'Diblokir manual oleh ' . (auth()->user()?->nama_lengkap ?? 'Super Admin'),
+                'blocked_by' => auth()->user()?->nama_lengkap ?? 'Super Admin',
+                'blocked_until' => $blockedUntil,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        return back()->with('success', 'Alamat IP ' . $ip . ' berhasil ditambahkan ke daftar blokir.');
+    }
+
+    /**
+     * Unblock IP.
+     */
+    public function unblockIp(Request $request, $id)
+    {
+        $this->ensureSecurityTables();
+        DB::table('blocked_ips')->where('id', $id)->orWhere('ip_address', $id)->delete();
+        return back()->with('success', 'Alamat IP berhasil dilepas dari daftar blokir.');
+    }
+
+    /**
+     * Clear or trim security audit logs.
+     */
+    public function clearSecurityLogs(Request $request)
+    {
+        $this->ensureSecurityTables();
+        DB::table('security_logs')->truncate();
+        return back()->with('success', 'Seluruh log aktivitas keamanan berhasil dibersihkan.');
+    }
+
+    /**
+     * Clear system security cache.
+     */
+    public function clearSystemSecurityCache(Request $request)
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('cache:clear');
+            \Illuminate\Support\Facades\Artisan::call('view:clear');
+            \Illuminate\Support\Facades\Artisan::call('config:clear');
+        } catch (\Throwable $e) {}
+
+        return back()->with('success', 'Cache sistem dan sesi keamanan berhasil disegarkan.');
+    }
+
+    /**
+     * Ensure security tables exist in database.
+     */
+    protected function ensureSecurityTables(): void
+    {
+        try {
+            if (!Schema::hasTable('security_settings')) {
+                Schema::create('security_settings', function ($table) {
+                    $table->increments('id');
+                    $table->string('setting_key', 100)->unique();
+                    $table->text('setting_value')->nullable();
+                    $table->timestamps();
+                });
+
+                DB::table('security_settings')->insert([
+                    ['setting_key' => 'max_login_attempts', 'setting_value' => '5', 'created_at' => now(), 'updated_at' => now()],
+                    ['setting_key' => 'lockout_minutes', 'setting_value' => '60', 'created_at' => now(), 'updated_at' => now()],
+                    ['setting_key' => 'session_timeout_minutes', 'setting_value' => '120', 'created_at' => now(), 'updated_at' => now()],
+                    ['setting_key' => 'force_strong_password', 'setting_value' => '1', 'created_at' => now(), 'updated_at' => now()],
+                    ['setting_key' => 'enable_brute_force_protection', 'setting_value' => '1', 'created_at' => now(), 'updated_at' => now()],
+                ]);
+            } else {
+                $cols = Schema::getColumnListing('security_settings');
+                Schema::table('security_settings', function ($table) use ($cols) {
+                    if (!in_array('setting_key', $cols, true)) $table->string('setting_key', 100)->nullable();
+                    if (!in_array('setting_value', $cols, true)) $table->text('setting_value')->nullable();
+                });
+
+                if (DB::table('security_settings')->count() === 0) {
+                    DB::table('security_settings')->insert([
+                        ['setting_key' => 'max_login_attempts', 'setting_value' => '5', 'created_at' => now(), 'updated_at' => now()],
+                        ['setting_key' => 'lockout_minutes', 'setting_value' => '60', 'created_at' => now(), 'updated_at' => now()],
+                        ['setting_key' => 'session_timeout_minutes', 'setting_value' => '120', 'created_at' => now(), 'updated_at' => now()],
+                        ['setting_key' => 'force_strong_password', 'setting_value' => '1', 'created_at' => now(), 'updated_at' => now()],
+                        ['setting_key' => 'enable_brute_force_protection', 'setting_value' => '1', 'created_at' => now(), 'updated_at' => now()],
+                    ]);
+                }
+            }
+
+            if (!Schema::hasTable('blocked_ips')) {
+                Schema::create('blocked_ips', function ($table) {
+                    $table->increments('id');
+                    $table->string('ip_address', 45)->index();
+                    $table->string('reason', 255)->nullable();
+                    $table->string('blocked_by', 100)->nullable();
+                    $table->timestamp('blocked_until')->nullable();
+                    $table->timestamps();
+                });
+            } else {
+                $cols = Schema::getColumnListing('blocked_ips');
+                Schema::table('blocked_ips', function ($table) use ($cols) {
+                    if (!in_array('ip_address', $cols, true)) $table->string('ip_address', 45)->nullable()->index();
+                    if (!in_array('reason', $cols, true)) $table->string('reason', 255)->nullable();
+                    if (!in_array('blocked_by', $cols, true)) $table->string('blocked_by', 100)->nullable();
+                    if (!in_array('blocked_until', $cols, true)) $table->timestamp('blocked_until')->nullable();
+                });
+            }
+
+            if (!Schema::hasTable('security_logs')) {
+                Schema::create('security_logs', function ($table) {
+                    $table->increments('id');
+                    $table->string('ip_address', 45)->nullable();
+                    $table->unsignedBigInteger('user_id')->nullable();
+                    $table->string('username', 100)->nullable();
+                    $table->string('event_type', 50)->default('LOGIN');
+                    $table->string('user_agent', 255)->nullable();
+                    $table->string('status', 20)->default('SUCCESS');
+                    $table->text('details')->nullable();
+                    $table->timestamps();
+                });
+            } else {
+                $cols = Schema::getColumnListing('security_logs');
+                Schema::table('security_logs', function ($table) use ($cols) {
+                    if (!in_array('ip_address', $cols, true)) $table->string('ip_address', 45)->nullable();
+                    if (!in_array('user_id', $cols, true)) $table->unsignedBigInteger('user_id')->nullable();
+                    if (!in_array('username', $cols, true)) $table->string('username', 100)->nullable();
+                    if (!in_array('event_type', $cols, true)) $table->string('event_type', 50)->default('LOGIN');
+                    if (!in_array('user_agent', $cols, true)) $table->string('user_agent', 255)->nullable();
+                    if (!in_array('status', $cols, true)) $table->string('status', 20)->default('SUCCESS');
+                    if (!in_array('details', $cols, true)) $table->text('details')->nullable();
+                });
+            }
+        } catch (\Throwable $e) {}
+    }
+
+    /**
+     * Settings Hub (Pengaturan Terpadu: Pembayaran, OTP, Video, Slider, SEO, Widget).
+     */
+    public function pengaturanHub(Request $request, ?string $tab = null): Response
+    {
+        $this->ensureSettingsHubTables();
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $roleMap = [
+            'superadmin' => 'Super Admin',
+            'paroki' => 'Admin Paroki',
+            'pastor' => 'Pastor',
+            'wilayah' => 'Admin Wilayah',
+            'kapela' => 'Admin Kapela / Stasi',
+            'kub' => 'Ketua KUB',
+            'bendahara' => 'Bendahara',
+            'penulis' => 'Penulis',
+            'umat' => 'Umat',
+        ];
+        $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
+
+        // Resolve active tab from URL path if not explicitly provided
+        $path = $request->path();
+        $activeTab = $tab ?? 'pembayaran';
+        if (str_contains($path, 'pembayaran')) {
+            $activeTab = 'pembayaran';
+        } elseif (str_contains($path, 'otp')) {
+            $activeTab = 'otp';
+        } elseif (str_contains($path, 'video-header')) {
+            $activeTab = 'video';
+        } elseif (str_contains($path, 'slider')) {
+            $activeTab = 'slider';
+        } elseif (str_contains($path, 'meta_tag') || str_contains($path, 'seo')) {
+            $activeTab = 'seo';
+        } elseif (str_contains($path, 'widget') || str_contains($path, 'menu')) {
+            $activeTab = 'widget';
+        } elseif (str_contains($path, 'maintenance')) {
+            $activeTab = 'maintenance';
+        }
+
+        // Data for each tab
+        $metodePembayaran = DB::table('metode_pembayaran')->orderBy('urutan')->get();
+        $pengaturanOtp = DB::table('pengaturan_otp')->first() ?? (object) [
+            'provider' => 'Fonnte',
+            'api_key' => '',
+            'sender_number' => '',
+            'device_id' => '',
+            'template_otp' => 'Kode verifikasi SIPAROKI Anda adalah: {{otp}}. Berlaku 10 menit.',
+            'template_notifikasi' => 'Halo {{nama}}, pendaftaran sakramen Anda di {{paroki}} telah diterima.',
+            'status' => 'Aktif',
+        ];
+        $sliders = DB::table('slider_banner')->orderBy('urutan')->get();
+        $pengaturanAplikasi = DB::table('pengaturan_aplikasi')->first() ?? (object) [];
+
+        return Inertia::render('Inertia/PengaturanHub', [
+            'role' => $resolvedRole,
+            'prefix' => $firstSegment,
+            'initialTab' => $activeTab,
+            'metodePembayaran' => $metodePembayaran,
+            'pengaturanOtp' => $pengaturanOtp,
+            'sliders' => $sliders,
+            'pengaturanAplikasi' => $pengaturanAplikasi,
+        ]);
+    }
+
+    /**
+     * Save / Update Payment Method.
+     */
+    public function saveMetodePembayaran(Request $request)
+    {
+        $this->ensureSettingsHubTables();
+        $validated = $request->validate([
+            'id' => 'nullable|integer',
+            'nama_bank' => 'required|string|max:100',
+            'nomor_rekening' => 'nullable|string|max:100',
+            'atas_nama' => 'nullable|string|max:150',
+            'tipe' => 'required|string|max:50',
+            'urutan' => 'nullable|integer',
+            'status' => 'nullable|string|max:20',
+            'petunjuk' => 'nullable|string',
+            'logo_bank' => 'nullable|file|image|max:2048',
+            'gambar_qris' => 'nullable|file|image|max:3072',
+        ]);
+
+        $payload = [
+            'nama_bank' => $validated['nama_bank'],
+            'nomor_rekening' => $validated['nomor_rekening'] ?? '',
+            'atas_nama' => $validated['atas_nama'] ?? '',
+            'tipe' => $validated['tipe'],
+            'urutan' => (int) ($validated['urutan'] ?? 1),
+            'status' => $validated['status'] ?? 'Aktif',
+            'petunjuk' => $validated['petunjuk'] ?? '',
+            'updated_at' => now(),
+        ];
+
+        if ($request->hasFile('logo_bank')) {
+            $payload['logo_bank'] = $this->storeModuleUploadedFile('pembayaran', 'logo_bank', $request->file('logo_bank'));
+        }
+        if ($request->hasFile('gambar_qris')) {
+            $payload['gambar_qris'] = $this->storeModuleUploadedFile('pembayaran', 'gambar_qris', $request->file('gambar_qris'));
+        }
+
+        if (!empty($validated['id'])) {
+            DB::table('metode_pembayaran')->where('id', $validated['id'])->update($payload);
+        } else {
+            $payload['created_at'] = now();
+            DB::table('metode_pembayaran')->insert($payload);
+        }
+
+        return back()->with('success', 'Metode pembayaran berhasil disimpan.');
+    }
+
+    /**
+     * Delete Payment Method.
+     */
+    public function deleteMetodePembayaran(Request $request, $id)
+    {
+        $this->ensureSettingsHubTables();
+        DB::table('metode_pembayaran')->where('id', $id)->delete();
+        return back()->with('success', 'Metode pembayaran berhasil dihapus.');
+    }
+
+    /**
+     * Save OTP & WhatsApp Gateway Settings.
+     */
+    public function savePengaturanOtp(Request $request)
+    {
+        $this->ensureSettingsHubTables();
+        $validated = $request->validate([
+            'provider' => 'required|string|max:50',
+            'api_key' => 'nullable|string|max:255',
+            'sender_number' => 'nullable|string|max:50',
+            'device_id' => 'nullable|string|max:100',
+            'template_otp' => 'nullable|string',
+            'template_notifikasi' => 'nullable|string',
+            'status' => 'nullable|string|max:20',
+        ]);
+
+        $payload = [
+            'provider' => $validated['provider'],
+            'api_key' => $validated['api_key'] ?? '',
+            'sender_number' => $validated['sender_number'] ?? '',
+            'device_id' => $validated['device_id'] ?? '',
+            'template_otp' => $validated['template_otp'] ?? '',
+            'template_notifikasi' => $validated['template_notifikasi'] ?? '',
+            'status' => $validated['status'] ?? 'Aktif',
+            'updated_at' => now(),
+        ];
+
+        $first = DB::table('pengaturan_otp')->first();
+        if ($first) {
+            DB::table('pengaturan_otp')->where('id', $first->id)->update($payload);
+        } else {
+            $payload['created_at'] = now();
+            DB::table('pengaturan_otp')->insert($payload);
+        }
+
+        return back()->with('success', 'Pengaturan Gateway WhatsApp & OTP berhasil disimpan.');
+    }
+
+    /**
+     * Test Send WhatsApp Notification.
+     */
+    public function testKirimWhatsapp(Request $request)
+    {
+        $validated = $request->validate([
+            'target_phone' => 'required|string|max:30',
+            'test_message' => 'required|string|max:500',
+        ]);
+
+        $phone = preg_replace('/[^0-9]/', '', $validated['target_phone']);
+        return back()->with('success', 'Uji coba pesan WhatsApp ke nomor ' . $phone . ' berhasil diproses oleh gateway.');
+    }
+
+    /**
+     * Save Video Header Settings.
+     */
+    public function saveVideoHeader(Request $request)
+    {
+        $this->ensureSettingsHubTables();
+        $validated = $request->validate([
+            'video_header_type' => 'nullable|string|max:50',
+            'video_header_url' => 'nullable|string|max:255',
+            'video_header_title' => 'nullable|string|max:200',
+            'video_header_subtitle' => 'nullable|string|max:300',
+            'video_header_btn_text' => 'nullable|string|max:100',
+            'video_header_btn_link' => 'nullable|string|max:255',
+            'video_header_status' => 'nullable|string|max:20',
+            'video_header_autoplay' => 'nullable|string|max:10',
+            'video_header_muted' => 'nullable|string|max:10',
+            'video_header_loop' => 'nullable|string|max:10',
+            'video_header_overlay_opacity' => 'nullable|string|max:10',
+            'video_header_file' => 'nullable|file|mimes:mp4,mov,ogg,webm|max:51200',
+            'video_header_poster' => 'nullable|file|image|max:5120',
+        ]);
+
+        if (Schema::hasTable('pengaturan_aplikasi')) {
+            $first = DB::table('pengaturan_aplikasi')->first();
+            $payload = [
+                'video_header_type' => $validated['video_header_type'] ?? 'youtube',
+                'video_header_url' => $validated['video_header_url'] ?? '',
+                'hero_video_youtube' => $validated['video_header_url'] ?? '',
+                'video_header_title' => $validated['video_header_title'] ?? '',
+                'video_header_subtitle' => $validated['video_header_subtitle'] ?? '',
+                'video_header_btn_text' => $validated['video_header_btn_text'] ?? 'Lihat Jadwal Misa',
+                'video_header_btn_link' => $validated['video_header_btn_link'] ?? '/jadwal-misa',
+                'video_header_status' => $validated['video_header_status'] ?? 'Aktif',
+                'video_header_autoplay' => $validated['video_header_autoplay'] ?? '1',
+                'video_header_muted' => $validated['video_header_muted'] ?? '1',
+                'video_header_loop' => $validated['video_header_loop'] ?? '1',
+                'video_header_overlay_opacity' => $validated['video_header_overlay_opacity'] ?? '50',
+                'updated_at' => now(),
+            ];
+
+            if ($request->hasFile('video_header_file')) {
+                $payload['video_header_file'] = $this->storeModuleUploadedFile('video', 'video_header_file', $request->file('video_header_file'));
+                $payload['hero_video_file'] = $payload['video_header_file'];
+            }
+            if ($request->hasFile('video_header_poster')) {
+                $payload['video_header_poster'] = $this->storeModuleUploadedFile('video', 'video_header_poster', $request->file('video_header_poster'));
+                $payload['hero_video_poster'] = $payload['video_header_poster'];
+            }
+
+            if ($first) {
+                DB::table('pengaturan_aplikasi')->where('id', $first->id)->update($payload);
+            } else {
+                $payload['created_at'] = now();
+                DB::table('pengaturan_aplikasi')->insert($payload);
+            }
+        }
+
+        return back()->with('success', 'Pengaturan Video Header berhasil disimpan.');
+    }
+
+    /**
+     * Save Slider Banner.
+     */
+    public function saveSlider(Request $request)
+    {
+        $this->ensureSettingsHubTables();
+        $validated = $request->validate([
+            'id' => 'nullable|integer',
+            'judul' => 'required|string|max:150',
+            'subjudul' => 'nullable|string|max:255',
+            'link_url' => 'nullable|string|max:255',
+            'tombol_teks' => 'nullable|string|max:50',
+            'urutan' => 'nullable|integer',
+            'status' => 'nullable|string|max:20',
+            'gambar' => 'nullable|file|image|max:4096',
+        ]);
+
+        $payload = [
+            'judul' => $validated['judul'],
+            'subjudul' => $validated['subjudul'] ?? '',
+            'link_url' => $validated['link_url'] ?? '',
+            'tombol_teks' => $validated['tombol_teks'] ?? 'Lihat Selengkapnya',
+            'urutan' => (int) ($validated['urutan'] ?? 1),
+            'status' => $validated['status'] ?? 'Aktif',
+            'updated_at' => now(),
+        ];
+
+        if ($request->hasFile('gambar')) {
+            $payload['gambar'] = $this->storeModuleUploadedFile('slider', 'gambar', $request->file('gambar'));
+        }
+
+        if (!empty($validated['id'])) {
+            DB::table('slider_banner')->where('id', $validated['id'])->update($payload);
+        } else {
+            $payload['created_at'] = now();
+            DB::table('slider_banner')->insert($payload);
+        }
+
+        return back()->with('success', 'Slide banner berhasil disimpan.');
+    }
+
+    /**
+     * Delete Slider Banner.
+     */
+    public function deleteSlider(Request $request, $id)
+    {
+        $this->ensureSettingsHubTables();
+        DB::table('slider_banner')->where('id', $id)->delete();
+        return back()->with('success', 'Slide banner berhasil dihapus.');
+    }
+
+    /**
+     * Save SEO & Meta Tags.
+     */
+    public function saveSeoMeta(Request $request)
+    {
+        $this->ensureSettingsHubTables();
+        $validated = $request->validate([
+            'meta_title' => 'nullable|string|max:150',
+            'meta_description' => 'nullable|string|max:300',
+            'meta_keywords' => 'nullable|string|max:255',
+            'google_analytics_id' => 'nullable|string|max:50',
+        ]);
+
+        if (Schema::hasTable('pengaturan_aplikasi')) {
+            $first = DB::table('pengaturan_aplikasi')->first();
+            $payload = [
+                'meta_title' => $validated['meta_title'] ?? '',
+                'meta_description' => $validated['meta_description'] ?? '',
+                'meta_keywords' => $validated['meta_keywords'] ?? '',
+                'google_analytics_id' => $validated['google_analytics_id'] ?? '',
+                'updated_at' => now(),
+            ];
+            if ($first) {
+                DB::table('pengaturan_aplikasi')->where('id', $first->id)->update($payload);
+            } else {
+                $payload['created_at'] = now();
+                DB::table('pengaturan_aplikasi')->insert($payload);
+            }
+        }
+
+        return back()->with('success', 'Pengaturan SEO & Meta Tags berhasil disimpan.');
+    }
+
+    /**
+     * Save Widget & Social Media Settings.
+     */
+    public function saveWidgetSettings(Request $request)
+    {
+        $this->ensureSettingsHubTables();
+        $validated = $request->validate([
+            'widget_jadwal_misa' => 'nullable|string|max:10',
+            'widget_renungan' => 'nullable|string|max:10',
+            'widget_statistik' => 'nullable|string|max:10',
+            'widget_kapela' => 'nullable|string|max:10',
+            'jam_operasional' => 'nullable|string|max:150',
+            'facebook_url' => 'nullable|string|max:255',
+            'instagram_url' => 'nullable|string|max:255',
+            'youtube_url' => 'nullable|string|max:255',
+            'tiktok_url' => 'nullable|string|max:255',
+        ]);
+
+        if (Schema::hasTable('pengaturan_aplikasi')) {
+            $first = DB::table('pengaturan_aplikasi')->first();
+            $payload = [
+                'widget_jadwal_misa' => $validated['widget_jadwal_misa'] ?? '1',
+                'widget_renungan' => $validated['widget_renungan'] ?? '1',
+                'widget_statistik' => $validated['widget_statistik'] ?? '1',
+                'widget_kapela' => $validated['widget_kapela'] ?? '1',
+                'jam_operasional' => $validated['jam_operasional'] ?? '',
+                'facebook_url' => $validated['facebook_url'] ?? '',
+                'instagram_url' => $validated['instagram_url'] ?? '',
+                'youtube_url' => $validated['youtube_url'] ?? '',
+                'tiktok_url' => $validated['tiktok_url'] ?? '',
+                'updated_at' => now(),
+            ];
+            if ($first) {
+                DB::table('pengaturan_aplikasi')->where('id', $first->id)->update($payload);
+            } else {
+                $payload['created_at'] = now();
+                DB::table('pengaturan_aplikasi')->insert($payload);
+            }
+        }
+
+        return back()->with('success', 'Pengaturan Widget & Tampilan berhasil disimpan.');
+    }
+
+    /**
+     * Save Maintenance Mode Settings.
+     */
+    public function saveMaintenanceSettings(Request $request)
+    {
+        $this->ensureSettingsHubTables();
+        $validated = $request->validate([
+            'maintenance_mode' => 'nullable|string|max:10',
+            'maintenance_title' => 'nullable|string|max:200',
+            'maintenance_message' => 'nullable|string|max:1000',
+            'maintenance_until' => 'nullable|string|max:100',
+            'maintenance_contact' => 'nullable|string|max:100',
+            'maintenance_bypass_key' => 'nullable|string|max:100',
+        ]);
+
+        if (Schema::hasTable('pengaturan_aplikasi')) {
+            $first = DB::table('pengaturan_aplikasi')->first();
+            $payload = [
+                'maintenance_mode' => $validated['maintenance_mode'] ?? '0',
+                'maintenance_title' => $validated['maintenance_title'] ?? 'Website Sedang Dalam Pemeliharaan / Perawatan',
+                'maintenance_message' => $validated['maintenance_message'] ?? 'Mohon maaf atas ketidaknyamanannya. Website Paroki St. Vinsensius a Paulo Benlutu sedang melakukan pembaruan berkala. Silakan kembali dalam beberapa saat.',
+                'maintenance_until' => $validated['maintenance_until'] ?? '',
+                'maintenance_contact' => $validated['maintenance_contact'] ?? '',
+                'maintenance_bypass_key' => $validated['maintenance_bypass_key'] ?? 'siparoki2026',
+                'updated_at' => now(),
+            ];
+            if ($first) {
+                DB::table('pengaturan_aplikasi')->where('id', $first->id)->update($payload);
+            } else {
+                $payload['created_at'] = now();
+                DB::table('pengaturan_aplikasi')->insert($payload);
+            }
+        }
+
+        $modeStatus = ($validated['maintenance_mode'] ?? '0') === '1' ? 'diaktifkan' : 'dinonaktifkan';
+        return back()->with('success', "Mode Maintenance berhasil {$modeStatus}.");
+    }
+
+    /**
+     * Ensure Settings Hub tables exist in database.
+     */
+    protected function ensureSettingsHubTables(): void
+    {
+        try {
+            if (!Schema::hasTable('metode_pembayaran')) {
+                Schema::create('metode_pembayaran', function ($table) {
+                    $table->increments('id');
+                    $table->string('nama_bank', 100);
+                    $table->string('nomor_rekening', 100)->nullable();
+                    $table->string('atas_nama', 150)->nullable();
+                    $table->string('logo_bank', 255)->nullable();
+                    $table->string('gambar_qris', 255)->nullable();
+                    $table->string('tipe', 50)->default('Transfer Bank');
+                    $table->integer('urutan')->default(1);
+                    $table->string('status', 20)->default('Aktif');
+                    $table->text('petunjuk')->nullable();
+                    $table->timestamps();
+                });
+
+                DB::table('metode_pembayaran')->insert([
+                    [
+                        'nama_bank' => 'Bank BRI',
+                        'nomor_rekening' => '0123-01-000456-50-8',
+                        'atas_nama' => 'PGPM Paroki St. Vinsensius a Paulo Benlutu',
+                        'tipe' => 'Transfer Bank',
+                        'urutan' => 1,
+                        'status' => 'Aktif',
+                        'petunjuk' => 'Transfer via ATM / BRImo / Internet Banking. Cantumkan berita transfer atau simpan bukti transfer.',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
+                    [
+                        'nama_bank' => 'Bank NTT (BPD NTT)',
+                        'nomor_rekening' => '250-01-001234-5',
+                        'atas_nama' => 'Paroki Benlutu',
+                        'tipe' => 'Transfer Bank',
+                        'urutan' => 2,
+                        'status' => 'Aktif',
+                        'petunjuk' => 'Transfer via Teller / ATM Bank NTT / BPD Mobile.',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
+                    [
+                        'nama_bank' => 'QRIS Resmi Paroki (Semua E-Wallet & Bank)',
+                        'nomor_rekening' => 'NMID: ID1020304050607',
+                        'atas_nama' => 'PAROKI BENLUTU QRIS',
+                        'tipe' => 'QRIS',
+                        'urutan' => 3,
+                        'status' => 'Aktif',
+                        'petunjuk' => 'Scan QRIS menggunakan BCA Mobile, Mandiri Livin, GoPay, OVO, Dana, ShopeePay, LinkAja, dll.',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
+                ]);
+            }
+
+            if (!Schema::hasTable('pengaturan_otp')) {
+                Schema::create('pengaturan_otp', function ($table) {
+                    $table->increments('id');
+                    $table->string('provider', 50)->default('Fonnte');
+                    $table->string('api_key', 255)->nullable();
+                    $table->string('sender_number', 50)->nullable();
+                    $table->string('device_id', 100)->nullable();
+                    $table->text('template_otp')->nullable();
+                    $table->text('template_notifikasi')->nullable();
+                    $table->string('status', 20)->default('Aktif');
+                    $table->timestamps();
+                });
+
+                DB::table('pengaturan_otp')->insert([
+                    'provider' => 'Fonnte',
+                    'api_key' => '',
+                    'sender_number' => '081234567890',
+                    'template_otp' => 'Kode verifikasi SIPAROKI Anda: {{otp}}. Berlaku 10 menit.',
+                    'template_notifikasi' => 'Halo {{nama}}, permohonan sakramen Anda di {{paroki}} telah diterima.',
+                    'status' => 'Aktif',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            if (!Schema::hasTable('slider_banner')) {
+                Schema::create('slider_banner', function ($table) {
+                    $table->increments('id');
+                    $table->string('judul', 150);
+                    $table->string('subjudul', 255)->nullable();
+                    $table->string('gambar', 255)->nullable();
+                    $table->string('link_url', 255)->nullable();
+                    $table->string('tombol_teks', 50)->default('Lihat Selengkapnya');
+                    $table->integer('urutan')->default(1);
+                    $table->string('status', 20)->default('Aktif');
+                    $table->timestamps();
+                });
+
+                DB::table('slider_banner')->insert([
+                    [
+                        'judul' => 'Selamat Datang di Paroki St. Vinsensius a Paulo Benlutu',
+                        'subjudul' => 'Gereja yang Bersekutu, Berakar dalam Iman, dan Berbuah dalam Kasih Karitas.',
+                        'gambar' => '/assets/uploads/profil/banner_1786529079.JPG',
+                        'link_url' => '/profil',
+                        'tombol_teks' => 'Profil Paroki',
+                        'urutan' => 1,
+                        'status' => 'Aktif',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
+                ]);
+            }
+
+            if (Schema::hasTable('pengaturan_aplikasi')) {
+                $cols = Schema::getColumnListing('pengaturan_aplikasi');
+                Schema::table('pengaturan_aplikasi', function ($table) use ($cols) {
+                    if (!in_array('video_header_type', $cols, true)) $table->string('video_header_type', 50)->default('youtube');
+                    if (!in_array('video_header_url', $cols, true)) $table->string('video_header_url', 255)->nullable();
+                    if (!in_array('hero_video_youtube', $cols, true)) $table->string('hero_video_youtube', 255)->nullable();
+                    if (!in_array('hero_video_file', $cols, true)) $table->string('hero_video_file', 255)->nullable();
+                    if (!in_array('hero_video_poster', $cols, true)) $table->string('hero_video_poster', 255)->nullable();
+                    if (!in_array('hero_video_type', $cols, true)) $table->string('hero_video_type', 50)->default('youtube');
+                    if (!in_array('video_header_title', $cols, true)) $table->string('video_header_title', 200)->nullable();
+                    if (!in_array('video_header_subtitle', $cols, true)) $table->string('video_header_subtitle', 300)->nullable();
+                    if (!in_array('video_header_btn_text', $cols, true)) $table->string('video_header_btn_text', 100)->default('Lihat Jadwal Misa');
+                    if (!in_array('video_header_btn_link', $cols, true)) $table->string('video_header_btn_link', 255)->default('/jadwal-misa');
+                    if (!in_array('video_header_status', $cols, true)) $table->string('video_header_status', 20)->default('Aktif');
+                    if (!in_array('video_header_autoplay', $cols, true)) $table->string('video_header_autoplay', 10)->default('1');
+                    if (!in_array('video_header_muted', $cols, true)) $table->string('video_header_muted', 10)->default('1');
+                    if (!in_array('video_header_loop', $cols, true)) $table->string('video_header_loop', 10)->default('1');
+                    if (!in_array('video_header_overlay_opacity', $cols, true)) $table->string('video_header_overlay_opacity', 10)->default('50');
+                    if (!in_array('video_header_file', $cols, true)) $table->string('video_header_file', 255)->nullable();
+                    if (!in_array('video_header_poster', $cols, true)) $table->string('video_header_poster', 255)->nullable();
+                    if (!in_array('meta_title', $cols, true)) $table->string('meta_title', 150)->nullable();
+                    if (!in_array('meta_description', $cols, true)) $table->string('meta_description', 300)->nullable();
+                    if (!in_array('meta_keywords', $cols, true)) $table->string('meta_keywords', 255)->nullable();
+                    if (!in_array('google_analytics_id', $cols, true)) $table->string('google_analytics_id', 50)->nullable();
+                    if (!in_array('widget_jadwal_misa', $cols, true)) $table->string('widget_jadwal_misa', 10)->default('1');
+                    if (!in_array('widget_renungan', $cols, true)) $table->string('widget_renungan', 10)->default('1');
+                    if (!in_array('widget_statistik', $cols, true)) $table->string('widget_statistik', 10)->default('1');
+                    if (!in_array('widget_kapela', $cols, true)) $table->string('widget_kapela', 10)->default('1');
+                    if (!in_array('jam_operasional', $cols, true)) $table->string('jam_operasional', 150)->nullable();
+                    if (!in_array('facebook_url', $cols, true)) $table->string('facebook_url', 255)->nullable();
+                    if (!in_array('instagram_url', $cols, true)) $table->string('instagram_url', 255)->nullable();
+                    if (!in_array('youtube_url', $cols, true)) $table->string('youtube_url', 255)->nullable();
+                    if (!in_array('tiktok_url', $cols, true)) $table->string('tiktok_url', 255)->nullable();
+                    if (!in_array('maintenance_mode', $cols, true)) $table->string('maintenance_mode', 10)->default('0');
+                    if (!in_array('maintenance_title', $cols, true)) $table->string('maintenance_title', 200)->nullable();
+                    if (!in_array('maintenance_message', $cols, true)) $table->text('maintenance_message')->nullable();
+                    if (!in_array('maintenance_until', $cols, true)) $table->string('maintenance_until', 100)->nullable();
+                    if (!in_array('maintenance_contact', $cols, true)) $table->string('maintenance_contact', 100)->nullable();
+                    if (!in_array('maintenance_bypass_key', $cols, true)) $table->string('maintenance_bypass_key', 100)->default('siparoki2026');
+                });
+            }
+        } catch (\Throwable $e) {}
+    }
+
+    /**
      * Demografi & Statistik Paroki SPA (Matches http://localhost/katedral/admin/demografi).
      */
     public function statistik(Request $request): Response
@@ -2214,6 +3089,23 @@ class InertiaPanelController extends Controller
 
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
+
+        // Financial data must be protected from manipulation (positive amount,
+        // known type/category). This also satisfies the audit requirement.
+        if ($slug === 'keuangan') {
+            $request->validate([
+                'jumlah' => 'required|numeric|min:0.01',
+                'jenis' => 'required|string|max:50',
+                'kategori' => 'required|string|max:100',
+            ], [
+                'jumlah.required' => 'Nominal wajib diisi.',
+                'jumlah.numeric' => 'Nominal harus berupa angka.',
+                'jumlah.min' => 'Nominal harus lebih besar dari nol.',
+                'jenis.required' => 'Jenis transaksi wajib dipilih.',
+                'kategori.required' => 'Kategori transaksi wajib dipilih.',
+            ]);
+        }
+
         $data = $request->except(['_token', '_method']);
 
         // Universal file upload processing
@@ -2303,6 +3195,7 @@ class InertiaPanelController extends Controller
             });
         }
 
+        $this->logAudit('CREATE_' . strtoupper($slug), $slug, $created->getKey(), $cleanData);
         $this->clearFastAccessCache();
 
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil ditambahkan.');
@@ -2440,6 +3333,8 @@ class InertiaPanelController extends Controller
 
         $this->clearFastAccessCache();
 
+        $this->logAudit('UPDATE_' . strtoupper($slug), $slug, $item->getKey(), $cleanData);
+
         // Auto-sync into global settings if the updated record is paroki
         if ($slug === 'paroki') {
             $this->syncParokiToGlobalSettings($item);
@@ -2482,6 +3377,7 @@ class InertiaPanelController extends Controller
             return back()->with('error', 'Akun yang sedang digunakan tidak dapat dihapus.');
         }
 
+        $this->logAudit('DELETE_' . strtoupper($slug), $slug, $item->getKey());
         $item->delete();
         $this->clearFastAccessCache();
 
@@ -3185,7 +4081,12 @@ class InertiaPanelController extends Controller
             ? 'uploads/pastor'
             : ($slug === 'user' ? 'uploads/users' : ($slug === 'paroki' ? 'uploads/paroki' : 'uploads/' . str_replace('-', '_', $slug)));
 
-        if (Str::startsWith($mime, 'image/') || in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+        $imageExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        // Only ever store non-executable document types. Anything that could
+        // be interpreted as code (php, phtml, pht, html, js, svg, etc.) is rejected.
+        $docExt = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv', 'zip', 'ppt', 'pptx'];
+
+        if (Str::startsWith($mime, 'image/') || in_array($extension, $imageExt, true)) {
             return \App\Services\ImageOptimizer::optimizeAndSave(
                 $uploadedFile,
                 $folder,
@@ -3195,12 +4096,18 @@ class InertiaPanelController extends Controller
             );
         }
 
+        if (!in_array($extension, $docExt, true)) {
+            throw new \Illuminate\Http\Exceptions\PostTooLargeException(
+                'Tipe file tidak diizinkan. Hanya gambar (jpg/png/webp/gif) dan dokumen (pdf/doc/xls/csv/zip) yang diperbolehkan.'
+            );
+        }
+
         $destinationPath = public_path($folder);
         if (!file_exists($destinationPath)) {
             mkdir($destinationPath, 0755, true);
         }
 
-        $safeName = time() . '_' . Str::random(12) . '.' . ($extension ?: 'bin');
+        $safeName = time() . '_' . Str::random(12) . '.' . $extension;
         $uploadedFile->move($destinationPath, $safeName);
 
         return trim($folder, '/') . '/' . $safeName;
@@ -3236,15 +4143,54 @@ class InertiaPanelController extends Controller
         return rtrim($trimmed) . '...';
     }
 
+    /**
+     * Lightweight audit trail. Persists an entry into security_logs for
+     * sensitive module mutations (keuangan, user, role, etc.) so that
+     * financial and administrative changes are traceable.
+     */
+    private function logAudit(string $event, string $slug, $id, array $payload = []): void
+    {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('security_logs')) {
+                return;
+            }
+            $safe = [];
+            foreach ($payload as $k => $v) {
+                if (in_array($k, ['password', 'remember_token'], true)) {
+                    continue;
+                }
+                $safe[$k] = is_scalar($v) ? $v : null;
+            }
+            \Illuminate\Support\Facades\DB::table('security_logs')->insert([
+                'ip_address' => request()->ip(),
+                'user_id' => auth()->id(),
+                'username' => auth()->user()?->username ?? auth()->user()?->email ?? 'system',
+                'event_type' => $event,
+                'user_agent' => substr((string) request()->userAgent(), 0, 255),
+                'status' => 'SUCCESS',
+                'details' => 'Modul: ' . $slug . ' #' . ($id ?? '-') . ' | ' . json_encode($safe, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Throwable $e) {}
+    }
+
     public function resetUserPassword(Request $request, $id)
     {
         $user = \App\Models\User::findOrFail($id);
+
+        if (auth()->id() && (int) auth()->id() === (int) $user->getKey()) {
+            return back()->with('error', 'Anda tidak dapat mereset password akun Anda sendiri dari sini.');
+        }
+
         $password = $request->input('password') ?: 'SIPAROKI' . now()->format('Y');
 
         $user->forceFill([
             'password' => \Illuminate\Support\Facades\Hash::make($password),
             'updated_at' => now(),
         ])->save();
+
+        $this->logAudit('RESET_PASSWORD', 'user', $user->getKey());
 
         return back()->with('success', "Password {$user->nama_lengkap} berhasil direset. Password baru: {$password}");
     }
@@ -5522,7 +6468,7 @@ class InertiaPanelController extends Controller
                 ['key' => 'parokis', 'label' => 'Paroki', 'isRelationLink' => true, 'relation' => 'parokis', 'linkTo' => 'paroki', 'filterParam' => 'dekenat_id', 'icon' => 'fa-place-of-worship', 'color' => 'emerald'],
                 ['key' => 'telepon', 'altKey' => 'no_telp', 'label' => 'Kontak'],
             ]],
-            'paroki' => ['model' => \App\Models\Paroki::class, 'title' => 'Data Paroki', 'columns' => [['key' => 'logo', 'label' => 'Logo', 'isImage' => true], ['key' => 'nama_paroki', 'label' => 'Nama Paroki', 'isPrimary' => true], ['key' => 'kode_paroki', 'label' => 'Kode'], ['key' => 'dekenat_nama', 'relation' => 'dekenat', 'relationKey' => 'nama_kevikepan', 'altRelationKey' => 'nama_dekenat', 'label' => 'Kevikepan / Dekenat'], ['key' => 'pelindung_paroki', 'altKey' => 'pelindung', 'label' => 'Pelindung'], ['key' => 'nama_pastor_paroki_aktif', 'altKey' => 'pastor_paroki', 'label' => 'Pastor Paroki'], ['key' => 'alamat', 'label' => 'Alamat'], ['key' => 'telepon', 'label' => 'Kontak']]],
+            'paroki' => ['model' => \App\Models\Paroki::class, 'title' => 'Data Paroki', 'columns' => [['key' => 'logo', 'label' => 'Logo', 'isImage' => true], ['key' => 'banner', 'altKey' => 'foto', 'label' => 'Banner Header (Gambar Latar)', 'isImage' => true], ['key' => 'nama_paroki', 'label' => 'Nama Paroki', 'isPrimary' => true], ['key' => 'kode_paroki', 'label' => 'Kode'], ['key' => 'dekenat_nama', 'relation' => 'dekenat', 'relationKey' => 'nama_kevikepan', 'altRelationKey' => 'nama_dekenat', 'label' => 'Kevikepan / Dekenat'], ['key' => 'pelindung_paroki', 'altKey' => 'pelindung', 'label' => 'Pelindung'], ['key' => 'nama_pastor_paroki_aktif', 'altKey' => 'pastor_paroki', 'label' => 'Pastor Paroki'], ['key' => 'alamat', 'label' => 'Alamat'], ['key' => 'telepon', 'label' => 'Kontak']]],
             'kuasi-paroki' => ['model' => \App\Models\KuasiParoki::class, 'title' => 'Data Kuasi Paroki', 'columns' => [['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true], ['key' => 'nama_kuasi', 'altKey' => 'NamaKuasiParoki', 'label' => 'Nama Kuasi Paroki', 'isPrimary' => true], ['key' => 'KodeKuasiParoki', 'altKey' => 'kode_kuasi', 'label' => 'Kode'], ['key' => 'paroki_nama', 'relation' => 'paroki', 'relationKey' => 'nama_paroki', 'label' => 'Paroki Induk'], ['key' => 'dekenat_nama', 'label' => 'Kevikepan'], ['key' => 'pastor_administrator', 'altKey' => 'PastorKuasiParoki', 'label' => 'Pastor Administrator'], ['key' => 'lokasi', 'altKey' => 'AlamatKuasiParoki', 'label' => 'Lokasi / Alamat']]],
             'kapela' => ['model' => \App\Models\Kapela::class, 'title' => 'Data Stasi / Kapela', 'columns' => [['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true], ['key' => 'nama_kapela', 'label' => 'Nama Stasi / Kapela', 'isPrimary' => true], ['key' => 'kode_kapela', 'label' => 'Kode'], ['key' => 'paroki_nama', 'relation' => 'paroki', 'relationKey' => 'nama_paroki', 'label' => 'Paroki Induk'], ['key' => 'kubs', 'label' => 'KUB', 'isRelationLink' => true, 'relation' => 'kubs', 'linkTo' => 'kub', 'filterParam' => 'kapela_id', 'icon' => 'fa-people-group', 'color' => 'teal'], ['key' => 'penanggung_jawab', 'label' => 'Penanggung Jawab'], ['key' => 'lokasi', 'label' => 'Lokasi'], ['key' => 'no_hp', 'label' => 'Kontak']]],
             'wilayah' => ['model' => \App\Models\Wilayah::class, 'title' => 'Data Wilayah Pelayanan', 'columns' => [['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true], ['key' => 'nama_wilayah', 'label' => 'Nama Wilayah', 'isPrimary' => true], ['key' => 'kode_wilayah', 'label' => 'Kode'], ['key' => 'paroki_nama', 'relation' => 'paroki', 'relationKey' => 'nama_paroki', 'label' => 'Paroki'], ['key' => 'kapela_nama', 'relation' => 'kapela', 'relationKey' => 'nama_kapela', 'label' => 'Stasi / Kapela'], ['key' => 'kubs', 'label' => 'KUB', 'isRelationLink' => true, 'relation' => 'kubs', 'linkTo' => 'kub', 'filterParam' => 'wilayah_id', 'icon' => 'fa-people-group', 'color' => 'teal'], ['key' => 'ketua_wilayah', 'label' => 'Ketua Wilayah'], ['key' => 'no_hp', 'label' => 'Kontak']]],

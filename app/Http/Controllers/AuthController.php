@@ -32,6 +32,27 @@ class AuthController extends Controller
      */
     public function processLogin(Request $request)
     {
+        $ip = $request->ip();
+        $userAgent = substr((string) $request->userAgent(), 0, 255);
+
+        // 1. Check if IP is currently blocked
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('blocked_ips')) {
+                $blocked = DB::table('blocked_ips')
+                    ->where('ip_address', $ip)
+                    ->where(function ($q) {
+                        $q->whereNull('blocked_until')->orWhere('blocked_until', '>', now());
+                    })
+                    ->first();
+
+                if ($blocked) {
+                    return back()->withErrors([
+                        'login' => 'Akses dari alamat IP Anda (' . $ip . ') diblokir oleh Firewall Sistem. Alasan: ' . ($blocked->reason ?: 'Aktivitas mencurigakan'),
+                    ])->onlyInput('login');
+                }
+            }
+        } catch (\Throwable $e) {}
+
         $credentials = $request->validate([
             'login' => 'required|string',
             'password' => 'required|string',
@@ -42,7 +63,6 @@ class AuthController extends Controller
 
         $login = $request->input('login');
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
         $remember = $request->boolean('remember');
 
         if (Auth::attempt([$field => $login, 'password' => $request->password], $remember) ||
@@ -51,6 +71,23 @@ class AuthController extends Controller
 
             $user = Auth::user();
             $roleSlug = strtolower($user->role->slug ?? $user->role->nama_role ?? '');
+
+            // Log successful login
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('security_logs')) {
+                    DB::table('security_logs')->insert([
+                        'ip_address' => $ip,
+                        'user_id' => $user->id ?? null,
+                        'username' => $user->username ?? $user->email ?? $login,
+                        'event_type' => 'LOGIN',
+                        'user_agent' => $userAgent,
+                        'status' => 'SUCCESS',
+                        'details' => 'Login berhasil via web portal (' . ($user->role->nama_role ?? 'User') . ')',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            } catch (\Throwable $e) {}
 
             if (str_contains($roleSlug, 'super')) {
                 return redirect('/superadmin')->with('success', 'Selamat datang kembali, Super Admin!');
@@ -70,6 +107,52 @@ class AuthController extends Controller
 
             return redirect('/dashboard')->with('success', 'Selamat datang kembali di SIPAROKI!');
         }
+
+        // Log failed login attempt
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('security_logs')) {
+                DB::table('security_logs')->insert([
+                    'ip_address' => $ip,
+                    'user_id' => null,
+                    'username' => $login,
+                    'event_type' => 'LOGIN_ATTEMPT',
+                    'user_agent' => $userAgent,
+                    'status' => 'FAILED',
+                    'details' => 'Percobaan login gagal (Password atau username salah)',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // Check recent failed attempts for brute-force detection (e.g. 5 fails in 15 mins)
+                $maxAttempts = 5;
+                if (\Illuminate\Support\Facades\Schema::hasTable('security_settings')) {
+                    $settingMax = DB::table('security_settings')->where('setting_key', 'max_login_attempts')->value('setting_value');
+                    if (!empty($settingMax) && is_numeric($settingMax)) {
+                        $maxAttempts = (int) $settingMax;
+                    }
+                }
+
+                $recentFails = DB::table('security_logs')
+                    ->where('ip_address', $ip)
+                    ->where('status', 'FAILED')
+                    ->where('created_at', '>=', now()->subMinutes(15))
+                    ->count();
+
+                if ($recentFails >= $maxAttempts && \Illuminate\Support\Facades\Schema::hasTable('blocked_ips')) {
+                    $alreadyBlocked = DB::table('blocked_ips')->where('ip_address', $ip)->exists();
+                    if (!$alreadyBlocked) {
+                        DB::table('blocked_ips')->insert([
+                            'ip_address' => $ip,
+                            'reason' => 'Brute Force Protection: ' . $recentFails . 'x percobaan login gagal',
+                            'blocked_by' => 'Auto-Firewall',
+                            'blocked_until' => now()->addMinutes(60),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
 
         return back()->withErrors([
             'login' => 'Email, Username, atau Kata Sandi yang Anda masukkan salah.',
@@ -190,11 +273,26 @@ class AuthController extends Controller
             ->orWhere('no_hp', $identitas)
             ->first();
 
-        if (!$user) {
-            return back()->withErrors(['identitas' => 'Akun dengan data tersebut tidak ditemukan dalam sistem paroki.'])->withInput();
+        // Always return the same response to avoid user enumeration.
+        // (No email/SMS is actually dispatched in this build; recovery is
+        // handled by the Sekretariat Paroki.)
+        if ($user) {
+            try {
+                \Illuminate\Support\Facades\DB::table('security_logs')->insert([
+                    'ip_address' => $request->ip(),
+                    'user_id' => $user->id,
+                    'username' => $user->username ?? $user->email ?? $identitas,
+                    'event_type' => 'PASSWORD_RESET_REQUEST',
+                    'user_agent' => substr((string) $request->userAgent(), 0, 255),
+                    'status' => 'SUCCESS',
+                    'details' => 'Permintaan reset password diajukan.',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } catch (\Throwable $e) {}
         }
 
-        return back()->with('status', 'Permintaan reset kata sandi telah dicatat. Silakan hubungi Sekretariat Paroki atau periksa pesan WhatsApp/Email untuk instruksi pemulihan akun.');
+        return back()->with('status', 'Jika data terdaftar, permintaan reset kata sandi telah dicatat. Silakan hubungi Sekretariat Paroki atau periksa pesan WhatsApp/Email untuk instruksi pemulihan akun.');
     }
 
     /**

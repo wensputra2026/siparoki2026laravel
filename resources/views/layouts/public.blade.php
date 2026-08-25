@@ -84,6 +84,45 @@
     <link rel="stylesheet" href="/css/portal-shell.css?v={{ @filemtime(public_path('css/portal-shell.css')) ?: time() }}">
     <link rel="stylesheet" href="/css/siparoki-tailwind-public.css?v={{ @filemtime(public_path('css/siparoki-tailwind-public.css')) ?: time() }}">
     <link rel="stylesheet" href="/konoha/styles.css?v={{ @filemtime(base_path('konoha/styles.css')) ?: time() }}">
+    @php
+        $rawBanner = $globalBanner 
+            ?? $globalProfil->banner 
+            ?? $globalProfil->foto_gedung 
+            ?? $globalProfil->foto_banner 
+            ?? $globalProfil->foto 
+            ?? $globalPengaturan->banner 
+            ?? $globalPengaturan->banner_header 
+            ?? null;
+
+        $resolvedHeaderBg = null;
+        if (!empty($rawBanner)) {
+            if (str_starts_with($rawBanner, 'http://') || str_starts_with($rawBanner, 'https://')) {
+                $resolvedHeaderBg = $rawBanner;
+            } elseif (file_exists(public_path($rawBanner))) {
+                $resolvedHeaderBg = asset($rawBanner);
+            } elseif (file_exists(public_path('assets/' . $rawBanner))) {
+                $resolvedHeaderBg = asset('assets/' . $rawBanner);
+            } elseif (file_exists(public_path('assets/uploads/profil/' . $rawBanner))) {
+                $resolvedHeaderBg = asset('assets/uploads/profil/' . $rawBanner);
+            } elseif (file_exists(public_path('uploads/profil/' . $rawBanner))) {
+                $resolvedHeaderBg = asset('uploads/profil/' . $rawBanner);
+            } elseif (file_exists(public_path('uploads/' . $rawBanner))) {
+                $resolvedHeaderBg = asset('uploads/' . $rawBanner);
+            } else {
+                $resolvedHeaderBg = asset($rawBanner);
+            }
+        }
+        if (empty($resolvedHeaderBg)) {
+            $resolvedHeaderBg = asset('assets/uploads/profil/banner_1786529079.JPG');
+        }
+    @endphp
+    @if(!empty($resolvedHeaderBg))
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, rgba(0, 56, 47, 0.88) 0%, rgba(0, 121, 107, 0.85) 50%, rgba(2, 44, 34, 0.92) 100%), url('{{ $resolvedHeaderBg }}') center/cover no-repeat, linear-gradient(135deg, #004d40 0%, #00796b 50%, #00332c 100%) !important;
+        }
+    </style>
+    @endif
     @stack('styles')
     @if(request()->is('sakramen*'))
         @livewireStyles
@@ -143,11 +182,12 @@
                             <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="/">Beranda</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{ request()->is('profil*') || request()->is('sejarah*') || request()->is('visi-misi*') || request()->is('riwayat-pastor*') || request()->is('kronik*') || request()->is('struktur*') || request()->is('profil-kapela*') || request()->is('peta-kapela*') || request()->is('direktori*') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle {{ request()->is('profil*') || request()->is('pelayan-pastoral*') || request()->is('sejarah*') || request()->is('visi-misi*') || request()->is('riwayat-pastor*') || request()->is('kronik*') || request()->is('struktur*') || request()->is('profil-kapela*') || request()->is('peta-kapela*') || request()->is('direktori*') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown">
                                 Profil
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="/profil">Profil Umum</a></li>
+                                <li><a class="dropdown-item" href="/pelayan-pastoral">Pelayan Pastoral</a></li>
                                 <li><a class="dropdown-item" href="/sejarah">Sejarah Paroki</a></li>
                                 <li><a class="dropdown-item" href="/visi-misi">Visi &amp; Misi</a></li>
                                 <li><a class="dropdown-item" href="/riwayat-pastor">Riwayat Pastor</a></li>

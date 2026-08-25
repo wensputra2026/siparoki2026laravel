@@ -63,8 +63,8 @@
 @section('content')
 <!-- Page Header / Breadcrumb Konoha Style -->
 <section class="page-header">
-    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
-        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 18px; color: #ffffff; line-height: 1.25; max-width: 960px; margin-left: auto; margin-right: auto;">
+    <div class="container">
+        <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 18px; color: #ffffff; line-height: 1.25; margin-left: auto; margin-right: auto;">
             {{ $item->judul }}
         </h1>
         <nav aria-label="breadcrumb">
@@ -85,7 +85,7 @@
 
 <!-- Detail Content Section Konoha Style -->
 <section class="content-section" style="padding: 50px 0 70px; background: #f4faf9;">
-    <div class="container" style="max-width: 960px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         
         <div style="margin-bottom: 25px;">
             <a href="/pengumuman" class="back-link" style="display: inline-flex; align-items: center; gap: 8px; color: var(--primary-teal, #00897b); font-weight: 600; text-decoration: none; font-size: 0.95rem;">

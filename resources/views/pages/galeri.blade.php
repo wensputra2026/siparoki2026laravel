@@ -36,7 +36,7 @@
 
 <!-- Page Header / Breadcrumb Konoha Style -->
 <section class="page-header">
-    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Galeri Dokumentasi</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
@@ -52,7 +52,7 @@
 </section>
 
 <section class="content-section" style="padding: 60px 0 80px; background: #f4faf9;" id="gallery" aria-label="Galeri dokumentasi">
-    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         @if(($galeri ?? collect())->count())
             <div class="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;">
                 @foreach($galeri as $i => $item)

@@ -5,7 +5,7 @@
 @section('content')
 <!-- Page Header / Breadcrumb Konoha Style -->
 <section class="page-header">
-    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Artikel & Katekese</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
@@ -22,7 +22,7 @@
 
 <!-- News/Article Section Konoha Style -->
 <section class="news-section" style="padding: 60px 0 80px; background: #f4faf9;">
-    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px;">
             @forelse($artikel ?? [] as $item)
@@ -44,7 +44,7 @@
                     $date = $item->tanggal_publish ?? $item->created_at ?? now();
                 @endphp
                 <div class="news-card" style="background: #ffffff; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.06); display: flex; flex-direction: column; height: 100%; transition: transform 0.3s, box-shadow 0.3s;">
-                    <div style="position: relative; overflow: hidden; height: 210px; background: #e2e8f0;">
+                    <a href="/artikel/{{ $item->slug }}" style="position: relative; overflow: hidden; height: 210px; background: #e2e8f0; display: block; text-decoration: none;">
                         @if($imgUrl)
                             <img src="{{ $imgUrl }}" alt="{{ $item->judul }}" class="news-img" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s;">
                         @else
@@ -52,16 +52,16 @@
                                 <i class="fas fa-book-open" style="font-size: 2.5rem;"></i>
                             </div>
                         @endif
-                        <span class="news-category category-news" style="position: absolute; top: 15px; left: 15px; background: #5c6bc0; color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">
+                        <span class="news-category category-news" style="position: absolute; top: 15px; left: 15px; background: #5c6bc0; color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; z-index: 2;">
                             {{ $item->kategori ?? 'ARTIKEL' }}
                         </span>
-                    </div>
+                    </a>
                     <div style="padding: 24px; display: flex; flex-direction: column; flex-grow: 1;">
                         <span class="news-date" style="display: inline-flex; align-items: center; gap: 6px; color: var(--primary-orange, #ff9800); font-size: 0.8rem; font-weight: 600; margin-bottom: 10px;">
                             <i class="far fa-calendar-alt"></i> {{ \Carbon\Carbon::parse($date)->translatedFormat('d M Y') }}
                         </span>
                         <h4 class="card-title" style="font-size: 1.1rem; font-weight: 700; line-height: 1.45; margin-bottom: 10px; color: #1e293b;">
-                            <a href="/artikel/{{ $item->slug }}" style="color: inherit; text-decoration: none;">
+                            <a href="/artikel/{{ $item->slug }}" style="color: inherit; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-teal, #00897b)'" onmouseout="this.style.color='#1e293b'">
                                 {{ $item->judul }}
                             </a>
                         </h4>

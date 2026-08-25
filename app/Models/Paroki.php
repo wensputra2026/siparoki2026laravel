@@ -29,6 +29,7 @@ class Paroki extends Model
         'email',
         'website',
         'logo',
+        'banner',
         'maps_embed',
         'maps_url',
         'latitude',

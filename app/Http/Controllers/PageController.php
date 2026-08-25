@@ -5,9 +5,20 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class PageController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if ($maintenance = $this->checkMaintenanceMode()) {
+                return $maintenance;
+            }
+            return $next($request);
+        });
+    }
+
     private function getCommonData()
     {
         $version = Cache::get('global_view_data_version', 1);
@@ -81,6 +92,88 @@ class PageController extends Controller
                 ?? $profil->pastor_paroki
                 ?? 'Pastor Paroki';
 
+            // Resolve dynamic pastor photo (priority: Admin uploaded photo > Riwayat Pastor Aktif > Master Pastor > default fallback)
+            $rawPastorFoto = $profil->foto_pastor
+                ?? $profil->foto_pastor_paroki
+                ?? $profil->foto
+                ?? $activeParoki->foto_pastor
+                ?? $activeParoki->foto
+                ?? $pengaturan->foto_pastor
+                ?? null;
+
+            if (empty($rawPastorFoto) && Schema::hasTable('riwayat_pastor_paroki')) {
+                try {
+                    $riwayatQuery = DB::table('riwayat_pastor_paroki')
+                        ->where(function($q) {
+                            $q->where('status', 'like', '%aktif%')
+                              ->orWhere('status_pelayanan', 'like', '%aktif%')
+                              ->orWhere('periode_selesai', 'Sekarang')
+                              ->orWhere('tahun_selesai', 'Sekarang');
+                        })
+                        ->whereNotNull('foto')
+                        ->where('foto', '!=', '');
+
+                    $cols = Schema::getColumnListing('riwayat_pastor_paroki');
+                    if (in_array('urutan', $cols, true)) {
+                        $riwayatQuery->orderByDesc('urutan');
+                    } elseif (in_array('id_riwayat_pastor', $cols, true)) {
+                        $riwayatQuery->orderByDesc('id_riwayat_pastor');
+                    } elseif (in_array('id', $cols, true)) {
+                        $riwayatQuery->orderByDesc('id');
+                    }
+
+                    $activePastorRiwayat = $riwayatQuery->first();
+                    if ($activePastorRiwayat && !empty($activePastorRiwayat->foto)) {
+                        $rawPastorFoto = $activePastorRiwayat->foto;
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            if (empty($rawPastorFoto) && Schema::hasTable('master_pastor')) {
+                try {
+                    $masterPastor = DB::table('master_pastor')
+                        ->where(function($q) {
+                            $q->where('jabatan', 'like', '%pastor paroki%')
+                              ->orWhere('status', 'like', '%aktif%');
+                        })
+                        ->whereNotNull('foto')
+                        ->where('foto', '!=', '')
+                        ->first();
+                    if ($masterPastor && !empty($masterPastor->foto)) {
+                        $rawPastorFoto = $masterPastor->foto;
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            $pastorFotoUrl = null;
+            if (!empty($rawPastorFoto)) {
+                if (str_starts_with($rawPastorFoto, 'http://') || str_starts_with($rawPastorFoto, 'https://')) {
+                    $pastorFotoUrl = $rawPastorFoto;
+                } elseif (file_exists(public_path($rawPastorFoto))) {
+                    $pastorFotoUrl = asset($rawPastorFoto);
+                } elseif (file_exists(public_path('assets/' . $rawPastorFoto))) {
+                    $pastorFotoUrl = asset('assets/' . $rawPastorFoto);
+                } elseif (file_exists(public_path('assets/uploads/' . $rawPastorFoto))) {
+                    $pastorFotoUrl = asset('assets/uploads/' . $rawPastorFoto);
+                } elseif (file_exists(public_path('uploads/' . $rawPastorFoto))) {
+                    $pastorFotoUrl = asset('uploads/' . $rawPastorFoto);
+                } elseif (file_exists(public_path('storage/' . $rawPastorFoto))) {
+                    $pastorFotoUrl = asset('storage/' . $rawPastorFoto);
+                } else {
+                    $pastorFotoUrl = asset($rawPastorFoto);
+                }
+            }
+
+            if (empty($pastorFotoUrl)) {
+                if (file_exists(public_path('assets/frontend/siparoki/images/default-pastor.jpg'))) {
+                    $pastorFotoUrl = asset('assets/frontend/siparoki/images/default-pastor.jpg');
+                } elseif (file_exists(public_path('images/default-pastor.jpg'))) {
+                    $pastorFotoUrl = asset('images/default-pastor.jpg');
+                } else {
+                    $pastorFotoUrl = asset('images/pastor-avatar.svg');
+                }
+            }
+
             return [
                 'profil' => $profil,
                 'activeParoki' => $activeParoki,
@@ -97,14 +190,55 @@ class PageController extends Controller
                 'latitude' => $activeParoki->latitude ?? null,
                 'longitude' => $activeParoki->longitude ?? null,
                 'pastor_paroki' => $pastorParoki,
+                'pastor_foto' => $pastorFotoUrl,
                 'pastor_rekan' => $activeParoki->nama_pastor_rekan ?? $profil->pastor_rekan ?? 'Pastor Rekan',
                 'frater' => $profil->frater ?? 'Frater TOP',
             ];
         });
     }
 
+    protected function checkMaintenanceMode()
+    {
+        if (auth()->check()) {
+            return null;
+        }
+
+        try {
+            if (Schema::hasTable('pengaturan_aplikasi')) {
+                $pengaturan = DB::table('pengaturan_aplikasi')->first();
+                if ($pengaturan && ($pengaturan->maintenance_mode ?? '0') === '1') {
+                    $bypass = request()->query('bypass');
+                    $secretKey = $pengaturan->maintenance_bypass_key ?? 'siparoki2026';
+                    if (!empty($bypass) && $bypass === $secretKey) {
+                        return null;
+                    }
+
+                    $profil = DB::table('profil_paroki')->first();
+                    $activeParoki = DB::table('paroki')->first();
+                    $namaParoki = $activeParoki->nama_paroki ?? $profil->nama_paroki ?? $pengaturan->nama_paroki ?? 'Paroki St. Vinsensius a Paulo Benlutu';
+                    $logo = $activeParoki->logo ?? $profil->logo ?? null;
+
+                    return response()->view('errors.maintenance', [
+                        'globalNamaParoki' => $namaParoki,
+                        'globalFavicon' => $logo ? asset($logo) : asset('favicon.ico'),
+                        'maintenanceTitle' => $pengaturan->maintenance_title ?? 'Website Sedang Dalam Pemeliharaan',
+                        'maintenanceMessage' => $pengaturan->maintenance_message ?? 'Mohon maaf atas ketidaknyamanannya. Website paroki kami sedang melakukan pembaruan berkala. Silakan kembali dalam beberapa saat.',
+                        'maintenanceUntil' => $pengaturan->maintenance_until ?? '',
+                        'maintenanceContact' => $pengaturan->maintenance_contact ?? '',
+                    ], 503);
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        return null;
+    }
+
     public function beranda()
     {
+        if ($maintenance = $this->checkMaintenanceMode()) {
+            return $maintenance;
+        }
+
         $common = $this->getCommonData();
 
         $jadwalMisa = Cache::remember('frontend.beranda.jadwal_misa', 300, fn () => DB::table('jadwal_misa')
@@ -162,7 +296,22 @@ class PageController extends Controller
     public function riwayatPastor()
     {
         $common = $this->getCommonData();
-        $riwayat = \App\Models\RiwayatPastorParoki::orderBy('urutan')->get();
+        try {
+            $query = \App\Models\RiwayatPastorParoki::query();
+            if (Schema::hasTable('riwayat_pastor_paroki')) {
+                $cols = Schema::getColumnListing('riwayat_pastor_paroki');
+                if (in_array('urutan', $cols, true)) {
+                    $query->orderBy('urutan');
+                } elseif (in_array('id_riwayat_pastor', $cols, true)) {
+                    $query->orderBy('id_riwayat_pastor');
+                } elseif (in_array('id', $cols, true)) {
+                    $query->orderBy('id');
+                }
+            }
+            $riwayat = $query->get();
+        } catch (\Throwable $e) {
+            $riwayat = collect();
+        }
         return view('pages.riwayat-pastor', array_merge($common, compact('riwayat')));
     }
 
@@ -220,8 +369,37 @@ class PageController extends Controller
     public function pelayanPastoral()
     {
         $common = $this->getCommonData();
-        $pastorList = \App\Models\MasterPastor::orderBy('id')->limit(12)->get();
-        return view('pages.pelayan-pastoral', array_merge($common, compact('pastorList')));
+        try {
+            $query = \App\Models\MasterPastor::query();
+            if (Schema::hasTable('master_pastor')) {
+                $cols = Schema::getColumnListing('master_pastor');
+                if (in_array('id', $cols, true)) {
+                    $query->orderBy('id');
+                } elseif (in_array('nama_pastor', $cols, true)) {
+                    $query->orderBy('nama_pastor');
+                }
+            }
+            $pastorList = $query->limit(24)->get();
+        } catch (\Throwable $e) {
+            $pastorList = collect();
+        }
+
+        try {
+            $riwayatQuery = \App\Models\RiwayatPastorParoki::query();
+            if (Schema::hasTable('riwayat_pastor_paroki')) {
+                $cols = Schema::getColumnListing('riwayat_pastor_paroki');
+                if (in_array('urutan', $cols, true)) {
+                    $riwayatQuery->orderBy('urutan');
+                } elseif (in_array('id_riwayat_pastor', $cols, true)) {
+                    $riwayatQuery->orderBy('id_riwayat_pastor');
+                }
+            }
+            $riwayatPastor = $riwayatQuery->get();
+        } catch (\Throwable $e) {
+            $riwayatPastor = collect();
+        }
+
+        return view('pages.pelayan-pastoral', array_merge($common, compact('pastorList', 'riwayatPastor')));
     }
 
     public function sambutan()
@@ -396,14 +574,55 @@ class PageController extends Controller
             abort(404);
         }
 
+        // Increment views counter
+        try {
+            DB::table('konten')->where('id', $item->id)->increment('views');
+        } catch (\Throwable $e) {}
+
         $terkait = DB::table('konten')
             ->where('status_publish', 'Publish')
             ->where('id', '!=', $item->id)
             ->latest('tanggal_publish')
-            ->limit(3)
+            ->limit(5)
             ->get();
 
-        return view('pages.artikel-detail', array_merge($common, compact('item', 'terkait', 'detailType')));
+        $recentNews = $terkait;
+
+        $categories = DB::table('konten')
+            ->select('kategori', DB::raw('COUNT(*) as total'))
+            ->where('status_publish', 'Publish')
+            ->whereNotNull('kategori')
+            ->where('kategori', '!=', '')
+            ->groupBy('kategori')
+            ->orderBy('kategori')
+            ->get();
+
+        $archive = DB::table('konten')
+            ->where('status_publish', 'Publish')
+            ->selectRaw("DATE_FORMAT(COALESCE(tanggal_publish, created_at), '%Y-%m') as month_key, DATE_FORMAT(COALESCE(tanggal_publish, created_at), '%M %Y') as label, COUNT(*) as total")
+            ->groupBy('month_key', 'label')
+            ->orderByDesc('month_key')
+            ->limit(6)
+            ->get();
+
+        $tags = DB::table('konten')
+            ->where('status_publish', 'Publish')
+            ->whereNotNull('tags')
+            ->pluck('tags')
+            ->flatMap(function ($tagList) {
+                return collect(explode(',', (string) $tagList))
+                    ->map(fn ($tag) => trim($tag))
+                    ->filter();
+            })
+            ->unique()
+            ->take(12)
+            ->values();
+
+        if ($tags->isEmpty()) {
+            $tags = collect(['kegiatan', 'misa', 'paroki', 'pengumuman', 'sakramen', 'orangtua']);
+        }
+
+        return view('pages.artikel-detail', array_merge($common, compact('item', 'terkait', 'recentNews', 'categories', 'archive', 'tags', 'detailType')));
     }
 
     public function pengumuman()

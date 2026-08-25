@@ -71,16 +71,20 @@
                     @endphp
                     <div class="col-lg-4 col-md-6">
                         <div class="card news-card">
-                            <div class="position-relative">
-                                <span class="news-category {{ $catClass }}">
+                            <a href="{{ route('berita.detail', $item->slug) }}" class="d-block position-relative" style="text-decoration: none; overflow: hidden;">
+                                <span class="news-category {{ $catClass }}" style="z-index: 2;">
                                     <i class="fas {{ $catIcon }} me-1"></i>
                                     {{ $item->kategori ?? $item->tipe ?? 'Berita' }}
                                 </span>
                                 <img src="{{ $imageUrl($item->gambar ?? null) }}" class="card-img-top news-img" alt="{{ $item->judul }}" loading="lazy">
-                            </div>
+                            </a>
                             <div class="card-body">
                                 <span class="news-date"><i class="far fa-calendar"></i> {{ \Carbon\Carbon::parse($publishedAt)->translatedFormat('j F Y') }}</span>
-                                <h5 class="card-title">{{ $item->judul }}</h5>
+                                <h5 class="card-title">
+                                    <a href="{{ route('berita.detail', $item->slug) }}" style="color: inherit; text-decoration: none;">
+                                        {{ $item->judul }}
+                                    </a>
+                                </h5>
                                 <p class="card-text">{{ $excerpt }}</p>
                                 <a href="{{ route('berita.detail', $item->slug) }}" class="btn-news">
                                     <i class="fas fa-arrow-right me-1"></i> Selengkapnya

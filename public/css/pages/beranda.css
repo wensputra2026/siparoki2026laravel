@@ -16,29 +16,31 @@
 .hero-quote-track { display: inline-flex; align-items: center; gap: 28px; min-width: 100%; white-space: nowrap; padding: 13px 0; animation: heroQuoteScroll 35s linear infinite; }
 .hero-quote-item { display: inline-flex; align-items: center; gap: 8px; font-size: .92rem; color: #f1f5f9; }
 @keyframes heroQuoteScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-.counter-section { padding: 40px 20px 0; }
-.counter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1200px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.06); }
+.counter-section { padding: 40px 20px 20px; }
+.counter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1100px; margin: 0 auto; background: #ffffff; border: 1px solid #eef2f6; border-radius: 20px; padding: 26px 32px; box-shadow: 0 10px 35px rgba(0,0,0,0.05); }
 [data-theme="dark"] .counter-grid { background: #101d31; border-color: #263a55; }
-.counter-card { display: flex; align-items: center; gap: 16px; padding: 10px; }
-.cc-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(2,132,199,.1); color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
-.cc-content h3 { font-size: 1.6rem; font-weight: 800; color: #0f172a; line-height: 1.1; margin: 0; }
+.counter-card { display: flex; align-items: center; gap: 16px; padding: 6px; }
+.cc-icon { width: 52px; height: 52px; border-radius: 12px; background: rgba(0, 137, 123, 0.1); color: var(--primary-teal, #00897b); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0; }
+.cc-content h3 { font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.1; margin: 0; }
 [data-theme="dark"] .cc-content h3 { color: #fff; }
-.cc-content p { font-size: .82rem; color: #64748b; margin: 4px 0 0; }
-.sambutan-pastor-section { background: linear-gradient(135deg, #f8fafc 0%, #eef8fb 100%); padding: 70px 20px; }
+.cc-content p { font-size: 0.85rem; color: #64748b; font-weight: 500; margin: 4px 0 0; }
+.sambutan-pastor-section { background: transparent; padding: 20px 20px 70px; }
 [data-theme="dark"] .sambutan-pastor-section { background: #090e1a; }
-.sambutan-pastor-card { display: grid; grid-template-columns: 320px 1fr; max-width: 980px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 50px rgba(15,23,42,.08); }
+.sambutan-pastor-card { display: grid; grid-template-columns: 340px 1fr; max-width: 1100px; margin: 0 auto; background: #ffffff; border: 1px solid #eef2f6; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.06); }
 [data-theme="dark"] .sambutan-pastor-card { background: #101d31; border-color: #263a55; }
-.sambutan-pastor-photo { position: relative; background: linear-gradient(135deg, #0c4a6e, #0284c7); display: flex; align-items: center; justify-content: center; min-height: 280px; color: #fff; font-size: 4.5rem; }
-.sambutan-pastor-photo img { width: 100%; height: 100%; object-fit: cover; }
-.sambutan-pastor-badge { position: absolute; top: 18px; left: 18px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-size: .72rem; font-weight: 800; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; }
-.sambutan-pastor-body { padding: 40px; display: flex; flex-direction: column; justify-content: center; }
-.sambutan-pastor-body h3 { font-size: 1.8rem; font-weight: 800; color: #0c4a6e; margin: 0 0 6px; }
+.sambutan-pastor-photo { position: relative; background: #ff7a00; display: flex; align-items: flex-end; justify-content: center; min-height: 320px; overflow: hidden; }
+.sambutan-pastor-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sambutan-pastor-badge { position: absolute; top: 20px; left: 20px; z-index: 5; background: rgba(0, 0, 0, 0.28); backdrop-filter: blur(4px); color: #ffffff; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; padding: 6px 16px; border-radius: 20px; }
+.sambutan-pastor-body { padding: 45px 50px; display: flex; flex-direction: column; justify-content: center; }
+.sambutan-pastor-body h3 { font-size: 2.1rem; font-weight: 800; color: #0c4a6e; margin: 0 0 6px; }
 [data-theme="dark"] .sambutan-pastor-body h3 { color: #38bdf8; }
-.sambutan-pastor-role { font-size: .88rem; font-weight: 600; color: #0284c7; margin-bottom: 16px; }
-.sambutan-pastor-body p { font-size: .95rem; line-height: 1.75; color: #475569; font-style: italic; margin-bottom: 24px; }
+.sambutan-pastor-role { font-size: 0.95rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 20px; }
+.sambutan-pastor-body p { font-size: 0.96rem; line-height: 1.8; color: #475569; font-style: italic; margin-bottom: 26px; }
 [data-theme="dark"] .sambutan-pastor-body p { color: #cbd5e1; }
+.btn-sambutan { background: #0c4a6e; color: #ffffff !important; border-radius: 30px; padding: 11px 28px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 10px; width: fit-content; text-decoration: none; box-shadow: 0 4px 15px rgba(12, 74, 110, 0.25); transition: all 0.3s; border: none; }
+.btn-sambutan:hover { background: #075985; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(12, 74, 110, 0.35); color: #ffffff !important; }
 @media (max-width: 900px) { .counter-grid { grid-template-columns: repeat(2, 1fr); } .sambutan-pastor-card { grid-template-columns: 1fr; } .hero { min-height: 72vh; } }
-@media (max-width: 560px) { .counter-grid { grid-template-columns: 1fr; padding: 16px; } .hero-quote-badge { padding: 10px 14px; } .hero-quote-track { animation-duration: 24s; } }
+@media (max-width: 560px) { .counter-grid { grid-template-columns: 1fr; padding: 16px; } .sambutan-pastor-body { padding: 30px 24px; } .hero-quote-badge { padding: 10px 14px; } .hero-quote-track { animation-duration: 24s; } }
 
 /* Keep the homepage video close to its original color; only add a soft readability veil. */
 .hero {
@@ -85,4 +87,314 @@
     text-shadow: 0 3px 14px rgba(0,0,0,.72) !important;
     backdrop-filter: blur(8px) saturate(1.2) !important;
     -webkit-backdrop-filter: blur(8px) saturate(1.2) !important;
+}
+
+/* ===== Konoha Style - Pelayan Pastoral Section ===== */
+.pelayan-pastoral-section {
+    padding: 40px 20px 70px;
+    background: transparent;
+}
+[data-theme="dark"] .pelayan-pastoral-section {
+    background: #090e1a;
+}
+.pelayan-pastoral-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+.pelayan-pastoral-header {
+    text-align: center;
+    margin-bottom: 36px;
+}
+.pelayan-pastoral-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 152, 0, 0.12);
+    color: var(--primary-orange, #ff9800);
+    padding: 6px 20px;
+    border-radius: 25px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+}
+.pelayan-pastoral-header h2 {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #0c4a6e;
+    margin: 0 0 10px;
+}
+[data-theme="dark"] .pelayan-pastoral-header h2 {
+    color: #38bdf8;
+}
+.pelayan-pastoral-header h2 span {
+    color: var(--primary-orange, #ff9800);
+}
+.pelayan-pastoral-header p {
+    color: #64748b;
+    font-size: 0.95rem;
+    max-width: 650px;
+    margin: 0 auto;
+}
+[data-theme="dark"] .pelayan-pastoral-header p {
+    color: #94a3b8;
+}
+
+.pelayan-pastoral-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+.pelayan-card {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 20px;
+    padding: 30px 24px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+[data-theme="dark"] .pelayan-card {
+    background: #101d31;
+    border-color: #263a55;
+}
+.pelayan-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 36px rgba(0, 137, 123, 0.12);
+    border-color: var(--primary-teal, #00897b);
+}
+.pelayan-card.pastor-paroki {
+    border-top: 4px solid var(--primary-orange, #ff9800);
+}
+.pelayan-card.pastor-rekan {
+    border-top: 4px solid #0284c7;
+}
+.pelayan-card.frater-katekis {
+    border-top: 4px solid var(--primary-teal, #00897b);
+}
+
+.pelayan-avatar-wrap {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 18px;
+}
+.pelayan-avatar-img {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary-orange, #ff9800);
+    padding: 3px;
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+.pelayan-avatar-icon {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: rgba(0, 137, 123, 0.1);
+    color: var(--primary-teal, #00897b);
+    border: 3px solid var(--primary-teal, #00897b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    margin: 0 auto;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+.pelayan-avatar-icon.rekan {
+    background: rgba(2, 132, 199, 0.1);
+    color: #0284c7;
+    border-color: #0284c7;
+}
+.pelayan-avatar-icon.frater {
+    background: rgba(13, 148, 136, 0.1);
+    color: #0d9488;
+    border-color: #0d9488;
+}
+.pelayan-tag {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: var(--primary-orange, #ff9800);
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.pelayan-tag.vikaris {
+    background: #0284c7;
+}
+.pelayan-tag.pastoral {
+    background: var(--primary-teal, #00897b);
+}
+
+.pelayan-role-badge {
+    display: inline-block;
+    background: rgba(255, 152, 0, 0.12);
+    color: #d97706;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 3px 14px;
+    border-radius: 14px;
+    margin-bottom: 8px;
+}
+.pelayan-role-badge.rekan {
+    background: rgba(2, 132, 199, 0.12);
+    color: #0284c7;
+}
+.pelayan-role-badge.frater {
+    background: rgba(13, 148, 136, 0.12);
+    color: #0f766e;
+}
+
+.pelayan-card h4 {
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px;
+}
+[data-theme="dark"] .pelayan-card h4 {
+    color: #ffffff;
+}
+.pelayan-subrole {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--primary-teal, #00897b);
+    margin-bottom: 14px;
+}
+.pelayan-divider {
+    height: 1px;
+    background: #eef2f6;
+    margin: 14px 0;
+}
+[data-theme="dark"] .pelayan-divider {
+    background: #263a55;
+}
+.pelayan-duties {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    font-size: 0.82rem;
+    color: #64748b;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+[data-theme="dark"] .pelayan-duties {
+    color: #cbd5e1;
+}
+.pelayan-duties li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+}
+.pelayan-duties li i {
+    color: var(--primary-teal, #00897b);
+    font-size: 0.8rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+.pelayan-card-footer {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px dashed #eef2f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+}
+[data-theme="dark"] .pelayan-card-footer {
+    border-color: #263a55;
+}
+.pelayan-status-label {
+    color: #94a3b8;
+    font-weight: 500;
+}
+.pelayan-status-val {
+    color: #10b981;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.pelayan-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+}
+.pelayan-btn-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+}
+.btn-konoha-teal {
+    background: var(--primary-teal, #00897b);
+    color: #ffffff !important;
+    border-radius: 30px;
+    padding: 10px 26px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(0, 137, 123, 0.25);
+    transition: all 0.3s;
+    border: none;
+}
+.btn-konoha-teal:hover {
+    background: var(--primary-teal-dark, #004d40);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 137, 123, 0.35);
+    color: #ffffff !important;
+}
+.btn-konoha-amber-outline {
+    background: #ffffff;
+    color: var(--primary-orange, #ff9800) !important;
+    border: 1px solid var(--primary-orange, #ff9800);
+    border-radius: 30px;
+    padding: 10px 22px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+[data-theme="dark"] .btn-konoha-amber-outline {
+    background: #101d31;
+}
+.btn-konoha-amber-outline:hover {
+    background: var(--primary-orange, #ff9800);
+    color: #ffffff !important;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 900px) {
+    .pelayan-pastoral-grid {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        margin: 0 auto;
+    }
 }

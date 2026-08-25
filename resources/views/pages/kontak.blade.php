@@ -17,7 +17,7 @@
 
 <!-- Page Header / Breadcrumb Konoha Style -->
 <section class="page-header">
-    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Hubungi Kami</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
@@ -34,7 +34,7 @@
 
 <!-- Contact Main Section Konoha Style -->
 <section class="contact-section" style="padding: 60px 0 80px; background: #f4faf9;">
-    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         
         @if(session('success'))
             <div style="margin-bottom: 25px; border-radius: 12px; border: 1px solid #a7f3d0; background: #ecfdf5; padding: 16px 20px; font-size: 0.9rem; font-weight: 600; color: #065f46; display: flex; align-items: center; gap: 10px;">

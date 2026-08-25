@@ -86,10 +86,12 @@ class PanelAccess
             return $next($request);
         }
 
-        $segment = explode('/', trim($request->path(), '/'))[0] ?? '';
+        $segments = explode('/', trim($request->path(), '/'));
+        $segment = $segments[0] ?? '';
+        $module = $segments[1] ?? null;
 
-        // Generic dashboards are available to any authenticated user.
-        if (in_array($segment, ['v2', 'dashboard'], true)) {
+        // Generic dashboards / profile are available to any authenticated user.
+        if (in_array($segment, ['dashboard'], true)) {
             return $next($request);
         }
 
@@ -98,12 +100,59 @@ class PanelAccess
             abort(403, 'Anda tidak memiliki akses ke area ini.');
         }
 
-        $prefix = $this->rolePrefix($slug);
+        // Modules that must NEVER be reachable by non-elevated roles,
+        // regardless of which panel prefix they use (privilege escalation /
+        // account takeover / database backup abuse protection).
+        $sensitiveModules = [
+            'user', 'role', 'roles',
+            'backup-database', 'security-settings', 'security-center',
+            'pengaturan-aplikasi', 'pengaturan', 'settings',
+        ];
 
-        if ($prefix && $segment === $prefix) {
-            return $next($request);
+        // Pages that any authenticated user may open inside their own panel.
+        $safeModules = [
+            'profil-saya', 'profil-paroki', 'panduan-hak-akses',
+            'statistik', 'demografi', 'dashboard',
+        ];
+
+        // Least-privilege module allow-list per (non-elevated) role prefix.
+        $moduleAccess = [
+            'bendahara' => ['keuangan', 'aset', 'kategori-keuangan', 'lapak-produk'],
+            'penulis' => ['konten', 'kategori-konten', 'pengumuman', 'galeri', 'renungan', 'kegiatan', 'artikel', 'berita'],
+            'wilayah' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kegiatan'],
+            'kapela' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kapela', 'stasi', 'kegiatan'],
+            'kub' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'lingkungan', 'kub'],
+            'umat' => [],
+        ];
+
+        // The legacy /v2/* prefix is a generic dashboard for parishioners:
+        // it must not become an admin backdoor.
+        if ($segment === 'v2') {
+            if ($module === null || in_array($module, $safeModules, true)) {
+                return $next($request);
+            }
+            abort(403, 'Akses ditolak untuk peran Anda.');
         }
 
-        abort(403, 'Akses ditolak untuk peran Anda.');
+        $prefix = $this->rolePrefix($slug);
+
+        if (!$prefix || $segment !== $prefix) {
+            abort(403, 'Akses ditolak untuk peran Anda.');
+        }
+
+        if ($module !== null) {
+            if (in_array($module, $sensitiveModules, true)) {
+                abort(403, 'Modul ini hanya dapat diakses oleh Administrator.');
+            }
+            if (in_array($module, $safeModules, true)) {
+                return $next($request);
+            }
+            $allowed = $moduleAccess[$prefix] ?? [];
+            if (!in_array($module, $allowed, true)) {
+                abort(403, 'Anda tidak memiliki wewenang untuk modul ini.');
+            }
+        }
+
+        return $next($request);
     }
 }

@@ -5,7 +5,7 @@
 @section('content')
 <!-- Page Header / Breadcrumb Konoha Style -->
 <section class="page-header">
-    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Pusat Unduhan Dokumen</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
@@ -22,7 +22,7 @@
 
 <!-- Content Section Konoha Style -->
 <section class="content-section" style="padding: 60px 0 80px; background: #f4faf9;">
-    <div class="container" style="max-width: 1100px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         @forelse(($downloadGroups ?? collect()) as $category => $items)
             <div style="background: #ffffff; border-radius: 15px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); margin-bottom: 30px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px solid #eef2f6;">

@@ -4,7 +4,7 @@
 @section('content')
 <!-- Page Header / Breadcrumb Konoha Style -->
 <section class="page-header">
-    <div class="container" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         <h1 style="font-size: 2.6rem; font-weight: 700; margin-bottom: 15px; color: #ffffff;">Struktur Organisasi</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 12px; background: transparent; justify-content: center; align-items: center;">
@@ -24,7 +24,7 @@
 
 <!-- Content Section Konoha Style -->
 <section class="content-section" style="padding: 60px 0 80px; background: #f4faf9;">
-    <div class="container" style="max-width: 1000px; margin: 0 auto; padding: 0 20px;">
+    <div class="container">
         
         <div style="background: #ffffff; border-radius: 15px; padding: 35px 40px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); margin-bottom: 30px;">
             <h3 style="font-size: 1.3rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 25px; border-left: 4px solid var(--primary-orange, #ff9800); padding-left: 14px;">

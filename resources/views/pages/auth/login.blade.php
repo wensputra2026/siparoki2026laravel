@@ -107,7 +107,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                             <i class="fa-solid fa-user text-xs"></i>
                         </div>
-                        <input type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="Masukkan email atau username" class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                        <input type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="Masukkan email atau username" class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
                     </div>
                 </div>
 
@@ -116,22 +116,22 @@
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                             Kata Sandi <span class="text-red-500">*</span>
                         </label>
-                        <a href="{{ route('lupa-password') }}" class="text-xs text-sky-600 dark:text-sky-400 hover:underline">Lupa sandi?</a>
+                        <a href="{{ route('lupa-password') }}" class="text-xs text-amber-600 dark:text-amber-400 hover:underline font-medium">Lupa sandi?</a>
                     </div>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                             <i class="fa-solid fa-lock text-xs"></i>
                         </div>
-                        <input type="password" name="password" required placeholder="••••••••" class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                        <input type="password" name="password" required placeholder="••••••••" class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition">
                     </div>
                 </div>
 
                 <div class="flex items-center">
-                    <input type="checkbox" name="remember" id="remember" class="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500">
-                    <label for="remember" class="ml-2 text-xs text-slate-600 dark:text-slate-400">Ingat saya</label>
+                    <input type="checkbox" name="remember" id="remember" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500">
+                    <label for="remember" class="ml-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">Ingat saya</label>
                 </div>
 
-                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white text-sm font-semibold shadow-md shadow-sky-600/20 transition flex items-center justify-center gap-2">
+                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-sm font-semibold shadow-md shadow-amber-500/20 transition flex items-center justify-center gap-2">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i>
                     <span>Masuk ke Akun</span>
                 </button>
@@ -140,7 +140,7 @@
             <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
                 <p class="text-xs text-slate-500 dark:text-slate-400">
                     Belum memiliki akun umat?
-                    <a href="{{ route('register') }}" class="font-semibold text-sky-600 dark:text-sky-400 hover:underline">Daftar Sekarang</a>
+                    <a href="{{ route('register') }}" class="font-semibold text-amber-600 dark:text-amber-400 hover:underline">Daftar Sekarang</a>
                 </p>
                 <div class="mt-3">
                     <a href="{{ route('beranda') }}" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition inline-flex items-center gap-1">

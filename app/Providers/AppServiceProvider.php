@@ -93,6 +93,42 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Auto cleanup stale Vite hot file if dev server is not running
+        if (file_exists(public_path('hot'))) {
+            $fp = @fsockopen('127.0.0.1', 5173, $errno, $errstr, 0.05);
+            if (!$fp) {
+                @unlink(public_path('hot'));
+            } else {
+                @fclose($fp);
+            }
+        }
+
+        // Auto sync assets from C:/laragon/www/katedral/assets/frontend/siparoki/images if present
+        $katedralImagesPath = 'C:/laragon/www/katedral/assets/frontend/siparoki/images';
+        $destPath = public_path('assets/frontend/siparoki/images');
+        $publicImagesPath = public_path('images');
+
+        if (is_dir($katedralImagesPath)) {
+            if (!is_dir($destPath)) {
+                @mkdir($destPath, 0777, true);
+            }
+            if (!is_dir($publicImagesPath)) {
+                @mkdir($publicImagesPath, 0777, true);
+            }
+            $files = @scandir($katedralImagesPath) ?: [];
+            foreach ($files as $f) {
+                if ($f !== '.' && $f !== '..' && is_file($katedralImagesPath . '/' . $f)) {
+                    @copy($katedralImagesPath . '/' . $f, $destPath . '/' . $f);
+                    @copy($katedralImagesPath . '/' . $f, $publicImagesPath . '/' . $f);
+                }
+            }
+
+            if (file_exists($destPath . '/default-pastor.jpg')) {
+                @copy($destPath . '/default-pastor.jpg', $publicImagesPath . '/pastor-avatar.jpg');
+                @copy($destPath . '/default-pastor.jpg', $publicImagesPath . '/imam.jpg');
+            }
+        }
+
         $this->registerPolicies();
 
         Model::unguard();
@@ -138,18 +174,21 @@ class AppServiceProvider extends ServiceProvider
 
                     $namaParoki = $activeParoki->nama_paroki ?? 'SIPAROKI';
                     $logoUrl = $activeParoki->logo ?? asset('favicon.ico');
+                    $bannerUrl = $activeParoki->banner ?? $activeParoki->foto ?? null;
 
                     return [
                         'globalProfil' => $activeParoki,
                         'globalPengaturan' => $activeParoki,
                         'globalLogo' => $logoUrl,
                         'globalFavicon' => $logoUrl,
+                        'globalBanner' => $bannerUrl,
                         'globalNamaParoki' => $namaParoki,
                     ];
                 } catch (\Throwable $e) {
                     return [
                         'globalLogo' => asset('favicon.ico'),
                         'globalFavicon' => asset('favicon.ico'),
+                        'globalBanner' => null,
                         'globalNamaParoki' => 'SIPAROKI',
                     ];
                 }

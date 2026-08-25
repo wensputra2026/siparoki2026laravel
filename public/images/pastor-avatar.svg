@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 450" width="100%" height="100%">
+    <defs>
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ff9800"/>
+            <stop offset="100%" stop-color="#f57c00"/>
+        </linearGradient>
+        <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fbd38d"/>
+            <stop offset="100%" stop-color="#f6ad55"/>
+        </linearGradient>
+        <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#1e293b"/>
+            <stop offset="100%" stop-color="#0f172a"/>
+        </linearGradient>
+    </defs>
+    
+    <!-- Background is filled by container or SVG -->
+    <rect width="400" height="450" fill="url(#bgGrad)"/>
+    
+    <!-- Neck -->
+    <rect x="175" y="240" width="50" height="70" rx="8" fill="url(#skinGrad)"/>
+    
+    <!-- Priest Shirt & Black Cassock Suit -->
+    <path d="M 90 450 L 120 310 L 160 300 L 200 340 L 240 300 L 280 310 L 310 450 Z" fill="#090d16"/>
+    <path d="M 70 450 L 110 320 L 155 315 L 175 450 Z" fill="url(#suitGrad)"/>
+    <path d="M 330 450 L 290 320 L 245 315 L 225 450 Z" fill="url(#suitGrad)"/>
+    
+    <!-- Clerical Roman Collar (Black Band with White Tab) -->
+    <rect x="162" y="295" width="76" height="24" rx="4" fill="#0f172a"/>
+    <rect x="187" y="295" width="26" height="20" rx="2" fill="#ffffff"/>
+    
+    <!-- Ears -->
+    <circle cx="132" cy="205" r="16" fill="#f6ad55"/>
+    <circle cx="268" cy="205" r="16" fill="#f6ad55"/>
+    
+    <!-- Head / Face -->
+    <path d="M 140 160 C 140 100, 260 100, 260 160 C 260 235, 235 270, 200 270 C 165 270, 140 235, 140 160 Z" fill="url(#skinGrad)"/>
+    
+    <!-- Hair -->
+    <path d="M 135 170 C 130 120, 160 85, 200 85 C 240 85, 270 120, 265 170 C 260 140, 240 120, 200 120 C 160 120, 140 140, 135 170 Z" fill="#2d3748"/>
+    <path d="M 135 160 C 140 115, 175 105, 200 110 C 225 105, 260 115, 265 160 C 255 135, 235 125, 200 130 C 165 125, 145 135, 135 160 Z" fill="#1a202c"/>
+</svg>

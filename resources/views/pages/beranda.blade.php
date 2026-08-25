@@ -12,14 +12,20 @@
 <!-- ===== HERO ===== -->
 <section class="hero" id="main-content" aria-label="Beranda {{ $globalNamaParoki ?? 'SIPAROKI' }}">
     @php
-        $heroVideoType = $pengaturan->hero_video_type ?? 'file';
-        $heroVideoFile = $pengaturan->hero_video_file ?? null;
-        $heroVideoYoutube = $pengaturan->hero_video_youtube ?? null;
-        $heroVideoPoster = $pengaturan->hero_video_poster ?? null;
+        $heroVideoType = $pengaturan->video_header_type ?? $pengaturan->hero_video_type ?? 'youtube';
+        $heroVideoFile = $pengaturan->video_header_file ?? $pengaturan->hero_video_file ?? null;
+        $heroVideoYoutube = $pengaturan->video_header_url ?? $pengaturan->hero_video_youtube ?? null;
+        $heroVideoPoster = $pengaturan->video_header_poster ?? $pengaturan->hero_video_poster ?? null;
+        $videoStatus = $pengaturan->video_header_status ?? 'Aktif';
+        $videoTitle = !empty($pengaturan->video_header_title) ? $pengaturan->video_header_title : ('Selamat Datang di Website Resmi ' . ($globalNamaParoki ?? 'Paroki'));
+        $videoSubtitle = !empty($pengaturan->video_header_subtitle) ? $pengaturan->video_header_subtitle : 'Membangun persekutuan umat yang beriman, melayani, dan bertumbuh dalam kasih.';
+        $videoBtnText = $pengaturan->video_header_btn_text ?? 'Lihat Jadwal Misa';
+        $videoBtnLink = $pengaturan->video_header_btn_link ?? '/jadwal-misa';
+        $overlayOpacity = (int) ($pengaturan->video_header_overlay_opacity ?? 50) / 100;
     @endphp
 
     <div class="hero-video-bg">
-        @if(($heroVideoType === 'youtube' || $heroVideoType === 'url') && !empty($heroVideoYoutube))
+        @if($videoStatus === 'Aktif' && ($heroVideoType === 'youtube' || $heroVideoType === 'url') && !empty($heroVideoYoutube))
             @php
                 $youtubeId = null;
                 if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]+)/', $heroVideoYoutube, $matches)) {
@@ -36,7 +42,7 @@
                     allowfullscreen
                 ></iframe>
             @endif
-        @elseif(!empty($heroVideoFile))
+        @elseif($videoStatus === 'Aktif' && !empty($heroVideoFile))
             @php
                 $cleanVideoPath = ltrim(str_replace(['assets/uploads/', 'uploads/'], '', $heroVideoFile), '/');
                 $posterUrl = '';
@@ -68,16 +74,16 @@
                 <source src="{{ asset('uploads/hero_video.mp4') }}" type="video/mp4">
             </video>
         @endif
-        <div class="hero-video-overlay"></div>
+        <div class="hero-video-overlay" style="opacity: {{ $overlayOpacity }};"></div>
     </div>
 
     <div class="hero-video-text">
         <h1>
-            <span class="hero-typing-text" data-typing-text="Selamat Datang di Website Resmi {{ $globalNamaParoki ?? 'Paroki' }}">
-                Selamat Datang di Website Resmi {{ $globalNamaParoki ?? 'Paroki' }}
+            <span class="hero-typing-text" data-typing-text="{{ $videoTitle }}">
+                {{ $videoTitle }}
             </span>
         </h1>
-        <p class="hero-subtitle-readable">Membangun persekutuan umat yang beriman, melayani, dan bertumbuh dalam kasih.</p>
+        <p class="hero-subtitle-readable">{{ $videoSubtitle }}</p>
     </div>
 
     {{-- Quote Marquee --}}
@@ -112,28 +118,28 @@
 <section class="counter-section" aria-label="Statistik paroki">
     <div class="counter-grid">
         <div class="counter-card">
-            <div class="cc-icon"><i class="fas fa-user-graduate" aria-hidden="true"></i></div>
+            <div class="cc-icon"><i class="fas fa-graduation-cap" aria-hidden="true"></i></div>
             <div class="cc-content">
                 <h3><span>{{ $stats['total_kk'] ?? 0 }}</span>+</h3>
                 <p>KK Katolik</p>
             </div>
         </div>
         <div class="counter-card">
-            <div class="cc-icon"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></div>
+            <div class="cc-icon"><i class="fas fa-id-card" aria-hidden="true"></i></div>
             <div class="cc-content">
                 <h3><span>{{ $stats['total_umat'] ?? 0 }}</span>+</h3>
                 <p>Umat</p>
             </div>
         </div>
         <div class="counter-card">
-            <div class="cc-icon"><i class="fas fa-church" aria-hidden="true"></i></div>
+            <div class="cc-icon"><i class="fas fa-trophy" aria-hidden="true"></i></div>
             <div class="cc-content">
                 <h3><span>{{ $stats['total_kapela'] ?? 0 }}</span>+</h3>
                 <p>Kapela</p>
             </div>
         </div>
         <div class="counter-card">
-            <div class="cc-icon"><i class="fas fa-users" aria-hidden="true"></i></div>
+            <div class="cc-icon"><i class="fas fa-book-bookmark" aria-hidden="true"></i></div>
             <div class="cc-content">
                 <h3><span>{{ $stats['total_kub'] ?? 0 }}</span>+</h3>
                 <p>KUB</p>
@@ -143,18 +149,25 @@
 </section>
 
 <!-- ===== SAMBUTAN PASTOR PAROKI SECTION ===== -->
+@php
+    $imamImage = file_exists(public_path('assets/frontend/siparoki/images/default-pastor.jpg'))
+        ? asset('assets/frontend/siparoki/images/default-pastor.jpg')
+        : (file_exists(public_path('assets/frontend/siparoki/images/default-principal.jpg'))
+            ? asset('assets/frontend/siparoki/images/default-principal.jpg')
+            : asset('images/pastor-avatar.svg'));
+@endphp
 <section id="sambutan-pastor-ringkas" class="sambutan-pastor-section" aria-label="Sambutan Pastor Paroki">
     <div class="sambutan-pastor-card">
         <div class="sambutan-pastor-photo">
-            <span class="sambutan-pastor-badge">Kata Sambutan</span>
-            <i class="fa-solid fa-user-tie"></i>
+            <span class="sambutan-pastor-badge">KATA SAMBUTAN</span>
+            <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" alt="Pastor Paroki {{ $globalNamaParoki ?? 'SIPAROKI' }}">
         </div>
         <div class="sambutan-pastor-body">
-            <h3>{{ $pastor_paroki ?? 'Pastor Paroki' }}</h3>
+            <h3>Pastor Paroki</h3>
             <span class="sambutan-pastor-role">Pastor Paroki {{ $globalNamaParoki ?? 'SIPAROKI' }}</span>
-            <p>Salve, Salam Sehat dan Berkah Dalem. Selamat Datang di Website Resmi {{ $globalNamaParoki ?? 'St. Vinsensius a Paulo - Benlutu' }}.</p>
+            <p>Salve, Salam Sehat dan Berkah Dalem. Selamat Datang di Website Resmi {{ $globalNamaParoki ?? 'SIPAROKI' }}.</p>
             <div>
-                <a href="/sambutan" class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-2.5 rounded-full text-sm transition">
+                <a href="/sambutan" class="btn-sambutan">
                     Baca Selengkapnya <i class="fas fa-arrow-right text-xs"></i>
                 </a>
             </div>
@@ -162,47 +175,144 @@
     </div>
 </section>
 
-<!-- ===== PELAYAN PASTORAL SAAT INI SECTION ===== -->
-<section id="pelayan-pastoral" class="py-16 bg-white dark:bg-[#07111f]">
-    <div class="max-w-6xl mx-auto px-4">
-        <div class="section-title">
-            <span class="st-badge"><i class="fas fa-users me-1"></i> Pelayan Pastoral</span>
-            <h2>Yang Bertugas <span class="text-gradient">Saat Ini</span></h2>
+<!-- ===== PELAYAN PASTORAL SAAT INI SECTION (KONOHA THEME) ===== -->
+<section id="pelayan-pastoral" class="pelayan-pastoral-section" aria-label="Pelayan Pastoral Paroki">
+    <div class="pelayan-pastoral-container">
+        <div class="pelayan-pastoral-header">
+            <span class="pelayan-pastoral-badge">
+                <i class="fas fa-users-rays me-1"></i> Pelayan Pastoral
+            </span>
+            <h2>Yang Bertugas <span>Saat Ini</span></h2>
             <p>Pastor Paroki, Pastor Rekan, dan Frater yang sedang melayani umat di {{ $globalNamaParoki ?? 'St. Vinsensius a Paulo - Benlutu' }}.</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div class="bg-slate-50 dark:bg-[#101d31] border border-slate-200 dark:border-[#263a55] rounded-2xl p-6 text-center shadow-sm">
-                <div class="w-20 h-20 bg-sky-100 dark:bg-sky-950 text-sky-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                    <i class="fa-solid fa-church"></i>
+        <div class="pelayan-pastoral-grid">
+            
+            {{-- Card 1: Pastor Paroki --}}
+            <div class="pelayan-card pastor-paroki">
+                <div>
+                    <div class="pelayan-avatar-wrap">
+                        <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" 
+                             alt="Pastor Paroki" 
+                             class="pelayan-avatar-img">
+                        <span class="pelayan-tag">
+                            <i class="fa-solid fa-cross text-[9px] me-0.5"></i> Paroki
+                        </span>
+                    </div>
+
+                    <span class="pelayan-role-badge">Pastor Paroki</span>
+                    <h4>{{ $pastor_paroki ?? 'RD. Herman Hillers Penga' }}</h4>
+                    <div class="pelayan-subrole">Ketua Dewan Pastoral Paroki</div>
+
+                    <div class="pelayan-divider"></div>
+
+                    <ul class="pelayan-duties">
+                        <li>
+                            <i class="fa-solid fa-check-circle"></i>
+                            <span>Penggembalaan &amp; Reksa Pastoral Paroki</span>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-check-circle"></i>
+                            <span>Melayani Perayaan Ekaristi &amp; Sakramen</span>
+                        </li>
+                    </ul>
                 </div>
-                <h4 class="font-bold text-slate-900 dark:text-white text-base">Pastor Paroki</h4>
-                <p class="text-xs text-sky-600 font-semibold mt-1">Ketua Dewan Pastoral</p>
-                <p class="text-xs text-slate-500 mt-2">Melayani Perayaan Ekaristi & Penggembalaan</p>
+
+                <div class="pelayan-card-footer">
+                    <span class="pelayan-status-label">Status</span>
+                    <span class="pelayan-status-val">
+                        <span class="pelayan-status-dot"></span> Aktif Bertugas
+                    </span>
+                </div>
             </div>
 
-            <div class="bg-slate-50 dark:bg-[#101d31] border border-slate-200 dark:border-[#263a55] rounded-2xl p-6 text-center shadow-sm">
-                <div class="w-20 h-20 bg-purple-100 dark:bg-purple-950 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                    <i class="fa-solid fa-hands-praying"></i>
+            {{-- Card 2: Pastor Rekan --}}
+            <div class="pelayan-card pastor-rekan">
+                <div>
+                    <div class="pelayan-avatar-wrap">
+                        <div class="pelayan-avatar-icon rekan">
+                            <i class="fa-solid fa-hands-praying"></i>
+                        </div>
+                        <span class="pelayan-tag vikaris">
+                            <i class="fa-solid fa-church text-[9px] me-0.5"></i> Vikaris
+                        </span>
+                    </div>
+
+                    <span class="pelayan-role-badge rekan">Pastor Rekan</span>
+                    <h4>{{ (!empty($pastor_rekan) && $pastor_rekan !== 'Pastor Rekan') ? $pastor_rekan : 'Pastor Rekan Paroki' }}</h4>
+                    <div class="pelayan-subrole">Vikaris Paroki</div>
+
+                    <div class="pelayan-divider"></div>
+
+                    <ul class="pelayan-duties">
+                        <li>
+                            <i class="fa-solid fa-check-circle"></i>
+                            <span>Pelayanan Sakramen &amp; Pastoral KUB</span>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-check-circle"></i>
+                            <span>Kunjungan Pastoral Stasi &amp; Lingkungan</span>
+                        </li>
+                    </ul>
                 </div>
-                <h4 class="font-bold text-slate-900 dark:text-white text-base">Pastor Rekan</h4>
-                <p class="text-xs text-purple-600 font-semibold mt-1">Vikaris Paroki</p>
-                <p class="text-xs text-slate-500 mt-2">Pelayanan Sakramen & Pastoral KUB</p>
+
+                <div class="pelayan-card-footer">
+                    <span class="pelayan-status-label">Status</span>
+                    <span class="pelayan-status-val">
+                        <span class="pelayan-status-dot"></span> Aktif Bertugas
+                    </span>
+                </div>
             </div>
 
-            <div class="bg-slate-50 dark:bg-[#101d31] border border-slate-200 dark:border-[#263a55] rounded-2xl p-6 text-center shadow-sm">
-                <div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                    <i class="fa-solid fa-book-bible"></i>
+            {{-- Card 3: Frater / Katekis --}}
+            <div class="pelayan-card frater-katekis">
+                <div>
+                    <div class="pelayan-avatar-wrap">
+                        <div class="pelayan-avatar-icon frater">
+                            <i class="fa-solid fa-book-bible"></i>
+                        </div>
+                        <span class="pelayan-tag pastoral">
+                            <i class="fa-solid fa-book-open text-[9px] me-0.5"></i> Pastoral
+                        </span>
+                    </div>
+
+                    <span class="pelayan-role-badge frater">Frater / Katekis</span>
+                    <h4>{{ (!empty($frater) && $frater !== 'Frater TOP') ? $frater : 'Frater Pastoral / Katekis' }}</h4>
+                    <div class="pelayan-subrole">Pendamping Pastoral</div>
+
+                    <div class="pelayan-divider"></div>
+
+                    <ul class="pelayan-duties">
+                        <li>
+                            <i class="fa-solid fa-check-circle"></i>
+                            <span>Katekese Sakramen &amp; Bina Iman Remaja</span>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-check-circle"></i>
+                            <span>Pendampingan OMK &amp; Putera-Puteri Altar</span>
+                        </li>
+                    </ul>
                 </div>
-                <h4 class="font-bold text-slate-900 dark:text-white text-base">Frater / Katekis</h4>
-                <p class="text-xs text-emerald-600 font-semibold mt-1">Pendamping Pastoral</p>
-                <p class="text-xs text-slate-500 mt-2">Katekese, OMK & Misdinar</p>
+
+                <div class="pelayan-card-footer">
+                    <span class="pelayan-status-label">Status</span>
+                    <span class="pelayan-status-val">
+                        <span class="pelayan-status-dot"></span> Aktif Bertugas
+                    </span>
+                </div>
             </div>
+
         </div>
 
-        <div class="text-center mt-8">
-            <a href="/pelayan-pastoral" class="inline-flex items-center gap-2 border border-sky-600 text-sky-600 hover:bg-sky-50 px-5 py-2 rounded-full text-sm font-semibold transition">
-                <span>Lihat Halaman Pelayan Pastoral</span> <i class="fas fa-arrow-right text-xs"></i>
+        <div class="pelayan-btn-group">
+            <a href="/pelayan-pastoral" class="btn-konoha-teal">
+                <i class="fa-solid fa-users text-xs"></i>
+                <span>Lihat Halaman Pelayan Pastoral</span>
+                <i class="fas fa-arrow-right text-xs"></i>
+            </a>
+            <a href="/riwayat-pastor" class="btn-konoha-amber-outline">
+                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                <span>Riwayat Pastor Paroki</span>
             </a>
         </div>
     </div>
@@ -298,7 +408,7 @@
 
 <!-- Section Berita & Artikel Terbaru -->
 <section id="artikel" class="py-16 bg-slate-50 dark:bg-[#090e1a]">
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 15px;">
+    <div class="container">
         <div class="section-title text-center mb-5">
             <span class="badge mb-2 px-3 py-2" style="background: rgba(0, 137, 123, 0.1); color: var(--primary-teal); font-weight: 700; border-radius: 20px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Berita &amp; Artikel</span>
             <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b;">Berita &amp; <span style="color: var(--primary-orange);">Artikel Terkini</span></h2>
@@ -350,19 +460,21 @@
                 @endphp
                 <div class="col-lg-4 col-md-6">
                     <div class="card news-card h-100 shadow-sm" style="border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); transition: transform 0.3s, box-shadow 0.3s; background: #ffffff;">
-                        <div class="position-relative" style="height: 210px; overflow: hidden; background: #e2e8f0;">
+                        <a href="/artikel/{{ $item->slug }}" class="d-block position-relative overflow-hidden" style="height: 210px; background: #e2e8f0; text-decoration: none;">
                             <span class="news-category {{ $catClass }}" style="position: absolute; top: 12px; left: 12px; z-index: 2; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; color: white; background: var(--primary-teal);">
                                 <i class="fas {{ $catIcon }} me-1"></i>
                                 {{ $item->kategori ?? $item->tipe ?? 'Berita Paroki' }}
                             </span>
                             <img src="{{ $newsImageUrl($item->gambar ?? null) }}" class="card-img-top w-100 h-100" alt="{{ $item->judul }}" loading="lazy" style="object-fit: cover; transition: transform 0.5s;">
-                        </div>
+                        </a>
                         <div class="card-body d-flex flex-column p-4">
                             <span class="news-date mb-2" style="display: inline-block; padding: 4px 10px; border-radius: 6px; background: var(--primary-orange); color: white; font-size: 12px; font-weight: 600; width: fit-content;">
                                 <i class="far fa-calendar me-1"></i> {{ \Carbon\Carbon::parse($publishedAt)->translatedFormat('j F Y') }}
                             </span>
                             <h5 class="card-title fw-bold mb-2" style="font-size: 1.05rem; line-height: 1.4; color: #1e293b; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                {{ $item->judul }}
+                                <a href="/artikel/{{ $item->slug }}" style="text-decoration: none; color: inherit; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-teal)'" onmouseout="this.style.color='#1e293b'">
+                                    {{ $item->judul }}
+                                </a>
                             </h5>
                             <p class="card-text text-muted mb-3 flex-grow-1" style="font-size: 0.85rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
                                 {{ $excerpt }}

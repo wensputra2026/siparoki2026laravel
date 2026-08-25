@@ -4,6 +4,41 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\MasterReferensiController;
 use Illuminate\Support\Facades\Route;
 
+if (!function_exists('siparoki_resolve_safe_file')) {
+    /**
+     * Safely resolve a candidate list of file paths, guaranteeing the final
+     * realpath stays inside one of the allowed base directories. Prevents
+     * directory traversal (e.g. /assets/uploads/../../.env) from disclosing
+     * arbitrary files outside the web root.
+     */
+    function siparoki_resolve_safe_file(array $candidates, array $allowedBases): ?string
+    {
+        $normalized = [];
+        foreach ($allowedBases as $base) {
+            $real = realpath($base);
+            if ($real === false) {
+                $real = $base;
+            }
+            $normalized[] = rtrim($real, '/\\') . DIRECTORY_SEPARATOR;
+        }
+
+        foreach ($candidates as $candidate) {
+            $real = realpath($candidate);
+            if ($real === false || !is_file($real)) {
+                continue;
+            }
+            $real .= (is_dir($real) ? DIRECTORY_SEPARATOR : '');
+            foreach ($normalized as $base) {
+                if (strncmp($real, $base, strlen($base)) === 0) {
+                    return $real;
+                }
+            }
+        }
+
+        return null;
+    }
+}
+
 // Beranda
 Route::get('/', [PageController::class, 'beranda'])->name('beranda');
 
@@ -58,15 +93,15 @@ Route::get('/sakramen', [PageController::class, 'sakramen'])->name('sakramen');
 Route::get('/login', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('login');
 Route::get('/masuk', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('masuk');
 Route::get('/admin/login', fn () => redirect('/login'))->name('admin.login');
-Route::post('/login', [\App\Http\Controllers\AuthController::class, 'processLogin'])->name('login.process');
+Route::post('/login', [\App\Http\Controllers\AuthController::class, 'processLogin'])->name('login.process')->middleware('throttle:10,1');
 
 Route::get('/register', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('register');
 Route::get('/daftar', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('daftar');
-Route::post('/register', [\App\Http\Controllers\AuthController::class, 'processRegister'])->name('register.process');
+Route::post('/register', [\App\Http\Controllers\AuthController::class, 'processRegister'])->name('register.process')->middleware('throttle:10,1');
 
 Route::get('/lupa-password', [\App\Http\Controllers\AuthController::class, 'showForgotPassword'])->name('lupa-password');
 Route::get('/forgot-password', [\App\Http\Controllers\AuthController::class, 'showForgotPassword'])->name('forgot-password');
-Route::post('/lupa-password', [\App\Http\Controllers\AuthController::class, 'processForgotPassword'])->name('lupa-password.process');
+Route::post('/lupa-password', [\App\Http\Controllers\AuthController::class, 'processForgotPassword'])->name('lupa-password.process')->middleware('throttle:10,1');
 
 // API GeoJSON Kapela (Untuk Leaflet Map)
 Route::get('/api/kapela-geojson', [PageController::class, 'kapelaGeojson'])->name('api.kapela-geojson');
@@ -90,15 +125,12 @@ Route::get('/assets/uploads/{path}', function($path) {
         storage_path('app/public/' . $path),
         storage_path('app/public/' . $cleanPath),
     ];
-    foreach ($candidates as $cand) {
-        if (file_exists($cand) && !is_dir($cand)) {
-            return response()->file($cand);
-        }
+    $safe = siparoki_resolve_safe_file($candidates, [public_path(), storage_path('app/public')]);
+    if ($safe) {
+        return response()->file($safe);
     }
     abort(404);
 })->where('path', '.*');
-
-// Static / Dynamic root uploads handler for katedral
 Route::get('/uploads/{path}', function($path) {
     $cleanPath = preg_replace('#^(video/)?uploads/#', '', $path);
     $baseName = basename($path);
@@ -115,10 +147,9 @@ Route::get('/uploads/{path}', function($path) {
         public_path('uploads/galeri/' . $baseName),
         storage_path('app/public/' . $path),
     ];
-    foreach ($candidates as $cand) {
-        if (file_exists($cand) && !is_dir($cand)) {
-            return response()->file($cand);
-        }
+    $safe = siparoki_resolve_safe_file($candidates, [public_path(), storage_path('app/public')]);
+    if ($safe) {
+        return response()->file($safe);
     }
     abort(404);
 })->where('path', '.*');
@@ -136,10 +167,9 @@ Route::get('/storage/{path}', function($path) {
         public_path('uploads/' . $cleanPath),
         public_path('assets/uploads/' . $cleanPath),
     ];
-    foreach ($candidates as $cand) {
-        if (file_exists($cand) && !is_dir($cand)) {
-            return response()->file($cand);
-        }
+    $safe = siparoki_resolve_safe_file($candidates, [public_path(), storage_path('app/public')]);
+    if ($safe) {
+        return response()->file($safe);
     }
     abort(404);
 })->where('path', '.*');
@@ -147,10 +177,11 @@ Route::get('/storage/{path}', function($path) {
 // Serve Konoha styles and assets directly from workspace konoha folder
 Route::get('/konoha/{file}', function($file) {
     $path = base_path('konoha/' . $file);
-    if (file_exists($path) && !is_dir($path)) {
-        $ext = pathinfo($path, PATHINFO_EXTENSION);
-        $mime = $ext === 'css' ? 'text/css' : ($ext === 'js' ? 'application/javascript' : mime_content_type($path));
-        return response()->file($path, ['Content-Type' => $mime]);
+    $safe = siparoki_resolve_safe_file([$path], [base_path('konoha')]);
+    if ($safe) {
+        $ext = pathinfo($safe, PATHINFO_EXTENSION);
+        $mime = $ext === 'css' ? 'text/css' : ($ext === 'js' ? 'application/javascript' : mime_content_type($safe));
+        return response()->file($safe, ['Content-Type' => $mime]);
     }
     abort(404);
 })->where('file', '.*');
@@ -294,6 +325,44 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::post('/backup-database/{id}/restore', [\App\Http\Controllers\InertiaPanelController::class, 'restoreDatabaseBackup'])->name("panel.{$prefix}.backup-database.restore");
         Route::post('/backup-database/upload-restore', [\App\Http\Controllers\InertiaPanelController::class, 'uploadRestoreDatabaseBackup'])->name("panel.{$prefix}.backup-database.upload-restore");
         Route::delete('/backup-database/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'deleteDatabaseBackup'])->name("panel.{$prefix}.backup-database.delete");
+        Route::get('/security-center', [\App\Http\Controllers\InertiaPanelController::class, 'securityCenter'])->name("panel.{$prefix}.security-center");
+        Route::get('/security-settings', [\App\Http\Controllers\InertiaPanelController::class, 'securityCenter'])->name("panel.{$prefix}.security-settings");
+        Route::post('/security/settings', [\App\Http\Controllers\InertiaPanelController::class, 'updateSecuritySettings'])->name("panel.{$prefix}.security.settings.update");
+        Route::post('/security/block-ip', [\App\Http\Controllers\InertiaPanelController::class, 'blockIp'])->name("panel.{$prefix}.security.block-ip");
+        Route::post('/security/unblock-ip/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'unblockIp'])->name("panel.{$prefix}.security.unblock-ip");
+        Route::delete('/security/unblock-ip/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'unblockIp'])->name("panel.{$prefix}.security.unblock-ip.delete");
+        Route::post('/security/clear-logs', [\App\Http\Controllers\InertiaPanelController::class, 'clearSecurityLogs'])->name("panel.{$prefix}.security.clear-logs");
+        Route::post('/security/clear-cache', [\App\Http\Controllers\InertiaPanelController::class, 'clearSystemSecurityCache'])->name("panel.{$prefix}.security.clear-cache");
+
+        // Settings Hub (Pengaturan Terpadu: Pembayaran, OTP, Video, Slider, SEO, Widget)
+        Route::get('/pengaturan-aplikasi', [\App\Http\Controllers\InertiaPanelController::class, 'pengaturanHub'])->name("panel.{$prefix}.pengaturan-aplikasi");
+        Route::get('/pengaturan/pembayaran', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'pembayaran'))->name("panel.{$prefix}.pengaturan.pembayaran");
+        Route::get('/pengaturan-pembayaran', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'pembayaran'))->name("panel.{$prefix}.pengaturan-pembayaran");
+        Route::get('/pengaturan/otp', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'otp'))->name("panel.{$prefix}.pengaturan.otp");
+        Route::get('/pengaturan-otp', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'otp'))->name("panel.{$prefix}.pengaturan-otp");
+        Route::get('/pengaturan/meta_tag', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'seo'))->name("panel.{$prefix}.pengaturan.meta_tag");
+        Route::get('/seo', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'seo'))->name("panel.{$prefix}.seo");
+        Route::get('/video-header', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'video'))->name("panel.{$prefix}.video-header");
+        Route::get('/slider', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'slider'))->name("panel.{$prefix}.slider");
+        Route::get('/widget', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'widget'))->name("panel.{$prefix}.widget");
+        Route::get('/menu', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'widget'))->name("panel.{$prefix}.menu");
+        Route::get('/pengaturan/maintenance', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'maintenance'))->name("panel.{$prefix}.pengaturan.maintenance");
+        Route::get('/maintenance', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'maintenance'))->name("panel.{$prefix}.maintenance");
+
+        // Settings Hub POST Actions
+        Route::post('/pengaturan/pembayaran/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveMetodePembayaran'])->name("panel.{$prefix}.pengaturan.pembayaran.save");
+        Route::delete('/pengaturan/pembayaran/{id}/delete', [\App\Http\Controllers\InertiaPanelController::class, 'deleteMetodePembayaran'])->name("panel.{$prefix}.pengaturan.pembayaran.delete");
+        Route::post('/pengaturan/pembayaran/{id}/delete', [\App\Http\Controllers\InertiaPanelController::class, 'deleteMetodePembayaran'])->name("panel.{$prefix}.pengaturan.pembayaran.delete.post");
+        Route::post('/pengaturan/otp/save', [\App\Http\Controllers\InertiaPanelController::class, 'savePengaturanOtp'])->name("panel.{$prefix}.pengaturan.otp.save");
+        Route::post('/pengaturan/otp/test', [\App\Http\Controllers\InertiaPanelController::class, 'testKirimWhatsapp'])->name("panel.{$prefix}.pengaturan.otp.test");
+        Route::post('/pengaturan/video/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveVideoHeader'])->name("panel.{$prefix}.pengaturan.video.save");
+        Route::post('/pengaturan/slider/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveSlider'])->name("panel.{$prefix}.pengaturan.slider.save");
+        Route::delete('/pengaturan/slider/{id}/delete', [\App\Http\Controllers\InertiaPanelController::class, 'deleteSlider'])->name("panel.{$prefix}.pengaturan.slider.delete");
+        Route::post('/pengaturan/slider/{id}/delete', [\App\Http\Controllers\InertiaPanelController::class, 'deleteSlider'])->name("panel.{$prefix}.pengaturan.slider.delete.post");
+        Route::post('/pengaturan/seo/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveSeoMeta'])->name("panel.{$prefix}.pengaturan.seo.save");
+        Route::post('/pengaturan/widget/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveWidgetSettings'])->name("panel.{$prefix}.pengaturan.widget.save");
+        Route::post('/pengaturan/maintenance/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveMaintenanceSettings'])->name("panel.{$prefix}.pengaturan.maintenance.save");
+
         Route::get('/jadwal-misa/bulan', fn () => redirect("/{$prefix}/jadwal-misa"));
         Route::get('/sakramen/daftar_pembayaran', fn () => redirect("/{$prefix}/pengajuan-sakramen"));
         Route::get('/kk/mutasi_kub', fn () => redirect("/{$prefix}/kk-katolik"));
@@ -406,17 +475,13 @@ Route::middleware([\App\Http\Middleware\PanelAccess::class])->prefix('v2')->grou
 
 // Legacy Media Library Asset Fallback
 Route::get('/media_library/{path}', function ($path) {
-    $filePath = public_path('media_library/' . $path);
-    if (file_exists($filePath)) {
-        return response()->file($filePath);
-    }
-    $uploadPath = public_path('uploads/' . $path);
-    if (file_exists($uploadPath)) {
-        return response()->file($uploadPath);
-    }
-    $keuskupanPath = public_path('uploads/keuskupan/' . basename($path));
-    if (file_exists($keuskupanPath)) {
-        return response()->file($keuskupanPath);
+    $safe = siparoki_resolve_safe_file([
+        public_path('media_library/' . $path),
+        public_path('uploads/' . $path),
+        public_path('uploads/keuskupan/' . basename($path)),
+    ], [public_path('media_library'), public_path('uploads')]);
+    if ($safe) {
+        return response()->file($safe);
     }
     $defaultSvg = public_path('uploads/keuskupan/logo_keuskupan_kupang.svg');
     if (file_exists($defaultSvg)) {
