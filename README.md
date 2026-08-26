@@ -175,9 +175,22 @@ php artisan serve
 
 ---
 
-### 🌐 Pilihan 3: Panduan Instalasi di Shared Hosting (cPanel / DirectAdmin)
+### 🌐 Pilihan 3: Panduan Lengkap Instalasi di Shared Hosting cPanel (Standar Rumahweb / Niagahoster / DomaiNesia)
 
-Bagi paroki yang menggunakan layanan web hosting bersama (*Shared Hosting cPanel*):
+Bagi paroki yang menggunakan layanan web hosting bersama (*Shared Hosting cPanel* seperti Rumahweb), ikuti panduan teruji berikut:
+
+```mermaid
+flowchart LR
+    A["File ZIP SIPAROKI"] --> B["Upload ke /home/user/laravel_core"]
+    A --> C["Extract Isi Folder public/ ke public_html/"]
+    B --> D["Edit public_html/index.php"]
+    C --> D
+    D --> E["Buat Database MySQL di cPanel"]
+    E --> F["Buka https://namaparoki.org/install.php"]
+    F --> G["SIPAROKI Online 100%!"]
+```
+
+---
 
 #### Langkah 1: Persiapan Versi PHP & Ekstensi di cPanel
 1. Masuk ke **cPanel Hosting** Anda.
@@ -186,36 +199,50 @@ Bagi paroki yang menggunakan layanan web hosting bersama (*Shared Hosting cPanel
 4. Masuk ke tab **Extensions**, pastikan ekstensi berikut dicentang aktif:
    - `pdo_mysql`, `openssl`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `gd`, `curl`, `zip`.
 
-#### Langkah 2: Unggah Source Code SIPAROKI
-Pilih salah satu cara berikut:
-- **Cara A (Menggunakan Git cPanel - Disarankan)**:
-  1. Buka menu **Git™ Version Control** di cPanel.
-  2. Klik **Create**.
-  3. Masukkan Clone URL: `https://github.com/wensputra2026/siparoki2026laravel.git`
-  4. Tentukan Repository Path: `repositories/siparoki` atau langsung di `public_html`.
-  5. Klik **Create**.
-- **Cara B (Upload Berkas ZIP)**:
-  1. Download ZIP dari repository: [Download ZIP](https://github.com/wensputra2026/siparoki2026laravel/archive/refs/heads/main.zip).
-  2. Buka **File Manager** cPanel &rarr; Masuk ke direktori `public_html` (atau folder subdomain Anda).
-  3. Upload file ZIP dan ekstrak semua berkasnya.
+---
 
-#### Langkah 3: Penataan Folder Root Web
-SIPAROKI sudah dilengkapi file `.htaccess` dan `index.php` di folder utama yang otomatis meneruskan permintaan ke folder `public/`, sehingga Anda **tidak perlu memindahkan berkas secara manual**.
-- Jika Anda ingin keamanan maksimal, arahkan *Document Root* domain paroki Anda di menu cPanel **Domains / Subdomains** langsung ke folder:
-  `public_html/public`
+#### Langkah 2: Unggah Source Code SIPAROKI ke cPanel (Metode Standar Rumahweb)
 
-#### Langkah 4: Buat Database MySQL
+1. **Download Berkas ZIP Proyek**:
+   * Unduh berkas ZIP dari GitHub: [Download SIPAROKI ZIP](https://github.com/wensputra2026/siparoki2026laravel/archive/refs/heads/main.zip).
+
+2. **Buat Folder Core di Luar `public_html` (Demi Keamanan Maksimal)**:
+   * Masuk ke **cPanel &rarr; File Manager**.
+   * Klik tombol **+ Folder**, buat folder baru sejajar dengan `public_html` bernama: `laravel_core` (Path: `/home/username/laravel_core`).
+   * Buka folder `laravel_core`, klik **Upload** dan unggah berkas ZIP.
+   * Setelah selesai, klik kanan berkas ZIP lalu pilih **Extract**.
+
+3. **Pindahkan Berkas Folder `public/` ke `public_html/`**:
+   * Masuk ke dalam folder `/home/username/laravel_core/public/`.
+   * Pilih semua berkas (*Select All*) dan klik **Move**.
+   * Pindahkan tujuannya ke folder: `/public_html/` (atau nama folder subdomain Anda).
+
+4. **Penyesuaian Path di `public_html/index.php`**:
+   * Berkas `index.php` SIPAROKI sudah dilengkapi **auto-detection otomatis**.
+   * Namun jika Anda ingin memastikan path statis, buka dan edit file `public_html/index.php`:
+     ```php
+     // Pastikan mengarah ke folder laravel_core Anda:
+     require __DIR__ . '/../laravel_core/vendor/autoload.php';
+     $app = require_once __DIR__ . '/../laravel_core/bootstrap/app.php';
+     ```
+
+---
+
+#### Langkah 3: Buat Database MySQL di cPanel
 1. Buka menu **MySQL&reg; Database Wizard** di cPanel.
 2. Buat nama database baru (contoh: `u1234_siparoki`).
 3. Buat pengguna database & password baru (contoh: `u1234_adminparoki`).
-4. Berikan hak akses penuh (**ALL PRIVILEGES**), lalu klik *Make Changes*.
+4. Berikan centang hak akses penuh (**ALL PRIVILEGES**), lalu klik *Make Changes*.
 
-#### Langkah 5: Jalankan Web Installer
-1. Buka browser dan akses domain paroki Anda:
-   `https://namaparoki-anda.org/install.php` (atau `https://namaparoki-anda.org/installer`)
-2. Masukkan nama database, username database, dan password yang baru saja dibuat di Langkah 4.
-3. Pilih Keuskupan, Dekenat, dan Paroki Anda.
-4. Klik **Mulai Instalasi Sekarang**. Sistem paroki Anda langsung aktif dan siap melayani umat!
+---
+
+#### Langkah 4: Jalankan Web Installer di Browser
+1. Buka browser dan akses alamat domain paroki Anda:
+   👉 **`https://namaparoki-anda.org/install.php`** (atau `https://namaparoki-anda.org/installer`)
+2. Masukkan nama database, username database, dan password yang baru saja dibuat di Langkah 3.
+3. Pilih Keuskupan, Dekenat, dan Paroki Anda dari daftar master nasional KWI.
+4. Masukkan nama, email, dan password untuk akun Super Administrator.
+5. Klik **"Mulai Instalasi Sekarang"**. Sistem paroki Anda langsung aktif dan siap melayani umat!
 
 ---
 

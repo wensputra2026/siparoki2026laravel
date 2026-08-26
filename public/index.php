@@ -69,6 +69,12 @@ if (!file_exists($corePath . '/vendor/autoload.php')) {
 
 require $corePath . '/vendor/autoload.php';
 
+// Normalize subfolder script path if accessed through root .htaccess (e.g. http://localhost/siparokilaravel/)
+if (isset($_SERVER['SCRIPT_NAME']) && str_ends_with($_SERVER['SCRIPT_NAME'], '/public/index.php')) {
+    $parentScript = substr($_SERVER['SCRIPT_NAME'], 0, -strlen('/public/index.php')) . '/index.php';
+    $_SERVER['SCRIPT_NAME'] = $parentScript;
+}
+
 // Bootstrap Laravel and handle the request...
 /** @var Application $app */
 $app = require_once $corePath . '/bootstrap/app.php';
