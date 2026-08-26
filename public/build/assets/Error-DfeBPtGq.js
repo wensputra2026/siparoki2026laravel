@@ -1,0 +1,1 @@
+import e from"./Error-mLRUq5mO.js";import{o as a,y as r}from"./vendor-vue-DANN6Vty.js";import"./vendor-DwcH5o34.js";const c={__name:"Error",props:{status:{type:[Number,String],default:404},message:{type:String,default:""}},setup(t){const s=t;return(o,m)=>(a(),r(e,{status:s.status,message:s.message},null,8,["status","message"]))}};export{c as default};
