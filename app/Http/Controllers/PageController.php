@@ -24,45 +24,51 @@ class PageController extends Controller
         $version = Cache::get('global_view_data_version', 1);
 
         return Cache::remember("frontend.common_data.{$version}", 60, function () {
-            $profil = DB::table('profil_paroki')->first();
-            $pengaturan = DB::table('pengaturan_aplikasi')->first();
+            $hasProfil = Schema::hasTable('profil_paroki');
+            $hasPengaturan = Schema::hasTable('pengaturan_aplikasi');
+            $hasParoki = Schema::hasTable('paroki');
+
+            $profil = $hasProfil ? DB::table('profil_paroki')->first() : null;
+            $pengaturan = $hasPengaturan ? DB::table('pengaturan_aplikasi')->first() : null;
             $activeParoki = null;
 
-            $parokiSelect = [
-                'paroki.*',
-                'keuskupan.nama_keuskupan',
-                'dekenat.nama_dekenat',
-                'provinsi.nama_provinsi',
-                'kabupaten.nama_kabupaten',
-                'kecamatan.nama_kecamatan',
-                'desa_kelurahan.nama_desa',
-            ];
+            if ($hasParoki) {
+                $parokiSelect = [
+                    'paroki.*',
+                    'keuskupan.nama_keuskupan',
+                    'dekenat.nama_dekenat',
+                    'provinsi.nama_provinsi',
+                    'kabupaten.nama_kabupaten',
+                    'kecamatan.nama_kecamatan',
+                    'desa_kelurahan.nama_desa',
+                ];
 
-            $parokiQuery = fn () => DB::table('paroki')
-                ->leftJoin('keuskupan', 'paroki.keuskupan_id', '=', 'keuskupan.id_keuskupan')
-                ->leftJoin('dekenat', 'paroki.dekenat_id', '=', 'dekenat.id_dekenat')
-                ->leftJoin('provinsi', 'paroki.provinsi_id', '=', 'provinsi.id_provinsi')
-                ->leftJoin('kabupaten', 'paroki.kabupaten_id', '=', 'kabupaten.id_kabupaten')
-                ->leftJoin('kecamatan', 'paroki.kecamatan_id', '=', 'kecamatan.id_kecamatan')
-                ->leftJoin('desa_kelurahan', 'paroki.desa_id', '=', 'desa_kelurahan.id_desa')
-                ->select($parokiSelect);
+                $parokiQuery = fn () => DB::table('paroki')
+                    ->leftJoin('keuskupan', 'paroki.keuskupan_id', '=', 'keuskupan.id_keuskupan')
+                    ->leftJoin('dekenat', 'paroki.dekenat_id', '=', 'dekenat.id_dekenat')
+                    ->leftJoin('provinsi', 'paroki.provinsi_id', '=', 'provinsi.id_provinsi')
+                    ->leftJoin('kabupaten', 'paroki.kabupaten_id', '=', 'kabupaten.id_kabupaten')
+                    ->leftJoin('kecamatan', 'paroki.kecamatan_id', '=', 'kecamatan.id_kecamatan')
+                    ->leftJoin('desa_kelurahan', 'paroki.desa_id', '=', 'desa_kelurahan.id_desa')
+                    ->select($parokiSelect);
 
-            if (!empty($profil?->paroki_id)) {
-                $activeParoki = $parokiQuery()->where('paroki.id_paroki', $profil->paroki_id)->first();
-            }
+                if (!empty($profil?->paroki_id)) {
+                    $activeParoki = $parokiQuery()->where('paroki.id_paroki', $profil->paroki_id)->first();
+                }
 
-            if (!$activeParoki && !empty($pengaturan?->nama_paroki)) {
-                $activeParoki = $parokiQuery()
-                    ->where('paroki.nama_paroki', $pengaturan->nama_paroki)
-                    ->orWhere('paroki.nama_paroki', 'like', '%' . $pengaturan->nama_paroki . '%')
-                    ->first();
-            }
+                if (!$activeParoki && !empty($pengaturan?->nama_paroki)) {
+                    $activeParoki = $parokiQuery()
+                        ->where('paroki.nama_paroki', $pengaturan->nama_paroki)
+                        ->orWhere('paroki.nama_paroki', 'like', '%' . $pengaturan->nama_paroki . '%')
+                        ->first();
+                }
 
-            if (!$activeParoki && !empty($profil?->nama_paroki)) {
-                $activeParoki = $parokiQuery()
-                    ->where('paroki.nama_paroki', $profil->nama_paroki)
-                    ->orWhere('paroki.nama_paroki', 'like', '%' . $profil->nama_paroki . '%')
-                    ->first();
+                if (!$activeParoki && !empty($profil?->nama_paroki)) {
+                    $activeParoki = $parokiQuery()
+                        ->where('paroki.nama_paroki', $profil->nama_paroki)
+                        ->orWhere('paroki.nama_paroki', 'like', '%' . $profil->nama_paroki . '%')
+                        ->first();
+                }
             }
 
             $namaParoki = $activeParoki->nama_paroki
