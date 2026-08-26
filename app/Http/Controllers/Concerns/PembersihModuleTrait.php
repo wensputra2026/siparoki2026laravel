@@ -30,6 +30,20 @@ trait PembersihModuleTrait
 
     public function pembersihSistem(\Illuminate\Http\Request $request)
     {
+        $firstSegment = $request->segment(1) ?: 'superadmin';
+        $roleMap = [
+            'superadmin' => 'Super Admin',
+            'paroki'     => 'Admin Paroki',
+            'pastor'     => 'Pastor',
+            'wilayah'    => 'Admin Wilayah',
+            'kapela'     => 'Admin Kapela / Stasi',
+            'kub'        => 'Ketua KUB',
+            'bendahara'  => 'Bendahara',
+            'penulis'    => 'Penulis',
+            'umat'       => 'Umat',
+        ];
+        $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
+
         $uploads = public_path('uploads');
         $scanned = is_dir($uploads);
         $orphans = [];
@@ -61,8 +75,8 @@ trait PembersihModuleTrait
         ];
 
         return \Inertia\Inertia::render('Inertia/PembersihSistem', [
-            'role'       => $this->resolvePanelRole($request),
-            'prefix'     => $this->resolvePanelPrefix($request),
+            'role'       => $resolvedRole,
+            'prefix'     => $firstSegment,
             'orphans'    => $orphans,
             'totalFiles' => $totalFiles,
             'totalSize'  => $totalSize,
