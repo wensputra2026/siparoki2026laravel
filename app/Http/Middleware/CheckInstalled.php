@@ -16,7 +16,10 @@ class CheckInstalled
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $isInstalled = File::exists(storage_path('installed')) || File::exists(storage_path('framework/installed'));
+        $isInstalled = File::exists(storage_path('installed')) 
+            || File::exists(storage_path('installed.lock'))
+            || File::exists(storage_path('framework/installed'))
+            || File::exists(public_path('installed.lock'));
         $isInstallerRoute = $request->is('installer') || $request->is('installer/*');
 
         // Allow static assets
