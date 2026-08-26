@@ -357,8 +357,8 @@ class PageController extends Controller
                         return null;
                     }
 
-                    $profil = DB::table('profil_paroki')->first();
-                    $activeParoki = DB::table('paroki')->first();
+                    $profil = Schema::hasTable('profil_paroki') ? DB::table('profil_paroki')->first() : null;
+                    $activeParoki = Schema::hasTable('paroki') ? DB::table('paroki')->first() : null;
                     $namaParoki = $activeParoki->nama_paroki ?? $profil->nama_paroki ?? $pengaturan->nama_paroki ?? 'Paroki St. Vinsensius a Paulo Benlutu';
                     $logo = $activeParoki->logo ?? $profil->logo ?? null;
 
