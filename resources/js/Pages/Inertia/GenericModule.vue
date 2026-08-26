@@ -608,6 +608,84 @@ const pastorParokiOptions = computed(() => {
     });
 });
 
+const tempatPelayananOptions = computed(() => {
+    const list = [
+        { id: 'Pusat Paroki (Gereja Utama)', name: 'Pusat Paroki (Gereja Utama)', value: 'Pusat Paroki (Gereja Utama)', label: 'Pusat Paroki (Gereja Utama)' },
+    ];
+
+    if (props.kapelaList && props.kapelaList.length) {
+        props.kapelaList.forEach(k => {
+            const name = k.nama_kapela || k.nama;
+            if (name) {
+                const labelStr = `Kapela / Stasi: ${name}`;
+                list.push({
+                    id: name,
+                    name: labelStr,
+                    value: name,
+                    label: labelStr,
+                });
+            }
+        });
+    }
+
+    if (props.wilayahList && props.wilayahList.length) {
+        props.wilayahList.forEach(w => {
+            const name = w.nama_wilayah || w.nama;
+            if (name) {
+                const labelStr = `Wilayah: ${name}`;
+                list.push({
+                    id: name,
+                    name: labelStr,
+                    value: name,
+                    label: labelStr,
+                });
+            }
+        });
+    }
+
+    if (props.kubList && props.kubList.length) {
+        props.kubList.forEach(kub => {
+            const name = kub.nama_kub || kub.nama;
+            if (name) {
+                const labelStr = `KUB: ${name}`;
+                list.push({
+                    id: name,
+                    name: labelStr,
+                    value: name,
+                    label: labelStr,
+                });
+            }
+        });
+    }
+
+    if (formData.value.wilayah_pelayanan && !list.some(o => o.value === formData.value.wilayah_pelayanan)) {
+        list.unshift({
+            id: formData.value.wilayah_pelayanan,
+            name: formData.value.wilayah_pelayanan,
+            value: formData.value.wilayah_pelayanan,
+            label: formData.value.wilayah_pelayanan,
+        });
+    }
+
+    return list;
+});
+
+const kapelaOptionsForMisdinar = computed(() => {
+    const list = [
+        { id: '', nama_kapela: 'Pusat Paroki (Gereja Utama)', label: 'Pusat Paroki (Gereja Utama)' },
+    ];
+    if (props.kapelaList && props.kapelaList.length) {
+        props.kapelaList.forEach(k => {
+            list.push({
+                id: k.id || k.id_kapela,
+                nama_kapela: k.nama_kapela || k.nama,
+                label: `Kapela / Stasi: ${k.nama_kapela || k.nama}`,
+            });
+        });
+    }
+    return list;
+});
+
 const tipeSakramenOptions = [
     { value: 'Baptis', label: 'Sakramen Baptis (Sacramentum Baptismi)' },
     { value: 'Komuni Pertama', label: 'Sakramen Ekaristi / Komuni Suci (Sacramentum Eucharistiae)' },
@@ -5258,12 +5336,16 @@ const statusLabel = (item) => {
                                 </div>
 
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Wilayah / Tempat Pelayanan</label>
-                                    <input
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Wilayah / Tempat Pelayanan *</label>
+                                    <SearchableSelect
                                         v-model="formData.wilayah_pelayanan"
-                                        type="text"
-                                        placeholder="Contoh: Pusat Paroki / Kapela Ekanaek"
-                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                                        :options="tempatPelayananOptions"
+                                        valueKey="value"
+                                        labelKey="label"
+                                        placeholder="Pilih Tempat / Wilayah Pelayanan..."
+                                        searchPlaceholder="Cari kapela, wilayah, KUB..."
+                                        icon="fa-location-dot"
+                                        iconColor="text-emerald-600"
                                     />
                                 </div>
 
@@ -5377,6 +5459,20 @@ const statusLabel = (item) => {
                                         <option value="Pembina">Pembina / Pendamping</option>
                                         <option value="Pengurus">Pengurus Misdinar</option>
                                     </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tempat / Kapela Pelayanan</label>
+                                    <SearchableSelect
+                                        v-model="formData.stasi_kapela_id"
+                                        :options="kapelaOptionsForMisdinar"
+                                        valueKey="id"
+                                        labelKey="label"
+                                        placeholder="Pusat Paroki / Pilih Kapela..."
+                                        searchPlaceholder="Cari kapela/stasi..."
+                                        icon="fa-place-of-worship"
+                                        iconColor="text-sky-600"
+                                    />
                                 </div>
 
                                 <div>
