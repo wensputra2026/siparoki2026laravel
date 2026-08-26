@@ -235,22 +235,17 @@
                 </div>
             </form>
 
-            <!-- Bottom Links -->
-            <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs">
-                <div class="flex items-center justify-between gap-2">
-                    <a href="{{ url('/admin/login') }}" class="text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 font-medium transition">
-                        Sudah punya akun? Masuk
-                    </a>
-                    <a href="{{ url('/lupa-password') }}" class="text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 font-medium transition">
-                        Lupa kata sandi?
-                    </a>
-                </div>
-
-                <div class="mt-4 flex justify-center">
-                    <a href="{{ url('/') }}" title="Kembali ke Beranda" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200" aria-label="Beranda">
-                        <i class="fa-solid fa-house text-sm"></i>
-                    </a>
-                </div>
+            <!-- Bottom Icon Actions -->
+            <div class="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-center gap-4">
+                <a href="{{ route('login') }}" title="Sudah Punya Akun? Masuk" aria-label="Masuk ke Akun" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200">
+                    <i class="fa-solid fa-arrow-right-to-bracket text-sm"></i>
+                </a>
+                <a href="{{ route('beranda') }}" title="Kembali ke Beranda" aria-label="Kembali ke Beranda" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200">
+                    <i class="fa-solid fa-house text-sm"></i>
+                </a>
+                <a href="{{ route('lupa-password') }}" title="Lupa Kata Sandi?" aria-label="Lupa Kata Sandi" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200">
+                    <i class="fa-solid fa-key text-sm"></i>
+                </a>
             </div>
         </div>
     </div>

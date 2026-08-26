@@ -305,29 +305,33 @@ const submit = () => {
                     </div>
                 </form>
 
-                <!-- Divider & Login Link -->
-                <div class="mt-6 pt-5 border-t border-slate-100 text-center">
-                    <p class="text-xs text-slate-500">
-                        Sudah memiliki akun terdaftar?
-                        <Link
-                            href="/login"
-                            class="font-bold text-amber-600 hover:text-amber-700 transition ml-1"
-                        >
-                            Masuk ke Akun
-                        </Link>
-                    </p>
+                <!-- Bottom Icon Actions -->
+                <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-4">
+                    <Link
+                        href="/login"
+                        title="Sudah Memiliki Akun? Masuk"
+                        aria-label="Masuk ke Akun"
+                        class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50 shadow-xs transition-all duration-200"
+                    >
+                        <i class="fa-solid fa-arrow-right-to-bracket text-sm"></i>
+                    </Link>
+                    <a
+                        href="/"
+                        title="Kembali ke Beranda"
+                        aria-label="Kembali ke Beranda"
+                        class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50 shadow-xs transition-all duration-200"
+                    >
+                        <i class="fa-solid fa-house text-sm"></i>
+                    </a>
+                    <Link
+                        href="/lupa-password"
+                        title="Lupa Kata Sandi?"
+                        aria-label="Lupa Kata Sandi"
+                        class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50 shadow-xs transition-all duration-200"
+                    >
+                        <i class="fa-solid fa-key text-sm"></i>
+                    </Link>
                 </div>
-            </div>
-
-            <!-- Back to Public Site -->
-            <div class="mt-6 text-center">
-                <a
-                    href="/"
-                    title="Kembali ke Beranda"
-                    class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50 shadow-xs transition-all duration-200"
-                >
-                    <i class="fa-solid fa-house text-sm"></i>
-                </a>
             </div>
         </div>
     </div>

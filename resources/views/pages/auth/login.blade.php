@@ -163,16 +163,17 @@
                 });
             </script>
 
-            <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
-                <p class="text-xs text-slate-500 dark:text-slate-400">
-                    Belum memiliki akun umat?
-                    <a href="{{ route('register') }}" class="font-semibold text-amber-600 dark:text-amber-400 hover:underline">Daftar Sekarang</a>
-                </p>
-                <div class="mt-4 flex justify-center">
-                    <a href="{{ route('beranda') }}" title="Kembali ke Beranda" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200" aria-label="Beranda">
-                        <i class="fa-solid fa-house text-sm"></i>
-                    </a>
-                </div>
+            <!-- Bottom Icon Actions -->
+            <div class="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-center gap-4">
+                <a href="{{ route('register') }}" title="Belum Punya Akun? Daftar Sekarang" aria-label="Daftar Akun Baru" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200">
+                    <i class="fa-solid fa-user-plus text-sm"></i>
+                </a>
+                <a href="{{ route('beranda') }}" title="Kembali ke Beranda" aria-label="Kembali ke Beranda" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200">
+                    <i class="fa-solid fa-house text-sm"></i>
+                </a>
+                <a href="{{ route('lupa-password') }}" title="Lupa Kata Sandi?" aria-label="Lupa Kata Sandi" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200">
+                    <i class="fa-solid fa-key text-sm"></i>
+                </a>
             </div>
         </div>
     </div>

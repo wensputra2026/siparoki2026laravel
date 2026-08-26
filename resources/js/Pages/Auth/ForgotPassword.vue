@@ -105,33 +105,33 @@ const submit = () => {
                     </div>
                 </form>
 
-                <div class="mt-6 pt-5 border-t border-slate-100 text-center flex items-center justify-between text-xs">
+                <!-- Bottom Icon Actions -->
+                <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-4">
                     <Link
                         href="/login"
-                        class="font-bold text-amber-600 hover:text-amber-700 transition inline-flex items-center gap-1"
+                        title="Sudah Ingat Sandi? Masuk ke Akun"
+                        aria-label="Masuk ke Akun"
+                        class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50 shadow-xs transition-all duration-200"
                     >
-                        <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                        <span>Kembali ke Login</span>
+                        <i class="fa-solid fa-arrow-right-to-bracket text-sm"></i>
                     </Link>
-
+                    <a
+                        href="/"
+                        title="Kembali ke Beranda"
+                        aria-label="Kembali ke Beranda"
+                        class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50 shadow-xs transition-all duration-200"
+                    >
+                        <i class="fa-solid fa-house text-sm"></i>
+                    </a>
                     <Link
                         href="/register"
-                        class="font-semibold text-slate-600 hover:text-slate-900 transition"
+                        title="Daftar Akun Umat Baru"
+                        aria-label="Daftar Akun Baru"
+                        class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50 shadow-xs transition-all duration-200"
                     >
-                        Daftar Akun Baru
+                        <i class="fa-solid fa-user-plus text-sm"></i>
                     </Link>
                 </div>
-            </div>
-
-            <!-- Back to Public Site -->
-            <div class="mt-6 text-center">
-                <a
-                    href="/"
-                    title="Kembali ke Beranda"
-                    class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50 shadow-xs transition-all duration-200"
-                >
-                    <i class="fa-solid fa-house text-sm"></i>
-                </a>
             </div>
         </div>
     </div>
