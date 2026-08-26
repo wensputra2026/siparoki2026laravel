@@ -17,7 +17,10 @@ class InstallController extends Controller
      */
     protected function isInstalled(): bool
     {
-        return File::exists(storage_path('installed')) || File::exists(storage_path('framework/installed'));
+        return File::exists(storage_path('installed')) 
+            || File::exists(storage_path('installed.lock'))
+            || File::exists(storage_path('framework/installed'))
+            || File::exists(public_path('installed.lock'));
     }
 
     /**
