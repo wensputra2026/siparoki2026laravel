@@ -233,7 +233,11 @@ Route::get('/foto-pastor/{filename}', function(string $filename) {
         }
     }
 
-    // Return default avatar as fallback
+    // Return default pastor photo as fallback
+    $defaultPastor = $laravelPublic . '/assets/frontend/siparoki/images/default-pastor.jpg';
+    if (file_exists($defaultPastor)) {
+        return response()->file($defaultPastor);
+    }
     $defaultAvatar = $laravelPublic . '/assets/img/default-avatar.png';
     if (file_exists($defaultAvatar)) {
         return response()->file($defaultAvatar);

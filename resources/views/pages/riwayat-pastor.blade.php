@@ -3,7 +3,7 @@
 
 @section('content')
 @php
-    $defaultAvatar = asset('images/pastor-avatar.svg');
+    $defaultAvatar = asset('assets/frontend/siparoki/images/default-pastor.jpg');
 @endphp
 
 <!-- Page Header / Breadcrumb Konoha Style -->

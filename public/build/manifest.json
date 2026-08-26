@@ -60,7 +60,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-5aiUPIF2.css",
+    "file": "assets/app-BmZiGc3J.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -154,7 +154,7 @@
     ]
   },
   "resources/js/Pages/Inertia/GenericModule.vue": {
-    "file": "assets/GenericModule-CazN5dPm.js",
+    "file": "assets/GenericModule-CBM3LPLL.js",
     "name": "GenericModule",
     "src": "resources/js/Pages/Inertia/GenericModule.vue",
     "isDynamicEntry": true,
@@ -397,7 +397,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-C3nu5S3d.js",
+    "file": "assets/app-B4M__MqC.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

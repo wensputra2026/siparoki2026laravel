@@ -89,9 +89,7 @@
                     <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #0284c7; border-radius: 16px; padding: 25px 20px; text-align: center; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between;">
                         <div>
                             <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 16px;">
-                                <div style="width: 90px; height: 90px; border-radius: 16px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; border: 2px solid #0284c7;">
-                                    <i class="fa-solid fa-hands-praying"></i>
-                                </div>
+                                <img src="{{ !empty($pastor_rekan_foto) ? $pastor_rekan_foto : $imamImage }}" alt="Pastor Rekan" style="width: 90px; height: 90px; border-radius: 16px; object-fit: cover; border: 2px solid #0284c7; padding: 2px;">
                                 <span style="position: absolute; bottom: -6px; right: -6px; background: #0284c7; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px;">Vikaris</span>
                             </div>
                             <span style="display: inline-block; background: rgba(2,132,199,0.12); color: #0369a1; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 3px 12px; border-radius: 12px; margin-bottom: 8px;">

@@ -2432,11 +2432,10 @@ const statusLabel = (item) => {
                                 <!-- Image / Logo Column -->
                                 <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto' || isImageField(col, getFieldValue(item, col))" class="w-8.5 h-8.5 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5">
                                     <img
-                                        v-if="getFieldValue(item, col) !== '—' && getFieldValue(item, col)"
-                                        :src="getImageUrl(getFieldValue(item, col))"
+                                        :src="getImageUrl(getFieldValue(item, col)) || (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey) ? '/assets/frontend/siparoki/images/default-pastor.jpg' : '')"
                                         :alt="item.nama_pastor || item.nama_lengkap || item.nama_keuskupan || 'Foto'"
                                         class="w-full h-full object-cover rounded-md"
-                                        @error="(e) => { e.target.style.display = 'none'; e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex'); }"
+                                        @error="(e) => { if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey)) { e.target.src = '/assets/frontend/siparoki/images/default-pastor.jpg'; } else { e.target.style.display = 'none'; e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex'); } }"
                                     />
                                     <div :class="['w-full h-full rounded-md flex items-center justify-center text-xs', getFieldValue(item, col) !== '—' && getFieldValue(item, col) ? 'hidden' : '', col.key === 'foto' || ['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'direktori-dpp', 'direktori-katekis', 'direktori-misdinar', 'user'].includes(moduleKey) ? 'bg-slate-100 text-slate-400' : 'bg-amber-50 text-amber-600']">
                                         <i :class="col.key === 'foto' || ['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor'].includes(moduleKey) ? 'fa-solid fa-user-tie text-slate-400' : (moduleKey === 'user' ? 'fa-solid fa-user text-slate-400' : 'fa-solid fa-church')"></i>
