@@ -375,6 +375,44 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
             }
         }
 
+        // Step E2: Update key-value pengaturan table if exists
+        $pengaturan_kv_cols = siparoki_table_columns($pdo, 'pengaturan');
+        if (!empty($pengaturan_kv_cols)) {
+            $pdo->prepare("INSERT INTO `pengaturan` (`kunci`, `nilai`, `updated_at`) VALUES ('nama_paroki', ?, NOW()) ON DUPLICATE KEY UPDATE `nilai` = ?, `updated_at` = NOW()")->execute([$paroki_name, $paroki_name]);
+            $pdo->prepare("INSERT INTO `pengaturan` (`kunci`, `nilai`, `updated_at`) VALUES ('keuskupan', ?, NOW()) ON DUPLICATE KEY UPDATE `nilai` = ?, `updated_at` = NOW()")->execute([$keuskupan, $keuskupan]);
+        }
+
+        // Step E3: Update identitas_paroki table if exists
+        $identitas_cols = siparoki_table_columns($pdo, 'identitas_paroki');
+        if (!empty($identitas_cols)) {
+            $id_data = [];
+            if (in_array('nama_paroki', $identitas_cols, true)) $id_data['nama_paroki'] = $paroki_name;
+            if (in_array('paroki_id', $identitas_cols, true) && $paroki_id) $id_data['paroki_id'] = $paroki_id;
+            if (in_array('id_paroki', $identitas_cols, true) && $paroki_id) $id_data['id_paroki'] = $paroki_id;
+            if (in_array('nama_keuskupan', $identitas_cols, true)) $id_data['nama_keuskupan'] = $keuskupan;
+            if (in_array('keuskupan', $identitas_cols, true)) $id_data['keuskupan'] = $keuskupan;
+            if (in_array('keuskupan_id', $identitas_cols, true) && $keuskupan_id) $id_data['keuskupan_id'] = $keuskupan_id;
+            if (in_array('dekenat_id', $identitas_cols, true) && $dekenat_id) $id_data['dekenat_id'] = $dekenat_id;
+            if (in_array('alamat', $identitas_cols, true)) $id_data['alamat'] = $alamat;
+
+            $first_id = $pdo->query("SELECT * FROM `identitas_paroki` LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+            if ($first_id) {
+                $sets = [];
+                $params = [];
+                foreach ($id_data as $col => $val) {
+                    $sets[] = "`{$col}` = ?";
+                    $params[] = $val;
+                }
+                $pk_id = in_array('id', $identitas_cols, true) ? 'id' : $identitas_cols[0];
+                $params[] = $first_id[$pk_id];
+                $pdo->prepare("UPDATE `identitas_paroki` SET " . implode(', ', $sets) . " WHERE `{$pk_id}` = ?")->execute($params);
+            } else if (!empty($id_data)) {
+                $cols_sql = '`' . implode('`, `', array_keys($id_data)) . '`';
+                $placeholders = implode(', ', array_fill(0, count($id_data), '?'));
+                $pdo->prepare("INSERT INTO `identitas_paroki` ($cols_sql) VALUES ($placeholders)")->execute(array_values($id_data));
+            }
+        }
+
         // Step F: Create / Update Super Admin Account
         $user_cols = siparoki_table_columns($pdo, 'users');
         if (!empty($user_cols)) {

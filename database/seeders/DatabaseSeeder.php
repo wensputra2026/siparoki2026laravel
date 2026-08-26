@@ -62,28 +62,100 @@ class DatabaseSeeder extends Seeder
             DB::table('users')->updateOrInsert(['email' => 'superadmin@paroki.org'], $filteredAdmin);
         }
 
-        // 3. Seed Default Profil Paroki
+        // 3. Seed Default Profil Paroki & Pengaturan Aplikasi
+        $benlutuParoki = null;
+        if (Schema::hasTable('paroki')) {
+            $benlutuParoki = DB::table('paroki')->where('id_paroki', 380)->first()
+                ?? DB::table('paroki')->where('nama_paroki', 'like', '%Benlutu%')->first();
+        }
+
+        $namaParoki = $benlutuParoki?->nama_paroki ?? 'St. Vinsensius a Paulo - Benlutu';
+        $parokiId = $benlutuParoki?->id_paroki ?? 380;
+        $keuskupanId = $benlutuParoki?->keuskupan_id ?? 5;
+        $dekenatId = $benlutuParoki?->dekenat_id ?? 14;
+        $alamatParoki = $benlutuParoki?->alamat ?: 'Benlutu, Kec. Batu Putih, Kab. Timor Tengah Selatan, NTT';
+        $pastorParoki = $benlutuParoki?->nama_pastor_paroki_aktif ?? 'RD. Herman Hilers Penga';
+
         if (Schema::hasTable('profil_paroki')) {
-            $count = DB::table('profil_paroki')->count();
-            if ($count === 0) {
-                $parokiData = [
-                    'nama_paroki' => 'Paroki St. Vinsensius a Paulo - Benlutu',
-                    'keuskupan' => 'Keuskupan Agung Kupang',
-                    'dekenat' => 'Dekenat Kota Kupang',
-                    'alamat' => 'Jl. Timor Raya Km. 28, Benlutu, Nusa Tenggara Timur',
-                    'telepon' => '081234567890',
-                    'email' => 'parokibenlutu@gmail.com',
-                    'sejarah' => 'Paroki St. Vinsensius a Paulo Benlutu didirikan untuk melayani umat beriman di wilayah Benlutu dan sekitarnya.',
-                    'visi' => 'Menjadi persekutuan umat beriman yang mandiri, misioner, dan berakar dalam Kristus.',
-                    'misi' => '1. Meningkatkan kualitas peribadatan dan penghayatan sakramen.\n2. Membangun solidaritas sosial antarumat dan masyarakat.',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-                
-                // Filter only columns that exist
-                $cols = Schema::getColumnListing('profil_paroki');
-                $filtered = array_intersect_key($parokiData, array_flip($cols));
+            $parokiData = [
+                'nama_paroki' => $namaParoki,
+                'keuskupan' => 'Keuskupan Agung Kupang',
+                'alamat' => $alamatParoki,
+                'telepon' => '081234567890',
+                'email' => 'parokibenlutu@gmail.com',
+                'pastor_paroki' => $pastorParoki,
+                'sejarah' => 'Paroki St. Vinsensius a Paulo Benlutu didirikan untuk melayani umat beriman di wilayah Benlutu dan sekitarnya.',
+                'visi' => 'Menjadi persekutuan umat beriman yang mandiri, misioner, dan berakar dalam Kristus.',
+                'misi' => "1. Meningkatkan kualitas peribadatan dan penghayatan sakramen.\n2. Membangun solidaritas sosial antarumat dan masyarakat.",
+                'updated_at' => now(),
+            ];
+            $cols = Schema::getColumnListing('profil_paroki');
+            if (in_array('paroki_id', $cols, true)) $parokiData['paroki_id'] = $parokiId;
+            if (in_array('keuskupan_id', $cols, true)) $parokiData['keuskupan_id'] = $keuskupanId;
+            if (in_array('dekenat_id', $cols, true)) $parokiData['dekenat_id'] = $dekenatId;
+            if (in_array('pelindung', $cols, true)) $parokiData['pelindung'] = 'St. Vinsensius a Paulo';
+
+            $filtered = array_intersect_key($parokiData, array_flip($cols));
+            if (DB::table('profil_paroki')->count() > 0) {
+                DB::table('profil_paroki')->update($filtered);
+            } else {
+                $filtered['created_at'] = now();
                 DB::table('profil_paroki')->insert($filtered);
+            }
+        }
+
+        if (Schema::hasTable('pengaturan_aplikasi')) {
+            $appCols = Schema::getColumnListing('pengaturan_aplikasi');
+            $appData = [
+                'nama_aplikasi' => 'SIPAROKI',
+                'nama_paroki' => $namaParoki,
+                'nama_keuskupan' => 'Keuskupan Agung Kupang',
+                'pelindung_paroki' => 'St. Vinsensius a Paulo',
+                'alamat' => $alamatParoki,
+                'updated_at' => now(),
+            ];
+            if (in_array('paroki_id', $appCols, true)) $appData['paroki_id'] = $parokiId;
+            if (in_array('keuskupan_id', $appCols, true)) $appData['keuskupan_id'] = $keuskupanId;
+            if (in_array('dekenat_id', $appCols, true)) $appData['dekenat_id'] = $dekenatId;
+            if (in_array('is_setup_completed', $appCols, true)) $appData['is_setup_completed'] = 1;
+
+            $filteredApp = array_intersect_key($appData, array_flip($appCols));
+            if (DB::table('pengaturan_aplikasi')->count() > 0) {
+                DB::table('pengaturan_aplikasi')->update($filteredApp);
+            } else {
+                $filteredApp['created_at'] = now();
+                DB::table('pengaturan_aplikasi')->insert($filteredApp);
+            }
+        }
+
+        if (Schema::hasTable('pengaturan')) {
+            DB::table('pengaturan')->updateOrInsert(['kunci' => 'nama_paroki'], ['nilai' => $namaParoki, 'updated_at' => now()]);
+            DB::table('pengaturan')->updateOrInsert(['kunci' => 'keuskupan'], ['nilai' => 'Keuskupan Agung Kupang', 'updated_at' => now()]);
+        }
+
+        if (Schema::hasTable('identitas_paroki')) {
+            $idCols = Schema::getColumnListing('identitas_paroki');
+            $idData = [];
+            if (in_array('nama_paroki', $idCols, true)) $idData['nama_paroki'] = $namaParoki;
+            if (in_array('paroki_id', $idCols, true)) $idData['paroki_id'] = $parokiId;
+            if (in_array('id_paroki', $idCols, true)) $idData['id_paroki'] = $parokiId;
+            if (in_array('nama_keuskupan', $idCols, true)) $idData['nama_keuskupan'] = 'Keuskupan Agung Kupang';
+            if (in_array('keuskupan', $idCols, true)) $idData['keuskupan'] = 'Keuskupan Agung Kupang';
+            if (in_array('keuskupan_id', $idCols, true)) $idData['keuskupan_id'] = $keuskupanId;
+            if (in_array('dekenat_id', $idCols, true)) $idData['dekenat_id'] = $dekenatId;
+            if (in_array('nama_dekenat', $idCols, true)) $idData['nama_dekenat'] = 'Kevikepan/Dekenat TTS';
+            if (in_array('pelindung', $idCols, true)) $idData['pelindung'] = 'St. Vinsensius a Paulo';
+            if (in_array('pelindung_paroki', $idCols, true)) $idData['pelindung_paroki'] = 'St. Vinsensius a Paulo';
+            if (in_array('pastor_paroki', $idCols, true)) $idData['pastor_paroki'] = $pastorParoki;
+            if (in_array('nama_pastor_paroki_aktif', $idCols, true)) $idData['nama_pastor_paroki_aktif'] = $pastorParoki;
+            if (in_array('alamat', $idCols, true)) $idData['alamat'] = $alamatParoki;
+
+            if (!empty($idData)) {
+                if (DB::table('identitas_paroki')->count() > 0) {
+                    DB::table('identitas_paroki')->update($idData);
+                } else {
+                    DB::table('identitas_paroki')->insert($idData);
+                }
             }
         }
 

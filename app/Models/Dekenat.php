@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Dekenat extends Model
 {
-    protected $table = 'kevikepan';
+    protected $table = 'dekenat';
+    protected $primaryKey = 'id_dekenat';
     protected $guarded = [];
 
     public function keuskupan()

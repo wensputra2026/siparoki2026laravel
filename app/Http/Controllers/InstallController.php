@@ -331,12 +331,46 @@ class InstallController extends Controller
                 }
             }
 
-            // Seed Kevikepan/Dekenat table if empty
+            // Seed Dekenat & Kevikepan tables if empty
+            if (Schema::hasTable('dekenat')) {
+                if (DB::table('dekenat')->count() === 0 && !empty($masterData['dekenat'])) {
+                    foreach ($masterData['dekenat'] as $d) {
+                        DB::table('dekenat')->insertOrIgnore([
+                            'id_dekenat' => $d['id_dekenat'] ?? $d['id'] ?? null,
+                            'keuskupan_id' => $d['keuskupan_id'] ?? $keuskupanId,
+                            'nama_dekenat' => $d['nama_dekenat'] ?? $d['nama_kevikepan'] ?? 'Dekenat',
+                            'status' => 'Aktif',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+
+                if (!empty($namaDekenat)) {
+                    $activeDekenat = DB::table('dekenat')
+                        ->where('nama_dekenat', $namaDekenat)
+                        ->orWhere('id_dekenat', $dekenatId)
+                        ->first();
+
+                    if (!$activeDekenat) {
+                        $dekenatId = DB::table('dekenat')->insertGetId([
+                            'keuskupan_id' => $keuskupanId,
+                            'nama_dekenat' => $namaDekenat,
+                            'status' => 'Aktif',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    } else {
+                        $dekenatId = $activeDekenat->id_dekenat;
+                    }
+                }
+            }
+
             if (Schema::hasTable('kevikepan')) {
                 if (DB::table('kevikepan')->count() === 0 && !empty($masterData['dekenat'])) {
                     foreach ($masterData['dekenat'] as $d) {
                         DB::table('kevikepan')->insertOrIgnore([
-                            'id' => $d['id'],
+                            'id' => $d['id'] ?? $d['id_dekenat'] ?? null,
                             'keuskupan_id' => $d['keuskupan_id'] ?? $keuskupanId,
                             'nama_kevikepan' => $d['nama_dekenat'] ?? $d['nama_kevikepan'] ?? 'Dekenat',
                             'status' => 'Aktif',
@@ -347,12 +381,12 @@ class InstallController extends Controller
                 }
 
                 if (!empty($namaDekenat)) {
-                    $activeDekenat = DB::table('kevikepan')
+                    $activeKevikepan = DB::table('kevikepan')
                         ->where('nama_kevikepan', $namaDekenat)
                         ->orWhere('id', $dekenatId)
                         ->first();
 
-                    if (!$activeDekenat) {
+                    if (!$activeKevikepan) {
                         $dekenatId = DB::table('kevikepan')->insertGetId([
                             'keuskupan_id' => $keuskupanId,
                             'nama_kevikepan' => $namaDekenat,
@@ -361,7 +395,7 @@ class InstallController extends Controller
                             'updated_at' => now(),
                         ]);
                     } else {
-                        $dekenatId = $activeDekenat->id;
+                        $dekenatId = $activeKevikepan->id;
                     }
                 }
             }
@@ -390,16 +424,77 @@ class InstallController extends Controller
             }
 
             if (Schema::hasTable('profil_paroki')) {
-                DB::table('profil_paroki')->truncate();
-                DB::table('profil_paroki')->insert([
-                    'paroki_id' => $parokiId,
+                $profilCols = Schema::getColumnListing('profil_paroki');
+                $profilData = [
                     'nama_paroki' => $namaParoki,
                     'keuskupan' => $namaKeuskupan,
                     'pastor_paroki' => $pastorParoki,
                     'alamat' => $alamatParoki,
-                    'created_at' => now(),
                     'updated_at' => now(),
-                ]);
+                ];
+                if (in_array('paroki_id', $profilCols, true)) $profilData['paroki_id'] = $parokiId;
+                if (in_array('keuskupan_id', $profilCols, true)) $profilData['keuskupan_id'] = $keuskupanId;
+                if (in_array('dekenat_id', $profilCols, true)) $profilData['dekenat_id'] = $dekenatId;
+
+                $filteredProfil = array_intersect_key($profilData, array_flip($profilCols));
+                if (DB::table('profil_paroki')->count() > 0) {
+                    DB::table('profil_paroki')->update($filteredProfil);
+                } else {
+                    $filteredProfil['created_at'] = now();
+                    DB::table('profil_paroki')->insert($filteredProfil);
+                }
+            }
+
+            if (Schema::hasTable('pengaturan_aplikasi')) {
+                $appCols = Schema::getColumnListing('pengaturan_aplikasi');
+                $appData = [
+                    'nama_aplikasi' => 'SIPAROKI',
+                    'nama_paroki' => $namaParoki,
+                    'nama_keuskupan' => $namaKeuskupan,
+                    'alamat' => $alamatParoki,
+                    'updated_at' => now(),
+                ];
+                if (in_array('paroki_id', $appCols, true)) $appData['paroki_id'] = $parokiId;
+                if (in_array('keuskupan_id', $appCols, true)) $appData['keuskupan_id'] = $keuskupanId;
+                if (in_array('dekenat_id', $appCols, true)) $appData['dekenat_id'] = $dekenatId;
+                if (in_array('is_setup_completed', $appCols, true)) $appData['is_setup_completed'] = 1;
+
+                $filteredApp = array_intersect_key($appData, array_flip($appCols));
+                if (DB::table('pengaturan_aplikasi')->count() > 0) {
+                    DB::table('pengaturan_aplikasi')->update($filteredApp);
+                } else {
+                    $filteredApp['created_at'] = now();
+                    DB::table('pengaturan_aplikasi')->insert($filteredApp);
+                }
+            }
+
+            if (Schema::hasTable('pengaturan')) {
+                DB::table('pengaturan')->updateOrInsert(['kunci' => 'nama_paroki'], ['nilai' => $namaParoki, 'updated_at' => now()]);
+                DB::table('pengaturan')->updateOrInsert(['kunci' => 'keuskupan'], ['nilai' => $namaKeuskupan, 'updated_at' => now()]);
+            }
+
+            if (Schema::hasTable('identitas_paroki')) {
+                $idCols = Schema::getColumnListing('identitas_paroki');
+                $idData = [];
+                if (in_array('nama_paroki', $idCols, true)) $idData['nama_paroki'] = $namaParoki;
+                if (in_array('paroki_id', $idCols, true)) $idData['paroki_id'] = $parokiId;
+                if (in_array('id_paroki', $idCols, true)) $idData['id_paroki'] = $parokiId;
+                if (in_array('nama_keuskupan', $idCols, true)) $idData['nama_keuskupan'] = $namaKeuskupan;
+                if (in_array('keuskupan', $idCols, true)) $idData['keuskupan'] = $namaKeuskupan;
+                if (in_array('keuskupan_id', $idCols, true)) $idData['keuskupan_id'] = $keuskupanId;
+                if (in_array('dekenat_id', $idCols, true)) $idData['dekenat_id'] = $dekenatId;
+                if (in_array('nama_dekenat', $idCols, true)) $idData['nama_dekenat'] = $namaDekenat;
+                if (in_array('pastor_paroki', $idCols, true)) $idData['pastor_paroki'] = $pastorParoki;
+                if (in_array('nama_pastor_paroki_aktif', $idCols, true)) $idData['nama_pastor_paroki_aktif'] = $pastorParoki;
+                if (in_array('alamat', $idCols, true)) $idData['alamat'] = $alamatParoki;
+
+                if (!empty($idData)) {
+                    if (DB::table('identitas_paroki')->count() > 0) {
+                        DB::table('identitas_paroki')->update($idData);
+                    } else {
+                        DB::table('identitas_paroki')->insert($idData);
+                    }
+                }
             }
 
             // Setup Master Pastor default
