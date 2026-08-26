@@ -181,7 +181,447 @@
             "nama_keuskupan": "Ordinariat Militer Indonesia"
         }
     ],
+    "dekenat": [
+        {
+            "id": 501,
+            "keuskupan_id": 5,
+            "nama_dekenat": "Dekenat Timor Tengah Selatan (TTS)"
+        },
+        {
+            "id": 502,
+            "keuskupan_id": 5,
+            "nama_dekenat": "Dekenat Kota Kupang"
+        },
+        {
+            "id": 503,
+            "keuskupan_id": 5,
+            "nama_dekenat": "Dekenat Kupang Barat"
+        },
+        {
+            "id": 504,
+            "keuskupan_id": 5,
+            "nama_dekenat": "Dekenat Kupang Timur"
+        },
+        {
+            "id": 505,
+            "keuskupan_id": 5,
+            "nama_dekenat": "Dekenat Rote Ndao"
+        },
+        {
+            "id": 506,
+            "keuskupan_id": 5,
+            "nama_dekenat": "Dekenat Sabu Raijua"
+        },
+        {
+            "id": 401,
+            "keuskupan_id": 4,
+            "nama_dekenat": "Dekenat Jakarta Pusat"
+        },
+        {
+            "id": 402,
+            "keuskupan_id": 4,
+            "nama_dekenat": "Dekenat Jakarta Barat I"
+        },
+        {
+            "id": 403,
+            "keuskupan_id": 4,
+            "nama_dekenat": "Dekenat Jakarta Barat II"
+        },
+        {
+            "id": 404,
+            "keuskupan_id": 4,
+            "nama_dekenat": "Dekenat Jakarta Selatan"
+        },
+        {
+            "id": 405,
+            "keuskupan_id": 4,
+            "nama_dekenat": "Dekenat Jakarta Timur"
+        },
+        {
+            "id": 406,
+            "keuskupan_id": 4,
+            "nama_dekenat": "Dekenat Jakarta Utara"
+        },
+        {
+            "id": 407,
+            "keuskupan_id": 4,
+            "nama_dekenat": "Dekenat Tangerang"
+        },
+        {
+            "id": 408,
+            "keuskupan_id": 4,
+            "nama_dekenat": "Dekenat Bekasi"
+        },
+        {
+            "id": 301,
+            "keuskupan_id": 3,
+            "nama_dekenat": "Dekenat Ende"
+        },
+        {
+            "id": 302,
+            "keuskupan_id": 3,
+            "nama_dekenat": "Dekenat Bajawa"
+        },
+        {
+            "id": 303,
+            "keuskupan_id": 3,
+            "nama_dekenat": "Dekenat Nagekeo"
+        },
+        {
+            "id": 1401,
+            "keuskupan_id": 14,
+            "nama_dekenat": "Dekenat Belu Utara"
+        },
+        {
+            "id": 1402,
+            "keuskupan_id": 14,
+            "nama_dekenat": "Dekenat Belu Selatan"
+        },
+        {
+            "id": 1403,
+            "keuskupan_id": 14,
+            "nama_dekenat": "Dekenat TTU (Timor Tengah Utara)"
+        },
+        {
+            "id": 1404,
+            "keuskupan_id": 14,
+            "nama_dekenat": "Dekenat Mena"
+        },
+        {
+            "id": 3301,
+            "keuskupan_id": 33,
+            "nama_dekenat": "Kevikepan Ruteng"
+        },
+        {
+            "id": 3302,
+            "keuskupan_id": 33,
+            "nama_dekenat": "Kevikepan Borong"
+        },
+        {
+            "id": 3303,
+            "keuskupan_id": 33,
+            "nama_dekenat": "Kevikepan Reo"
+        },
+        {
+            "id": 3304,
+            "keuskupan_id": 33,
+            "nama_dekenat": "Kevikepan Labuan Bajo"
+        },
+        {
+            "id": 2301,
+            "keuskupan_id": 23,
+            "nama_dekenat": "Dekenat Larantuka"
+        },
+        {
+            "id": 2302,
+            "keuskupan_id": 23,
+            "nama_dekenat": "Dekenat Adonara"
+        },
+        {
+            "id": 2303,
+            "keuskupan_id": 23,
+            "nama_dekenat": "Dekenat Solor"
+        },
+        {
+            "id": 2304,
+            "keuskupan_id": 23,
+            "nama_dekenat": "Dekenat Lembata"
+        },
+        {
+            "id": 2801,
+            "keuskupan_id": 28,
+            "nama_dekenat": "Kevikepan Maumere"
+        },
+        {
+            "id": 4101,
+            "keuskupan_id": 41,
+            "nama_dekenat": "Dekenat Sumba Barat"
+        },
+        {
+            "id": 4102,
+            "keuskupan_id": 41,
+            "nama_dekenat": "Dekenat Sumba Timur"
+        },
+        {
+            "id": 1201,
+            "keuskupan_id": 12,
+            "nama_dekenat": "Kevikepan Semarang"
+        },
+        {
+            "id": 1202,
+            "keuskupan_id": 12,
+            "nama_dekenat": "Kevikepan Surakarta"
+        },
+        {
+            "id": 1203,
+            "keuskupan_id": 12,
+            "nama_dekenat": "Kevikepan Yogyakarta Barat"
+        },
+        {
+            "id": 1204,
+            "keuskupan_id": 12,
+            "nama_dekenat": "Kevikepan Yogyakarta Timur"
+        },
+        {
+            "id": 1205,
+            "keuskupan_id": 12,
+            "nama_dekenat": "Kevikepan Kedu"
+        },
+        {
+            "id": 3701,
+            "keuskupan_id": 37,
+            "nama_dekenat": "Kevikepan Surabaya Utara"
+        },
+        {
+            "id": 3702,
+            "keuskupan_id": 37,
+            "nama_dekenat": "Kevikepan Surabaya Selatan"
+        },
+        {
+            "id": 3703,
+            "keuskupan_id": 37,
+            "nama_dekenat": "Kevikepan Surabaya Barat"
+        },
+        {
+            "id": 3704,
+            "keuskupan_id": 37,
+            "nama_dekenat": "Kevikepan Madiun"
+        },
+        {
+            "id": 3705,
+            "keuskupan_id": 37,
+            "nama_dekenat": "Kevikepan Kediri"
+        },
+        {
+            "id": 3706,
+            "keuskupan_id": 37,
+            "nama_dekenat": "Kevikepan Blitar"
+        },
+        {
+            "id": 1501,
+            "keuskupan_id": 15,
+            "nama_dekenat": "Kevikepan Bandung Barat"
+        },
+        {
+            "id": 1502,
+            "keuskupan_id": 15,
+            "nama_dekenat": "Kevikepan Bandung Timur"
+        },
+        {
+            "id": 1503,
+            "keuskupan_id": 15,
+            "nama_dekenat": "Kevikepan Priangan"
+        },
+        {
+            "id": 1801,
+            "keuskupan_id": 18,
+            "nama_dekenat": "Dekenat Tengah (Bogor)"
+        },
+        {
+            "id": 1802,
+            "keuskupan_id": 18,
+            "nama_dekenat": "Dekenat Timur"
+        },
+        {
+            "id": 1803,
+            "keuskupan_id": 18,
+            "nama_dekenat": "Dekenat Selatan (Sukabumi)"
+        },
+        {
+            "id": 1804,
+            "keuskupan_id": 18,
+            "nama_dekenat": "Dekenat Utara (Depok)"
+        },
+        {
+            "id": 1805,
+            "keuskupan_id": 18,
+            "nama_dekenat": "Dekenat Barat (Banten)"
+        },
+        {
+            "id": 1901,
+            "keuskupan_id": 19,
+            "nama_dekenat": "Dekenat Bali Timur"
+        },
+        {
+            "id": 1902,
+            "keuskupan_id": 19,
+            "nama_dekenat": "Dekenat Bali Barat"
+        },
+        {
+            "id": 1903,
+            "keuskupan_id": 19,
+            "nama_dekenat": "Dekenat NTB"
+        }
+    ],
     "paroki": [
+        {
+            "id_paroki": 5001,
+            "keuskupan_id": 5,
+            "dekenat_id": 501,
+            "nama_paroki": "Paroki St. Vinsensius a Paulo Benlutu",
+            "alamat": "Benlutu, Kec. Batu Putih, Kab. Timor Tengah Selatan, NTT"
+        },
+        {
+            "id_paroki": 5002,
+            "keuskupan_id": 5,
+            "dekenat_id": 502,
+            "nama_paroki": "Paroki Katedral Kristus Raja Kupang",
+            "alamat": "Jl. Ir. Soekarno No. 1, Oeba, Kota Kupang, NTT"
+        },
+        {
+            "id_paroki": 5003,
+            "keuskupan_id": 5,
+            "dekenat_id": 502,
+            "nama_paroki": "Paroki St. Yosef Naikoten",
+            "alamat": "Jl. Herewila No. 31, Naikoten II, Kota Kupang, NTT"
+        },
+        {
+            "id_paroki": 5004,
+            "keuskupan_id": 5,
+            "dekenat_id": 502,
+            "nama_paroki": "Paroki St. Maria Assumpta Kota Baru Kupang",
+            "alamat": "Jl. Perintis Kemerdekaan, Kota Baru, Kota Kupang, NTT"
+        },
+        {
+            "id_paroki": 5005,
+            "keuskupan_id": 5,
+            "dekenat_id": 502,
+            "nama_paroki": "Paroki St. Matias Rasul Tofa",
+            "alamat": "Tofa, Maulafa, Kota Kupang, NTT"
+        },
+        {
+            "id_paroki": 5006,
+            "keuskupan_id": 5,
+            "dekenat_id": 502,
+            "nama_paroki": "Paroki St. Fransiskus Asisi BTN Kolhua",
+            "alamat": "BTN Kolhua, Maulafa, Kota Kupang, NTT"
+        },
+        {
+            "id_paroki": 5007,
+            "keuskupan_id": 5,
+            "dekenat_id": 504,
+            "nama_paroki": "Paroki St. Simon Petrus Tarus",
+            "alamat": "Tarus, Kupang Tengah, Kab. Kupang, NTT"
+        },
+        {
+            "id_paroki": 5008,
+            "keuskupan_id": 5,
+            "dekenat_id": 503,
+            "nama_paroki": "Paroki St. Yohanes Pemandi Buraen",
+            "alamat": "Buraen, Amarasi Selatan, Kab. Kupang, NTT"
+        },
+        {
+            "id_paroki": 5009,
+            "keuskupan_id": 5,
+            "dekenat_id": 504,
+            "nama_paroki": "Paroki St. Helena Camplong",
+            "alamat": "Camplong, Fatuleu, Kab. Kupang, NTT"
+        },
+        {
+            "id_paroki": 5010,
+            "keuskupan_id": 5,
+            "dekenat_id": 504,
+            "nama_paroki": "Paroki St. Arnoldus Janssen Noelmina",
+            "alamat": "Noelmina, Takari, Kab. Kupang, NTT"
+        },
+        {
+            "id_paroki": 5011,
+            "keuskupan_id": 5,
+            "dekenat_id": 502,
+            "nama_paroki": "Paroki Santa Familia Sikumana",
+            "alamat": "Sikumana, Maulafa, Kota Kupang, NTT"
+        },
+        {
+            "id_paroki": 5012,
+            "keuskupan_id": 5,
+            "dekenat_id": 502,
+            "nama_paroki": "Paroki Sta. Maria Mater Dei Bonipoi",
+            "alamat": "Bonipoi, Kota Lama, Kota Kupang, NTT"
+        },
+        {
+            "id_paroki": 5013,
+            "keuskupan_id": 5,
+            "dekenat_id": 502,
+            "nama_paroki": "Paroki St. Yoseph Pekerja Penfui",
+            "alamat": "Penfui, Maulafa, Kota Kupang, NTT"
+        },
+        {
+            "id_paroki": 5014,
+            "keuskupan_id": 5,
+            "dekenat_id": 504,
+            "nama_paroki": "Paroki St. Gregorius Agung Oelamasi",
+            "alamat": "Oelamasi, Kupang Timur, Kab. Kupang, NTT"
+        },
+        {
+            "id_paroki": 5015,
+            "keuskupan_id": 5,
+            "dekenat_id": 505,
+            "nama_paroki": "Paroki Santa Columba Ba'a Rote",
+            "alamat": "Ba'a, Rote Ndao, NTT"
+        },
+        {
+            "id_paroki": 5016,
+            "keuskupan_id": 5,
+            "dekenat_id": 506,
+            "nama_paroki": "Paroki Santo Paulus Seba Sabu",
+            "alamat": "Seba, Sabu Raijua, NTT"
+        },
+        {
+            "id_paroki": 5017,
+            "keuskupan_id": 5,
+            "dekenat_id": 501,
+            "nama_paroki": "Paroki Santa Maria Imakulata Soe",
+            "alamat": "Soe, TTS, NTT"
+        },
+        {
+            "id_paroki": 5018,
+            "keuskupan_id": 5,
+            "dekenat_id": 501,
+            "nama_paroki": "Paroki Santo Vincentius a Paulo Soe",
+            "alamat": "Soe, TTS, NTT"
+        },
+        {
+            "id_paroki": 5019,
+            "keuskupan_id": 5,
+            "dekenat_id": 501,
+            "nama_paroki": "Paroki Santo Petrus Tublopo",
+            "alamat": "Tublopo, TTS, NTT"
+        },
+        {
+            "id_paroki": 5020,
+            "keuskupan_id": 5,
+            "dekenat_id": 501,
+            "nama_paroki": "Paroki Santo Mikael Noetoko",
+            "alamat": "Noetoko, TTS, NTT"
+        },
+        {
+            "id_paroki": 5021,
+            "keuskupan_id": 5,
+            "dekenat_id": 501,
+            "nama_paroki": "Paroki Santo Petrus Oeekam",
+            "alamat": "Oeekam, TTS, NTT"
+        },
+        {
+            "id_paroki": 5022,
+            "keuskupan_id": 5,
+            "dekenat_id": 501,
+            "nama_paroki": "Paroki Santo Bartolomeus Oinlasi",
+            "alamat": "Oinlasi, TTS, NTT"
+        },
+        {
+            "id_paroki": 5023,
+            "keuskupan_id": 5,
+            "dekenat_id": 501,
+            "nama_paroki": "Paroki Santa Maria Imakulata Kapan",
+            "alamat": "Kapan, TTS, NTT"
+        },
+        {
+            "id_paroki": 5024,
+            "keuskupan_id": 5,
+            "dekenat_id": 501,
+            "nama_paroki": "Paroki Santo Yohanes Pemandi Panite",
+            "alamat": "Panite, TTS, NTT"
+        },
         {
             "id_paroki": 499,
             "keuskupan_id": 2,
@@ -192,12 +632,6 @@
             "id_paroki": 483,
             "keuskupan_id": 2,
             "nama_paroki": "Aimutin Gereja Santo Yosef",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 406,
-            "keuskupan_id": 5,
-            "nama_paroki": "Airmadidi",
             "alamat": ""
         },
         {
@@ -459,12 +893,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 391,
-            "keuskupan_id": 5,
-            "nama_paroki": "Hati Tersuci Maria - Oeekam",
-            "alamat": ""
-        },
-        {
             "id_paroki": 206,
             "keuskupan_id": 3,
             "nama_paroki": "Hati Yesus Dan Hati Maria - Boanio",
@@ -639,12 +1067,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 377,
-            "keuskupan_id": 5,
-            "nama_paroki": "Kristus Raja - Katedral \/ Bonipoi",
-            "alamat": ""
-        },
-        {
             "id_paroki": 337,
             "keuskupan_id": 33,
             "nama_paroki": "Kristus Raja - Katedral Jayapura",
@@ -690,12 +1112,6 @@
             "id_paroki": 313,
             "keuskupan_id": 19,
             "nama_paroki": "Kristus Raja (Grj Jl Danau Toba No.58) - Pejompongan",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 383,
-            "keuskupan_id": 5,
-            "nama_paroki": "Kristus Raja Katedral",
             "alamat": ""
         },
         {
@@ -1785,12 +2201,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 387,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Arnoldus-Josef (Aryos) - Niki - Niki",
-            "alamat": ""
-        },
-        {
             "id_paroki": 321,
             "keuskupan_id": 19,
             "nama_paroki": "St. Bartolomeus - Taman Galaksi",
@@ -1833,12 +2243,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 398,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Columba - Putain",
-            "alamat": ""
-        },
-        {
             "id_paroki": 220,
             "keuskupan_id": 3,
             "nama_paroki": "St. Dominikus - Kotabaru",
@@ -1854,18 +2258,6 @@
             "id_paroki": 334,
             "keuskupan_id": 33,
             "nama_paroki": "St. Emanuel - Elagaima",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 400,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Familia - Sikumana",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 389,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Fransiskus - Noetoko \/ TTS",
             "alamat": ""
         },
         {
@@ -1908,12 +2300,6 @@
             "id_paroki": 158,
             "keuskupan_id": 38,
             "nama_paroki": "St. Fransiskus Assisi - Cibadak",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 378,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Fransiskus dari Asisi - BTN Kolhua",
             "alamat": ""
         },
         {
@@ -2001,18 +2387,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 392,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Gregorius Agung - Oeleta",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 381,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Helena - Camplong",
-            "alamat": ""
-        },
-        {
             "id_paroki": 284,
             "keuskupan_id": 19,
             "nama_paroki": "St. Helena - Curug",
@@ -2076,12 +2450,6 @@
             "id_paroki": 287,
             "keuskupan_id": 19,
             "nama_paroki": "St. Kristoforus - Grogol",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 376,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Kristoforus BAA \/ P. Rote",
             "alamat": ""
         },
         {
@@ -2175,12 +2543,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 390,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Maria Bunda Orang Miskin - Noelmina",
-            "alamat": ""
-        },
-        {
             "id_paroki": 274,
             "keuskupan_id": 19,
             "nama_paroki": "St. Maria Bunda Perantara - Cideng",
@@ -2193,12 +2555,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 382,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Maria Dolorosa - Soe",
-            "alamat": ""
-        },
-        {
             "id_paroki": 125,
             "keuskupan_id": 12,
             "nama_paroki": "St. Maria Fatima - Lembang",
@@ -2208,12 +2564,6 @@
             "id_paroki": 174,
             "keuskupan_id": 38,
             "nama_paroki": "St. Maria Fatima - Sentul City",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 405,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Maria Gunung Karmel - Tumu \/ Putain",
             "alamat": ""
         },
         {
@@ -2250,12 +2600,6 @@
             "id_paroki": 203,
             "keuskupan_id": 3,
             "nama_paroki": "St. Maria Mater Boni Consili (Bunda Penasihat Baik) - Bajawa I",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 393,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Maria Mater Dei - Oepoli",
             "alamat": ""
         },
         {
@@ -2352,12 +2696,6 @@
             "id_paroki": 301,
             "keuskupan_id": 19,
             "nama_paroki": "St. Matias Rasul - Kosambi Baru",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 404,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Matias Rasul - Tofa",
             "alamat": ""
         },
         {
@@ -2466,18 +2804,6 @@
             "id_paroki": 132,
             "keuskupan_id": 12,
             "nama_paroki": "St. Paulus - Mohammad Toha",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 394,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Paulus - Oinlasi",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 399,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Paulus - Seba \/ Sabu",
             "alamat": ""
         },
         {
@@ -2595,18 +2921,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 396,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Petrus - Pante Baru \/ Rote",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 401,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Petrus - Sulamu",
-            "alamat": ""
-        },
-        {
             "id_paroki": 476,
             "keuskupan_id": 18,
             "nama_paroki": "St. Petrus - Wabar (Kuasi Paroki)",
@@ -2703,12 +3017,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 403,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Simon Petrus - Tarus",
-            "alamat": ""
-        },
-        {
             "id_paroki": 360,
             "keuskupan_id": 28,
             "nama_paroki": "St. Stefanus - Kendawangan",
@@ -2727,18 +3035,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 386,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Stephanus - Naikliu",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 388,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Stephanus - Noehaen",
-            "alamat": ""
-        },
-        {
             "id_paroki": 152,
             "keuskupan_id": 32,
             "nama_paroki": "St. Theresia - Pelaihari",
@@ -2748,12 +3044,6 @@
             "id_paroki": 199,
             "keuskupan_id": 24,
             "nama_paroki": "St. Theresia - Tangeb \/ Tangeb - Bali",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 395,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Theresia Dari Kanak-kanak Yesus - Panite",
             "alamat": ""
         },
         {
@@ -2787,12 +3077,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 380,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Vinsensius a Paulo - Benlutu",
-            "alamat": "Benlutu"
-        },
-        {
             "id_paroki": 333,
             "keuskupan_id": 33,
             "nama_paroki": "St. Willibrordus - Arso",
@@ -2820,12 +3104,6 @@
             "id_paroki": 170,
             "keuskupan_id": 38,
             "nama_paroki": "St. Yakobus - Mega Mendung",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 379,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Yakobus Rasul - Bukapiting \/ Alor",
             "alamat": ""
         },
         {
@@ -2997,18 +3275,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 385,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Yoseph Naikoten",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 397,
-            "keuskupan_id": 5,
-            "nama_paroki": "St. Yoseph Pekerja - Penfui",
-            "alamat": "Penfui, Kupang, Nusa Tenggara Timur"
-        },
-        {
             "id_paroki": 142,
             "keuskupan_id": 12,
             "nama_paroki": "St. Yusuf - Yos Sudarso",
@@ -3027,12 +3293,6 @@
             "alamat": ""
         },
         {
-            "id_paroki": 407,
-            "keuskupan_id": 5,
-            "nama_paroki": "Sta Maria Reinha Rosari Siolais",
-            "alamat": ""
-        },
-        {
             "id_paroki": 359,
             "keuskupan_id": 28,
             "nama_paroki": "Sta. Maria - Botong (Pra Paroki)",
@@ -3042,18 +3302,6 @@
             "id_paroki": 363,
             "keuskupan_id": 28,
             "nama_paroki": "Sta. Maria - Meraban (Pra Paroki)",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 384,
-            "keuskupan_id": 5,
-            "nama_paroki": "Sta. Maria Assumpta Kota Baru",
-            "alamat": ""
-        },
-        {
-            "id_paroki": 402,
-            "keuskupan_id": 5,
-            "nama_paroki": "Sta. Maria Fatima - Taklale",
             "alamat": ""
         },
         {

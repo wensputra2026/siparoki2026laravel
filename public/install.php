@@ -709,6 +709,9 @@ $all_perms_passed = !in_array(false, $perms, true);
 
         $(document).ready(function() {
             populateKeuskupan();
+            if ($('#sel_keuskupan').val()) {
+                onKeuskupanChange();
+            }
         });
 
         function goToStep(num) {
@@ -723,7 +726,8 @@ $all_perms_passed = !in_array(false, $perms, true);
             let html = '<option value="">-- Pilih Keuskupan --</option>';
             if (masterData.keuskupan && masterData.keuskupan.length > 0) {
                 masterData.keuskupan.forEach(function(k) {
-                    html += `<option value="${k.id_keuskupan}">${k.nama_keuskupan}</option>`;
+                    let isSelected = (parseInt(k.id_keuskupan) === 5 || k.nama_keuskupan === 'Keuskupan Agung Kupang') ? ' selected' : '';
+                    html += `<option value="${k.id_keuskupan}"${isSelected}>${k.nama_keuskupan}</option>`;
                 });
             } else {
                 html += '<option value="5" selected>Keuskupan Agung Kupang</option>';
