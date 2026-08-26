@@ -164,6 +164,37 @@ trait UmatModuleTrait
             ['label' => 'Janda / Duda', 'count' => $jandaDuda, 'percent' => round(($jandaDuda / max(1, $totalUmat)) * 100), 'color' => 'bg-slate-500'],
         ];
 
+        // 6 Umat Terakhir Terdaftar
+        $latestUmat = (clone $umatQuery)->latest('id')
+            ->take(6)
+            ->get(['id', 'nama_lengkap', 'jenis_kelamin', 'status_umat', 'created_at']);
+
+        // Data Sakramen
+        $baptisTable = Schema::hasTable('sakramen') ? Sakramen::where('tipe_sakramen', 'like', '%Baptis%')->count() : 0;
+        $baptisUmat = (clone $umatQuery)->where(function($q) {
+            $q->whereNotNull('tgl_baptis')->orWhere('status_baptis', 'Sudah');
+        })->count();
+
+        $komuniTable = Schema::hasTable('sakramen') ? Sakramen::where('tipe_sakramen', 'like', '%Komuni%')->count() : 0;
+        $komuniUmat = (clone $umatQuery)->whereNotNull('tgl_komuni_1')->count();
+
+        $krismaTable = Schema::hasTable('sakramen') ? Sakramen::where('tipe_sakramen', 'like', '%Krisma%')->count() : 0;
+        $krismaUmat = (clone $umatQuery)->whereNotNull('tgl_krisma')->count();
+
+        $nikahTable = Schema::hasTable('sakramen') ? Sakramen::where(function($q) {
+            $q->where('tipe_sakramen', 'like', '%Nikah%')
+              ->orWhere('tipe_sakramen', 'like', '%Kawin%')
+              ->orWhere('tipe_sakramen', 'like', '%Perkawinan%');
+        })->count() : 0;
+        $nikahUmat = (clone $umatQuery)->whereNotNull('tgl_perkawinan')->count();
+
+        $sakramenCount = [
+            'baptis' => max($baptisTable, $baptisUmat),
+            'komuni' => max($komuniTable, $komuniUmat),
+            'krisma' => max($krismaTable, $krismaUmat),
+            'perkawinan' => max($nikahTable, $nikahUmat),
+        ];
+
         return Inertia::render('Inertia/Dashboard', [
             'stats' => $stats,
             'latestUmat' => $latestUmat,
