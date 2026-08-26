@@ -18,7 +18,7 @@ const reloadDashboard = () => {
     });
 };
 
-defineProps({
+const props = defineProps({
     stats: {
         type: Array,
         default: () => [],
@@ -51,7 +51,7 @@ const activeParokiName = computed(() => {
 });
 
 const activeRoleName = computed(() => {
-    return page.props.role || 'Super Admin';
+    return props.role || page.props.role || 'Super Admin';
 });
 
 const basePrefix = computed(() => {
