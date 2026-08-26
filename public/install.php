@@ -748,11 +748,18 @@ $all_perms_passed = !in_array(false, $perms, true);
                             <p class="text-slate-400">Email: <span id="res_email" class="text-slate-200"></span></p>
                             <p class="text-slate-400">Password: <span id="res_pass" class="text-slate-200"></span></p>
                         </div>
-                        <div class="pt-2">
-                            <a id="btn_go_login" href="/login" class="inline-flex items-center gap-2 px-8 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-xl shadow-amber-500/20 transition">
-                                <span>Masuk ke Dashboard SIPAROKI</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </a>
+                        <div class="space-y-2 pt-2">
+                            <p id="countdown-text-standalone" class="text-xs text-amber-400 font-bold"><i class="fa-solid fa-clock"></i> Mengarahkan ke halaman login dalam <span id="countdown-sec-standalone">6</span> detik...</p>
+                            <div class="flex items-center justify-center gap-3">
+                                <a id="btn_go_login" href="<?= htmlspecialchars($root_app_url) ?>/login" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-xl shadow-amber-500/20 transition">
+                                    <span>Masuk ke Dashboard</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                                <a id="btn_go_home" href="<?= htmlspecialchars($root_app_url) ?>/" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition">
+                                    <i class="fa-solid fa-globe"></i>
+                                    <span>Website Publik</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -947,10 +954,19 @@ $all_perms_passed = !in_array(false, $perms, true);
                         $('#res_paroki').text(res.paroki || postData.paroki_name);
                         $('#res_email').text(postData.admin_email);
                         $('#res_pass').text(postData.admin_pass);
-                        if (res.redirect) {
-                            $('#btn_go_login').attr('href', res.redirect);
-                        }
+                        const redirectUrl = res.redirect || '<?= htmlspecialchars($root_app_url) ?>/login';
+                        $('#btn_go_login').attr('href', redirectUrl);
                         $('#install_success').removeClass('hidden');
+
+                        let sec = 6;
+                        const timer = setInterval(() => {
+                            sec--;
+                            $('#countdown-sec-standalone').text(sec);
+                            if (sec <= 0) {
+                                clearInterval(timer);
+                                window.location.href = redirectUrl;
+                            }
+                        }, 1000);
                     } else {
                         $('#err_msg').text(res.message);
                         $('#install_error').removeClass('hidden');

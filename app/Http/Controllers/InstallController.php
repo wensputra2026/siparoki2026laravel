@@ -253,12 +253,14 @@ class InstallController extends Controller
             ]);
             $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
 
+            $appUrl = rtrim($request->root(), '/');
+
             // 2. Update .env File
             $this->updateEnvFile([
                 'APP_NAME' => '"SIPAROKI 2026"',
                 'APP_ENV' => 'production',
                 'APP_DEBUG' => 'false',
-                'APP_URL' => url('/'),
+                'APP_URL' => $appUrl,
                 'DB_CONNECTION' => 'mysql',
                 'DB_HOST' => $dbHost,
                 'DB_PORT' => $dbPort,
@@ -488,10 +490,16 @@ class InstallController extends Controller
                 Artisan::call('optimize:clear');
             } catch (\Throwable $e) {}
 
+            $loginUrl = $appUrl . '/login';
+            $homeUrl = $appUrl . '/';
+
             return response()->json([
                 'success' => true,
                 'message' => 'Instalasi SIPAROKI berhasil selesai!',
-                'redirect' => '/login',
+                'redirect' => $loginUrl,
+                'login_url' => $loginUrl,
+                'home_url' => $homeUrl,
+                'admin_email' => $adminEmail,
             ]);
         } catch (\Throwable $e) {
             return response()->json([

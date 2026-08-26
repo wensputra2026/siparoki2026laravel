@@ -793,23 +793,32 @@
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <h2 style="font-size: 22px; font-weight: 800; color: var(--slate-900); margin-bottom: 8px;">Selamat, SIPAROKI 2026 Berhasil Terpasang!</h2>
-                <p style="font-size: 13.5px; color: var(--slate-600); max-width: 540px; margin: 0 auto 24px;">
-                    Aplikasi paroki telah siap digunakan. Master data referensi telah tersinkronisasi dan akun Super Administrator Anda telah aktif.
+                <p style="font-size: 13.5px; color: var(--slate-600); max-width: 540px; margin: 0 auto 20px;">
+                    Aplikasi paroki telah siap digunakan. Seluruh konfigurasi, master data referensi, dan akun Super Administrator Anda telah aktif.
                 </p>
+
+                <div class="alert-box alert-success" style="text-align: left; max-width: 520px; margin: 0 auto 16px;">
+                    <i class="fa-solid fa-circle-check text-lg"></i>
+                    <div>
+                        <strong>Akun Super Admin Aktif:</strong>
+                        <p class="text-xs mt-1">Email: <strong id="succ-admin-email" class="font-mono"></strong> &bull; Password: <span class="text-slate-500">(Sesuai yang Anda tentukan)</span></p>
+                    </div>
+                </div>
 
                 <div class="alert-box alert-warning" style="text-align: left; max-width: 520px; margin: 0 auto 24px;">
                     <i class="fa-solid fa-shield-halved text-lg"></i>
                     <div>
                         <strong>Keamanan Installer:</strong>
                         <p class="text-xs mt-1">File installer telah dikunci otomatis (<code style="background: rgba(0,0,0,0.06); padding: 1px 4px; border-radius: 4px;">storage/installed</code>) demi melindungi sistem Anda.</p>
+                        <p id="countdown-text" class="text-xs text-amber-800 font-bold mt-2"><i class="fa-solid fa-clock"></i> Mengarahkan ke halaman login dalam <span id="countdown-sec">6</span> detik...</p>
                     </div>
                 </div>
 
                 <div style="display: flex; justify-content: center; gap: 12px;">
-                    <a href="/login" class="btn btn-primary" style="padding: 12px 30px; font-size: 14px;">
+                    <a id="btn-login-success" href="{{ url('/login') }}" class="btn btn-primary" style="padding: 12px 30px; font-size: 14px;">
                         <i class="fa-solid fa-right-to-bracket"></i> Masuk ke Panel SIPAROKI
                     </a>
-                    <a href="/" class="btn btn-secondary" style="padding: 12px 24px; font-size: 14px;">
+                    <a id="btn-home-success" href="{{ url('/') }}" class="btn btn-secondary" style="padding: 12px 24px; font-size: 14px;">
                         <i class="fa-solid fa-globe"></i> Lihat Website Publik
                     </a>
                 </div>
@@ -916,7 +925,7 @@
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Menguji koneksi...';
 
         try {
-            const response = await fetch('/installer/test-db', {
+            const response = await fetch('{{ route('installer.test-db') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1121,7 +1130,7 @@
         }, 1200);
 
         try {
-            const response = await fetch('/installer/process', {
+            const response = await fetch('{{ route('installer.process') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1138,6 +1147,24 @@
                 setTimeout(() => {
                     document.getElementById('install-processing').style.display = 'none';
                     document.getElementById('install-success').style.display = 'block';
+
+                    const loginUrl = data.login_url || data.redirect || '{{ url("/login") }}';
+                    const homeUrl = data.home_url || '{{ url("/") }}';
+                    
+                    document.getElementById('btn-login-success').href = loginUrl;
+                    document.getElementById('btn-home-success').href = homeUrl;
+                    document.getElementById('succ-admin-email').textContent = data.admin_email || payload.admin_email;
+
+                    let sec = 6;
+                    const timer = setInterval(() => {
+                        sec--;
+                        const el = document.getElementById('countdown-sec');
+                        if (el) el.textContent = sec;
+                        if (sec <= 0) {
+                            clearInterval(timer);
+                            window.location.href = loginUrl;
+                        }
+                    }, 1000);
                 }, 800);
             } else {
                 throw new Error(data.message || 'Gagal memproses instalasi.');
