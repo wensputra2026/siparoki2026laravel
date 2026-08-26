@@ -7010,8 +7010,11 @@ const statusLabel = (item) => {
 
                     <!-- 19. GENERIC FORM FOR OTHER MODULES -->
                     <template v-else>
-                        <div v-for="col in columns" :key="col.key">
-                            <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto'" class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
+                        <template v-for="col in columns" :key="col.key">
+                            <div v-if="col.isRelationLink || col.key === 'desas' || col.key === 'kecamatans' || col.key === 'kabupatens' || col.key === 'dekenats' || col.key === 'parokis' || col.key === 'kubs' || col.key === 'wilayahs'" class="hidden">
+                                <!-- Hide relation link columns from form inputs -->
+                            </div>
+                            <div v-else-if="col.isImage || col.key === 'logo' || col.key === 'foto'" class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
                                 <label class="block text-xs font-bold text-slate-700">{{ col.label }}</label>
                                 <div class="flex items-center gap-4">
                                     <div class="w-18 h-18 rounded-2xl bg-white border border-slate-200 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
@@ -7060,15 +7063,70 @@ const statusLabel = (item) => {
                                     iconColor="text-amber-600"
                                 />
                                 <SearchableSelect
-                                    v-else-if="moduleKey === 'desa-kelurahan' && col.relation === 'kecamatan'"
+                                    v-else-if="col.relation === 'provinsi' || col.key === 'provinsi_id' || col.key === 'provinsi_nama'"
+                                    v-model="formData.provinsi_id"
+                                    :options="provinsiList"
+                                    value-key="id_provinsi"
+                                    label-key="nama_provinsi"
+                                    placeholder="-- Pilih Provinsi --"
+                                    search-placeholder="Ketik cari provinsi..."
+                                    icon="fa-map"
+                                    icon-color="text-blue-600"
+                                />
+                                <SearchableSelect
+                                    v-else-if="col.relation === 'kabupaten' || col.key === 'kabupaten_id' || col.key === 'kabupaten_nama'"
+                                    v-model="formData.kabupaten_id"
+                                    :options="availableKabupatens"
+                                    value-key="id_kabupaten"
+                                    label-key="nama_kabupaten"
+                                    placeholder="-- Pilih Kabupaten / Kota --"
+                                    search-placeholder="Ketik cari kabupaten..."
+                                    icon="fa-city"
+                                    icon-color="text-emerald-600"
+                                />
+                                <SearchableSelect
+                                    v-else-if="col.relation === 'kecamatan' || col.key === 'kecamatan_id' || col.key === 'kecamatan_nama'"
                                     v-model="formData.kecamatan_id"
-                                    :options="filteredKecamatansForFilter"
+                                    :options="availableKecamatans"
                                     value-key="id_kecamatan"
                                     label-key="nama_kecamatan"
-                                    placeholder="-- Pilih Kecamatan dari database --"
+                                    placeholder="-- Pilih Kecamatan --"
                                     search-placeholder="Ketik cari kecamatan..."
                                     icon="fa-building-columns"
                                     icon-color="text-teal-600"
+                                />
+                                <SearchableSelect
+                                    v-else-if="col.relation === 'desa' || col.key === 'desa_id' || col.key === 'desa_nama'"
+                                    v-model="formData.desa_id"
+                                    :options="availableDesas"
+                                    value-key="id_desa"
+                                    label-key="nama_desa"
+                                    placeholder="-- Pilih Desa / Kelurahan --"
+                                    search-placeholder="Ketik cari desa..."
+                                    icon="fa-tree-city"
+                                    icon-color="text-purple-600"
+                                />
+                                <SearchableSelect
+                                    v-else-if="col.relation === 'dekenat' || col.relation === 'kevikepan' || col.key === 'dekenat_id' || col.key === 'dekenat_nama'"
+                                    v-model="formData.dekenat_id"
+                                    :options="availableDekenats"
+                                    value-key="id_dekenat"
+                                    label-key="nama_dekenat"
+                                    placeholder="-- Pilih Kevikepan / Dekenat --"
+                                    search-placeholder="Ketik cari dekenat..."
+                                    icon="fa-layer-group"
+                                    icon-color="text-indigo-600"
+                                />
+                                <SearchableSelect
+                                    v-else-if="col.relation === 'keuskupan' || col.key === 'keuskupan_id' || col.key === 'keuskupan_nama'"
+                                    v-model="formData.keuskupan_id"
+                                    :options="keuskupanList"
+                                    value-key="id_keuskupan"
+                                    label-key="nama_keuskupan"
+                                    placeholder="-- Pilih Keuskupan --"
+                                    search-placeholder="Ketik cari keuskupan..."
+                                    icon="fa-church"
+                                    icon-color="text-amber-600"
                                 />
                                 <!-- Stasi / Kapela Dropdown from database -->
                                 <SearchableSelect
@@ -7167,7 +7225,7 @@ const statusLabel = (item) => {
                                     class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                                 />
                             </div>
-                        </div>
+                        </template>
                     </template>
 
                     <!-- Form Buttons -->
