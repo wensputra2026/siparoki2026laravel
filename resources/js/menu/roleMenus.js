@@ -180,7 +180,6 @@ export const roleMenus = {
                 { name: 'Backup & Restore', href: '/superadmin/backup-database', icon: 'fa-database' },
                 { name: 'Pembersih Sistem', href: '/superadmin/pembersih-sistem', icon: 'fa-broom' },
                 { name: 'Profil Saya', href: '/superadmin/profil-saya', icon: 'fa-circle-user' },
-                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -246,7 +245,6 @@ export const roleMenus = {
             section: 'Akun Saya',
             menus: [
                 { name: 'Profil Saya', href: '/pastor/profil-saya', icon: 'fa-circle-user' },
-                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -391,7 +389,6 @@ export const roleMenus = {
                 { name: 'Manajemen User', href: '/paroki/user', icon: 'fa-user-gear' },
                 { name: 'Pembersih Sistem', href: '/paroki/pembersih-sistem', icon: 'fa-broom' },
                 { name: 'Profil Saya', href: '/paroki/profil-saya', icon: 'fa-circle-user' },
-                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -425,7 +422,6 @@ export const roleMenus = {
             section: 'Akun Saya',
             menus: [
                 { name: 'Profil Saya', href: '/bendahara/profil-saya', icon: 'fa-circle-user' },
-                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -472,7 +468,6 @@ export const roleMenus = {
             menus: [
                 { name: 'Manajemen User', href: '/wilayah/user', icon: 'fa-user-plus' },
                 { name: 'Profil Saya', href: '/wilayah/profil-saya', icon: 'fa-circle-user' },
-                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -511,7 +506,6 @@ export const roleMenus = {
             section: 'Akun Saya',
             menus: [
                 { name: 'Profil Saya', href: '/kapela/profil-saya', icon: 'fa-circle-user' },
-                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -546,7 +540,6 @@ export const roleMenus = {
             section: 'Akun Saya',
             menus: [
                 { name: 'Profil Saya', href: '/kub/profil-saya', icon: 'fa-circle-user' },
-                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -571,7 +564,6 @@ export const roleMenus = {
             section: 'Akun Saya',
             menus: [
                 { name: 'Profil Saya', href: '/penulis/profil-saya', icon: 'fa-circle-user' },
-                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
@@ -601,7 +593,6 @@ export const roleMenus = {
             section: 'Akun Saya',
             menus: [
                 { name: 'Profil Saya', href: '/umat/profil-saya', icon: 'fa-circle-user' },
-                { name: 'Keluar', action: 'logout', icon: 'fa-arrow-right-from-bracket' },
             ],
         },
     ],
