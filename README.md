@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Platform Digital Universal Gereja Katolik Tingkat Paroki se-Indonesia</strong><br>
-  <em>Solusi Manajemen Umat, Keluarga Katolik (KKK), Sakramen, Keuangan, Warta Paroki, dan Pelayanan Pastoral Berbasis Web Terintegrasi.</em>
+  <em>Solusi Modern Manajemen Umat, Keluarga Katolik (KKK), 7 Sakramen Gereja, Multi-Payment Gateway Midtrans Snap, Keuangan &amp; Akuntansi, Warta Paroki, dan Pelayanan Pastoral Berbasis Web Terintegrasi.</em>
 </p>
 
 <p align="center">
@@ -14,6 +14,7 @@
   <img src="https://img.shields.io/badge/Inertia.js-2.x-9553E9?style=for-the-badge&logo=inertia&logoColor=white" alt="Inertia.js" />
   <img src="https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Midtrans-Snap_Payment-002855?style=for-the-badge&logo=visa&logoColor=white" alt="Midtrans Snap" />
   <img src="https://img.shields.io/badge/PHP-8.2+-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2+" />
   <img src="https://img.shields.io/badge/MySQL-5.7+-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" />
   <img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License MIT" />
@@ -23,60 +24,79 @@
 
 ## 🌟 Tentang SIPAROKI
 
-**SIPAROKI (Sistem Informasi Paroki Terpadu)** adalah aplikasi sistem informasi manajemen gerejawi komprehensif yang dirancang untuk mendigitalkan dan mengoptimalkan seluruh alur administrasi pastoral gereja Katolik di Indonesia.
+**SIPAROKI (Sistem Informasi Paroki Terpadu)** adalah ekosistem aplikasi sistem informasi gerejawi komprehensif generasi terbaru berbasis **Laravel 12**, **Inertia.js v2**, dan **Vue 3 Composition API**. Aplikasi ini dirancang secara khusus untuk mendigitalkan, menertibkan, dan mengoptimalkan seluruh alur pelayanan pastoral gereja Katolik di Indonesia.
 
-Aplikasi ini **Universal Multi-Parish Ready**, artinya dapat digunakan oleh **seluruh paroki di berbagai Keuskupan di Indonesia (KWI)** dengan identitas, logo, struktur hierarki, dan database mandiri tanpa perlu merombak kode sumber (*source code*).
+Aplikasi ini bersifat **Universal Multi-Parish Ready**, artinya dapat langsung digunakan oleh **seluruh paroki di berbagai Keuskupan di Indonesia (KWI)** dengan identitas paroki, santo pelindung, logo, struktur hierarki teritorial (Wilayah, Stasi/Kapela, KUB), dan database mandiri tanpa perlu mengubah kode sumber (*zero-code modification*).
 
 ---
 
 ## ✨ Fitur Unggulan Sistem
 
 ### 1. 🏛️ Universal Web Installation Wizard & Setup Paroki
-- **Web Installer 4 Langkah**: Panduan instalasi grafis modern berbasis browser (`install.php`) untuk memeriksa kesiapan server, koneksi database, serta pemilihan identitas paroki default.
-- **Master Referensi Nasional KWI**: Terintegrasi daftar master seluruh Keuskupan Agung & Sufragan se-Indonesia, Dekenat / Kevikepan, dan Paroki terdaftar.
-- **Inisialisasi Paroki Otomatis**: Nama paroki, santo pelindung, alamat, kontak WhatsApp, email, nama pastor paroki, hingga logo gereja otomatis menyesuaikan di seluruh website dan panel admin.
+- **Web Installer 5 Langkah**: Panduan instalasi grafis modern berbasis browser (`/installer` atau `/install.php`) untuk memeriksa kesiapan server, koneksi database, serta inisialisasi identitas paroki default.
+- **Master Referensi Nasional KWI**: Terintegrasi daftar master seluruh 39 Keuskupan Agung & Sufragan se-Indonesia, Dekenat / Kevikepan, dan Paroki terdaftar.
+- **Inisialisasi Paroki Otomatis**: Nama paroki, santo pelindung, alamat, kontak WhatsApp, email, nama pastor paroki, hingga logo gereja otomatis menyesuaikan di seluruh website publik dan panel administrasi.
 
-### 2. 👨‍👩‍👧‍👦 Manajemen Umat & Kartu Keluarga Katolik (KKK Digital)
-- **Registrasi Mandiri Umat**: Formulir pendaftaran akun umat (`/register`) dengan **Select2 Searchable** dan *live mutual filtering* antara **Wilayah**, **Stasi / Kapela**, dan **KUB (Komunitas Umat Basis)**.
-- **Buku Induk Umat**: Data demografi lengkap (NIK, nama baptis, tanggal lahir, status perkawinan, golongan darah, pendidikan, pekerjaan, dll.).
+### 2. 💳 Multi-Payment Gateway Midtrans Snap & Pembayaran Digital
+- **All-in-One Channel**: Menerima pembayaran persembahan, iuran KUB, donasi pembangunan, dan intensi misa melalui:
+  - **QRIS Dinamis**: Scan langsung via BCA Mobile, Livin Mandiri, BRImo, BNI Mobile, GoPay, OVO, Dana, ShopeePay, LinkAja (nominal otomatis pas).
+  - **Virtual Account (VA) Bank**: BCA, Mandiri Bill, BNI, BRI, Permata, CIMB Niaga.
+  - **Direct E-Wallet**: Pembayaran instan via aplikasi GoPay dan ShopeePay.
+  - **Gerai Minimarket**: Bayar tunai via kasir Alfamart dan Indomaret.
+  - **Kartu Kredit / Debit**: Visa, Mastercard, JCB (3D Secure).
+- **Auto-Settlement Webhook Real-time**: Verifikasi tanda tangan digital SHA512 dan pembaruan otomatis status iuran/tagihan menjadi **`Lunas`** detik itu juga tanpa perlu cek mutasi manual.
+- **Dukungan Metode Manual**: Tetap dapat berjalan berdampingan dengan rekening bank transfer manual & QRIS statis gambar paroki.
+- **Sandbox Simulator Interaktif**: Uji coba transaksi popup Midtrans Snap langsung di panel admin tanpa uang sungguhan.
+
+### 3. 👨‍👩‍👧‍👦 Manajemen Umat & Kartu Keluarga Katolik (KKK Digital)
+- **Komponen Select2 Searchable Terstandardisasi**: Seluruh input pilihan (pekerjaan, pendidikan, golongan darah, status ekonomi, hubungan keluarga, suku, agama asal, disabilitas, status baptis, pastor pembaptis, dll.) menggunakan `SearchableSelect` dengan pencarian instan.
+- **Registrasi Mandiri Umat**: Formulir pendaftaran akun umat (`/register`) dengan *live mutual filtering* antara **Wilayah**, **Stasi / Kapela**, dan **KUB (Komunitas Umat Basis)**.
+- **Buku Induk Umat**: Data demografi lengkap (NIK, nama lahir, nama baptis, tempat & tanggal lahir, status perkawinan, talenta pelayanan paroki, dll.).
 - **Kartu Keluarga Katolik (KKK)**: Pengelompokan kepala keluarga, hubungan keluarga, status jemaat, dan pencetakan lembar KKK resmi.
 
-### 3. 🕊️ Administrasi & Permohonan Sakramen
-- **Pencatatan 7 Sakramen Gereja**: Baptis, Krisma, Komuni Pertama, Pernikahan, Imamat, Pengurapan Orang Sakit (Minyak Suci), dan Tobat.
-- **Permohonan Sakramen Online**: Umat dapat mengajukan pendaftaran sakramen secara mandiri melalui portal umat, mengunggah berkas syarat, dan memantau status persetujuan sekretariat paroki.
-- **Buku Induk Baptis & Cetak Sertifikat**: Pembuatan nomor surat baptis otomatis (Liber Baptizatorum) dan pencetakan surat permandian/baptis resmi berformat PDF.
+### 4. 🕊️ Administrasi & Permohonan 7 Sakramen Gereja
+- **Pencatatan Sakramen Sesuai KHK (Kitab Hukum Kanonik)**:
+  - **Sakramen Inisiasi**: Baptis (Bayi/Dewasa/Receptio), Krisma/Penguatan, dan Ekaristi (Komuni Pertama).
+  - **Sakramen Penyembuhan**: Tobat/Rekonsiliasi dan Pengurapan Orang Sakit (Minyak Suci).
+  - **Sakramen Panggilan & Persekutuan**: Perkawinan Katolik dan Tahbisan Imamat.
+- **Buku Registrasi Sakramen (Liber Sacramenta)**: Pencatatan nomor jilid, halaman, dan nomor akta untuk *Liber Baptizatorum*, *Liber Confirmatorum*, dan *Liber Matrimoniorum*.
+- **Permohonan Sakramen Online**: Umat dapat mengajukan sakramen mandiri, mengunggah berkas syarat, dan memantau status persetujuan sekretariat paroki.
 
-### 4. 💰 Keuangan, Aset & Donasi QRIS
-- **Pencatatan Kas Masuk & Keluar**: Rekapitulasi kas operasional, kolekte misa, dana pembangunan, dan pos kas per KUB/Stasi.
-- **Metode Pembayaran & QRIS Dinamis**: Manajemen rekening bank paroki dan QRIS untuk kemudahan donasi, intensi misa, dan iuran umat.
-- **Inventaris Aset Paroki**: Pendataan aset gereja, lokasi gedung, status kondisi, dan penanggung jawab aset.
+### 5. 📲 WhatsApp Gateway & Notifikasi OTP Otomatis
+- **Multi-Provider WhatsApp API**: Mendukung Fonnte, Wablas, Twilio, UltraMsg, dan Custom HTTP Webhook.
+- **Verifikasi OTP**: Kode verifikasi pendaftaran dan login aman via pesan WhatsApp ke nomor jemaat.
+- **Notifikasi Otomatis**: Konfirmasi penerimaan berkas sakramen, jadwal misa, dan status intensi misa.
 
-### 5. 📰 Portal Informasi Publik & Warta Paroki
-- **Jadwal Misa Interaktif**: Jadwal perayaan ekaristi harian, mingguan, hari raya, misa lingkungan/KUB, dan misa stasi luar.
-- **Warta & Artikel Paroki**: Berita kegiatan, artikel rohani, renungan harian, dan pengumuman sekretariat.
-- **Sistem Komentar Interaktif dengan Moderasi Sensor Kata Kasar**: Filter otomatis kata-kata makian/jelek, sensor kata kasar (`***`), serta panel moderasi komentar artikel bagi redaksi/admin.
-- **Galeri Foto & Video Hero Banner**: Penayangan video profil gereja di header beranda serta dokumentasi foto kegiatan pastoral.
-
-### 6. 🛡️ Security Center & Auto-Firewall
+### 6. 🛡️ Security Center, Firewall & Proteksi Sistem
 - **Brute Force Protection**: Pembatasan percobaan login salah dan pemblokiran otomatis IP mencurigakan ke daftar hitam (*blocked IPs*).
-- **Audit Log Keamanan**: Pencatatan riwayat login, perubahan data penting, dan aktivitas operasional user.
-- **Role-Based Access Control (RBAC)**: Pembatasan akses berbasis peran (*Least Privilege Access*) dengan enkripsi password standar Bcrypt.
+- **Audit Log Keamanan**: Pencatatan riwayat login, perubahan data penting, dan aktivitas operasional seluruh admin.
+- **Role-Based Access Control (RBAC)**: Pembatasan akses multi-level berbasis peran (*Least Privilege Access*) dengan enkripsi password standar Bcrypt.
+
+### 7. 💾 Backup & Restore Database Terpadu
+- **1-Klik Generate Backup**: Pencadangan otomatis struktur dan seluruh data database ke file SQL terkompresi.
+- **Restore Instan**: Pemulihan database langsung dari panel admin atau melalui upload berkas backup SQL.
+
+### 8. 📰 Portal Informasi Publik & Warta Paroki
+- **Jadwal Misa Interaktif**: Jadwal perayaan ekaristi harian, mingguan, hari raya, misa lingkungan/KUB, dan misa stasi luar.
+- **Video Header Hero & Banner Slider**: Penayangan video profil gereja di header beranda serta slider banner warta kegiatan.
+- **Warta & Artikel Paroki**: Berita kegiatan pastoral, renungan harian, dan pengumuman sekretariat.
+- **Moderasi Komentar & Filter Kata Kasar**: Filter otomatis kata-kata makian/jelek, sensor kata kasar (`***`), serta panel moderasi komentar artikel bagi redaksi.
 
 ---
 
 ## 👥 Struktur Peran & Hak Akses (9 Role Multi-Level)
 
-| Role | Cakupan Akses |
-|---|---|
-| **Super Admin** | Akses penuh seluruh sistem, manajemen pengguna, konfigurasi paroki default, backup database, dan security center. |
-| **Pastor Paroki** | Akses persetujuan sakramen, verifikasi data umat, laporan pastoral, jadwal misa, sambutan, dan buku kas paroki. |
-| **Admin Paroki** | Pengelolaan sekretariat, pendaftaran sakramen, kartu keluarga, data umat, aset, dan surat-menyurat. |
-| **Admin Wilayah** | Pengelolaan data umat, KKK, dan kegiatan pada tingkat Wilayah / Lingkungan terkait. |
-| **Admin Kapela / Stasi** | Pengelolaan data umat, jadwal peribadatan, dan aset pada tingkat Stasi / Kapela luar. |
-| **Pengurus KUB** | Pendataan warga basis KUB, iuran komunitas basis, dan verifikasi anggota KUB. |
-| **Bendahara** | Pengelolaan transaksi keuangan, verifikasi bukti transfer/QRIS, buku kas, dan laporan keuangan. |
-| **Redaksi / Komsos** | Publikasi berita, artikel renungan, pengumuman, galeri media, dan moderasi komentar publik. |
-| **Umat Mandiri** | Akses portal umat untuk melihat data KKK digital, pengajuan sakramen, riwayat intensi misa, dan profil mandiri. |
+| Role | Prefix URL | Cakupan Akses & Tanggung Jawab |
+|---|---|---|
+| **Super Admin** | `/superadmin` | Akses penuh seluruh sistem, manajemen pengguna, konfigurasi paroki default, gateway pembayaran Midtrans, backup database, dan security center. |
+| **Pastor Paroki** | `/pastor` | Akses persetujuan sakramen, verifikasi data umat, laporan pastoral, jadwal misa, sambutan, dan buku kas paroki. |
+| **Admin Paroki** | `/paroki` | Pengelolaan sekretariat, pendaftaran sakramen, kartu keluarga, data umat, aset, dan surat-menyurat. |
+| **Admin Wilayah** | `/wilayah` | Pengelolaan data umat, KKK, dan kegiatan pada tingkat Wilayah / Lingkungan terkait. |
+| **Admin Kapela / Stasi** | `/kapela` | Pengelolaan data umat, jadwal peribadatan, dan aset pada tingkat Stasi / Kapela luar. |
+| **Pengurus KUB** | `/kub` | Pendataan warga basis KUB, iuran komunitas basis, dan verifikasi anggota KUB. |
+| **Bendahara** | `/bendahara` | Pengelolaan transaksi keuangan, verifikasi bukti transfer/QRIS, konfirmasi Midtrans, buku kas, dan laporan keuangan. |
+| **Redaksi / Komsos** | `/penulis` | Publikasi berita, artikel renungan, pengumuman, galeri media, slider banner, dan moderasi komentar publik. |
+| **Umat Mandiri** | `/umat` | Akses portal umat untuk melihat data KKK digital, pengajuan sakramen, pembayaran online iuran/intensi misa, dan profil mandiri. |
 
 ---
 
@@ -85,17 +105,8 @@ Aplikasi ini **Universal Multi-Parish Ready**, artinya dapat digunakan oleh **se
 - **PHP**: Versi `8.2` atau `8.3+`
 - **Database**: MySQL `5.7+` atau MariaDB `10.3+`
 - **Ekstensi PHP Wajib**:
-  - `pdo_mysql`
-  - `openssl`
-  - `mbstring`
-  - `tokenizer`
-  - `xml`
-  - `ctype`
-  - `json`
-  - `bcmath`
-  - `fileinfo`
-  - `gd` (untuk pengolahan gambar & logo)
-- **Web Server**: Apache (`mod_rewrite` aktif) atau Nginx
+  - `pdo_mysql`, `openssl`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `gd`, `curl`, `zip`
+- **Web Server**: Apache (`mod_rewrite` aktif), Nginx, atau OpenLiteSpeed
 - **Node.js & NPM**: Versi `18+` (hanya diperlukan jika ingin mengompilasi ulang aset frontend).
 
 ---
@@ -181,31 +192,27 @@ SIPAROKI sudah dilengkapi file `.htaccess` dan `index.php` di folder utama yang 
 
 ---
 
-### 🔄 Panduan Update Otomatis dari GitHub (Ketika Programmer Menambah Fitur / Perbaikan)
+### 🔄 Panduan Update Otomatis dari GitHub (Ketika Pengembang Merilis Fitur Baru)
 
-Ketika tim programmer merilis perbaikan bug, penambahan fitur sakramen baru, atau pembaruan modul di repository [https://github.com/wensputra2026/siparoki2026laravel](https://github.com/wensputra2026/siparoki2026laravel), paroki dapat memperbarui sistem secara instan tanpa kehilangan data database maupun berkas konfigurasi paroki yang sudah berjalan.
+Ketika tim pengembang merilis fitur baru atau perbaikan di repository [https://github.com/wensputra2026/siparoki2026laravel](https://github.com/wensputra2026/siparoki2026laravel), paroki dapat memperbarui sistem secara instan tanpa kehilangan data database maupun berkas konfigurasi paroki yang sudah berjalan.
 
 ```mermaid
 flowchart LR
-    A["Programmer Push Update ke GitHub"] --> B["cPanel / Server Paroki"]
+    A["Pengembang Push Update ke GitHub"] --> B["cPanel / Server Paroki"]
     B --> C["Tarik Kode Terbaru (Git Pull)"]
-    C --> D["Jalankan Migrasi Database Baru"]
-    D --> E["SIPAROKI Paroki Terupdate & Data Aman!"]
+    B --> D["Jalankan Migrasi Database Baru"]
+    B --> E["SIPAROKI Paroki Terupdate & Data 100% Aman!"]
 ```
-
-Pilih salah satu metode pembaruan berikut sesuai kebutuhan hosting Anda:
 
 ---
 
 #### 🌟 Pilihan 1: Update 1-Klik via cPanel Git™ Version Control (Paling Praktis untuk Shared Hosting)
-
-Jika instalasi di cPanel menggunakan Git Version Control:
 1. Masuk ke **cPanel Hosting** &rarr; Buka menu **Git™ Version Control**.
 2. Klik tombol **Manage** pada repository SIPAROKI Anda.
 3. Klik tab **Pull or Deploy**.
 4. Klik tombol biru **"Update from Remote"** (atau *Pull from Remote*).
 5. cPanel akan otomatis mengunduh seluruh penambahan fitur dan pembaruan kode terbaru dari GitHub.
-6. *(Opsional)* Jika ada penambahan tabel/struktur data baru dari programmer, buka menu **Terminal cPanel** (atau Cron Job 1x) dan jalankan:
+6. *(Opsional)* Jika ada penambahan tabel/struktur data baru dari pengembang, buka menu **Terminal cPanel** (atau Cron Job 1x) dan jalankan:
    ```bash
    php artisan migrate --force
    php artisan optimize:clear
@@ -214,33 +221,7 @@ Jika instalasi di cPanel menggunakan Git Version Control:
 
 ---
 
-#### ⚡ Pilihan 2: Update Otomatis Tanpa Sentuh via GitHub Webhook (Zero-Click Auto Deploy)
-
-Anda dapat membuat server hosting paroki otomatis terupdate setiap kali programmer melakukan `push` ke GitHub:
-
-1. Di hosting paroki, buat file script updater sederhana di `public/deploy-webhook.php`:
-   ```php
-   <?php
-   // Secret token pengaman
-   $secret = 'KUNCI_RAHASIA_PAROKI_ANDA_123';
-   if (($_GET['token'] ?? '') !== $secret) {
-       http_response_code(403);
-       die('Access Denied');
-   }
-
-   $output = shell_exec('cd .. && git pull origin main 2>&1 && php artisan migrate --force 2>&1 && php artisan optimize:clear 2>&1');
-   echo "<pre>$output</pre>";
-   ```
-2. Buka repository GitHub: [https://github.com/wensputra2026/siparoki2026laravel](https://github.com/wensputra2026/siparoki2026laravel) &rarr; **Settings** &rarr; **Webhooks** &rarr; **Add Webhook**.
-3. Masukkan **Payload URL**: `https://namaparoki-anda.org/deploy-webhook.php?token=KUNCI_RAHASIA_PAROKI_ANDA_123`
-4. Pilih Content type: `application/json` &rarr; Centang *Just the push event* &rarr; Klik **Add Webhook**.
-5. **Hasil**: Setiap kali tim pengembang merilis pembaruan, server paroki otomatis terupdate secara *real-time*.
-
----
-
-#### 🖥️ Pilihan 3: Update via SSH Terminal (Untuk VPS / Cloud Server)
-
-Jika menggunakan VPS Linux (Ubuntu/Debian) atau hosting dengan akses SSH:
+#### 🖥️ Pilihan 2: Update via SSH Terminal (Untuk VPS / Cloud Server)
 ```bash
 # 1. Masuk ke direktori aplikasi
 cd /var/www/siparoki
@@ -257,29 +238,9 @@ php artisan optimize:clear
 
 ---
 
-#### 📦 Pilihan 4: Update Manual (Bagi Hosting Tanpa Fitur Git)
-
-Bagi paroki yang menggunakan shared hosting biasa tanpa akses Git/SSH:
-1. Download berkas rilis terbaru berupa ZIP dari GitHub: [Download Update ZIP](https://github.com/wensputra2026/siparoki2026laravel/archive/refs/heads/main.zip).
-2. Ekstrak ZIP di komputer Anda.
-3. Unggah dan timpa (*overwrite*) folder-folder sistem berikut ke File Manager cPanel:
-   - `app/`
-   - `resources/`
-   - `routes/`
-   - `public/build/`
-   - `database/migrations/`
-4. > [!IMPORTANT]
-   > **JANGAN PERNAH MENIMPA / MENGHAPUS**:
-   > - Berkas `.env` (berisi password database paroki Anda)
-   > - Direktori `storage/` (berisi log, sesi, dan status instalasi)
-   > - Direktori `public/uploads/` (berisi foto umat, logo paroki, surat baptis, dan dokumen arsip)
-5. Akses URL: `https://namaparoki-anda.org/` &rarr; sistem otomatis berjalan dengan versi terbaru!
-
----
-
 ### 🐧 Metode 3: Panduan Instalasi di VPS aaPanel (Linux / Nginx / OpenLiteSpeed / Apache)
 
-Bagi paroki yang mengelola server VPS sendiri menggunakan **aaPanel** (Control Panel VPS grafis yang ringan & populer):
+Bagi paroki yang mengelola server VPS sendiri menggunakan **aaPanel**:
 
 #### Langkah 1: Persiapan Environment & PHP di aaPanel App Store
 1. Masuk ke **Dashboard aaPanel VPS** Anda (`http://IP-SERVER:8888`).
@@ -332,7 +293,7 @@ chmod -R 775 storage bootstrap/cache public/uploads
 #### Langkah 6: Pasang SSL Gratis (HTTPS)
 1. Di jendela pengaturan website aaPanel &rarr; Buka tab **SSL**.
 2. Pilih tab **Let's Encrypt** &rarr; Centang domain paroki Anda.
-3. Klik **Apply**. Setelah berhasil terbit, aktifkan toggle **Force HTTPS** (Otomatis mengalihkan seluruh lalu lintas HTTP ke HTTPS).
+3. Klik **Apply**. Setelah berhasil terbit, aktifkan toggle **Force HTTPS**.
 
 #### Langkah 7: Jalankan Web Installer Wizard
 1. Buka browser Anda: `https://paroki-anda.org/installer` (atau `https://paroki-anda.org/install.php`).
@@ -432,10 +393,12 @@ npm run build
 siparoki/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/       # Controller (Auth, Panel, SetupParoki, PageController, dll.)
-│   │   └── Middleware/        # Middleware (PanelAccess, EnsureParokiConfigured, dll.)
-│   └── Models/                # Eloquent Models (Umat, KK, Sakramen, Paroki, Keuskupan, dll.)
-├── bootstrap/                 # Konfigurasi bootstrap Laravel 12
+│   │   ├── Controllers/       # Controller (Auth, Panel, SetupParoki, MidtransController, dll.)
+│   │   │   └── Concerns/      # Modul modular (KkModuleTrait, GenericModuleTrait, SettingsModuleTrait)
+│   │   └── Middleware/        # Middleware (PanelAccess, EnsureParokiConfigured, CheckInstalled, dll.)
+│   ├── Models/                # Eloquent Models (Umat, KK, Sakramen, Midtrans, Paroki, Keuskupan, dll.)
+│   └── Services/              # Service Layer (MidtransService, dll.)
+├── bootstrap/                 # Konfigurasi bootstrap Laravel 12 & CSRF Exception
 ├── database/
 │   ├── data/                  # Master JSON Keuskupan & baseline SQL
 │   ├── migrations/            # Berkas migrasi database
@@ -450,11 +413,12 @@ siparoki/
 ├── resources/
 │   ├── js/
 │   │   ├── Components/        # Komponen UI Vue (SearchableSelect, RichTextEditor, dll.)
-│   │   └── Layouts/           # Layout utama (AppLayout, Dashboard layout)
-│   │   └── Pages/             # Halaman Inertia Vue (Auth, ProfilParoki, SetupParoki, dll.)
+│   │   ├── Composables/       # Composable Vue 3 (useMidtransSnap, useRoleMenu)
+│   │   ├── Layouts/           # Layout utama (AppLayout, Dashboard layout)
+│   │   └── Pages/             # Halaman Inertia Vue (Auth, ProfilParoki, PengaturanHub, UmatForm, KkForm, dll.)
 │   └── views/                 # Blade templates (Halaman publik, register, login)
 ├── routes/
-│   └── web.php                # Seluruh rute aplikasi & panel navigasi
+│   └── web.php                # Seluruh rute aplikasi, panel navigasi & webhook Midtrans
 └── install.php                # Root installer forwarder (untuk Shared Hosting)
 ```
 
