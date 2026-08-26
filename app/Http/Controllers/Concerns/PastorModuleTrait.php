@@ -110,7 +110,10 @@ trait PastorModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $pastorItem = \App\Models\MasterPastor::findOrFail($id);
+        $decodedId = decode_id($id) ?: $id;
+        $pastorItem = \App\Models\MasterPastor::findOrFail($decodedId);
+        $pastorItem->hashid = encode_id($pastorItem->id);
+        $pastorItem->iid = $pastorItem->hashid;
 
         $ordoList = [];
         if (\Illuminate\Support\Facades\Schema::hasTable('master_ordo')) {
@@ -219,7 +222,8 @@ trait PastorModuleTrait
 
     public function updatePastor(Request $request, $id)
     {
-        $pastor = \App\Models\MasterPastor::findOrFail($id);
+        $decodedId = decode_id($id) ?: $id;
+        $pastor = \App\Models\MasterPastor::findOrFail($decodedId);
         $data = $request->all();
 
         // Ensure schema columns exist for advanced pastor fields

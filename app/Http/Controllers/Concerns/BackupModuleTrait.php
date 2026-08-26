@@ -70,7 +70,12 @@ trait BackupModuleTrait
 
         $backups = DB::table('backup_database')
             ->orderBy('id', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($b) {
+                $b->hashid = encode_id($b->id);
+                $b->iid = $b->hashid;
+                return $b;
+            });
 
         // Calculate database metrics
         $databaseName = config('database.connections.mysql.database');
@@ -121,22 +126,25 @@ trait BackupModuleTrait
 
                 $rows = DB::table($tableName)->get();
                 if ($rows->count() > 0) {
-                    $sqlContent .= "INSERT INTO `{$tableName}` VALUES \n";
-                    $rowStrings = [];
                     foreach ($rows as $row) {
-                        $values = array_map(function ($val) {
-                            if ($val === null) return 'NULL';
-                            return "'" . addslashes((string)$val) . "'";
-                        }, (array)$row);
-                        $rowStrings[] = "(" . implode(", ", $values) . ")";
+                        $rowArr = (array) $row;
+                        $cols = array_keys($rowArr);
+                        $escapedCols = array_map(fn($c) => "`{$c}`", $cols);
+                        $escapedValues = array_map(function ($val) {
+                            if (is_null($val)) return 'NULL';
+                            return "'" . addslashes((string) $val) . "'";
+                        }, array_values($rowArr));
+
+                        $sqlContent .= "INSERT INTO `{$tableName}` (" . implode(', ', $escapedCols) . ") VALUES (" . implode(', ', $escapedValues) . ");\n";
                     }
-                    $sqlContent .= implode(",\n", $rowStrings) . ";\n\n";
+                    $sqlContent .= "\n";
                 }
             }
 
             $sqlContent .= "SET FOREIGN_KEY_CHECKS=1;\n";
 
-            $fileName = 'backup-paroki-' . date('Y-m-d_His') . '.sql';
+            $dateSuffix = now()->format('Y-m-d_H-i-s');
+            $fileName = "backup_siparoki_{$dateSuffix}.sql";
             $backupDir = storage_path('app/backups');
             if (!file_exists($backupDir)) {
                 mkdir($backupDir, 0755, true);
@@ -165,7 +173,8 @@ trait BackupModuleTrait
 
     public function downloadDatabaseBackup($id)
     {
-        $backup = DB::table('backup_database')->where('id', $id)->first();
+        $decodedId = decode_id($id) ?: $id;
+        $backup = DB::table('backup_database')->where('id', $decodedId)->first();
         if (!$backup) {
             abort(404, 'File backup tidak ditemukan.');
         }
@@ -184,7 +193,8 @@ trait BackupModuleTrait
     public function restoreDatabaseBackup(Request $request, $id)
     {
         try {
-            $backup = DB::table('backup_database')->where('id', $id)->first();
+            $decodedId = decode_id($id) ?: $id;
+            $backup = DB::table('backup_database')->where('id', $decodedId)->first();
             if (!$backup) {
                 return back()->with('error', 'Data backup tidak ditemukan.');
             }
@@ -226,13 +236,14 @@ trait BackupModuleTrait
 
     public function deleteDatabaseBackup($id)
     {
-        $backup = DB::table('backup_database')->where('id', $id)->first();
+        $decodedId = decode_id($id) ?: $id;
+        $backup = DB::table('backup_database')->where('id', $decodedId)->first();
         if ($backup) {
             $filePath = storage_path('app/backups/' . $backup->nama_file);
             if (file_exists($filePath)) {
                 @unlink($filePath);
             }
-            DB::table('backup_database')->where('id', $id)->delete();
+            DB::table('backup_database')->where('id', $decodedId)->delete();
         }
 
         return back()->with('success', 'File backup berhasil dihapus.');

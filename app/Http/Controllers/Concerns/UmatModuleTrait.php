@@ -191,6 +191,12 @@ trait UmatModuleTrait
             ->paginate(10)
             ->withQueryString();
 
+        $umats->getCollection()->transform(function ($u) {
+            $u->hashid = encode_id($u->id);
+            $u->iid = $u->hashid;
+            return $u;
+        });
+
         return Inertia::render('Inertia/UmatIndex', [
             'umats' => $umats,
             'role' => $resolvedRole,
@@ -272,7 +278,10 @@ trait UmatModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $umatItem = \App\Models\Umat::findOrFail($id);
+        $decodedId = decode_id($id) ?: $id;
+        $umatItem = \App\Models\Umat::findOrFail($decodedId);
+        $umatItem->hashid = encode_id($umatItem->id);
+        $umatItem->iid = $umatItem->hashid;
 
         $defaultParokiId = $this->defaultParokiIdFromProfile();
         $defaultParoki = Paroki::with('keuskupan')->find($defaultParokiId)
@@ -340,7 +349,8 @@ trait UmatModuleTrait
             return redirect("/{$firstSegment}/umat")->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
         }
 
-        $umat = \App\Models\Umat::findOrFail($id);
+        $decodedId = decode_id($id) ?: $id;
+        $umat = \App\Models\Umat::findOrFail($decodedId);
         $data = $request->all();
         $validColumns = $this->schemaColumns('umat');
         $cleanData = [];

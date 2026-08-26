@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
+
 class Konten extends Model
 {
+    use HasIndirectId;
 
     protected $table = 'konten';
 

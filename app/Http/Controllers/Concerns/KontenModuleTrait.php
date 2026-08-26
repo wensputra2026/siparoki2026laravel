@@ -35,14 +35,18 @@ trait KontenModuleTrait
 
     public function editKonten(Request $request, $id): Response
     {
+        $decodedId = decode_id($id) ?: $id;
         $item = \App\Models\Konten::query()
-            ->where('id', $id)
+            ->where('id', $decodedId)
             ->orWhere('slug', $id)
             ->first();
 
         if (!$item) {
             abort(404);
         }
+
+        $item->hashid = encode_id($item->id);
+        $item->iid = $item->hashid;
 
         return $this->renderKontenForm($request, $item);
     }
@@ -50,14 +54,18 @@ trait KontenModuleTrait
 
     public function previewKonten(Request $request, $id): Response
     {
+        $decodedId = decode_id($id) ?: $id;
         $item = \App\Models\Konten::query()
-            ->where('id', $id)
+            ->where('id', $decodedId)
             ->orWhere('slug', $id)
             ->first();
 
         if (!$item) {
             abort(404);
         }
+
+        $item->hashid = encode_id($item->id);
+        $item->iid = $item->hashid;
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? '';
         $roleMap = [

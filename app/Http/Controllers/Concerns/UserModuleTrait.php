@@ -29,7 +29,8 @@ trait UserModuleTrait
 {
     public function resetUserPassword(Request $request, $id)
     {
-        $user = \App\Models\User::findOrFail($id);
+        $decodedId = decode_id($id) ?: $id;
+        $user = \App\Models\User::findOrFail($decodedId);
 
         if (auth()->id() && (int) auth()->id() === (int) $user->getKey()) {
             return back()->with('error', 'Anda tidak dapat mereset password akun Anda sendiri dari sini.');
@@ -50,7 +51,8 @@ trait UserModuleTrait
 
     public function toggleUserStatus(Request $request, $id)
     {
-        $user = \App\Models\User::findOrFail($id);
+        $decodedId = decode_id($id) ?: $id;
+        $user = \App\Models\User::findOrFail($decodedId);
         if (auth()->id() && (int) auth()->id() === (int) $user->getKey()) {
             return back()->with('error', 'Akun yang sedang digunakan tidak dapat dinonaktifkan.');
         }
@@ -178,12 +180,13 @@ trait UserModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $roleItem = \App\Models\Role::where('id', $id)
+        $decodedId = decode_id($id) ?: $id;
+        $roleItem = \App\Models\Role::where('id', $decodedId)
             ->orWhere('slug', $id)
             ->first();
 
-        if (!$roleItem && is_numeric($id)) {
-            $roleItem = \App\Models\Role::find($id);
+        if (!$roleItem && is_numeric($decodedId)) {
+            $roleItem = \App\Models\Role::find($decodedId);
         }
 
         if (!$roleItem) {

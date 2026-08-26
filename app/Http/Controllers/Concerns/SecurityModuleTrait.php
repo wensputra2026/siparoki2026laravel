@@ -227,7 +227,8 @@ trait SecurityModuleTrait
     public function unblockIp(Request $request, $id)
     {
         $this->ensureSecurityTables();
-        DB::table('blocked_ips')->where('id', $id)->orWhere('ip_address', $id)->delete();
+        $decodedId = decode_id($id) ?: $id;
+        DB::table('blocked_ips')->where('id', $decodedId)->orWhere('ip_address', $id)->delete();
         return back()->with('success', 'Alamat IP berhasil dilepas dari daftar blokir.');
     }
 

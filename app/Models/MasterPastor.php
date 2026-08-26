@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
 
 class MasterPastor extends Model
 {
+    use HasIndirectId;
+
     protected $table = 'master_pastor';
     protected $guarded = [];
-    protected $appends = ['nama_lengkap_gelar'];
+    protected $appends = ['nama_lengkap_gelar', 'hashid'];
 
     /**
      * Format Nama Pastor dengan Gelar Depan (RD. / RP.) dan Gelar Belakang Ordo (misal: CMF, SVD).

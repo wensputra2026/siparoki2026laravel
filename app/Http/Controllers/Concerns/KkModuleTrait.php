@@ -101,7 +101,12 @@ trait KkModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $kkItem = \App\Models\KkKatolik::with('anggota')->findOrFail($id);
+        $decodedId = decode_id($id) ?: $id;
+        $kkItem = is_numeric($decodedId)
+            ? \App\Models\KkKatolik::with('anggota')->findOrFail($decodedId)
+            : \App\Models\KkKatolik::with('anggota')->where('no_kk_kw', $id)->firstOrFail();
+        $kkItem->hashid = encode_id($kkItem->id);
+        $kkItem->iid = $kkItem->hashid;
 
         $defaultParokiId = $this->defaultParokiIdFromProfile();
         $defaultParoki = Paroki::with(['keuskupan', 'provinsi', 'kabupaten', 'kecamatan', 'desa'])->find($defaultParokiId)
@@ -159,13 +164,16 @@ trait KkModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $kk = is_numeric($id)
-            ? \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->find($id)
+        $decodedId = decode_id($id) ?: $id;
+        $kk = is_numeric($decodedId)
+            ? \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->find($decodedId)
             : \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->where('no_kk_kw', $id)->first();
 
         if (!$kk) {
             $kk = \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->firstOrFail();
         }
+        $kk->hashid = encode_id($kk->id);
+        $kk->iid = $kk->hashid;
 
         $defaultParokiId = $this->defaultParokiIdFromProfile();
         $defaultParoki = Paroki::with('keuskupan')->find($defaultParokiId)
@@ -183,8 +191,9 @@ trait KkModuleTrait
 
     public function exportKkPdf(Request $request, string|int $id)
     {
-        $kk = is_numeric($id)
-            ? \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->find($id)
+        $decodedId = decode_id($id) ?: $id;
+        $kk = is_numeric($decodedId)
+            ? \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->find($decodedId)
             : \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->where('no_kk_kw', $id)->first();
 
         if (!$kk) {

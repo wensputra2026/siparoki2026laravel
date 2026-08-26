@@ -69,10 +69,14 @@ trait GaleriModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
+        $decodedId = decode_id($id) ?: $id;
         $item = \App\Models\Galeri::query()
-            ->where('id', $id)
+            ->where('id', $decodedId)
             ->orWhere('slug', $id)
             ->firstOrFail();
+
+        $item->hashid = encode_id($item->id);
+        $item->iid = $item->hashid;
 
         return Inertia::render('Inertia/GaleriForm', [
             'role' => $resolvedRole,

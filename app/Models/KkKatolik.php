@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
+
 class KkKatolik extends Model
 {
+    use HasIndirectId;
 
     protected $table = 'kk_katolik';
 

@@ -278,12 +278,18 @@ trait GenericModuleTrait
             $query->orderBy($modelInstance->getKeyName(), 'desc');
         }
 
-        $perPage = (int) $request->input('per_page', 10);
-        if (!in_array($perPage, [10, 15, 25, 50, 100])) {
-            $perPage = 10;
-        }
-
         $items = $query->paginate($perPage)->withQueryString();
+
+        $items->getCollection()->transform(function ($item) {
+            if (is_object($item)) {
+                $pkVal = method_exists($item, 'getKey') ? $item->getKey() : ($item->id ?? null);
+                if ($pkVal) {
+                    $item->hashid = encode_id($pkVal);
+                    $item->iid = $item->hashid;
+                }
+            }
+            return $item;
+        });
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? '';
         $roleMap = [
@@ -714,8 +720,10 @@ trait GenericModuleTrait
         $modelInstance = new $modelClass;
         $pk = $modelInstance->getKeyName();
 
+        $decodedId = decode_id($id) ?: $id;
+
         // Try by the model's declared primary key first
-        $item = $modelClass::where($pk, $id)->first();
+        $item = $modelClass::where($pk, $decodedId)->first();
 
         // Fallback: try common primary key patterns
         if (!$item) {
@@ -730,7 +738,7 @@ trait GenericModuleTrait
             ]);
             foreach ($candidates as $cand) {
                 if ($cand !== $pk && Schema::hasColumn($table, $cand)) {
-                    $found = $modelClass::where($cand, $id)->first();
+                    $found = $modelClass::where($cand, $decodedId)->first();
                     if ($found) { $item = $found; break; }
                 }
             }
@@ -856,12 +864,13 @@ trait GenericModuleTrait
 
         $modelInstance = new $modelClass;
         $pk = $modelInstance->getKeyName();
-        $item = $modelClass::where($pk, $id)->first();
-        if (!$item && is_numeric($id)) {
-            $item = $modelClass::find($id);
+        $decodedId = decode_id($id) ?: $id;
+        $item = $modelClass::where($pk, $decodedId)->first();
+        if (!$item && is_numeric($decodedId)) {
+            $item = $modelClass::find($decodedId);
         }
         if (!$item) {
-            $item = $modelClass::where('id', $id)->first();
+            $item = $modelClass::where('id', $decodedId)->first();
         }
         if (!$item && in_array('slug', \Illuminate\Support\Facades\Schema::getColumnListing($modelInstance->getTable()))) {
             $item = $modelClass::where('slug', $id)->first();
