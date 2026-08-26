@@ -154,7 +154,7 @@
     ]
   },
   "resources/js/Pages/Inertia/GenericModule.vue": {
-    "file": "assets/GenericModule-CaFEmWbV.js",
+    "file": "assets/GenericModule-DBMJfbGj.js",
     "name": "GenericModule",
     "src": "resources/js/Pages/Inertia/GenericModule.vue",
     "isDynamicEntry": true,
@@ -397,7 +397,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-9V7T46FP.js",
+    "file": "assets/app-Cz1P9pfF.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

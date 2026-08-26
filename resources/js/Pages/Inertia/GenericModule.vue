@@ -2010,7 +2010,7 @@ const statusLabel = (item) => {
                             class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
                         >
                             <i class="fa-solid fa-plus text-[11px]"></i>
-                            <span>+ Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : (['umat', 'data-umat'].includes(moduleKey) ? 'Umat' : (moduleKey === 'galeri' ? 'Album Galeri' : title)) }}</span>
+                            <span>Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : (['umat', 'data-umat'].includes(moduleKey) ? 'Umat' : (moduleKey === 'galeri' ? 'Album Galeri' : title)) }}</span>
                         </Link>
                         <button
                             v-else
@@ -2019,7 +2019,7 @@ const statusLabel = (item) => {
                             class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
                         >
                             <i class="fa-solid fa-plus text-[11px]"></i>
-                            <span>+ Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : title }}</span>
+                            <span>Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : title }}</span>
                         </button>
                     </template>
 
