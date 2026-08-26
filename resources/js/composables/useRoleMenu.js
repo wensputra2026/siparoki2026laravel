@@ -87,16 +87,7 @@ const triggerToast = (msg, type = 'success') => {
     }, 4000);
 };
 
-// Watch for incoming flash messages from Laravel
-watch(
-    () => _page?.props.flash,
-    (flash) => {
-        if (flash?.success) triggerToast(flash.success, 'success');
-        else if (flash?.status) triggerToast(flash.status, 'success');
-        else if (flash?.error) triggerToast(flash.error, 'error');
-    },
-    { deep: true, immediate: true }
-);
+// (Flash watcher is initialized inside init() with the reactive page instance)
 
 const confirmLogout = () => {
     showLogoutModal.value = false;
@@ -255,12 +246,23 @@ const toggleGroup = (groupName) => {
 
 // Inisialisasi watcher & lifecycle HANYA SEKALI (singleton), agar remount
 // akibat router.reload() tidak memicu syncActiveGroup() atau me-reset state.
-const init = () => {
+const init = (page) => {
     if (_initialized) return;
     _initialized = true;
 
+    // Watch for incoming flash messages from Laravel (e.g. login success alert)
     watch(
-        () => [_page?.props.role, _page?.url],
+        () => page.props.flash,
+        (flash) => {
+            if (flash?.success) triggerToast(flash.success, 'success');
+            else if (flash?.status) triggerToast(flash.status, 'success');
+            else if (flash?.error) triggerToast(flash.error, 'error');
+        },
+        { deep: true, immediate: true }
+    );
+
+    watch(
+        () => [page.props.role, page.url],
         () => {
             activeRole.value = resolveActiveRole();
         },
@@ -291,7 +293,7 @@ const init = () => {
     );
 
     watch(
-        () => [_page?.url, activeRole.value],
+        () => [page.url, activeRole.value],
         () => {
             syncActiveGroup();
         }
@@ -299,10 +301,11 @@ const init = () => {
 };
 
 export function useRoleMenu(props) {
-    if (!_page) _page = usePage();
-    init();
+    const page = usePage();
+    _page = page;
+    init(page);
     return {
-        page: _page,
+        page,
         isSidebarOpen,
         isMounted,
         toggleSidebar,
