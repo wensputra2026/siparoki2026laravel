@@ -19,49 +19,49 @@
                 font-style: normal;
                 font-weight: 300;
                 font-display: optional;
-                src: url('/fonts/poppins/poppins-latin-400-normal.woff2') format('woff2');
+                src: url('{{ asset('fonts/poppins/poppins-latin-400-normal.woff2') }}') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 400;
                 font-display: optional;
-                src: url('/fonts/poppins/poppins-latin-400-normal.woff2') format('woff2');
+                src: url('{{ asset('fonts/poppins/poppins-latin-400-normal.woff2') }}') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 500;
                 font-display: optional;
-                src: url('/fonts/poppins/poppins-latin-500-normal.woff2') format('woff2');
+                src: url('{{ asset('fonts/poppins/poppins-latin-500-normal.woff2') }}') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 600;
                 font-display: optional;
-                src: url('/fonts/poppins/poppins-latin-600-normal.woff2') format('woff2');
+                src: url('{{ asset('fonts/poppins/poppins-latin-600-normal.woff2') }}') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 700;
                 font-display: optional;
-                src: url('/fonts/poppins/poppins-latin-700-normal.woff2') format('woff2');
+                src: url('{{ asset('fonts/poppins/poppins-latin-700-normal.woff2') }}') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 800;
                 font-display: optional;
-                src: url('/fonts/poppins/poppins-latin-800-normal.woff2') format('woff2');
+                src: url('{{ asset('fonts/poppins/poppins-latin-800-normal.woff2') }}') format('woff2');
             }
             @font-face {
                 font-family: 'Poppins';
                 font-style: normal;
                 font-weight: 900;
                 font-display: optional;
-                src: url('/fonts/poppins/poppins-latin-900-normal.woff2') format('woff2');
+                src: url('{{ asset('fonts/poppins/poppins-latin-900-normal.woff2') }}') format('woff2');
             }
 
             :root {

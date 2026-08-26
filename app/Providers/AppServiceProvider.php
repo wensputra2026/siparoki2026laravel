@@ -103,6 +103,14 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
+        // Auto-support Apache / Localhost subfolders (e.g. http://localhost/siparokilaravel/)
+        if (!app()->runningInConsole()) {
+            $basePath = request()->getBasePath();
+            if (!empty($basePath)) {
+                \Illuminate\Support\Facades\URL::forceRootUrl(request()->root());
+            }
+        }
+
         // Auto sync assets from C:/laragon/www/katedral/assets/frontend/siparoki/images if present
         $katedralImagesPath = 'C:/laragon/www/katedral/assets/frontend/siparoki/images';
         $destPath = public_path('assets/frontend/siparoki/images');

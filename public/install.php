@@ -444,11 +444,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
 
         // Step H: Generate & Write .env File
         $app_key = 'base64:' . base64_encode(random_bytes(32));
+        $asset_url_line = !empty($base_path) ? "ASSET_URL=" . addslashes($root_app_url) . "\n" : "";
         $env_content = "APP_NAME=\"" . addslashes($app_name) . "\"\n"
             . "APP_ENV=local\n"
             . "APP_KEY={$app_key}\n"
             . "APP_DEBUG=true\n"
-            . "APP_URL=" . addslashes($root_app_url) . "\n\n"
+            . "APP_URL=" . addslashes($root_app_url) . "\n"
+            . $asset_url_line . "\n"
             . "LOG_CHANNEL=stack\n"
             . "LOG_DEPRECATIONS_CHANNEL=null\n"
             . "LOG_LEVEL=debug\n\n"
