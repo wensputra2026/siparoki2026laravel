@@ -57,26 +57,17 @@ trait StatistikModuleTrait
         $kapelaQuery = \App\Models\Kapela::query();
 
         if (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
-            $umatQuery->where(function($q) use ($authUser) {
-                $q->where('wilayah_id', $authUser->wilayah_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
-            });
+            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
             $kkQuery->where('wilayah_id', $authUser->wilayah_id);
             $kubQuery->where('wilayah_id', $authUser->wilayah_id);
             $wilayahQuery->where('id', $authUser->wilayah_id);
         } elseif ((str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) && !empty($authUser?->kapela_id)) {
-            $umatQuery->where(function($q) use ($authUser) {
-                $q->where('kapela_id', $authUser->kapela_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
-            });
+            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
             $kkQuery->where('kapela_id', $authUser->kapela_id);
             $kubQuery->where('kapela_id', $authUser->kapela_id);
             $kapelaQuery->where('id', $authUser->kapela_id);
         } elseif (str_contains($slugClean, 'kub') && !empty($authUser?->kub_id)) {
-            $umatQuery->where(function($q) use ($authUser) {
-                $q->where('kub_id', $authUser->kub_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
-            });
+            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
             $kkQuery->where('kub_id', $authUser->kub_id);
             $kubQuery->where('id', $authUser->kub_id);
         }

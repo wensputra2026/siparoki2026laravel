@@ -139,9 +139,7 @@ trait UmatModuleTrait
         if (Schema::hasTable('kub')) {
             $kubList = (clone $kubQuery)->take(6)->get();
             foreach ($kubList as $k) {
-                $countUmatInKub = Umat::where(function($q) use ($k) {
-                    $q->where('kub_id', $k->id)->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $k->id));
-                })->count();
+                $countUmatInKub = Umat::whereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $k->id))->count();
                 $sebaranStats[] = [
                     'id' => $k->id,
                     'nama' => $k->nama_kub,
@@ -201,20 +199,11 @@ trait UmatModuleTrait
 
         $query = Umat::query();
         if (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
-            $query->where(function ($q) use ($authUser) {
-                $q->where('wilayah_id', $authUser->wilayah_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
-            });
+            $query->whereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
         } elseif ((str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) && !empty($authUser?->kapela_id)) {
-            $query->where(function ($q) use ($authUser) {
-                $q->where('kapela_id', $authUser->kapela_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
-            });
+            $query->whereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
         } elseif (str_contains($slugClean, 'kub') && !empty($authUser?->kub_id)) {
-            $query->where(function ($q) use ($authUser) {
-                $q->where('kub_id', $authUser->kub_id)
-                  ->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
-            });
+            $query->whereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
         }
 
         $umats = $query
