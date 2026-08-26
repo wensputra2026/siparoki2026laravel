@@ -1251,6 +1251,56 @@ const openCreateModal = () => {
         formData.value.permissions = ['lihat_umat', 'lihat_sakramen', 'lihat_keuangan'];
     }
 
+    if (props.moduleKey === 'kabupaten') {
+        const defaultProv = props.provinsiList?.find(p => p.nama_provinsi?.toLowerCase().includes('nusa tenggara timur') || p.nama_provinsi?.toLowerCase().includes('ntt')) || props.provinsiList?.[0];
+        formData.value = {
+            provinsi_id: defaultProv ? (defaultProv.id_provinsi || defaultProv.id) : '',
+            nama_kabupaten: '',
+            tipe: 'Kabupaten',
+            kode_kabupaten: '',
+            status: 'Aktif',
+        };
+    }
+
+    if (props.moduleKey === 'kecamatan') {
+        const defaultProv = props.provinsiList?.find(p => p.nama_provinsi?.toLowerCase().includes('nusa tenggara timur') || p.nama_provinsi?.toLowerCase().includes('ntt')) || props.provinsiList?.[0];
+        const defaultProvId = defaultProv ? (defaultProv.id_provinsi || defaultProv.id) : '';
+        const defaultKab = props.kabupatenList?.find(k => String(k.provinsi_id) === String(defaultProvId)) || props.kabupatenList?.[0];
+        formData.value = {
+            provinsi_id: defaultProvId,
+            kabupaten_id: defaultKab ? (defaultKab.id_kabupaten || defaultKab.id) : '',
+            nama_kecamatan: '',
+            kode_kecamatan: '',
+            status: 'Aktif',
+        };
+    }
+
+    if (props.moduleKey === 'desa-kelurahan' || props.moduleKey === 'desa' || props.moduleKey === 'kelurahan') {
+        const defaultProv = props.provinsiList?.find(p => p.nama_provinsi?.toLowerCase().includes('nusa tenggara timur') || p.nama_provinsi?.toLowerCase().includes('ntt')) || props.provinsiList?.[0];
+        const defaultProvId = defaultProv ? (defaultProv.id_provinsi || defaultProv.id) : '';
+        const defaultKab = props.kabupatenList?.find(k => String(k.provinsi_id) === String(defaultProvId)) || props.kabupatenList?.[0];
+        const defaultKabId = defaultKab ? (defaultKab.id_kabupaten || defaultKab.id) : '';
+        const defaultKec = (props.kecamatanList || []).find(kc => String(kc.kabupaten_id) === String(defaultKabId)) || props.kecamatanList?.[0];
+        formData.value = {
+            provinsi_id: defaultProvId,
+            kabupaten_id: defaultKabId,
+            kecamatan_id: defaultKec ? (defaultKec.id_kecamatan || defaultKec.id) : '',
+            nama_desa: '',
+            tipe: 'Desa',
+            kode_desa: '',
+            kode_pos: '',
+            status: 'Aktif',
+        };
+    }
+
+    if (props.moduleKey === 'provinsi') {
+        formData.value = {
+            nama_provinsi: '',
+            kode_provinsi: '',
+            status: 'Aktif',
+        };
+    }
+
     uploadedFile.value = null;
     previewImage.value = null;
     props.columns.forEach((col) => {
@@ -1345,6 +1395,65 @@ const openEditModal = (item) => {
     if (!desaId && item.desa && typeof item.desa === 'string') {
         const found = (props.desaList || []).find(d => d.nama_desa?.toLowerCase() === item.desa.toLowerCase());
         if (found) desaId = found.id_desa || found.id;
+    }
+
+    if (props.moduleKey === 'kabupaten') {
+        formData.value = {
+            id_kabupaten: item.id_kabupaten || item.id,
+            provinsi_id: provId,
+            nama_kabupaten: item.nama_kabupaten || item.nama || '',
+            tipe: item.tipe || 'Kabupaten',
+            kode_kabupaten: item.kode_kabupaten || item.kode || '',
+            status: item.status || 'Aktif',
+        };
+        showFormModal.value = true;
+        return;
+    }
+
+    if (props.moduleKey === 'kecamatan') {
+        const kabObj = props.kabupatenList?.find(k => String(k.id_kabupaten || k.id) === String(kabId));
+        const effectiveProvId = provId || (kabObj ? kabObj.provinsi_id : '');
+        formData.value = {
+            id_kecamatan: item.id_kecamatan || item.id,
+            provinsi_id: effectiveProvId,
+            kabupaten_id: kabId,
+            nama_kecamatan: item.nama_kecamatan || item.nama || '',
+            kode_kecamatan: item.kode_kecamatan || item.kode || '',
+            status: item.status || 'Aktif',
+        };
+        showFormModal.value = true;
+        return;
+    }
+
+    if (props.moduleKey === 'desa-kelurahan' || props.moduleKey === 'desa' || props.moduleKey === 'kelurahan') {
+        const kecObj = (props.kecamatanList || []).find(k => String(k.id_kecamatan || k.id) === String(kecId));
+        const effectiveKabId = kabId || (kecObj ? kecObj.kabupaten_id : '');
+        const kabObj = props.kabupatenList?.find(k => String(k.id_kabupaten || k.id) === String(effectiveKabId));
+        const effectiveProvId = provId || (kabObj ? kabObj.provinsi_id : '');
+        formData.value = {
+            id_desa: item.id_desa || item.id,
+            provinsi_id: effectiveProvId,
+            kabupaten_id: effectiveKabId,
+            kecamatan_id: kecId,
+            nama_desa: item.nama_desa || item.nama || '',
+            tipe: item.tipe || 'Desa',
+            kode_desa: item.kode_desa || item.kode || '',
+            kode_pos: item.kode_pos || '',
+            status: item.status || 'Aktif',
+        };
+        showFormModal.value = true;
+        return;
+    }
+
+    if (props.moduleKey === 'provinsi') {
+        formData.value = {
+            id_provinsi: item.id_provinsi || item.id,
+            nama_provinsi: item.nama_provinsi || item.nama || '',
+            kode_provinsi: item.kode_provinsi || item.kode || '',
+            status: item.status || 'Aktif',
+        };
+        showFormModal.value = true;
+        return;
     }
 
     formData.value = {
@@ -7008,7 +7117,383 @@ const statusLabel = (item) => {
                         </div>
                     </template>
 
-                    <!-- 19. GENERIC FORM FOR OTHER MODULES -->
+                    <!-- 19. KABUPATEN / KOTA FORM -->
+                    <template v-else-if="moduleKey === 'kabupaten'">
+                        <div class="space-y-4">
+                            <div class="p-3.5 bg-blue-50/70 rounded-2xl border border-blue-200/80 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-600 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-city"></i>
+                                </div>
+                                <div class="text-xs text-slate-700">
+                                    <h5 class="font-bold text-blue-900">Formulir Data Kabupaten / Kota</h5>
+                                    <p class="text-[11px] text-slate-600">Pilih provinsi terlebih dahulu, lalu masukkan nama dan kode kabupaten/kota.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3.5">
+                                <!-- 1. Pilih Provinsi (Wajib) -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Provinsi Induk <span class="text-rose-500">*</span>
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="formData.provinsi_id"
+                                        :options="provinsiList"
+                                        value-key="id_provinsi"
+                                        label-key="nama_provinsi"
+                                        placeholder="-- Pilih Provinsi --"
+                                        search-placeholder="Ketik cari nama provinsi..."
+                                        icon="fa-map"
+                                        icon-color="text-blue-600"
+                                        required
+                                    />
+                                </div>
+
+                                <!-- 2. Nama Kabupaten & Tipe -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Nama Kabupaten / Kota <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input
+                                            v-model="formData.nama_kabupaten"
+                                            type="text"
+                                            required
+                                            placeholder="Contoh: Timor Tengah Selatan"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Tipe Administrasi
+                                        </label>
+                                        <select
+                                            v-model="formData.tipe"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        >
+                                            <option value="Kabupaten">Kabupaten</option>
+                                            <option value="Kota">Kota</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Kode & Status -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Kode Kabupaten / Kemendagri
+                                        </label>
+                                        <input
+                                            v-model="formData.kode_kabupaten"
+                                            type="text"
+                                            placeholder="Contoh: 53.02"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Status Data
+                                        </label>
+                                        <select
+                                            v-model="formData.status"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        >
+                                            <option value="Aktif">Aktif</option>
+                                            <option value="Nonaktif">Nonaktif</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 20. KECAMATAN FORM -->
+                    <template v-else-if="moduleKey === 'kecamatan'">
+                        <div class="space-y-4">
+                            <div class="p-3.5 bg-teal-50/70 rounded-2xl border border-teal-200/80 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-teal-600 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-building-columns"></i>
+                                </div>
+                                <div class="text-xs text-slate-700">
+                                    <h5 class="font-bold text-teal-900">Formulir Data Kecamatan</h5>
+                                    <p class="text-[11px] text-slate-600">Pilih provinsi & kabupaten/kota induk terlebih dahulu, lalu masukkan nama kecamatan.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3.5">
+                                <!-- 1. Pilih Provinsi (Filter Pembantu) -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Provinsi (Filter)
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="formData.provinsi_id"
+                                        :options="provinsiList"
+                                        value-key="id_provinsi"
+                                        label-key="nama_provinsi"
+                                        placeholder="-- Pilih Provinsi --"
+                                        search-placeholder="Ketik cari nama provinsi..."
+                                        icon="fa-map"
+                                        icon-color="text-blue-600"
+                                    />
+                                </div>
+
+                                <!-- 2. Pilih Kabupaten / Kota (Wajib) -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Kabupaten / Kota Induk <span class="text-rose-500">*</span>
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="formData.kabupaten_id"
+                                        :options="availableKabupatens"
+                                        value-key="id_kabupaten"
+                                        label-key="nama_kabupaten"
+                                        placeholder="-- Pilih Kabupaten / Kota --"
+                                        search-placeholder="Ketik cari kabupaten..."
+                                        icon="fa-city"
+                                        icon-color="text-emerald-600"
+                                        required
+                                    />
+                                </div>
+
+                                <!-- 3. Nama Kecamatan & Kode -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Nama Kecamatan <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input
+                                            v-model="formData.nama_kecamatan"
+                                            type="text"
+                                            required
+                                            placeholder="Contoh: Batu Putih"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Kode Kecamatan / Kemendagri
+                                        </label>
+                                        <input
+                                            v-model="formData.kode_kecamatan"
+                                            type="text"
+                                            placeholder="Contoh: 53.02.04"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- 4. Status Data -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Status Data
+                                    </label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 21. DESA / KELURAHAN FORM -->
+                    <template v-else-if="moduleKey === 'desa-kelurahan' || moduleKey === 'desa' || moduleKey === 'kelurahan'">
+                        <div class="space-y-4">
+                            <div class="p-3.5 bg-purple-50/70 rounded-2xl border border-purple-200/80 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-500 to-purple-600 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-tree-city"></i>
+                                </div>
+                                <div class="text-xs text-slate-700">
+                                    <h5 class="font-bold text-purple-900">Formulir Data Desa / Kelurahan</h5>
+                                    <p class="text-[11px] text-slate-600">Pilih kecamatan induk terlebih dahulu, lalu masukkan nama desa/kelurahan.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3.5">
+                                <!-- 1. Filter Provinsi & Kabupaten -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Provinsi (Filter)
+                                        </label>
+                                        <SearchableSelect
+                                            v-model="formData.provinsi_id"
+                                            :options="provinsiList"
+                                            value-key="id_provinsi"
+                                            label-key="nama_provinsi"
+                                            placeholder="-- Pilih Provinsi --"
+                                            search-placeholder="Ketik cari provinsi..."
+                                            icon="fa-map"
+                                            icon-color="text-blue-600"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Kabupaten / Kota (Filter)
+                                        </label>
+                                        <SearchableSelect
+                                            v-model="formData.kabupaten_id"
+                                            :options="availableKabupatens"
+                                            value-key="id_kabupaten"
+                                            label-key="nama_kabupaten"
+                                            placeholder="-- Pilih Kabupaten / Kota --"
+                                            search-placeholder="Ketik cari kabupaten..."
+                                            icon="fa-city"
+                                            icon-color="text-emerald-600"
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- 2. Pilih Kecamatan (Wajib) -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Kecamatan Induk <span class="text-rose-500">*</span>
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="formData.kecamatan_id"
+                                        :options="availableKecamatans"
+                                        value-key="id_kecamatan"
+                                        label-key="nama_kecamatan"
+                                        placeholder="-- Pilih Kecamatan --"
+                                        search-placeholder="Ketik cari kecamatan..."
+                                        icon="fa-building-columns"
+                                        icon-color="text-teal-600"
+                                        required
+                                    />
+                                </div>
+
+                                <!-- 3. Nama Desa & Tipe -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Nama Desa / Kelurahan <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input
+                                            v-model="formData.nama_desa"
+                                            type="text"
+                                            required
+                                            placeholder="Contoh: Benlutu"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Tipe Wilayah
+                                        </label>
+                                        <select
+                                            v-model="formData.tipe"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        >
+                                            <option value="Desa">Desa</option>
+                                            <option value="Kelurahan">Kelurahan</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 4. Kode & Kode Pos -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Kode Desa / Kemendagri
+                                        </label>
+                                        <input
+                                            v-model="formData.kode_desa"
+                                            type="text"
+                                            placeholder="Contoh: 53.02.04.2001"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Kode Pos
+                                        </label>
+                                        <input
+                                            v-model="formData.kode_pos"
+                                            type="text"
+                                            placeholder="Contoh: 85561"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- 5. Status Data -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Status Data
+                                    </label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 22. PROVINSI FORM -->
+                    <template v-else-if="moduleKey === 'provinsi'">
+                        <div class="space-y-4">
+                            <div class="p-3.5 bg-blue-50/70 rounded-2xl border border-blue-200/80 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-600 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-map"></i>
+                                </div>
+                                <div class="text-xs text-slate-700">
+                                    <h5 class="font-bold text-blue-900">Formulir Data Provinsi</h5>
+                                    <p class="text-[11px] text-slate-600">Masukkan nama provinsi dan kode wilayah provinsi.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Nama Provinsi <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="formData.nama_provinsi"
+                                        type="text"
+                                        required
+                                        placeholder="Contoh: Nusa Tenggara Timur"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                    />
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Kode Provinsi / Kemendagri
+                                        </label>
+                                        <input
+                                            v-model="formData.kode_provinsi"
+                                            type="text"
+                                            placeholder="Contoh: 53"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                            Status Data
+                                        </label>
+                                        <select
+                                            v-model="formData.status"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        >
+                                            <option value="Aktif">Aktif</option>
+                                            <option value="Nonaktif">Nonaktif</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 23. GENERIC FORM FOR OTHER MODULES -->
                     <template v-else>
                         <template v-for="col in columns" :key="col.key">
                             <div v-if="col.isRelationLink || col.key === 'desas' || col.key === 'kecamatans' || col.key === 'kabupatens' || col.key === 'dekenats' || col.key === 'parokis' || col.key === 'kubs' || col.key === 'wilayahs'" class="hidden">
