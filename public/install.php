@@ -54,9 +54,92 @@ function siparoki_table_columns(PDO $pdo, $table) {
 }
 
 // 1. Check if already installed
-if (file_exists($lock_file) || file_exists($public_lock_file)) {
+if (file_exists($lock_file) || file_exists($public_lock_file) || file_exists($storage_dir . '/installed')) {
     if (!isset($_GET['force'])) {
-        die('<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>SIPAROKI Terpasang</title><script src="https://cdn.tailwindcss.com"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{font-family:\'Poppins\',sans-serif;}</style></head><body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4"><div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl space-y-5"><div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mx-auto shadow-lg"><i class="fa-solid fa-church"></i></div><div class="space-y-1"><h2 class="text-xl font-black text-white">SIPAROKI Sudah Terpasang</h2><p class="text-slate-400 text-xs">Sistem paroki sudah aktif dan terkonfigurasi. Untuk instalasi ulang, hapus file <code>storage/installed.lock</code>.</p></div><div class="flex items-center justify-center gap-3 pt-2"><a href="' . htmlspecialchars($root_app_url) . '/" class="inline-block bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20 text-xs">Buka Beranda Website &rarr;</a><a href="' . htmlspecialchars($root_app_url) . '/login" class="inline-block bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-6 py-2.5 rounded-xl transition text-xs">Login Admin</a></div></div></body></html>');
+        $login_url = htmlspecialchars($root_app_url . '/login');
+        $home_url = htmlspecialchars($root_app_url . '/');
+        $superadmin_url = htmlspecialchars($root_app_url . '/superadmin');
+        $force_url = htmlspecialchars($_SERVER['PHP_SELF'] ?? 'install.php') . '?force=1';
+        
+        die('<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIPAROKI 2026 - Aplikasi Siap Digunakan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>body{font-family:\'Poppins\',sans-serif;}</style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-lg w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl space-y-6">
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-amber-500/20 font-black">
+            <i class="fa-solid fa-church"></i>
+        </div>
+        
+        <div class="space-y-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Instalasi Selesai & Aktif</span>
+            </span>
+            <h2 class="text-2xl font-black text-white">SIPAROKI Siap Digunakan</h2>
+            <p class="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto">
+                Sistem Informasi Manajemen Paroki telah berhasil dipasang dan terhubung ke database.
+            </p>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 text-xs text-left space-y-2 text-slate-300">
+            <div class="flex items-center justify-between text-slate-400">
+                <span>Akun Default:</span>
+                <span class="font-mono text-amber-400 font-bold">superadmin@paroki.org</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-400">
+                <span>Password Default:</span>
+                <span class="font-mono text-amber-400 font-bold">Admin@Paroki2026!</span>
+            </div>
+        </div>
+
+        <div class="space-y-3">
+            <a href="' . $login_url . '" id="btn-login" class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3.5 px-6 rounded-xl transition shadow-lg shadow-amber-500/25 text-sm cursor-pointer">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Masuk ke Halaman Login (<span id="countdown">4</span>s)</span>
+            </a>
+            
+            <div class="grid grid-cols-2 gap-2">
+                <a href="' . $superadmin_url . '" class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-4 rounded-xl transition text-xs">
+                    <i class="fa-solid fa-gauge text-amber-400"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="' . $home_url . '" class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-4 rounded-xl transition text-xs">
+                    <i class="fa-solid fa-globe text-sky-400"></i>
+                    <span>Situs Paroki</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800/60 text-[11px] text-slate-500 flex items-center justify-between">
+            <span>SIPAROKI &copy; 2026</span>
+            <a href="' . $force_url . '" class="text-amber-400/80 hover:text-amber-300 hover:underline">Pasang Ulang / Reset &rarr;</a>
+        </div>
+    </div>
+
+    <script>
+        let timeLeft = 4;
+        const countdownEl = document.getElementById("countdown");
+        const timer = setInterval(() => {
+            timeLeft--;
+            if (countdownEl) countdownEl.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                window.location.href = "' . $login_url . '";
+            }
+        }, 1000);
+    </script>
+</body>
+</html>');
     }
 }
 
