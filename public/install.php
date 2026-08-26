@@ -221,8 +221,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
         $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$db_name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         $pdo->exec("USE `{$db_name}`");
 
-        // Step B: Import SQL Baseline if available
-        $sql_file = __DIR__ . '/installer/database/siparoki.sql';
+        // Step B: Import SQL Baseline (skema aplikasi ini: parokibenlutularavel12)
+        $sql_file = __DIR__ . '/installer/database/parokibenlutularavel12.sql';
+        if (!file_exists($sql_file)) {
+            $sql_file = __DIR__ . '/installer/database/siparoki.sql';
+        }
         if (!file_exists($sql_file)) {
             $sql_file = $base_dir . '/database/data/siparoki.sql';
         }
