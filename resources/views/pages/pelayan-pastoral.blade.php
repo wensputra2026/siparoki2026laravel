@@ -146,64 +146,6 @@
             </div>
         </div>
 
-        {{-- Section 2: Daftar Imam & Gembala Pastoral --}}
-        @if(($pastorList && $pastorList->isNotEmpty()) || ($riwayatPastor && $riwayatPastor->isNotEmpty()))
-        <div style="background: #ffffff; border-radius: 20px; padding: 35px 40px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
-            <div style="margin-bottom: 24px;">
-                <span style="display: inline-block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--primary-teal, #00897b); margin-bottom: 4px;">
-                    <i class="fas fa-cross me-1"></i> Direktori Gembala
-                </span>
-                <h3 style="font-size: 1.3rem; font-weight: 800; color: #1e293b; margin: 0;">
-                    Daftar Imam &amp; Gembala Pastoral
-                </h3>
-            </div>
-
-            <div class="row g-3">
-                @if($pastorList && $pastorList->isNotEmpty())
-                    @foreach($pastorList as $p)
-                        <div class="col-lg-6">
-                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 14px;">
-                                <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
-                                    <i class="fa-solid fa-user-tie"></i>
-                                </div>
-                                <div style="flex: 1; min-width: 0;">
-                                    <h5 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                        {{ $p->nama_lengkap_gelar ?? \App\Models\MasterPastor::formatNama($p) }}
-                                    </h5>
-                                    <div style="display: flex; gap: 8px; align-items: center; font-size: 0.75rem;">
-                                        <span style="color: var(--primary-teal, #00897b); font-weight: 600;">{{ $p->jabatan ?? 'Pastor' }}</span>
-                                        <span style="color: #cbd5e1;">&bull;</span>
-                                        <span style="color: #64748b;">{{ $p->keuskupan ?? 'Keuskupan Agung Kupang' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                @elseif($riwayatPastor && $riwayatPastor->isNotEmpty())
-                    @foreach($riwayatPastor as $r)
-                        <div class="col-lg-6">
-                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 14px;">
-                                <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(255,152,0,0.1); color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
-                                    <i class="fa-solid fa-user-tie"></i>
-                                </div>
-                                <div style="flex: 1; min-width: 0;">
-                                    <h5 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0 0 2px;">
-                                        {{ $r->nama_lengkap_gelar ?? \App\Models\MasterPastor::formatNama($r) }}
-                                    </h5>
-                                    <div style="display: flex; gap: 8px; align-items: center; font-size: 0.75rem;">
-                                        <span style="color: #d97706; font-weight: 600;">{{ $r->jabatan ?? 'Pastor Paroki' }}</span>
-                                        <span style="color: #cbd5e1;">&bull;</span>
-                                        <span style="color: #64748b;">Periode: {{ $r->periode_mulai ?? $r->tahun_mulai ?? '-' }} - {{ $r->periode_selesai ?? $r->tahun_selesai ?? 'Sekarang' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                @endif
-            </div>
-        </div>
-        @endif
-
     </div>
 </section>
 @endsection
