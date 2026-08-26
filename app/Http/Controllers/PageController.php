@@ -385,36 +385,76 @@ class PageController extends Controller
 
         $common = $this->getCommonData();
 
-        $jadwalMisa = Cache::remember('frontend.beranda.jadwal_misa', 300, fn () => DB::table('jadwal_misa')
-            ->orderBy('tanggal')
-            ->orderBy('jam_perayaan')
-            ->limit(6)
-            ->get());
+        $jadwalMisa = Cache::remember('frontend.beranda.jadwal_misa', 300, function () {
+            if (!Schema::hasTable('jadwal_misa')) return collect();
+            try {
+                return DB::table('jadwal_misa')
+                    ->orderBy('tanggal')
+                    ->orderBy('jam_perayaan')
+                    ->limit(6)
+                    ->get();
+            } catch (\Throwable $e) {
+                return collect();
+            }
+        });
 
-        $pengumuman = Cache::remember('frontend.beranda.pengumuman', 300, fn () => DB::table('pengumuman')
-            ->where('status', 1)
-            ->latest('created_at')
-            ->limit(6)
-            ->get());
+        $pengumuman = Cache::remember('frontend.beranda.pengumuman', 300, function () {
+            if (!Schema::hasTable('pengumuman')) return collect();
+            try {
+                return DB::table('pengumuman')
+                    ->where('status', 1)
+                    ->latest('created_at')
+                    ->limit(6)
+                    ->get();
+            } catch (\Throwable $e) {
+                return collect();
+            }
+        });
 
-        $galeri = Cache::remember('frontend.beranda.galeri', 300, fn () => DB::table('galeri')
-            ->where('status', 1)
-            ->latest('created_at')
-            ->limit(8)
-            ->get());
+        $galeri = Cache::remember('frontend.beranda.galeri', 300, function () {
+            if (!Schema::hasTable('galeri')) return collect();
+            try {
+                return DB::table('galeri')
+                    ->where('status', 1)
+                    ->latest('created_at')
+                    ->limit(8)
+                    ->get();
+            } catch (\Throwable $e) {
+                return collect();
+            }
+        });
 
-        $artikel = Cache::remember('frontend.beranda.artikel', 300, fn () => DB::table('konten')
-            ->where('status_publish', 'Publish')
-            ->latest('tanggal_publish')
-            ->limit(6)
-            ->get());
+        $artikel = Cache::remember('frontend.beranda.artikel', 300, function () {
+            if (!Schema::hasTable('konten')) return collect();
+            try {
+                return DB::table('konten')
+                    ->where('status_publish', 'Publish')
+                    ->latest('tanggal_publish')
+                    ->limit(6)
+                    ->get();
+            } catch (\Throwable $e) {
+                return collect();
+            }
+        });
 
-        $stats = Cache::remember('frontend.beranda.stats', 300, fn () => [
-            'total_kk' => DB::table('kk_katolik')->count(),
-            'total_umat' => DB::table('umat')->count(),
-            'total_kapela' => DB::table('kapela')->count() + DB::table('stasi_kapela')->count(),
-            'total_kub' => DB::table('lingkungan')->count() + DB::table('kub')->count(),
-        ]);
+        $stats = Cache::remember('frontend.beranda.stats', 300, function () {
+            $kkCount = Schema::hasTable('kk_katolik') ? DB::table('kk_katolik')->count() : 0;
+            $umatCount = Schema::hasTable('umat') ? DB::table('umat')->count() : 0;
+            $kapelaCount = Schema::hasTable('kapela') ? DB::table('kapela')->count() : 0;
+            if (Schema::hasTable('stasi_kapela')) {
+                $kapelaCount += DB::table('stasi_kapela')->count();
+            }
+            $kubCount = Schema::hasTable('kub') ? DB::table('kub')->count() : 0;
+            if (Schema::hasTable('lingkungan')) {
+                $kubCount += DB::table('lingkungan')->count();
+            }
+            return [
+                'total_kk' => $kkCount,
+                'total_umat' => $umatCount,
+                'total_kapela' => $kapelaCount,
+                'total_kub' => $kubCount,
+            ];
+        });
 
         return view('pages.beranda', array_merge($common, compact('jadwalMisa', 'pengumuman', 'galeri', 'artikel', 'stats')));
     }
