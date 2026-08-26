@@ -60,7 +60,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-CUX-4zY5.css",
+    "file": "assets/app-CP5lBop6.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -180,7 +180,7 @@
     ]
   },
   "resources/js/Pages/Inertia/KkForm.vue": {
-    "file": "assets/KkForm-wfifWQBI.js",
+    "file": "assets/KkForm-C3pW1O-h.js",
     "name": "KkForm",
     "src": "resources/js/Pages/Inertia/KkForm.vue",
     "isDynamicEntry": true,
@@ -397,7 +397,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-zmFn3R0T.js",
+    "file": "assets/app-BdOf2FGF.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

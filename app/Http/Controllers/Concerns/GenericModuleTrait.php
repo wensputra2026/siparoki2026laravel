@@ -711,6 +711,11 @@ trait GenericModuleTrait
         $this->logAudit('CREATE_' . strtoupper($slug), $slug, $created->getKey(), $cleanData);
         $this->clearFastAccessCache();
 
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            return redirect("/{$firstSegment}/kk-katolik")->with('success', 'Data Kartu Keluarga (KK) Katolik berhasil ditambahkan.');
+        }
+
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil ditambahkan.');
     }
 
@@ -854,6 +859,11 @@ trait GenericModuleTrait
         // Auto-sync into global settings if the updated record is paroki
         if ($slug === 'paroki') {
             $this->syncParokiToGlobalSettings($item);
+        }
+
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            return redirect("/{$firstSegment}/kk-katolik")->with('success', 'Data Kartu Keluarga (KK) Katolik berhasil diperbarui.');
         }
 
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil diperbarui.');

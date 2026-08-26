@@ -446,15 +446,9 @@ const removeAnggota = (index) => {
 
 const submitForm = () => {
     if (props.isEdit && props.kkItem?.id) {
-        form.put(`${basePrefix.value}/kk-katolik/${props.kkItem.id}`, {
-            preserveScroll: true,
-            onSuccess: () => router.visit(listUrl.value),
-        });
+        form.put(`${basePrefix.value}/kk-katolik/${props.kkItem.id}`);
     } else {
-        form.post(`${basePrefix.value}/kk-katolik`, {
-            preserveScroll: true,
-            onSuccess: () => router.visit(listUrl.value),
-        });
+        form.post(`${basePrefix.value}/kk-katolik`);
     }
 };
 </script>
