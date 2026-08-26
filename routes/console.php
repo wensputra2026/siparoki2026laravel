@@ -78,3 +78,22 @@ Artisan::command('siparoki:setup {--force : Paksa timpa database yang ada}', fun
     $this->line('  Password  : Admin@Paroki2026!');
     $this->info('====================================================');
 })->purpose('Setup otomatis database, master data, dan akun superadmin SIPAROKI');
+
+Artisan::command('admin:reset {email=superadmin@paroki.org} {password=Admin@Paroki2026!}', function ($email, $password) {
+    $user = \App\Models\User::firstOrNew(['email' => $email]);
+    $user->nama_lengkap = $user->nama_lengkap ?: 'Super Administrator';
+    $user->name = $user->name ?: 'Super Administrator';
+    $user->username = $user->username ?: 'superadmin';
+    $user->role_id = 1;
+    $user->status_aktif = 1;
+    $user->status_user = 'Aktif';
+    $user->password = Hash::make($password);
+    $user->save();
+
+    $this->info('====================================================');
+    $this->info('  AKUN SUPER ADMIN BERHASIL DI-RESET / DISIAPKAN!   ');
+    $this->info('====================================================');
+    $this->line("  Email    : {$email}");
+    $this->line("  Password : {$password}");
+    $this->info('====================================================');
+})->purpose('Reset atau buat akun Super Administrator baru');
