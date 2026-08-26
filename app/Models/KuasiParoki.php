@@ -66,7 +66,7 @@ class KuasiParoki extends Model
 
     public function dekenat()
     {
-        return $this->belongsTo(Dekenat::class, 'dekenat_id');
+        return $this->belongsTo(Dekenat::class, 'dekenat_id', 'id_dekenat');
     }
 
     public function paroki()

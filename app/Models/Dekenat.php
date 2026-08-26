@@ -17,11 +17,11 @@ class Dekenat extends Model
 
     public function parokis()
     {
-        return $this->hasMany(Paroki::class, 'dekenat_id');
+        return $this->hasMany(Paroki::class, 'dekenat_id', 'id_dekenat');
     }
 
     public function kuasiParokis()
     {
-        return $this->hasMany(KuasiParoki::class, 'dekenat_id');
+        return $this->hasMany(KuasiParoki::class, 'dekenat_id', 'id_dekenat');
     }
 }

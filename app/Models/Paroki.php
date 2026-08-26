@@ -55,7 +55,7 @@ class Paroki extends Model
 
     public function dekenat()
     {
-        return $this->belongsTo(Dekenat::class, 'dekenat_id', 'id');
+        return $this->belongsTo(Dekenat::class, 'dekenat_id', 'id_dekenat');
     }
 
     public function kevikepan()
