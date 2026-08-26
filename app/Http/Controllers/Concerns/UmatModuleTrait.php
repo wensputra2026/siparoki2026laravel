@@ -170,23 +170,41 @@ trait UmatModuleTrait
             ->get(['id', 'nama_lengkap', 'jenis_kelamin', 'status_umat', 'created_at']);
 
         // Data Sakramen
+        $hasTglBaptis = Schema::hasColumn('umat', 'tgl_baptis');
+        $hasStatusBaptis = Schema::hasColumn('umat', 'status_baptis');
+        $hasTglKomuni = Schema::hasColumn('umat', 'tgl_komuni_1');
+        $hasTglKrisma = Schema::hasColumn('umat', 'tgl_krisma');
+        $hasTglPerkawinan = Schema::hasColumn('umat', 'tgl_perkawinan');
+
         $baptisTable = Schema::hasTable('sakramen') ? Sakramen::where('tipe_sakramen', 'like', '%Baptis%')->count() : 0;
-        $baptisUmat = (clone $umatQuery)->where(function($q) {
-            $q->whereNotNull('tgl_baptis')->orWhere('status_baptis', 'Sudah');
-        })->count();
+        $baptisUmat = 0;
+        if ($hasTglBaptis || $hasStatusBaptis) {
+            $baptisUmat = (clone $umatQuery)->where(function($q) use ($hasTglBaptis, $hasStatusBaptis) {
+                if ($hasTglBaptis) {
+                    $q->whereNotNull('tgl_baptis');
+                }
+                if ($hasStatusBaptis) {
+                    if ($hasTglBaptis) {
+                        $q->orWhere('status_baptis', 'Sudah');
+                    } else {
+                        $q->where('status_baptis', 'Sudah');
+                    }
+                }
+            })->count();
+        }
 
         $komuniTable = Schema::hasTable('sakramen') ? Sakramen::where('tipe_sakramen', 'like', '%Komuni%')->count() : 0;
-        $komuniUmat = (clone $umatQuery)->whereNotNull('tgl_komuni_1')->count();
+        $komuniUmat = $hasTglKomuni ? (clone $umatQuery)->whereNotNull('tgl_komuni_1')->count() : 0;
 
         $krismaTable = Schema::hasTable('sakramen') ? Sakramen::where('tipe_sakramen', 'like', '%Krisma%')->count() : 0;
-        $krismaUmat = (clone $umatQuery)->whereNotNull('tgl_krisma')->count();
+        $krismaUmat = $hasTglKrisma ? (clone $umatQuery)->whereNotNull('tgl_krisma')->count() : 0;
 
         $nikahTable = Schema::hasTable('sakramen') ? Sakramen::where(function($q) {
             $q->where('tipe_sakramen', 'like', '%Nikah%')
               ->orWhere('tipe_sakramen', 'like', '%Kawin%')
               ->orWhere('tipe_sakramen', 'like', '%Perkawinan%');
         })->count() : 0;
-        $nikahUmat = (clone $umatQuery)->whereNotNull('tgl_perkawinan')->count();
+        $nikahUmat = $hasTglPerkawinan ? (clone $umatQuery)->whereNotNull('tgl_perkawinan')->count() : 0;
 
         $sakramenCount = [
             'baptis' => max($baptisTable, $baptisUmat),
