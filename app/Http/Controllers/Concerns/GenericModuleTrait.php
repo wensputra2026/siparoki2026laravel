@@ -691,7 +691,13 @@ trait GenericModuleTrait
                 continue;
             }
             if (in_array($k, $validColumns, true) && !in_array($k, ['created_at', 'updated_at', 'deleted_at'], true)) {
-                if ($v === 'false') {
+                if (in_array($k, ['status_aktif', 'tampil_frontend', 'is_deleted'], true)) {
+                    if (is_string($v)) {
+                        $v = in_array(strtolower($v), ['aktif', 'active', '1', 'true', 'ya'], true) ? 1 : 0;
+                    } elseif (is_bool($v)) {
+                        $v = $v ? 1 : 0;
+                    }
+                } elseif ($v === 'false') {
                     $v = 0;
                 } elseif ($v === 'true') {
                     $v = 1;
@@ -845,7 +851,13 @@ trait GenericModuleTrait
                 continue;
             }
             if (in_array($k, $validColumns, true) && !in_array($k, ['created_at', 'updated_at', 'deleted_at'], true)) {
-                if ($v === 'false') {
+                if (in_array($k, ['status_aktif', 'tampil_frontend', 'is_deleted'], true)) {
+                    if (is_string($v)) {
+                        $v = in_array(strtolower($v), ['aktif', 'active', '1', 'true', 'ya'], true) ? 1 : 0;
+                    } elseif (is_bool($v)) {
+                        $v = $v ? 1 : 0;
+                    }
+                } elseif ($v === 'false') {
                     $v = 0;
                 } elseif ($v === 'true') {
                     $v = 1;
@@ -2438,10 +2450,11 @@ trait GenericModuleTrait
         } elseif (isset($data['nama_lengkap']) && !isset($data['nama'])) {
             $data['nama'] = $data['nama_lengkap'];
         }
-        if (isset($data['status'])) {
-            $data['status_aktif'] = $data['status'];
-        } elseif (isset($data['status_aktif'])) {
-            $data['status'] = $data['status_aktif'];
+        $rawStatusDpp = $data['status_aktif'] ?? $data['status'] ?? null;
+        if ($rawStatusDpp !== null) {
+            $isAktif = in_array(strtolower((string)$rawStatusDpp), ['aktif', 'active', '1', 'true', 'ya'], true) || $rawStatusDpp === 1 || $rawStatusDpp === true;
+            $data['status_aktif'] = $isAktif ? 1 : 0;
+            $data['status'] = $isAktif ? 'Aktif' : 'Nonaktif';
         }
         if (isset($data['kontak']) && !isset($data['no_hp'])) {
             $data['no_hp'] = $data['kontak'];
@@ -2465,10 +2478,11 @@ trait GenericModuleTrait
         } elseif (isset($data['nama_lengkap']) && !isset($data['nama'])) {
             $data['nama'] = $data['nama_lengkap'];
         }
-        if (isset($data['status'])) {
-            $data['status_aktif'] = ($data['status'] === 'Aktif' || $data['status'] == 1 || $data['status'] === '1') ? 1 : 0;
-        } elseif (isset($data['status_aktif'])) {
-            $data['status'] = ($data['status_aktif'] == 1 || $data['status_aktif'] === '1' || $data['status_aktif'] === 'Aktif') ? 'Aktif' : 'Nonaktif';
+        $rawStatusKat = $data['status_aktif'] ?? $data['status'] ?? null;
+        if ($rawStatusKat !== null) {
+            $isAktif = in_array(strtolower((string)$rawStatusKat), ['aktif', 'active', '1', 'true', 'ya'], true) || $rawStatusKat === 1 || $rawStatusKat === true;
+            $data['status_aktif'] = $isAktif ? 1 : 0;
+            $data['status'] = $isAktif ? 'Aktif' : 'Nonaktif';
         }
         if (isset($data['kontak']) && !isset($data['no_hp'])) {
             $data['no_hp'] = $data['kontak'];
@@ -2487,10 +2501,11 @@ trait GenericModuleTrait
         } elseif (isset($data['nama_lengkap']) && !isset($data['nama'])) {
             $data['nama'] = $data['nama_lengkap'];
         }
-        if (isset($data['status'])) {
-            $data['status_aktif'] = ($data['status'] === 'Aktif' || $data['status'] == 1 || $data['status'] === '1') ? 1 : 0;
-        } elseif (isset($data['status_aktif'])) {
-            $data['status'] = ($data['status_aktif'] == 1 || $data['status_aktif'] === '1' || $data['status_aktif'] === 'Aktif') ? 'Aktif' : 'Nonaktif';
+        $rawStatusMis = $data['status_aktif'] ?? $data['status'] ?? null;
+        if ($rawStatusMis !== null) {
+            $isAktif = in_array(strtolower((string)$rawStatusMis), ['aktif', 'active', '1', 'true', 'ya'], true) || $rawStatusMis === 1 || $rawStatusMis === true;
+            $data['status_aktif'] = $isAktif ? 1 : 0;
+            $data['status'] = $isAktif ? 'Aktif' : 'Nonaktif';
         }
         if (isset($data['kontak']) && !isset($data['no_hp'])) {
             $data['no_hp'] = $data['kontak'];
