@@ -1128,18 +1128,21 @@ main {
 .breadcrumb {
     background: transparent;
     justify-content: center;
+    align-items: center;
     margin-bottom: 0;
-    gap: 20px;
+    gap: 8px;
     padding: 0;
 }
 
 .breadcrumb-item {
-    background: rgba(255,255,255,0.2);
-    padding: 8px 16px;
+    background: rgba(255,255,255,0.22);
+    padding: 6px 18px;
     border-radius: 25px;
     font-size: 0.85rem;
     position: relative;
     margin: 0;
+    display: inline-flex;
+    align-items: center;
 }
 
 .breadcrumb-item a {
@@ -1149,24 +1152,29 @@ main {
 }
 
 .breadcrumb-item a:hover {
-    opacity: 0.8;
+    opacity: 0.85;
     color: white;
 }
 
 .breadcrumb-item.active {
-    background: var(--primary-orange);
+    background: var(--primary-orange, #ff9800);
     color: white;
-    font-weight: 600;
+    font-weight: 700;
 }
 
+.breadcrumb-item::before,
 .breadcrumb-item + .breadcrumb-item::before {
-    content: "›";
-    display: inline-block;
-    margin-left: -20px;
-    margin-right: -12px;
-    color: rgba(255,255,255,0.8);
-    font-weight: bold;
-    position: relative;
+    content: none !important;
+    display: none !important;
+}
+
+.breadcrumb-separator {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 2px;
+    margin: 0;
 }
 
 /* Hero Section */

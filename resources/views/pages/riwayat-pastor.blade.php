@@ -14,14 +14,20 @@
             Daftar imam dan gembala umat yang telah dan sedang menggembalakan umat beriman di Paroki St. Vinsensius a Paulo Benlutu dari masa ke masa.
         </p>
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 10px; background: transparent; justify-content: center; align-items: center; flex-wrap: wrap;">
-                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.2); padding: 5px 16px; border-radius: 25px; font-size: 0.82rem;">
-                    <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Beranda</a>
+            <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 8px; background: transparent; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
+                    <a href="/" style="color: white; text-decoration: none; font-weight: 500;"><i class="fa-solid fa-house me-1" style="font-size: 0.75rem;"></i> Beranda</a>
                 </li>
-                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.2); padding: 5px 16px; border-radius: 25px; font-size: 0.82rem;">
+                <li class="breadcrumb-separator" style="color: rgba(255,255,255,0.75); font-size: 0.7rem; display: inline-flex; align-items: center;">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </li>
+                <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
                     <a href="/profil" style="color: white; text-decoration: none; font-weight: 500;">Profil</a>
                 </li>
-                <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 5px 16px; border-radius: 25px; font-size: 0.82rem; font-weight: 700;">
+                <li class="breadcrumb-separator" style="color: rgba(255,255,255,0.75); font-size: 0.7rem; display: inline-flex; align-items: center;">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </li>
+                <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 6px 18px; border-radius: 25px; font-size: 0.85rem; font-weight: 700;">
                     Riwayat Pastor
                 </li>
             </ol>
