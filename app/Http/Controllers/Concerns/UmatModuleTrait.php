@@ -380,7 +380,7 @@ trait UmatModuleTrait
 
         $rows = $query->orderBy('nama_lengkap')
             ->limit(50)
-            ->get(['id', 'nama_lengkap', 'nama_baptis', 'nik', 'handphone', 'no_hp'])
+            ->get(['id', 'nama_lengkap', 'nama_baptis', 'nik', 'handphone'])
             ->map(function ($u) {
                 $nama = trim(trim(($u->nama_baptis ?: '') . ' ' . ($u->nama_lengkap ?: '')));
                 $nama = $nama ?: ($u->nama_lengkap ?: '');
