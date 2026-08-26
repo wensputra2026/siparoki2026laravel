@@ -18,10 +18,44 @@ use Inertia\Response;
 class AuthController extends Controller
 {
     /**
+     * Helper to redirect authenticated user to their role dashboard.
+     */
+    protected function redirectUserByRole($user)
+    {
+        $roleSlug = strtolower($user->role->slug ?? $user->role->nama_role ?? '');
+
+        if (str_contains($roleSlug, 'super')) {
+            return redirect('/superadmin');
+        } elseif (str_contains($roleSlug, 'pastor')) {
+            return redirect('/pastor');
+        } elseif (str_contains($roleSlug, 'paroki') || str_contains($roleSlug, 'sekretariat')) {
+            return redirect('/paroki');
+        } elseif (str_contains($roleSlug, 'wilayah')) {
+            return redirect('/wilayah');
+        } elseif (str_contains($roleSlug, 'kapela') || str_contains($roleSlug, 'stasi')) {
+            return redirect('/kapela');
+        } elseif (str_contains($roleSlug, 'kub')) {
+            return redirect('/kub');
+        } elseif (str_contains($roleSlug, 'bendahara')) {
+            return redirect('/bendahara');
+        } elseif (str_contains($roleSlug, 'penulis') || str_contains($roleSlug, 'komsos')) {
+            return redirect('/penulis');
+        } elseif (str_contains($roleSlug, 'umat')) {
+            return redirect('/umat');
+        }
+
+        return redirect('/superadmin');
+    }
+
+    /**
      * Show login page.
      */
     public function showLogin()
     {
+        if (Auth::check()) {
+            return $this->redirectUserByRole(Auth::user());
+        }
+
         return view('pages.auth.login', [
             'status' => session('status'),
         ]);
@@ -70,7 +104,6 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
-            $roleSlug = strtolower($user->role->slug ?? $user->role->nama_role ?? '');
 
             // Log successful login
             try {
@@ -89,27 +122,7 @@ class AuthController extends Controller
                 }
             } catch (\Throwable $e) {}
 
-            if (str_contains($roleSlug, 'super')) {
-                return redirect('/superadmin')->with('success', 'Selamat datang kembali, Super Admin!');
-            } elseif (str_contains($roleSlug, 'pastor')) {
-                return redirect('/pastor')->with('success', 'Selamat datang di Panel Pastor Paroki!');
-            } elseif (str_contains($roleSlug, 'paroki') || str_contains($roleSlug, 'sekretariat')) {
-                return redirect('/paroki')->with('success', 'Selamat datang di Panel Sekretariat Paroki!');
-            } elseif (str_contains($roleSlug, 'wilayah')) {
-                return redirect('/wilayah')->with('success', 'Selamat datang di Panel Admin Wilayah!');
-            } elseif (str_contains($roleSlug, 'kapela') || str_contains($roleSlug, 'stasi')) {
-                return redirect('/kapela')->with('success', 'Selamat datang di Panel Admin Kapela / Stasi!');
-            } elseif (str_contains($roleSlug, 'kub')) {
-                return redirect('/kub')->with('success', 'Selamat datang di Panel Pengurus KUB!');
-            } elseif (str_contains($roleSlug, 'bendahara')) {
-                return redirect('/bendahara')->with('success', 'Selamat datang di Panel Bendahara!');
-            } elseif (str_contains($roleSlug, 'penulis') || str_contains($roleSlug, 'komsos')) {
-                return redirect('/penulis')->with('success', 'Selamat datang di Panel Redaksi / Komsos!');
-            } elseif (str_contains($roleSlug, 'umat')) {
-                return redirect('/umat')->with('success', 'Selamat datang di Portal Umat!');
-            }
-
-            return redirect('/superadmin')->with('success', 'Selamat datang kembali di SIPAROKI!');
+            return $this->redirectUserByRole($user)->with('success', 'Selamat datang kembali, ' . ($user->name ?? $user->nama_lengkap ?? 'Petugas') . '!');
         }
 
         // Log failed login attempt
@@ -168,6 +181,10 @@ class AuthController extends Controller
      */
     public function showRegister()
     {
+        if (Auth::check()) {
+            return $this->redirectUserByRole(Auth::user());
+        }
+
         $wilayahs = collect();
         $kapelas = collect();
         $kubs = collect();
@@ -259,6 +276,10 @@ class AuthController extends Controller
      */
     public function showForgotPassword()
     {
+        if (Auth::check()) {
+            return $this->redirectUserByRole(Auth::user());
+        }
+
         return view('pages.auth.lupa-password', [
             'status' => session('status'),
         ]);
