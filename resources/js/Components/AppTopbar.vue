@@ -24,12 +24,18 @@ const {
     selectedKapelaId,
     kubList,
     selectedKubId,
+    onScopeChange,
     getHref,
     isItemActive,
     userAvatar,
     userName,
     showLogoutModal,
 } = inject(RoleMenuKey);
+
+const returnToSuperAdmin = () => {
+    activeRole.value = 'Super Admin';
+    onRoleChange();
+};
 </script>
 
 <template>
@@ -39,13 +45,13 @@ const {
         <div class="flex items-center gap-3">
             <button
                 @click="toggleSidebar"
-                class="hidden lg:flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                class="hidden lg:flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
             >
                 <i class="fa-solid fa-bars text-sm"></i>
             </button>
             <button
                 @click="isMobileOpen = !isMobileOpen"
-                class="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                class="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
             >
                 <i class="fa-solid fa-bars text-sm"></i>
             </button>
@@ -73,9 +79,9 @@ const {
 
         <!-- Right: Role Switcher & Action Buttons -->
         <div class="flex items-center gap-2.5">
-            <!-- Role Preview Selector (ONLY for Super Admin) -->
-            <div v-if="isSuperAdmin" class="hidden md:flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-xl border border-slate-200 text-xs">
-                <span class="text-[10px] font-bold uppercase text-slate-500 pl-1.5 pr-0.5">Peran:</span>
+            <!-- Role Preview Selector (for Super Admin & Admin Paroki) -->
+            <div v-if="isSuperAdmin" class="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-xl border border-slate-200 text-xs">
+                <span class="text-[10px] font-bold uppercase text-slate-500 pl-1.5 pr-0.5 hidden sm:inline">Peran:</span>
                 <select
                     v-model="activeRole"
                     @change="onRoleChange"
@@ -91,11 +97,12 @@ const {
                     <span class="text-slate-300">|</span>
                     <select
                         v-model="selectedPastorId"
+                        @change="onScopeChange('pastor_id', selectedPastorId)"
                         class="bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[160px] truncate"
                     >
-                        <option value="">-- Pilih Pastor --</option>
+                        <option value="">-- Semua Pastor --</option>
                         <option v-for="p in pastorsList" :key="p.id" :value="p.id">
-                            {{ p.nama_pastor }} ({{ p.jabatan || 'Pastor' }})
+                            {{ p.nama_pastor }}
                         </option>
                     </select>
                 </template>
@@ -105,9 +112,10 @@ const {
                     <span class="text-slate-300">|</span>
                     <select
                         v-model="selectedWilayahId"
+                        @change="onScopeChange('wilayah_id', selectedWilayahId)"
                         class="bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[160px] truncate"
                     >
-                        <option value="">-- Pilih Wilayah --</option>
+                        <option value="">-- Semua Wilayah --</option>
                         <option v-for="w in wilayahList" :key="w.id" :value="w.id">
                             {{ w.nama_wilayah }}
                         </option>
@@ -119,9 +127,10 @@ const {
                     <span class="text-slate-300">|</span>
                     <select
                         v-model="selectedKapelaId"
+                        @change="onScopeChange('kapela_id', selectedKapelaId)"
                         class="bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[160px] truncate"
                     >
-                        <option value="">-- Pilih Stasi / Kapela --</option>
+                        <option value="">-- Semua Stasi / Kapela --</option>
                         <option v-for="k in kapelaList" :key="k.id" :value="k.id">
                             {{ k.nama_kapela }}
                         </option>
@@ -133,17 +142,30 @@ const {
                     <span class="text-slate-300">|</span>
                     <select
                         v-model="selectedKubId"
+                        @change="onScopeChange('kub_id', selectedKubId)"
                         class="bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[160px] truncate"
                     >
-                        <option value="">-- Pilih KUB --</option>
+                        <option value="">-- Semua KUB --</option>
                         <option v-for="kb in kubList" :key="kb.id" :value="kb.id">
                             {{ kb.nama_kub }}
                         </option>
                     </select>
                 </template>
+
+                <!-- Quick Button: Return To Super Admin -->
+                <button
+                    v-if="activeRole !== 'Super Admin'"
+                    type="button"
+                    @click="returnToSuperAdmin"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-[11px] font-bold shadow-xs transition cursor-pointer shrink-0"
+                    title="Kembali ke Mode Penuh Super Admin"
+                >
+                    <i class="fa-solid fa-arrow-rotate-left text-[10px]"></i>
+                    <span class="hidden md:inline">Ke Super Admin</span>
+                </button>
             </div>
 
-            <!-- Static Role Badge for Non-Super Admin (Admin Paroki, Pastor, Wilayah, etc.) -->
+            <!-- Static Role Badge for Non-Super Admin -->
             <div v-else class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80 text-xs font-bold text-amber-900 shadow-2xs">
                 <i class="fa-solid fa-user-shield text-amber-600 text-[11px]"></i>
                 <span>{{ activeRole }}</span>

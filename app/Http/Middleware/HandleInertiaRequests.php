@@ -106,12 +106,13 @@ class HandleInertiaRequests extends Middleware
         // Cache scopeOptions for 10 minutes — these rarely change
         $currentRole = $request->user()?->role?->nama_role ?? $request->user()?->role?->slug ?? '';
         $roleKey = str_replace(['_', '-', ' '], '', strtolower($currentRole));
-        $needsPastorScope = str_contains($roleKey, 'pastor');
-        $needsWilayahScope = str_contains($roleKey, 'wilayah');
-        $needsKapelaScope = str_contains($roleKey, 'kapela') || str_contains($roleKey, 'stasi');
-        $needsKubScope = str_contains($roleKey, 'kub');
+        $isSuperUser = (int) ($request->user()?->role_id ?? 0) === 1 || in_array($roleKey, ['superadmin', 'superadministrator', 'admin', 'administrator', 'pastor', 'pastorparoki'], true);
+        $needsPastorScope = $isSuperUser || str_contains($roleKey, 'pastor');
+        $needsWilayahScope = $isSuperUser || str_contains($roleKey, 'wilayah');
+        $needsKapelaScope = $isSuperUser || str_contains($roleKey, 'kapela') || str_contains($roleKey, 'stasi');
+        $needsKubScope = $isSuperUser || str_contains($roleKey, 'kub');
 
-        $scopeOptions = Cache::remember("scope_options_middleware_v4.{$roleKey}", 600, function () use ($needsPastorScope, $needsWilayahScope, $needsKapelaScope, $needsKubScope) {
+        $scopeOptions = Cache::remember("scope_options_middleware_v5.{$roleKey}", 600, function () use ($needsPastorScope, $needsWilayahScope, $needsKapelaScope, $needsKubScope) {
             $result = ['pastors' => [], 'wilayah' => [], 'kapela' => [], 'kub' => []];
             try {
                 // Pastors
@@ -185,7 +186,7 @@ class HandleInertiaRequests extends Middleware
                     'foto'           => $request->user()->foto ?? null,
                     'role_id'        => (int) ($request->user()->role_id ?? 0),
                     'role'           => $request->user()->role?->nama_role ?? 'Pengguna',
-                    'is_super_admin' => (int) ($request->user()->role_id ?? 0) === 1 || in_array(strtolower(preg_replace('/[^a-z]/', '', $request->user()->role?->nama_role ?? '')), ['superadmin', 'superadministrator'], true),
+                    'is_super_admin' => (int) ($request->user()->role_id ?? 0) === 1 || in_array(strtolower(preg_replace('/[^a-z]/', '', $request->user()->role?->nama_role ?? $request->user()->role?->slug ?? '')), ['superadmin', 'superadministrator'], true),
                 ] : null,
             ],
             'scopeOptions' => $scopeOptions,

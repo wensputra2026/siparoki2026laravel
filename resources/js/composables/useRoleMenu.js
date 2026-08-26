@@ -117,13 +117,29 @@ const kubList = computed(() => _page?.props.scopeOptions?.kub || []);
 
 // Current authenticated user role or active preview role
 const userActualRole = computed(() => {
-    return _page?.props.auth?.user?.role || '';
+    const roleVal = _page?.props.auth?.user?.role;
+    if (typeof roleVal === 'string') return roleVal;
+    return roleVal?.nama_role || roleVal?.slug || 'Super Admin';
 });
 
 const isSuperAdmin = computed(() => {
+    if (Boolean(_page?.props.auth?.user?.is_super_admin)) return true;
+    if (Number(_page?.props.auth?.user?.role_id) === 1) return true;
     const r = (userActualRole.value || '').toLowerCase();
-    return r.includes('super');
+    return r.includes('super') || r.includes('admin paroki');
 });
+
+const onScopeChange = (type, val) => {
+    if (typeof window === 'undefined') return;
+    const currentPath = _page?.url?.split('?')[0] || window.location.pathname;
+    const url = new URL(window.location.origin + currentPath);
+    if (val) {
+        url.searchParams.set(type, val);
+    } else {
+        url.searchParams.delete(type);
+    }
+    router.visit(url.pathname + url.search, { preserveState: true, preserveScroll: true });
+};
 
 const resolveRoleFromPath = () => {
     const rawUrl = _page?.url || (typeof window !== 'undefined' ? window.location.pathname : '') || '';
@@ -351,10 +367,15 @@ export function useRoleMenu(props) {
         triggerToast,
         userAvatar,
         userName,
+        pastorsList,
         selectedPastorId,
+        wilayahList,
         selectedWilayahId,
+        kapelaList,
         selectedKapelaId,
+        kubList,
         selectedKubId,
+        onScopeChange,
         isSuperAdmin,
         activeRole,
         onRoleChange,
