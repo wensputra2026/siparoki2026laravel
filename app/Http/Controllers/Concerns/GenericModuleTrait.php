@@ -27,51 +27,404 @@ use Inertia\Response;
 
 trait GenericModuleTrait
 {
+    public function module(Request $request, string $slug)
+    {
+        if ($slug === 'statistik' || $slug === 'demografi') {
+            return $this->statistik($request);
+        }
+
+        $moduleMap = $this->getModuleMap();
+
+        if (!isset($moduleMap[$slug])) {
+            return redirect()->route('dashboard');
+        }
+
+        $config = $moduleMap[$slug];
+        $modelClass = $config['model'];
+        $search = $request->input('search');
+
+        if ($slug === 'riwayat-pastor' || $slug === 'riwayat_pastor_paroki') {
+            $this->ensureRiwayatPastorParokiTableAndData();
+        }
+
+        if ($slug === 'kategori-konten' || $slug === 'kategori_konten') {
+            $this->ensureKategoriKontenTableAndData();
+        }
+
+        if ($slug === 'komentar-artikel' || $slug === 'komentar_artikel') {
+            $this->ensureKomentarArtikelTableAndData();
+        }
+
+        $query = $modelClass::query();
+        if ($slug === 'keuskupan') {
+            $query->with([
+                'dekenats.parokis',
+                'provinsi:id_provinsi,nama_provinsi',
+                'kabupaten:id_kabupaten,nama_kabupaten',
+                'kecamatan:id_kecamatan,nama_kecamatan',
+                'desa:id_desa,nama_desa'
+            ]);
+        } elseif ($slug === 'dekenat' || $slug === 'kevikepan') {
+            $query->with([
+                'keuskupan',
+                'parokis'
+            ]);
+        } elseif ($slug === 'paroki') {
+            $query->with([
+                'keuskupan',
+                'dekenat',
+                'provinsi:id_provinsi,nama_provinsi',
+                'kabupaten:id_kabupaten,nama_kabupaten',
+                'kecamatan:id_kecamatan,nama_kecamatan',
+                'desa:id_desa,nama_desa',
+                'wilayahs'
+            ]);
+        } elseif ($slug === 'kuasi-paroki') {
+            $query->with(['paroki.dekenat']);
+        } elseif ($slug === 'kapela' || $slug === 'stasi') {
+            if (Schema::hasColumn('kapela', 'paroki_id')) {
+                $query->with(['paroki']);
+            }
+            if (Schema::hasColumn('kub', 'kapela_id')) {
+                $query->with(['kubs']);
+            }
+            if (Schema::hasColumn('wilayah', 'kapela_id')) {
+                $query->with(['wilayahs']);
+            }
+        } elseif ($slug === 'wilayah') {
+            $query->with(['paroki', 'kubs']);
+        } elseif ($slug === 'kub') {
+            $query->with(['wilayah', 'kapela', 'paroki']);
+        } elseif ($slug === 'provinsi') {
+            $query->with(['kabupatens']);
+        } elseif ($slug === 'kabupaten') {
+            $query->with(['provinsi:id_provinsi,nama_provinsi', 'kecamatans']);
+        } elseif ($slug === 'kecamatan') {
+            $query->with(['kabupaten', 'desas']);
+        } elseif ($slug === 'desa-kelurahan') {
+            $query->with(['kecamatan']);
+        } elseif ($slug === 'kk-katolik') {
+            $query->withCount('anggota');
+        } elseif (in_array($slug, ['umat', 'data-umat'], true)) {
+            $query->with(['kk.wilayah', 'kk.kapela', 'kk.kub', 'lingkungan']);
+        } elseif ($slug === 'user') {
+            $query->with(['role', 'wilayah', 'kapela', 'kub']);
+        } elseif ($slug === 'anggota-kategorial') {
+            $query->with(['peranKategorial']);
+        } elseif ($slug === 'komentar-artikel' || $slug === 'komentar_artikel') {
+            $query->with(['konten']);
+        }
+
+        $modelInstance = new $modelClass;
+        $tableName = $modelInstance->getTable();
+        $tableColumns = \Illuminate\Support\Facades\Cache::remember(
+            "schema_columns_{$tableName}",
+            86400,
+            fn () => \Illuminate\Support\Facades\Schema::getColumnListing($tableName)
+        );
+        $defaultParokiId = $this->defaultParokiIdFromProfile();
+
+        if (($slug === 'kapela' || $slug === 'stasi') && $defaultParokiId && in_array('paroki_id', $tableColumns, true)) {
+            $query->where('paroki_id', $defaultParokiId);
+        }
+
+        // Automatic Scope Filtering based on Role (matches CI3 reference)
+        $authUser = auth()->user();
+        $userRoleSlug = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));
+
+        if (str_contains($userRoleSlug, 'wilayah') && !empty($authUser?->wilayah_id)) {
+            if ($slug === 'wilayah' && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->wilayah_id);
+            } elseif (in_array('wilayah_id', $tableColumns, true)) {
+                $query->where('wilayah_id', $authUser->wilayah_id);
+            }
+        } elseif ((str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) && !empty($authUser?->kapela_id)) {
+            if (in_array($slug, ['kapela', 'stasi']) && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->kapela_id);
+            } elseif (in_array('kapela_id', $tableColumns, true)) {
+                $query->where('kapela_id', $authUser->kapela_id);
+            }
+        } elseif (str_contains($userRoleSlug, 'kub') && !empty($authUser?->kub_id)) {
+            if ($slug === 'kub' && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->kub_id);
+            } elseif (in_array('kub_id', $tableColumns, true)) {
+                $query->where('kub_id', $authUser->kub_id);
+            }
+        }
+
+        $keuskupanFilter = $request->input('keuskupan_id');
+        $dekenatFilter = $request->input('dekenat_id');
+        $provinsiFilter = $request->input('provinsi_id');
+        $kabupatenFilter = $request->input('kabupaten_id');
+        $kecamatanFilter = $request->input('kecamatan_id');
+        $tipeFilter = $request->input('tipe');
+        $roleIdFilter = $request->input('role_id');
+        $wilayahIdFilter = $request->input('wilayah_id');
+        $kapelaIdFilter = $request->input('kapela_id');
+        $kubIdFilter = $request->input('kub_id');
+        $statusFilter = $request->input('status');
+
+        if ($keuskupanFilter && in_array('keuskupan_id', $tableColumns)) {
+            $query->where('keuskupan_id', $keuskupanFilter);
+        }
+
+        if ($dekenatFilter && in_array('dekenat_id', $tableColumns)) {
+            $query->where('dekenat_id', $dekenatFilter);
+        }
+
+        if ($provinsiFilter) {
+            if (in_array('provinsi_id', $tableColumns)) {
+                $query->where('provinsi_id', $provinsiFilter);
+            } elseif ($slug === 'kecamatan') {
+                $query->whereHas('kabupaten', function ($q) use ($provinsiFilter) {
+                    $q->where('provinsi_id', $provinsiFilter);
+                });
+            } elseif ($slug === 'desa-kelurahan') {
+                $query->whereHas('kecamatan.kabupaten', function ($q) use ($provinsiFilter) {
+                    $q->where('provinsi_id', $provinsiFilter);
+                });
+            }
+        }
+
+        if ($kabupatenFilter) {
+            if (in_array('kabupaten_id', $tableColumns)) {
+                $query->where('kabupaten_id', $kabupatenFilter);
+            } elseif ($slug === 'desa-kelurahan') {
+                $query->whereHas('kecamatan', function ($q) use ($kabupatenFilter) {
+                    $q->where('kabupaten_id', $kabupatenFilter);
+                });
+            }
+        }
+
+        if ($kecamatanFilter && in_array('kecamatan_id', $tableColumns)) {
+            $query->where('kecamatan_id', $kecamatanFilter);
+        }
+
+        if ($slug === 'konten' && $tipeFilter && in_array('tipe', $tableColumns, true)) {
+            $query->where('tipe', $tipeFilter);
+        }
+
+        if (in_array($slug, ['umat', 'data-umat'], true)) {
+            if ($wilayahIdFilter) {
+                $query->where(function ($q) use ($wilayahIdFilter, $tableColumns) {
+                    if (in_array('wilayah_id', $tableColumns, true)) {
+                        $q->where('wilayah_id', $wilayahIdFilter);
+                    }
+                    $q->orWhereHas('kk', function ($kkQ) use ($wilayahIdFilter) {
+                        $kkQ->where('wilayah_id', $wilayahIdFilter);
+                    });
+                });
+            }
+
+            if ($kapelaIdFilter) {
+                $query->where(function ($q) use ($kapelaIdFilter, $tableColumns) {
+                    if (in_array('kapela_id', $tableColumns, true)) {
+                        $q->where('kapela_id', $kapelaIdFilter);
+                    }
+                    $q->orWhereHas('kk', function ($kkQ) use ($kapelaIdFilter) {
+                        $kkQ->where('kapela_id', $kapelaIdFilter);
+                    });
+                });
+            }
+
+            if ($kubIdFilter) {
+                $query->where(function ($q) use ($kubIdFilter, $tableColumns) {
+                    if (in_array('kub_id', $tableColumns, true)) {
+                        $q->where('kub_id', $kubIdFilter);
+                    }
+                    $q->orWhereHas('kk', function ($kkQ) use ($kubIdFilter) {
+                        $kkQ->where('kub_id', $kubIdFilter);
+                    });
+                });
+            }
+        }
+
+        foreach (['paroki_id', 'wilayah_id', 'kapela_id', 'kub_id', 'role_id', 'status', 'status_kk', 'status_verifikasi'] as $relationFilter) {
+            if (in_array($slug, ['umat', 'data-umat'], true) && in_array($relationFilter, ['wilayah_id', 'kapela_id', 'kub_id'], true)) {
+                continue;
+            }
+            $value = $request->input($relationFilter);
+            if ($value && in_array($relationFilter, $tableColumns, true)) {
+                $query->where($relationFilter, $value);
+            }
+        }
+
+        if ($search && !empty($config['columns'])) {
+            $query->where(function ($q) use ($config, $search, $tableColumns) {
+                $isFirst = true;
+                foreach ($config['columns'] as $col) {
+                    $columnToSearch = null;
+                    if (in_array($col['key'], $tableColumns)) {
+                        $columnToSearch = $col['key'];
+                    } elseif (isset($col['altKey']) && in_array($col['altKey'], $tableColumns)) {
+                        $columnToSearch = $col['altKey'];
+                    }
+
+                    if ($columnToSearch) {
+                        if ($isFirst) {
+                            $q->where($columnToSearch, 'like', "%{$search}%");
+                            $isFirst = false;
+                        } else {
+                            $q->orWhere($columnToSearch, 'like', "%{$search}%");
+                        }
+                    }
+                }
+            });
+        }
+
+        if (in_array('created_at', $tableColumns)) {
+            $query->latest('created_at');
+        } elseif ($modelInstance->getKeyName() && in_array($modelInstance->getKeyName(), $tableColumns)) {
+            $query->orderBy($modelInstance->getKeyName(), 'desc');
+        }
+
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, [10, 15, 25, 50, 100])) {
+            $perPage = 10;
+        }
+
+        $items = $query->paginate($perPage)->withQueryString();
+
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? '';
+        $roleMap = [
+            'superadmin' => 'Super Admin',
+            'paroki' => 'Admin Paroki',
+            'pastor' => 'Pastor',
+            'wilayah' => 'Admin Wilayah',
+            'kapela' => 'Admin Kapela / Stasi',
+            'kub' => 'Ketua KUB',
+            'bendahara' => 'Bendahara',
+            'penulis' => 'Penulis',
+            'umat' => 'Umat',
+        ];
+        $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
+
+        $needsKeuskupanReferences = in_array($slug, ['keuskupan', 'dekenat', 'kevikepan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'wilayah', 'kub'], true);
+        $needsDekenatReferences = in_array($slug, ['keuskupan', 'dekenat', 'kevikepan', 'paroki', 'kuasi-paroki'], true);
+        $needsProvinsiReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'kabupaten', 'kecamatan', 'desa-kelurahan'], true);
+        $needsKabupatenReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'kecamatan', 'desa-kelurahan'], true);
+        $needsKecamatanReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'desa-kelurahan'], true);
+        $needsParokiReferences = in_array($slug, ['keuskupan', 'dekenat', 'kevikepan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'wilayah', 'kub', 'user'], true);
+        $needsPastors = in_array($slug, ['paroki', 'kuasi-paroki', 'dekenat', 'kevikepan', 'master-pastor', 'riwayat-pastor', 'sakramen', 'pengajuan-sakramen']);
+        $needsUmatReferences = in_array($slug, ['pengajuan-sakramen', 'sakramen', 'iuran', 'umat', 'data-umat'], true);
+        $needsKontenReferences = $slug === 'konten';
+
+        $keuskupanList = $needsKeuskupanReferences
+            ? \Illuminate\Support\Facades\Cache::remember('ref_keuskupan_list_v2', 3600, function() {
+                return \App\Models\Keuskupan::orderBy('nama_keuskupan')->get(['id_keuskupan', 'nama_keuskupan', 'kode_keuskupan']);
+            })
+            : [];
+
+        $dekenatList = $needsDekenatReferences
+            ? \Illuminate\Support\Facades\Cache::remember('ref_dekenat_list_v3', 3600, function() {
+                return \App\Models\Dekenat::all();
+            })
+            : [];
+
+        $provinsiList = $needsProvinsiReferences
+            ? \Illuminate\Support\Facades\Cache::remember('ref_provinsi_list_v2', 3600, function() {
+                return \App\Models\Provinsi::orderBy('nama_provinsi')->get(['id_provinsi', 'nama_provinsi']);
+            })
+            : [];
+
+        $kabupatenList = $needsKabupatenReferences
+            ? \Illuminate\Support\Facades\Cache::remember('ref_kabupaten_list_v2', 3600, function() {
+                return \App\Models\Kabupaten::orderBy('nama_kabupaten')->get(['id_kabupaten', 'provinsi_id', 'nama_kabupaten']);
+            })
+            : [];
+
+        $kecamatanList = [];
+        if ($needsKecamatanReferences) {
+            $kecamatanList = \Illuminate\Support\Facades\Cache::remember('ref_kecamatan_list_ntt_v1', 3600, function() {
+                $nttKecIds = \App\Models\Kecamatan::whereHas('kabupaten.provinsi', function($q) {
+                    $q->where('nama_provinsi', 'like', '%Nusa Tenggara Timur%')
+                      ->orWhere('nama_provinsi', 'like', '%NTT%');
+                })->pluck('id_kecamatan');
+
+                if ($nttKecIds->isNotEmpty()) {
+                    return \App\Models\Kecamatan::whereIn('id_kecamatan', $nttKecIds)
+                        ->orderBy('nama_kecamatan')
+                        ->get(['id_kecamatan', 'kabupaten_id', 'nama_kecamatan']);
+                }
+                return \App\Models\Kecamatan::orderBy('nama_kecamatan')->get(['id_kecamatan', 'kabupaten_id', 'nama_kecamatan']);
+            });
+
+            if ($slug === 'desa-kelurahan' && $kabupatenFilter) {
+                $kecamatanList = $kecamatanList
+                    ->filter(fn ($kecamatan) => (string) $kecamatan->kabupaten_id === (string) $kabupatenFilter)
+                    ->values();
+            }
+        }
+
+        $desaList = [];
+        if ($slug === 'keuskupan' || $slug === 'paroki' || $slug === 'kapela' || $slug === 'stasi') {
+            $desaList = \Illuminate\Support\Facades\Cache::remember('ref_desa_list_ntt_v3', 3600, function() {
+                $nttKecIds = \App\Models\Kecamatan::whereHas('kabupaten.provinsi', function($q) {
+                    $q->where('nama_provinsi', 'like', '%Nusa Tenggara Timur%')
+                      ->orWhere('nama_provinsi', 'like', '%NTT%');
+                })->pluck('id_kecamatan');
+
+                if ($nttKecIds->isNotEmpty()) {
+                    return \App\Models\DesaKelurahan::whereIn('kecamatan_id', $nttKecIds)->orderBy('nama_desa')->get(['id_desa', 'kecamatan_id', 'nama_desa']);
                 }
                 return \App\Models\DesaKelurahan::take(500)->orderBy('nama_desa')->get(['id_desa', 'kecamatan_id', 'nama_desa']);
             });
         }
+
         $parokiList = $needsParokiReferences
             ? \Illuminate\Support\Facades\Cache::remember('ref_paroki_list_all_v2', 3600, function() {
                 return \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'keuskupan_id', 'nama_paroki', 'kode_paroki']);
             })
             : collect();
+
         $defaultParoki = $needsParokiReferences
             ? $parokiList->firstWhere('id_paroki', $defaultParokiId)
             : null;
+
         $roleList = $slug === 'user'
             ? \Illuminate\Support\Facades\Cache::remember('ref_role_list_v1', 3600, function() {
                 return \App\Models\Role::where('status', 1)->orderBy('nama_role')->get(['id', 'nama_role', 'slug']);
             })
             : [];
+
         $wilayahList = \Illuminate\Support\Facades\Cache::remember('ref_wilayah_list_v2', 1800, fn () => \App\Models\Wilayah::orderBy('nama_wilayah')->get());
         $kapelaList = \Illuminate\Support\Facades\Cache::remember('ref_kapela_list_v2', 1800, fn () => \App\Models\Kapela::orderBy('nama_kapela')->get());
         $kubList = \Illuminate\Support\Facades\Cache::remember('ref_kub_list_v2', 1800, fn () => \App\Models\Kub::orderBy('nama_kub')->get());
-        // Daftar umat kini diambil lazy via endpoint /umat-options (tenant-scoped)
-        // agar tidak memuat ratusan baris umat setiap buka modul.
-        $umatList = [];
+        $umatList = $needsUmatReferences
+            ? \Illuminate\Support\Facades\Cache::remember('ref_umat_select_list_v1', 600, fn () => \App\Models\Umat::orderBy('nama_lengkap')->take(500)->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']))
+            : [];
+
         if (str_contains($userRoleSlug, 'wilayah') && !empty($authUser?->wilayah_id)) {
             $wilayahList = $wilayahList->where('id', $authUser->wilayah_id)->values();
             $kubList = $kubList->where('wilayah_id', $authUser->wilayah_id)->values();
             $kapelaList = collect();
             if ($needsUmatReferences) {
-                $umatList = collect([]);
+                $umatList = \App\Models\Umat::whereHas('kk', fn($kQ) => $kQ->where('wilayah_id', $authUser->wilayah_id))
+                    ->orderBy('nama_lengkap')
+                    ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
             }
         } elseif ((str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) && !empty($authUser?->kapela_id)) {
             $kapelaList = $kapelaList->where('id', $authUser->kapela_id)->values();
             $kubList = $kubList->where('kapela_id', $authUser->kapela_id)->values();
             $wilayahList = collect();
             if ($needsUmatReferences) {
-                $umatList = collect([]);
+                $umatList = \App\Models\Umat::whereHas('kk', fn($kQ) => $kQ->where('kapela_id', $authUser->kapela_id))
+                    ->orderBy('nama_lengkap')
+                    ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
             }
         } elseif (str_contains($userRoleSlug, 'kub') && !empty($authUser?->kub_id)) {
             $kubList = $kubList->where('id', $authUser->kub_id)->values();
             $wilayahList = collect();
             $kapelaList = collect();
             if ($needsUmatReferences) {
-                $umatList = collect([]);
+                $umatList = \App\Models\Umat::whereHas('kk', fn($kQ) => $kQ->where('kub_id', $authUser->kub_id))
+                    ->orderBy('nama_lengkap')
+                    ->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']);
             }
         }
+
+
+
         $kategoriKontenList = $needsKontenReferences && Schema::hasTable('kategori_konten')
             ? DB::table('kategori_konten')
                 ->when(Schema::hasColumn('kategori_konten', 'is_deleted'), fn ($q) => $q->where(function ($qq) {
@@ -83,6 +436,7 @@ trait GenericModuleTrait
                 ->orderBy('nama_kategori')
                 ->get(['id', 'nama_kategori', 'slug', 'tipe'])
             : [];
+
         $penulisList = $needsKontenReferences
             ? collect(DB::table('users')->whereNotNull('nama_lengkap')->where('nama_lengkap', '!=', '')->pluck('nama_lengkap'))
                 ->merge(DB::table('konten')->whereNotNull('penulis')->where('penulis', '!=', '')->distinct()->pluck('penulis'))
@@ -91,6 +445,7 @@ trait GenericModuleTrait
                 ->sort(SORT_NATURAL | SORT_FLAG_CASE)
                 ->values()
             : [];
+
         $mergedPastors = $needsPastors
             ? \Illuminate\Support\Facades\Cache::remember('ref_merged_pastors_v2', 3600, function() {
                 $defaultPastors = [
@@ -134,6 +489,7 @@ trait GenericModuleTrait
                 return $merged;
             })
             : [];
+
         $kkList = [];
         if ($slug === 'iuran' || in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
             $kkQuery = \App\Models\KkKatolik::when(Schema::hasColumn('kk_katolik', 'is_deleted'), fn ($q) => $q->where(function ($qq) {
@@ -163,6 +519,7 @@ trait GenericModuleTrait
                     ];
                 });
         }
+
         $jenisIuranList = ($slug === 'iuran' || $slug === 'jenis-iuran') && Schema::hasTable('jenis_iuran')
             ? DB::table('jenis_iuran')
                 ->when(Schema::hasColumn('jenis_iuran', 'is_deleted'), fn ($q) => $q->where(function ($qq) {
@@ -174,20 +531,7 @@ trait GenericModuleTrait
                 ->orderBy('nama_iuran')
                 ->get(['id', 'nama_iuran', 'nominal_default', 'periode', 'kategori_iuran'])
             : [];
-        // Enrich column metadata with ENUM options so the generic form can
-        // render a proper dropdown instead of a free-text input (prevents
-        // "Data truncated" DB errors on enum columns like jenis_tugas).
-        $enumTable = (new $config['model'])->getTable();
-        foreach ($config['columns'] as &$col) {
-            if (!empty($col['key'])) {
-                $opts = $this->getEnumOptions($enumTable, $col['key']);
-                if ($opts !== null) {
-                    $col['isEnum'] = true;
-                    $col['enumOptions'] = $opts;
-                }
-            }
-        }
-        unset($col);
+
         return Inertia::render('Inertia/GenericModule', [
             'title' => $config['title'],
             'moduleKey' => $slug,
@@ -230,17 +574,18 @@ trait GenericModuleTrait
             ],
         ]);
     }
-    /**
-     * Store new record for pastoral modules with file upload support.
-     */
+
+
     public function storeModule(Request $request, string $slug)
     {
         $moduleMap = $this->getModuleMap();
         if (!isset($moduleMap[$slug])) {
             return back()->with('error', 'Modul tidak ditemukan.');
         }
+
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
+
         // Financial data must be protected from manipulation (positive amount,
         // known type/category). This also satisfies the audit requirement.
         if ($slug === 'keuangan') {
@@ -256,26 +601,27 @@ trait GenericModuleTrait
                 'kategori.required' => 'Kategori transaksi wajib dipilih.',
             ]);
         }
+
         $data = $request->except(['_token', '_method']);
+
         // Universal file upload processing
         foreach ($request->allFiles() as $fileKey => $uploadedFile) {
             $data[$fileKey] = $this->storeModuleUploadedFile($slug, $fileKey, $uploadedFile);
         }
+
         if ($slug === 'user') {
             $data = $this->normalizeUserPayload($data, true);
         }
+
         if ($slug === 'konten') {
             $data = $this->normalizeKontenPayload($data, true);
         }
-        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
-        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'sakramen', 'wilayah', 'kub'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
-            return back()->with('error', 'Akses ditolak. Penambahan data hanya dapat dilakukan oleh Sekretariat Paroki / Super Admin.');
-        }
+
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
             $this->validateKkRequest($request);
             $data = $this->normalizeKkPayload($data, true);
         }
+
         if ($slug === 'kegiatan') {
             if (isset($data['nama_kegiatan']) && !isset($data['judul'])) {
                 $data['judul'] = $data['nama_kegiatan'];
@@ -291,9 +637,11 @@ trait GenericModuleTrait
                 $data['slug'] = Str::slug($data['nama_kegiatan'] ?? $data['judul']);
             }
         }
+
         if (isset($data['nama_pastor_rekan']) && is_array($data['nama_pastor_rekan'])) {
             $data['nama_pastor_rekan'] = implode(', ', array_filter($data['nama_pastor_rekan']));
         }
+
         if ($slug === 'kuasi-paroki') {
             $data = $this->normalizeKuasiParokiPayload($data);
         }
@@ -303,12 +651,14 @@ trait GenericModuleTrait
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
         }
+
         $nullableFks = ['keuskupan_id', 'dekenat_id', 'paroki_id', 'provinsi_id', 'kabupaten_id', 'kecamatan_id', 'desa_id', 'wilayah_id', 'kapela_id', 'kub_id', 'umat_id'];
         foreach ($nullableFks as $fk) {
             if (isset($data[$fk]) && ($data[$fk] === '' || $data[$fk] === 'null' || $data[$fk] === null)) {
                 $data[$fk] = null;
             }
         }
+
         // Filter data strictly by database table schema to prevent unknown column errors
         $table = (new $modelClass)->getTable();
         $validColumns = $this->schemaColumns($table);
@@ -326,39 +676,47 @@ trait GenericModuleTrait
                 $cleanData[$k] = $v;
             }
         }
+
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
             $created = DB::transaction(function () use ($modelClass, $cleanData, $request) {
                 $created = $modelClass::create($cleanData);
                 $this->syncKkAnggota($created, $request->input('anggota', []));
+
                 return $created;
             });
         } else {
             $created = $modelClass::create($cleanData);
         }
+
         if ($slug === 'kuasi-paroki' && $this->shouldPromoteKuasiParoki($data)) {
             DB::transaction(function () use ($created, $data) {
                 $this->promoteKuasiParokiToParoki($created, $data);
             });
         }
+
         $this->logAudit('CREATE_' . strtoupper($slug), $slug, $created->getKey(), $cleanData);
         $this->clearFastAccessCache();
+
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil ditambahkan.');
     }
-    /**
-     * Update existing record in database.
-     */
+
+
     public function updateModule(Request $request, string $slug, $id)
     {
         $moduleMap = $this->getModuleMap();
         if (!isset($moduleMap[$slug])) {
             return back()->with('error', 'Modul tidak ditemukan.');
         }
+
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
+
         $modelInstance = new $modelClass;
         $pk = $modelInstance->getKeyName();
+
         // Try by the model's declared primary key first
         $item = $modelClass::where($pk, $id)->first();
+
         // Fallback: try common primary key patterns
         if (!$item) {
             $table = $modelInstance->getTable();
@@ -377,29 +735,31 @@ trait GenericModuleTrait
                 }
             }
         }
+
         if (!$item) {
             return back()->with('error', 'Data ' . $config['title'] . ' tidak ditemukan.');
         }
+
         $data = $request->except(['_token', '_method']);
+
         // Universal file upload processing
         foreach ($request->allFiles() as $fileKey => $uploadedFile) {
             $data[$fileKey] = $this->storeModuleUploadedFile($slug, $fileKey, $uploadedFile);
         }
+
         if ($slug === 'user') {
             $data = $this->normalizeUserPayload($data, false);
         }
+
         if ($slug === 'konten') {
             $data = $this->normalizeKontenPayload($data, false, $item);
         }
-        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
-        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'wilayah', 'kub', 'sakramen'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
-            return back()->with('error', 'Akses ditolak. Pengelolaan data (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
-        }
+
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
             $this->validateKkRequest($request, $item);
             $data = $this->normalizeKkPayload($data, false, $item);
         }
+
         if ($slug === 'kegiatan') {
             if (isset($data['nama_kegiatan']) && !isset($data['judul'])) {
                 $data['judul'] = $data['nama_kegiatan'];
@@ -415,9 +775,11 @@ trait GenericModuleTrait
                 $data['slug'] = Str::slug($data['nama_kegiatan'] ?? $data['judul']);
             }
         }
+
         if (isset($data['nama_pastor_rekan']) && is_array($data['nama_pastor_rekan'])) {
             $data['nama_pastor_rekan'] = implode(', ', array_filter($data['nama_pastor_rekan']));
         }
+
         if ($slug === 'kuasi-paroki') {
             $data = $this->normalizeKuasiParokiPayload($data, $item);
         }
@@ -427,12 +789,14 @@ trait GenericModuleTrait
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
         }
+
         $nullableFks = ['keuskupan_id', 'dekenat_id', 'paroki_id', 'provinsi_id', 'kabupaten_id', 'kecamatan_id', 'desa_id', 'wilayah_id', 'kapela_id', 'kub_id', 'umat_id'];
         foreach ($nullableFks as $fk) {
             if (isset($data[$fk]) && ($data[$fk] === '' || $data[$fk] === 'null' || $data[$fk] === null)) {
                 $data[$fk] = null;
             }
         }
+
         // Filter data strictly by database table schema to prevent unknown column errors
         $table = (new $modelClass)->getTable();
         $validColumns = $this->schemaColumns($table);
@@ -450,6 +814,7 @@ trait GenericModuleTrait
                 $cleanData[$k] = $v;
             }
         }
+
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
             DB::transaction(function () use ($item, $cleanData, $request) {
                 $item->update($cleanData);
@@ -465,25 +830,30 @@ trait GenericModuleTrait
         } else {
             $item->update($cleanData);
         }
+
         $this->clearFastAccessCache();
+
         $this->logAudit('UPDATE_' . strtoupper($slug), $slug, $item->getKey(), $cleanData);
+
         // Auto-sync into global settings if the updated record is paroki
         if ($slug === 'paroki') {
             $this->syncParokiToGlobalSettings($item);
         }
+
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil diperbarui.');
     }
-    /**
-     * Delete record from database.
-     */
+
+
     public function destroyModule(Request $request, string $slug, $id)
     {
         $moduleMap = $this->getModuleMap();
         if (!isset($moduleMap[$slug])) {
             return back()->with('error', 'Modul tidak ditemukan.');
         }
+
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
+
         $modelInstance = new $modelClass;
         $pk = $modelInstance->getKeyName();
         $item = $modelClass::where($pk, $id)->first();
@@ -496,34 +866,40 @@ trait GenericModuleTrait
         if (!$item && in_array('slug', \Illuminate\Support\Facades\Schema::getColumnListing($modelInstance->getTable()))) {
             $item = $modelClass::where('slug', $id)->first();
         }
+
         if (!$item) {
             return back()->with('error', 'Data tidak ditemukan.');
         }
+
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($slug, ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'wilayah', 'kub'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
-            return back()->with('error', 'Akses ditolak. Penghapusan data struktur Wilayah & KUB hanya dapat dilakukan oleh Sekretariat Paroki / Super Admin.');
+        if (in_array($slug, ['umat', 'data-umat'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
+            return back()->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
         }
+
         if ($slug === 'user' && auth()->id() && (int) auth()->id() === (int) $item->getKey()) {
             return back()->with('error', 'Akun yang sedang digunakan tidak dapat dihapus.');
         }
+
         $this->logAudit('DELETE_' . strtoupper($slug), $slug, $item->getKey());
         $item->delete();
         $this->clearFastAccessCache();
+
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil dihapus.');
     }
-    /**
-     * Export generic module data to Excel (CSV), PDF, or Printable View.
-     */
+
+
     private function exportModuleLegacyCsv(Request $request, string $slug, string $format)
     {
         $moduleMap = $this->getModuleMap();
         if (!isset($moduleMap[$slug])) {
             abort(404, 'Modul tidak ditemukan.');
         }
+
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
         $query = $modelClass::query();
+
         // Apply filters
         $search = $request->query('search');
         if ($search) {
@@ -535,9 +911,11 @@ trait GenericModuleTrait
                 }
             });
         }
+
         $items = $query->latest()->get();
         $title = $config['title'];
         $columns = $config['columns'];
+
         if ($format === 'excel' || $format === 'csv' || $format === 'template') {
             $filename = ($format === 'template' ? 'template-' : '') . Str::slug($title) . '-' . date('Y-m-d_His') . '.csv';
             $headers = [
@@ -547,10 +925,12 @@ trait GenericModuleTrait
                 'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
                 'Expires' => '0',
             ];
+
             $callback = function () use ($items, $columns, $format) {
                 $file = fopen('php://output', 'w');
                 // Output UTF-8 BOM for Excel compatibility
                 fputs($file, "\xEF\xBB\xBF");
+
                 // Headers
                 $headerRow = [];
                 foreach ($columns as $col) {
@@ -559,6 +939,7 @@ trait GenericModuleTrait
                     }
                 }
                 fputcsv($file, $headerRow);
+
                 if ($format !== 'template') {
                     // Data Rows
                     foreach ($items as $item) {
@@ -575,11 +956,14 @@ trait GenericModuleTrait
                 }
                 fclose($file);
             };
+
             return response()->stream($callback, 200, $headers);
         }
+
         // PDF / Print View
         $paroki = \App\Models\Paroki::first();
         $namaParoki = $paroki->nama_paroki ?? 'Paroki Katolik';
+
         $html = '<!DOCTYPE html>
 <html lang="id">
 <head>
@@ -591,7 +975,6 @@ trait GenericModuleTrait
         .header h1 { font-size: 16px; margin: 0; text-transform: uppercase; color: #0f172a; }
         .header h2 { font-size: 13px; margin: 4px 0 0 0; color: #b45309; font-weight: bold; }
         .header p { font-size: 10px; color: #64748b; margin: 2px 0 0 0; }
-
         .meta { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 10px; color: #475569; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         th { background-color: #f1f5f9; color: #334155; font-weight: bold; text-align: left; padding: 6px 8px; border: 1px solid #cbd5e1; font-size: 10px; text-transform: uppercase; }
@@ -609,11 +992,13 @@ trait GenericModuleTrait
         <span>Dokumen siap dicetak / diexport PDF. Klik tombol cetak jika dialog tidak muncul otomatis.</span>
         <button onclick="window.print()" style="padding: 6px 14px; background: #d97706; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Cetak Dokumen</button>
     </div>
+
     <div class="header">
         <h1>' . htmlspecialchars($namaParoki) . '</h1>
         <h2>Laporan Data ' . htmlspecialchars($title) . '</h2>
         <p>Dicetak pada: ' . date('d F Y, H:i') . ' WITA | Total: ' . count($items) . ' Data</p>
     </div>
+
     <table>
         <thead>
             <tr>
@@ -640,50 +1025,54 @@ trait GenericModuleTrait
         }
         $html .= '</tbody>
     </table>
+
     <div class="footer">
         <div>SIPAROKI &copy; ' . date('Y') . ' - Sistem Informasi Paroki</div>
         <div>Halaman 1 / 1</div>
     </div>
 </body>
 </html>';
+
         return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
     }
-    /**
-     * Import generic module data from CSV / Excel file.
-     */
-    /**
-     * Import generic module data from CSV / Excel file with strict anti-duplicate validation.
-     */
+
+
     private function importModuleLegacyCsv(Request $request, string $slug)
     {
         $moduleMap = $this->getModuleMap();
         if (!isset($moduleMap[$slug])) {
             return back()->with('error', 'Modul tidak ditemukan.');
         }
+
         $request->validate([
             'file' => 'required|file|max:15360',
         ]);
+
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
         $modelInstance = new $modelClass;
         $table = $modelInstance->getTable();
         $tableCols = \Illuminate\Support\Facades\Schema::getColumnListing($table);
         $file = $request->file('file');
+
         try {
             $handle = fopen($file->getRealPath(), 'r');
             if ($handle === false) {
                 return back()->with('error', 'Gagal membaca file.');
             }
+
             // Remove UTF-8 BOM if present
             $bom = fread($handle, 3);
             if ($bom !== "\xEF\xBB\xBF") {
                 rewind($handle);
             }
+
             $header = fgetcsv($handle, 2000, ',');
             if (!$header) {
                 fclose($handle);
                 return back()->with('error', 'Format header file CSV / Excel kosong atau tidak valid.');
             }
+
             // Header dictionary mapper
             $headerMap = [
                 'no_kk' => 'no_kk_kw',
@@ -725,7 +1114,6 @@ trait GenericModuleTrait
                 'desa' => 'desa_kelurahan',
                 'desa_kelurahan' => 'desa_kelurahan',
                 'kelurahan' => 'desa_kelurahan',
-
                 'kecamatan' => 'kecamatan',
                 'kota' => 'kota_kabupaten',
                 'kabupaten' => 'kota_kabupaten',
@@ -748,6 +1136,7 @@ trait GenericModuleTrait
                 'status_umat' => 'status_umat',
                 'status_aktif' => 'status_aktif',
             ];
+
             $cleanHeader = [];
             foreach ($header as $h) {
                 $raw = trim(Str::snake(strtolower($h)));
@@ -758,9 +1147,11 @@ trait GenericModuleTrait
                 }
                 $cleanHeader[] = $mapped;
             }
+
             $createdCount = 0;
             $updatedCount = 0;
             $skippedCount = 0;
+
             while (($row = fgetcsv($handle, 2000, ',')) !== false) {
                 // Filter out empty rows
                 $filledValues = array_filter($row, function ($v) {
@@ -770,16 +1161,19 @@ trait GenericModuleTrait
                     $skippedCount++;
                     continue;
                 }
+
                 $rowData = [];
                 foreach ($cleanHeader as $idx => $headerName) {
                     if (isset($row[$idx]) && in_array($headerName, $tableCols, true)) {
                         $val = trim($row[$idx]);
+
                         // Date normalization (DD/MM/YYYY or DD-MM-YYYY to YYYY-MM-DD)
                         if (str_contains($headerName, 'tanggal') || str_contains($headerName, 'tgl') || str_ends_with($headerName, '_at')) {
                             if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $val, $m)) {
                                 $val = sprintf('%04d-%02d-%02d', $m[3], $m[2], $m[1]);
                             }
                         }
+
                         // Gender normalization
                         if ($headerName === 'jenis_kelamin') {
                             $upper = strtoupper($val);
@@ -789,20 +1183,25 @@ trait GenericModuleTrait
                                 $val = 'Perempuan';
                             }
                         }
+
                         // Status normalization
                         if ($headerName === 'status_aktif') {
                             $upper = strtoupper($val);
                             $val = ($upper === '1' || $upper === 'AKTIF' || $upper === 'YA' || $upper === 'TRUE') ? 1 : 0;
                         }
+
                         $rowData[$headerName] = $val;
                     }
                 }
+
                 if (empty($rowData)) {
                     $skippedCount++;
                     continue;
                 }
+
                 // Strict Deduplication & Upsert Logic
                 $existing = null;
+
                 if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
                     if (!empty($rowData['no_kk_kw'])) {
                         $existing = $modelClass::where('no_kk_kw', $rowData['no_kk_kw'])->first();
@@ -857,6 +1256,7 @@ trait GenericModuleTrait
                         }
                     }
                 }
+
                 if ($existing) {
                     // Update existing record (anti-duplicate)
                     $existing->update($rowData);
@@ -867,270 +1267,17 @@ trait GenericModuleTrait
                     $createdCount++;
                 }
             }
+
             fclose($handle);
             $this->clearFastAccessCache();
+
             return back()->with('success', "Proses import selesai: {$createdCount} data baru berhasil ditambahkan, {$updatedCount} data diperbarui (anti-duplikat), {$skippedCount} baris kosong dilewati.");
         } catch (\Throwable $e) {
             return back()->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
         }
     }
-    private function normalizeKontenPayload(array $data, bool $isCreate, $item = null): array
-    {
-        $title = trim((string) ($data['judul'] ?? ''));
 
-        $content = (string) ($data['isi'] ?? $data['konten'] ?? '');
-        $customSlug = trim((string) ($data['slug'] ?? ''));
-        $baseSlug = Str::slug($customSlug !== '' ? $customSlug : $title);
-        if ($baseSlug === '') {
-            $baseSlug = 'konten-' . time();
-        }
-        $query = \App\Models\Konten::where('slug', $baseSlug);
-        if (!$isCreate && $item) {
-            $query->where($item->getKeyName(), '!=', $item->getKey());
-        }
-        $data['slug'] = $query->exists() ? $baseSlug . '-' . time() : $baseSlug;
-        $submitAction = Str::lower((string) ($data['submit_action'] ?? ''));
-        $status = $submitAction === 'draft'
-            ? 'Draft'
-            : ucfirst(Str::lower((string) ($data['status_publish'] ?? $data['status'] ?? 'Publish')));
-        $data['status_publish'] = in_array($status, ['Publish', 'Draft'], true) ? $status : 'Publish';
-        $data['isi'] = $content;
-        unset($data['konten'], $data['status'], $data['submit_action']);
-        $excerpt = trim((string) ($data['excerpt'] ?? ''));
-        if ($excerpt === '') {
-            $excerpt = $this->generateKontenExcerpt($content);
-        } else {
-            $excerpt = $this->cleanKontenExcerpt($excerpt, $content);
-        }
-        $data['excerpt'] = $excerpt;
-        if (isset($data['tanggal_publish']) && $data['tanggal_publish'] !== '') {
-            $data['tanggal_publish'] = date('Y-m-d H:i:s', strtotime(str_replace('T', ' ', (string) $data['tanggal_publish'])));
-            if ($isCreate && empty($data['created_at'])) {
-                $data['created_at'] = $data['tanggal_publish'];
-            }
-        } elseif ($isCreate) {
-            $data['tanggal_publish'] = now()->format('Y-m-d H:i:s');
-            $data['created_at'] = $data['tanggal_publish'];
-        } elseif ($item && empty($data['tanggal_publish'])) {
-            unset($data['tanggal_publish']);
-        }
-        $data['is_featured'] = !empty($data['is_featured']) && $data['is_featured'] !== 'false' ? 1 : 0;
-        $data['embed_pdf'] = array_key_exists('embed_pdf', $data)
-            ? (!empty($data['embed_pdf']) && $data['embed_pdf'] !== 'false' ? 1 : 0)
-            : 1;
-        foreach (['kategori_id', 'arsip_id', 'arsip_digital_id', 'file_pdf'] as $nullable) {
-            if (array_key_exists($nullable, $data) && ($data[$nullable] === '' || $data[$nullable] === 'null')) {
-                $data[$nullable] = null;
-            }
-        }
-        if (!empty($data['kategori_id']) && Schema::hasTable('kategori_konten')) {
-            $kategori = DB::table('kategori_konten')->where('id', $data['kategori_id'])->first();
 
-            if ($kategori) {
-                $data['kategori'] = $kategori->nama_kategori ?? $data['kategori'] ?? null;
-            }
-        }
-        if (empty($data['tipe'])) {
-            $data['tipe'] = 'Berita';
-        }
-        if (!empty($data['gambar']) && is_string($data['gambar'])) {
-            $data['gambar'] = ltrim($data['gambar'], '/');
-        }
-        if (empty($data['penulis'])) {
-            $user = auth()->user();
-            $data['penulis'] = $user?->nama_lengkap ?: $user?->username ?: 'Administrator';
-        }
-        if ($isCreate && empty($data['created_by']) && auth()->id()) {
-            $data['created_by'] = auth()->id();
-        }
-        return $data;
-    }
-    private function validateKkRequest(Request $request, $item = null): void
-    {
-        $ignoreId = $item?->id;
-        $unique = fn (string $column) => \Illuminate\Validation\Rule::unique('kk_katolik', $column)->ignore($ignoreId);
-        $request->validate([
-            'no_kk_kw' => ['required', 'string', 'max:50', $unique('no_kk_kw')],
-            'no_kk_dukcapil' => ['nullable', 'digits_between:10,16', $unique('no_kk_dukcapil')],
-            'nik_pemilik' => ['required', 'digits:16', $unique('nik_pemilik')],
-            'nama_baptis_pemilik' => ['required', 'string', 'max:150'],
-            'nama_lahir_pemilik' => ['required', 'string', 'max:150'],
-            'nama_pasangan' => ['nullable', 'string', 'max:150'],
-            'wilayah_id' => ['nullable', 'integer', 'exists:wilayah,id'],
-            'kub_id' => ['nullable', 'integer', 'exists:kub,id'],
-            'kapela_id' => ['nullable', 'integer', 'exists:kapela,id'],
-            'lingkungan_id' => ['nullable', 'integer', 'exists:lingkungan,id'],
-            'paroki_id' => ['nullable', 'integer'],
-            'alamat_sekarang' => ['required', 'string', 'max:500'],
-            'handphone' => ['required', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:150'],
-            'status_verifikasi' => ['required', \Illuminate\Validation\Rule::in(['Belum', 'Terverifikasi', 'Ditolak'])],
-            'status_kk' => ['required', \Illuminate\Validation\Rule::in(['Aktif', 'Pindah KUB', 'Pindah Wilayah', 'Pindah Paroki', 'Pecah KK', 'Tidak Aktif'])],
-            'anggota' => ['nullable', 'array'],
-            'anggota.*.id' => ['nullable', 'integer'],
-            'anggota.*.nama_lengkap' => ['nullable', 'string', 'max:150'],
-            'anggota.*.nama_baptis' => ['nullable', 'string', 'max:150'],
-            'anggota.*.nik' => ['nullable', 'digits:16', 'distinct'],
-            'anggota.*.hubungan_keluarga' => ['nullable', 'string', 'max:50'],
-            'anggota.*.jenis_kelamin' => ['nullable', \Illuminate\Validation\Rule::in(['Laki-Laki', 'Perempuan'])],
-            'anggota.*.tanggal_lahir' => ['nullable', 'date'],
-            'anggota.*.tempat_lahir' => ['nullable', 'string', 'max:120'],
-            'anggota.*.status_perkawinan' => ['nullable', 'string', 'max:80'],
-        ]);
-        foreach (array_values($request->input('anggota', [])) as $idx => $member) {
-            if (!is_array($member)) {
-                continue;
-            }
-            $nik = preg_replace('/\D+/', '', (string) ($member['nik'] ?? ''));
-            if ($nik === '') {
-                continue;
-            }
-            $query = \App\Models\Umat::where('nik', $nik);
-            if (!empty($member['id'])) {
-                $query->where('id', '!=', $member['id']);
-            }
-            if ($ignoreId) {
-                $query->where(function ($q) use ($ignoreId) {
-                    $q->where('kk_id', '!=', $ignoreId)->orWhereNull('kk_id');
-                });
-            }
-            if ($query->exists()) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    "anggota.{$idx}.nik" => "NIK anggota {$nik} sudah digunakan oleh data umat lain.",
-                ]);
-            }
-        }
-    }
-    private function normalizeKkPayload(array $data, bool $isCreate, $item = null): array
-    {
-        unset($data['anggota']);
-        foreach (['no_kk_dukcapil', 'nik_pemilik', 'handphone'] as $field) {
-            if (!empty($data[$field])) {
-                $data[$field] = preg_replace('/\D+/', '', (string) $data[$field]);
-            }
-        }
-        foreach (['wilayah_id', 'kub_id', 'kapela_id', 'paroki_id', 'lingkungan_id'] as $fk) {
-            if (array_key_exists($fk, $data) && ($data[$fk] === '' || $data[$fk] === 'null')) {
-                $data[$fk] = null;
-            }
-        }
-        $data['status_kk'] = $data['status_kk'] ?? 'Aktif';
-        $data['status_verifikasi'] = $data['status_verifikasi'] ?? 'Belum';
-        if (empty($data['nama_baptis_pemilik']) && !empty($data['nama_lahir_pemilik'])) {
-            $data['nama_baptis_pemilik'] = $data['nama_lahir_pemilik'];
-        }
-        if (empty($data['nama_lahir_pemilik']) && !empty($data['nama_baptis_pemilik'])) {
-            $data['nama_lahir_pemilik'] = $data['nama_baptis_pemilik'];
-        }
-        if ($isCreate && empty($data['created_by']) && auth()->id()) {
-            $data['created_by'] = auth()->id();
-        }
-        if (!$isCreate && auth()->id()) {
-            $data['updated_by'] = auth()->id();
-        }
-        return $data;
-    }
-    private function syncKkAnggota(\App\Models\KkKatolik $kk, $members): void
-    {
-        if (!is_array($members)) {
-            return;
-        }
-        $validColumns = $this->schemaColumns('umat');
-        $keepIds = [];
-        foreach (array_values($members) as $idx => $member) {
-            if (!is_array($member)) {
-                continue;
-            }
-            $namaLengkap = trim((string) ($member['nama_lengkap'] ?? $member['nama_lahir'] ?? ''));
-            $namaBaptis = trim((string) ($member['nama_baptis'] ?? ''));
-            $nik = preg_replace('/\D+/', '', (string) ($member['nik'] ?? ''));
-            if ($namaLengkap === '' && $namaBaptis === '' && $nik === '') {
-                continue;
-            }
-            $payload = [
-                'kk_id' => $kk->id,
-                'no_urut_anggota' => $idx + 1,
-                'kode_anggota' => $member['kode_anggota'] ?? null,
-                'suku_etnis' => $member['suku_etnis'] ?? null,
-                'nik' => $nik ?: null,
-                'nama_lengkap' => $namaLengkap ?: $namaBaptis,
-                'nama_lahir' => $namaLengkap ?: $namaBaptis,
-                'nama_baptis' => $namaBaptis ?: $namaLengkap,
-                'no_kk_kw' => $kk->no_kk_kw,
-                'nama_pemilik_kk' => $kk->nama_lahir_pemilik ?: $kk->nama_baptis_pemilik,
-                'hubungan_keluarga' => $member['hubungan_keluarga'] ?? ($idx === 0 ? 'Kepala Keluarga' : 'Anak'),
-                'jenis_kelamin' => $member['jenis_kelamin'] ?? null,
-                'tempat_lahir' => $member['tempat_lahir'] ?? null,
-                'tanggal_lahir' => $member['tanggal_lahir'] ?? null,
-                'status_menikah' => $member['status_perkawinan'] ?? $member['status_menikah'] ?? null,
-                'status_perkawinan' => $member['status_perkawinan'] ?? null,
-                'agama_asal' => $member['agama_asal'] ?? null,
-                'pendidikan_saat_ini' => $member['pendidikan_saat_ini'] ?? $member['pendidikan'] ?? null,
-                'pendidikan' => $member['pendidikan'] ?? $member['pendidikan_saat_ini'] ?? null,
-                'pekerjaan' => $member['pekerjaan'] ?? null,
-                'golongan_darah' => $member['golongan_darah'] ?? null,
-                'talenta' => $member['talenta'] ?? null,
-                'disabilitas' => $member['disabilitas'] ?? null,
-                'status_baptis' => $member['status_baptis'] ?? null,
-                'jenis_penerimaan_baptis' => $member['jenis_penerimaan_baptis'] ?? null,
-                'tgl_baptis' => $member['tgl_baptis'] ?? null,
-                'paroki_baptis' => $member['paroki_baptis'] ?? null,
-                'pastor_baptis' => $member['pastor_baptis'] ?? null,
-                'wali_baptis' => $member['wali_baptis'] ?? null,
-                'buku_baptis_vol' => $member['buku_baptis_vol'] ?? null,
-                'buku_baptis_hal' => $member['buku_baptis_hal'] ?? null,
-
-                'buku_baptis_no' => $member['buku_baptis_no'] ?? null,
-                'tgl_komuni_1' => $member['tgl_komuni_1'] ?? null,
-                'paroki_komuni_1' => $member['paroki_komuni_1'] ?? null,
-                'tgl_krisma' => $member['tgl_krisma'] ?? null,
-                'paroki_krisma' => $member['paroki_krisma'] ?? null,
-                'tgl_perkawinan' => $member['tgl_perkawinan'] ?? null,
-                'paroki_perkawinan' => $member['paroki_perkawinan'] ?? null,
-                'nama_pasangan' => $member['nama_pasangan'] ?? null,
-                'status_perkawinan_kanonik' => $member['status_perkawinan_kanonik'] ?? null,
-                'peristiwa_lain' => $member['peristiwa_lain'] ?? null,
-                'no_surat_peristiwa' => $member['no_surat_peristiwa'] ?? null,
-                'status_panggilan' => $member['status_panggilan'] ?? 'Awam',
-                'nama_ordo_kongregasi' => $member['nama_ordo_kongregasi'] ?? null,
-                'tahap_panggilan' => $member['tahap_panggilan'] ?? null,
-                'tempat_tugas_biara' => $member['tempat_tugas_biara'] ?? null,
-                'tgl_tahbisan_kaul' => $member['tgl_tahbisan_kaul'] ?? null,
-                'status_aktif' => 1,
-                'status_umat' => 'Aktif',
-                'handphone' => $member['handphone'] ?? null,
-                'email' => $member['email'] ?? null,
-                'updated_by' => auth()->id(),
-            ];
-            $umat = null;
-            if (!empty($member['id'])) {
-                $umat = \App\Models\Umat::where('id', $member['id'])->where('kk_id', $kk->id)->first();
-            }
-            if (!$umat && $nik) {
-                $umat = \App\Models\Umat::where('nik', $nik)->where('kk_id', $kk->id)->first();
-            }
-            if (!$umat && $nik && \App\Models\Umat::where('nik', $nik)->where('kk_id', '!=', $kk->id)->exists()) {
-                continue;
-            }
-            $cleanPayload = array_intersect_key($payload, array_flip($validColumns));
-            if ($umat) {
-                $umat->update($cleanPayload);
-            } else {
-                if (in_array('created_by', $validColumns, true)) {
-                    $cleanPayload['created_by'] = auth()->id();
-                }
-                $umat = \App\Models\Umat::create($cleanPayload);
-            }
-            $keepIds[] = $umat->id;
-        }
-        if (!empty($keepIds)) {
-            \App\Models\Umat::where('kk_id', $kk->id)->whereNotIn('id', $keepIds)->update([
-                'kk_id' => null,
-                'tanggal_keluar_dari_kk' => now(),
-                'updated_by' => auth()->id(),
-            ]);
-        }
-    }
     private function storeModuleUploadedFile(string $slug, string $fileKey, $uploadedFile): string
     {
         $extension = strtolower($uploadedFile->getClientOriginalExtension() ?: '');
@@ -1138,10 +1285,12 @@ trait GenericModuleTrait
         $folder = in_array($slug, ['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor'], true)
             ? 'uploads/pastor'
             : ($slug === 'user' ? 'uploads/users' : ($slug === 'paroki' ? 'uploads/paroki' : 'uploads/' . str_replace('-', '_', $slug)));
+
         $imageExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
         // Only ever store non-executable document types. Anything that could
         // be interpreted as code (php, phtml, pht, html, js, svg, etc.) is rejected.
         $docExt = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv', 'zip', 'ppt', 'pptx'];
+
         if (Str::startsWith($mime, 'image/') || in_array($extension, $imageExt, true)) {
             return \App\Services\ImageOptimizer::optimizeAndSave(
                 $uploadedFile,
@@ -1151,167 +1300,31 @@ trait GenericModuleTrait
                 85
             );
         }
+
         if (!in_array($extension, $docExt, true)) {
             throw new \Illuminate\Http\Exceptions\PostTooLargeException(
                 'Tipe file tidak diizinkan. Hanya gambar (jpg/png/webp/gif) dan dokumen (pdf/doc/xls/csv/zip) yang diperbolehkan.'
             );
         }
+
         $destinationPath = public_path($folder);
         if (!file_exists($destinationPath)) {
             mkdir($destinationPath, 0755, true);
         }
+
         $safeName = time() . '_' . Str::random(12) . '.' . $extension;
         $uploadedFile->move($destinationPath, $safeName);
+
         return trim($folder, '/') . '/' . $safeName;
     }
-    private function generateKontenExcerpt(string $content, int $limit = 180): string
-    {
-        return $this->cleanKontenExcerpt($content, '', $limit);
-    }
-    private function cleanKontenExcerpt(string $excerpt, string $fallbackContent = '', int $limit = 180): string
-    {
-        $text = html_entity_decode(html_entity_decode(strip_tags($excerpt), ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
-        $text = preg_replace('/\[[^\]]+\]/', '', $text);
-        $text = preg_replace('/\s+/', ' ', (string) $text);
-        $text = trim((string) $text);
-        if ($text === '' && $fallbackContent !== '') {
-            return $this->generateKontenExcerpt($fallbackContent, $limit);
-        }
-        if (mb_strlen($text) <= $limit) {
-            return $text;
-        }
-        $trimmed = mb_substr($text, 0, $limit);
-        $lastSpace = mb_strrpos($trimmed, ' ');
-        if ($lastSpace !== false && $lastSpace > 50) {
-            $trimmed = mb_substr($trimmed, 0, $lastSpace);
-        }
-        return rtrim($trimmed) . '...';
-    }
-    /**
-     * Lightweight audit trail. Persists an entry into security_logs for
-     * sensitive module mutations (keuangan, user, role, etc.) so that
-     * financial and administrative changes are traceable.
-     */
-    private function logAudit(string $event, string $slug, $id, array $payload = []): void
-    {
-        try {
-            if (!\Illuminate\Support\Facades\Schema::hasTable('security_logs')) {
-                return;
-            }
-            $safe = [];
-            foreach ($payload as $k => $v) {
-                if (in_array($k, ['password', 'remember_token'], true)) {
-                    continue;
-                }
-                $safe[$k] = is_scalar($v) ? $v : null;
-            }
-            \Illuminate\Support\Facades\DB::table('security_logs')->insert([
-                'ip_address' => request()->ip(),
-                'user_id' => auth()->id(),
-                'username' => auth()->user()?->username ?? auth()->user()?->email ?? 'system',
-                'event_type' => $event,
-                'user_agent' => substr((string) request()->userAgent(), 0, 255),
-                'status' => 'SUCCESS',
-                'details' => 'Modul: ' . $slug . ' #' . ($id ?? '-') . ' | ' . json_encode($safe, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        } catch (\Throwable $e) {}
-    }
-    public function resetUserPassword(Request $request, $id)
-    {
-        $user = \App\Models\User::findOrFail($id);
-        if (auth()->id() && (int) auth()->id() === (int) $user->getKey()) {
-            return back()->with('error', 'Anda tidak dapat mereset password akun Anda sendiri dari sini.');
-        }
-        $password = $request->input('password') ?: 'SIPAROKI' . now()->format('Y');
-        $user->forceFill([
-            'password' => \Illuminate\Support\Facades\Hash::make($password),
-            'updated_at' => now(),
-        ])->save();
-        $this->logAudit('RESET_PASSWORD', 'user', $user->getKey());
-        return back()->with('success', "Password {$user->nama_lengkap} berhasil direset. Password baru: {$password}");
-    }
-    public function toggleUserStatus(Request $request, $id)
-    {
-        $user = \App\Models\User::findOrFail($id);
-        if (auth()->id() && (int) auth()->id() === (int) $user->getKey()) {
-            return back()->with('error', 'Akun yang sedang digunakan tidak dapat dinonaktifkan.');
-        }
-        $user->forceFill([
-            'status' => $user->status ? 0 : 1,
-            'updated_at' => now(),
-        ])->save();
-        return back()->with('success', 'Status pengguna berhasil diperbarui.');
-    }
-    private function normalizeUserPayload(array $data, bool $isCreate): array
-    {
-        if (isset($data['handphone']) && !isset($data['no_hp'])) {
-            $data['no_hp'] = $data['handphone'];
-        }
-        // Ensure email is never null/empty on create to prevent Integrity Constraint Violation
-        if (empty($data['email']) || $data['email'] === 'null' || trim((string)$data['email']) === '') {
-            if ($isCreate) {
-                $baseEmail = !empty($data['username']) ? Str::slug($data['username']) : (!empty($data['nama_lengkap']) ? Str::slug($data['nama_lengkap']) : 'user');
-                $genEmail = strtolower($baseEmail) . '@siparoki.local';
-                $counter = 1;
-                while (\App\Models\User::where('email', $genEmail)->exists()) {
-                    $genEmail = strtolower($baseEmail) . $counter . '@siparoki.local';
-                    $counter++;
-                }
-                $data['email'] = $genEmail;
-            } else {
-                unset($data['email']);
-            }
-        }
-        // Ensure username is never null/empty on create
-        if (empty($data['username']) || $data['username'] === 'null' || trim((string)$data['username']) === '') {
-            if ($isCreate) {
-                $baseUser = !empty($data['nama_lengkap']) ? Str::slug($data['nama_lengkap'], '') : 'user';
-                $genUser = strtolower($baseUser);
-                $counter = 1;
-                while (\App\Models\User::where('username', $genUser)->exists()) {
-                    $genUser = strtolower($baseUser) . $counter;
-                    $counter++;
-                }
-                $data['username'] = $genUser;
-            } else {
-                unset($data['username']);
-            }
-        }
-        // Compatibility between name and nama_lengkap
-        if (empty($data['name']) && !empty($data['nama_lengkap'])) {
-            $data['name'] = $data['nama_lengkap'];
-        } elseif (empty($data['nama_lengkap']) && !empty($data['name'])) {
-            $data['nama_lengkap'] = $data['name'];
-        }
-        if (array_key_exists('status', $data)) {
-            $data['status'] = in_array((string) $data['status'], ['1', 'true', 'Aktif', 'aktif'], true) ? 1 : 0;
-        } elseif ($isCreate) {
-            $data['status'] = 1;
-        }
-        if (isset($data['maintenance_access'])) {
-            $data['maintenance_access'] = in_array((string) $data['maintenance_access'], ['1', 'true', 'Ya', 'ya'], true) ? 'Ya' : 'Tidak';
-        } elseif ($isCreate) {
-            $data['maintenance_access'] = 'Tidak';
-        }
-        if (empty($data['password'])) {
-            if ($isCreate) {
-                $data['password'] = \Illuminate\Support\Facades\Hash::make('SIPAROKI' . now()->format('Y'));
-            } else {
-                unset($data['password']);
-            }
-        } else {
-            $data['password'] = \Illuminate\Support\Facades\Hash::make($data['password']);
-        }
-        unset($data['handphone']);
-        return $data;
-    }
+
+
     public function exportModule(Request $request, string $slug, string $format)
     {
         if ($slug === 'statistik' || $slug === 'demografi') {
             return $this->exportStatistik($request, $format);
         }
+
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
             $this->ensureKkKatolikColumns();
         }
@@ -1319,120 +1332,211 @@ trait GenericModuleTrait
         if (!isset($moduleMap[$slug])) {
             abort(404);
         }
+
         $config = $moduleMap[$slug];
+        [$headings, $rows] = $this->moduleExportPayload($request, $slug, $config);
 
-                                            $sheet->setAutoFilter("A4:{$lastColumn}{$lastRow}");
-                                            $sheet->getRowDimension(1)->setRowHeight(30);
-                                            $sheet->getRowDimension(2)->setRowHeight(22);
-                                            $sheet->getRowDimension(4)->setRowHeight(26);
-                                            $sheet->getColumnDimension('A')->setWidth(7);
-                                            $sheet->getStyle("A1:{$lastColumn}1")->applyFromArray([
-                                                'font' => ['bold' => true, 'size' => 15, 'color' => ['rgb' => 'FFFFFF']],
-                                                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '1B365D']],
-                                                'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                                            ]);
-                                            $sheet->getStyle("A2:{$lastColumn}2")->applyFromArray([
-                                                'font' => ['italic' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
-                                                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '2563EB']],
-                                                'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                                            ]);
-                                            $sheet->getStyle("A4:{$lastColumn}4")->applyFromArray([
-                                                'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
-                                                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '0F172A']],
-                                                'alignment' => ['horizontal' => 'center', 'vertical' => 'center', 'wrapText' => true],
-                                            ]);
-                                            $sheet->getStyle("A4:{$lastColumn}{$lastRow}")->applyFromArray([
-                                                'borders' => [
-                                                    'allBorders' => [
-                                                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                                                        'color' => ['rgb' => 'CBD5E1'],
-                                                    ],
-                                                ],
-                                                'alignment' => ['vertical' => 'center', 'wrapText' => true],
-                                            ]);
-                                            // Baris Contoh Isian Berwarna Kuning Pastel
-                                            $sheet->getStyle("A5:{$lastColumn}5")->applyFromArray([
-                                                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'FEF3C7']],
-                                                'font' => ['italic' => true],
-                                            ]);
-                                            $sheet->getStyle("A5:A{$lastRow}")->applyFromArray([
-                                                'alignment' => ['horizontal' => 'center'],
-                                                'font' => ['bold' => true, 'color' => ['rgb' => '475569']],
-                                            ]);
-                                        },
-                                    ];
+        if (in_array($format, ['template', 'template-excel'], true)) {
+            $fileName = 'template-import-' . Str::slug($config['title']) . '.xlsx';
 
-                        array_merge(['No'], $this->headings),
-                    ];
-                    foreach ($this->rows as $index => $row) {
-                        $body[] = array_merge([$index + 1], array_values($row));
-                    }
-                    if (empty($this->rows)) {
-                        $body[] = array_merge([''], array_fill(0, count($this->headings), ''));
-                    }
-                    return $body;
-                }
-                public function title(): string
-                {
-                    return \Illuminate\Support\Str::limit(preg_replace('/[\\\\\\/\\?\\*\\[\\]\\:]+/', '', $this->title), 31, '');
-                }
-                public function registerEvents(): array
-                {
-                    return [
-                        \Maatwebsite\Excel\Events\AfterSheet::class => function (\Maatwebsite\Excel\Events\AfterSheet $event) {
-                            $sheet = $event->sheet->getDelegate();
-                            $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($this->headings) + 1);
-                            $lastRow = max(5, count($this->rows) + 4);
-                            $sheet->mergeCells("A1:{$lastColumn}1");
-                            $sheet->mergeCells("A2:{$lastColumn}2");
-                            $sheet->freezePane('A5');
-                            $sheet->setAutoFilter("A4:{$lastColumn}{$lastRow}");
-                            $sheet->getRowDimension(1)->setRowHeight(28);
-                            $sheet->getRowDimension(2)->setRowHeight(22);
-                            $sheet->getRowDimension(4)->setRowHeight(24);
-                            $sheet->getColumnDimension('A')->setWidth(7);
-                            $sheet->getStyle("A1:{$lastColumn}1")->applyFromArray([
-                                'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => 'FFFFFF']],
-                                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '1B365D']],
-                                'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                            ]);
-                            $sheet->getStyle("A2:{$lastColumn}2")->applyFromArray([
-                                'font' => ['italic' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
-                                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '2F5597']],
-                                'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                            ]);
-                            $sheet->getStyle("A4:{$lastColumn}4")->applyFromArray([
-                                'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
-                                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '203864']],
-                                'alignment' => ['horizontal' => 'center', 'vertical' => 'center', 'wrapText' => true],
-                            ]);
-                            $sheet->getStyle("A4:{$lastColumn}{$lastRow}")->applyFromArray([
-                                'borders' => [
-                                    'allBorders' => [
-                                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                                        'color' => ['rgb' => 'B0C4DE'],
-                                    ],
-                                ],
-                                'alignment' => ['vertical' => 'center', 'wrapText' => true],
-                            ]);
-                            for ($row = 5; $row <= $lastRow; $row++) {
-                                $fill = $row % 2 === 0 ? 'F8FAFC' : 'FFFFFF';
-                                $sheet->getStyle("A{$row}:{$lastColumn}{$row}")->applyFromArray([
-                                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => $fill]],
-                                ]);
-                            }
-                            $sheet->getStyle("A5:A{$lastRow}")->applyFromArray([
-                                'alignment' => ['horizontal' => 'center'],
-                                'font' => ['bold' => true, 'color' => ['rgb' => '475569']],
-                            ]);
-                        },
-                    ];
-
-        } catch (\Throwable $e) {
-            return null;
+            return $this->styledExcelDownload(
+                $config['title'],
+                $headings,
+                $this->moduleTemplateRows($slug, $headings),
+                $fileName,
+                true
+            );
         }
-        return null;
+
+        if (in_array($format, ['excel', 'xlsx'], true)) {
+            $fileName = Str::slug($config['title']) . '-' . now()->format('Ymd-His') . '.xlsx';
+
+            return $this->styledExcelDownload($config['title'], $headings, $rows, $fileName);
+        }
+
+        if (in_array($format, ['pdf', 'print', 'cetak'], true)) {
+            $defaultParokiId = $this->defaultParokiIdFromProfile();
+            $paroki = Paroki::with('keuskupan')->find($defaultParokiId)
+                ?? Paroki::with('keuskupan')->first();
+            $keuskupan = $paroki?->keuskupan ?? \App\Models\Keuskupan::first();
+            $profilParoki = \App\Models\ProfilParoki::first();
+
+            $keuskupanLogo = $keuskupan?->logo ?: '/uploads/keuskupan/logo_keuskupan_kupang.svg';
+            $parokiLogo = $paroki?->logo ?: '/assets/uploads/profil/logo_paroki_1787370466.jpeg';
+
+            $summaryLabel = in_array($slug, ['umat', 'data-umat'], true) ? 'Total Jiwa / Umat' : (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true) ? 'Total Kepala Keluarga' : 'Total Data');
+
+            return response()->view('exports.keuskupan-print', [
+                'title' => $config['title'],
+                'headings' => $headings,
+                'rows' => $rows,
+                'paroki' => $paroki,
+                'keuskupan' => $keuskupan,
+                'profilParoki' => $profilParoki,
+                'keuskupanLogo' => $keuskupanLogo,
+                'parokiLogo' => $parokiLogo,
+                'summaryNumber' => number_format($rows->count(), 0, ',', '.'),
+                'summaryLabel' => $summaryLabel,
+                'printedAt' => now()->format('d/m/Y H:i'),
+            ]);
+        }
+
+        abort(404);
     }
+
+
+    public function importModule(Request $request, string $slug)
+    {
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            $this->ensureKkKatolikColumns();
+        }
+        $moduleMap = $this->getModuleMap();
+        if (!isset($moduleMap[$slug])) {
+            abort(404);
+        }
+
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:10240'],
+        ]);
+
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($request->file('file')->getRealPath());
+        $firstSheet = $spreadsheet->getSheet(0);
+        $allRows = $firstSheet->toArray(null, true, true, true);
+        if (count($allRows) < 2) {
+            return back()->with('error', 'File impor kosong atau belum memiliki baris data.');
+        }
+
+        $config = $moduleMap[$slug];
+        $modelClass = $config['model'];
+        $table = (new $modelClass)->getTable();
+        $validColumns = $this->schemaColumns($table);
+        $fieldMap = $this->moduleImportFieldMap($slug, $config, $validColumns);
+
+        // Cari baris header secara cerdas (baris yang paling banyak cocok dengan fieldMap)
+        $headerRowIndex = null;
+        $headers = [];
+        $rawHeaders = [];
+        $maxMatchedFields = 0;
+
+        foreach ($allRows as $rowIndex => $row) {
+            $currentMatched = 0;
+            $tempHeaders = [];
+            $tempRawHeaders = [];
+            foreach ($row as $column => $label) {
+                if (empty($label)) continue;
+                $normalizedHeading = $this->normalizeImportHeading((string) $label);
+                $tempRawHeaders[$column] = $normalizedHeading;
+                if (isset($fieldMap[$normalizedHeading])) {
+                    $currentMatched++;
+                    $tempHeaders[$column] = $fieldMap[$normalizedHeading];
+                }
+                if (str_starts_with($normalizedHeading, 'anggota_')) {
+                    $currentMatched++;
+                }
+            }
+
+            if ($currentMatched > $maxMatchedFields) {
+                $maxMatchedFields = $currentMatched;
+                $headerRowIndex = $rowIndex;
+                $headers = $tempHeaders;
+                $rawHeaders = $tempRawHeaders;
+            }
+        }
+
+        if (!$headerRowIndex || $maxMatchedFields === 0) {
+            return back()->with('error', 'Format kolom header tidak dikenali. Silakan unduh Template Excel resmi untuk panduan kolom.');
+        }
+
+        // Ambil data setelah baris header
+        $sheetRows = [];
+        $passedHeader = false;
+        foreach ($allRows as $rowIndex => $row) {
+            if ($rowIndex == $headerRowIndex) {
+                $passedHeader = true;
+                continue;
+            }
+            if ($passedHeader) {
+                $sheetRows[] = $row;
+            }
+        }
+
+        $created = 0;
+        $updated = 0;
+        $skipped = 0;
+        $seenLookups = [];
+
+        DB::transaction(function () use ($sheetRows, $headers, $rawHeaders, $validColumns, $slug, $modelClass, &$created, &$updated, &$skipped, &$seenLookups) {
+            foreach ($sheetRows as $row) {
+                $payload = $this->mapModuleImportRow($row, $headers, $validColumns);
+                $kkMembers = in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)
+                    ? $this->extractKkImportMembers($row, $rawHeaders)
+                    : [];
+
+                if ($slug === 'kuasi-paroki') {
+                    $payload = $this->normalizeKuasiParokiPayload($payload);
+                }
+
+                $lookup = $this->moduleImportLookup($slug, $payload, $validColumns);
+                if (empty($lookup)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $lookupKey = Str::lower(key($lookup) . ':' . trim((string) current($lookup)));
+                if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+                    $identityKeys = $this->kkImportIdentityKeys($payload, $validColumns);
+                    if (empty($identityKeys)) {
+                        $skipped++;
+                        continue;
+                    }
+                    foreach ($identityKeys as $identityKey) {
+                        if (isset($seenLookups[$identityKey])) {
+                            $skipped++;
+                            continue 2;
+                        }
+                    }
+                    foreach ($identityKeys as $identityKey) {
+                        $seenLookups[$identityKey] = true;
+                    }
+                } else {
+                    if (isset($seenLookups[$lookupKey])) {
+                        $skipped++;
+                        continue;
+                    }
+                    $seenLookups[$lookupKey] = true;
+                }
+
+                $existing = in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)
+                    ? $this->findExistingKkForImport($modelClass, $payload, $validColumns)
+                    : $modelClass::where($lookup)->first();
+                if ($existing) {
+                    $existing->update($payload);
+                    if (!empty($kkMembers)) {
+                        $this->syncKkAnggota($existing, $kkMembers);
+                    }
+                    $updated++;
+                } else {
+                    $createdItem = $modelClass::create($payload);
+                    if (!empty($kkMembers)) {
+                        $this->syncKkAnggota($createdItem, $kkMembers);
+                    }
+                    $created++;
+                }
+            }
+        });
+
+        $this->clearFastAccessCache();
+
+        return back()->with('success', "Import {$config['title']} selesai. Baru: {$created}, diperbarui: {$updated}, dilewati: {$skipped}.");
+    }
+
+
+    private function schemaColumns(string $table): array
+    {
+        return Cache::remember("schema_columns_{$table}", 86400, fn () => \Illuminate\Support\Facades\Schema::getColumnListing($table));
+    }
+
+
     private function territoryModuleSlugs(): array
     {
         return [
@@ -1454,6 +1558,8 @@ trait GenericModuleTrait
             'keluarga',
         ];
     }
+
+
     private function moduleTemplateRows(string $slug, array $headings): array
     {
         $examples = [
@@ -1521,6 +1627,7 @@ trait GenericModuleTrait
             'Status KK' => 'Aktif',
             'Status Verifikasi' => 'Terverifikasi',
         ];
+
         for ($i = 1; $i <= 2; $i++) {
             $examples += [
                 "Anggota {$i} - Hubungan Keluarga" => $i === 1 ? 'Kepala Keluarga' : 'Istri',
@@ -1555,65 +1662,347 @@ trait GenericModuleTrait
                 "Anggota {$i} - No Surat Peristiwa" => '',
             ];
         }
+
         return [
             array_map(fn ($heading) => $examples[$heading] ?? '', $headings),
         ];
     }
+
+
     private function moduleExportPayload(Request $request, string $slug, array $config): array
     {
         $modelClass = $config['model'];
         $query = $this->moduleExportQuery($slug, $modelClass);
         $modelInstance = new $modelClass;
         $tableColumns = $this->schemaColumns($modelInstance->getTable());
+
         if (($slug === 'kapela' || $slug === 'stasi') && in_array('paroki_id', $tableColumns, true)) {
             $defaultParokiId = $this->defaultParokiIdFromProfile();
             if ($defaultParokiId) {
                 $query->where('paroki_id', $defaultParokiId);
             }
         }
+
         $authUser = auth()->user();
         $userRoleSlug = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));
+
         if (str_contains($userRoleSlug, 'wilayah') && !empty($authUser?->wilayah_id)) {
             if ($slug === 'wilayah' && in_array('id', $tableColumns, true)) {
                 $query->where('id', $authUser->wilayah_id);
             } elseif (in_array('wilayah_id', $tableColumns, true)) {
                 $query->where('wilayah_id', $authUser->wilayah_id);
-
+            } elseif (in_array($slug, ['umat', 'data-umat'], true)) {
+                $query->where(function ($q) use ($authUser, $tableColumns) {
+                    if (in_array('wilayah_id', $tableColumns, true)) {
+                        $q->where('wilayah_id', $authUser->wilayah_id);
+                    }
+                    $q->orWhereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
+                });
+            } elseif (in_array($slug, ['sakramen', 'pengajuan-sakramen'], true)) {
+                if (in_array('wilayah_id', $tableColumns, true)) {
+                    $query->where('wilayah_id', $authUser->wilayah_id);
+                } elseif (in_array('umat_id', $tableColumns, true)) {
+                    $query->whereHas('umat', function ($uQ) use ($authUser) {
+                        $uQ->whereHas('kk', fn($kQ) => $kQ->where('wilayah_id', $authUser->wilayah_id));
+                    });
+                }
+            }
+        } elseif ((str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) && !empty($authUser?->kapela_id)) {
+            if (in_array($slug, ['kapela', 'stasi']) && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->kapela_id);
+            } elseif (in_array('kapela_id', $tableColumns, true)) {
+                $query->where('kapela_id', $authUser->kapela_id);
+            } elseif (in_array($slug, ['umat', 'data-umat'], true)) {
+                $query->where(function ($q) use ($authUser, $tableColumns) {
+                    if (in_array('kapela_id', $tableColumns, true)) {
+                        $q->where('kapela_id', $authUser->kapela_id);
+                    }
+                    $q->orWhereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
+                });
+            } elseif (in_array($slug, ['sakramen', 'pengajuan-sakramen'], true)) {
+                if (in_array('kapela_id', $tableColumns, true)) {
+                    $query->where('kapela_id', $authUser->kapela_id);
+                } elseif (in_array('umat_id', $tableColumns, true)) {
+                    $query->whereHas('umat', function ($uQ) use ($authUser) {
+                        $uQ->whereHas('kk', fn($kQ) => $kQ->where('kapela_id', $authUser->kapela_id));
+                    });
+                }
+            }
+        } elseif (str_contains($userRoleSlug, 'kub') && !empty($authUser?->kub_id)) {
+            if ($slug === 'kub' && in_array('id', $tableColumns, true)) {
+                $query->where('id', $authUser->kub_id);
+            } elseif (in_array('kub_id', $tableColumns, true)) {
+                $query->where('kub_id', $authUser->kub_id);
+            } elseif (in_array($slug, ['umat', 'data-umat'], true)) {
+                $query->where(function ($q) use ($authUser, $tableColumns) {
+                    if (in_array('kub_id', $tableColumns, true)) {
+                        $q->where('kub_id', $authUser->kub_id);
+                    }
+                    $q->orWhereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
+                });
+            } elseif (in_array($slug, ['sakramen', 'pengajuan-sakramen'], true)) {
+                if (in_array('kub_id', $tableColumns, true)) {
+                    $query->where('kub_id', $authUser->kub_id);
+                } elseif (in_array('umat_id', $tableColumns, true)) {
+                    $query->whereHas('umat', function ($uQ) use ($authUser) {
+                        $uQ->whereHas('kk', fn($kQ) => $kQ->where('kub_id', $authUser->kub_id));
+                    });
+                }
+            }
         }
+
+        $search = $request->input('search');
+        if ($search) {
+            $query->where(function ($q) use ($config, $search, $tableColumns) {
+                $isFirst = true;
+                foreach ($config['columns'] as $col) {
+                    $columnToSearch = null;
+                    if (in_array($col['key'], $tableColumns, true)) {
+                        $columnToSearch = $col['key'];
+                    } elseif (isset($col['altKey']) && in_array($col['altKey'], $tableColumns, true)) {
+                        $columnToSearch = $col['altKey'];
+                    }
+
+                    if ($columnToSearch) {
+                        $method = $isFirst ? 'where' : 'orWhere';
+                        $q->{$method}($columnToSearch, 'like', "%{$search}%");
+                        $isFirst = false;
+                    }
+                }
+            });
+        }
+
+        if (in_array($slug, ['umat', 'data-umat'], true)) {
+            $wilayahIdFilter = $request->input('wilayah_id');
+            $kapelaIdFilter = $request->input('kapela_id');
+            $kubIdFilter = $request->input('kub_id');
+
+            if ($wilayahIdFilter) {
+                $query->where(function ($q) use ($wilayahIdFilter, $tableColumns) {
+                    if (in_array('wilayah_id', $tableColumns, true)) {
+                        $q->where('wilayah_id', $wilayahIdFilter);
+                    }
+                    $q->orWhereHas('kk', function ($kkQ) use ($wilayahIdFilter) {
+                        $kkQ->where('wilayah_id', $wilayahIdFilter);
+                    });
+                });
+            }
+
+            if ($kapelaIdFilter) {
+                $query->where(function ($q) use ($kapelaIdFilter, $tableColumns) {
+                    if (in_array('kapela_id', $tableColumns, true)) {
+                        $q->where('kapela_id', $kapelaIdFilter);
+                    }
+                    $q->orWhereHas('kk', function ($kkQ) use ($kapelaIdFilter) {
+                        $kkQ->where('kapela_id', $kapelaIdFilter);
+                    });
+                });
+            }
+
+            if ($kubIdFilter) {
+                $query->where(function ($q) use ($kubIdFilter, $tableColumns) {
+                    if (in_array('kub_id', $tableColumns, true)) {
+                        $q->where('kub_id', $kubIdFilter);
+                    }
+                    $q->orWhereHas('kk', function ($kkQ) use ($kubIdFilter) {
+                        $kkQ->where('kub_id', $kubIdFilter);
+                    });
+                });
+            }
+        }
+
+        foreach (['keuskupan_id', 'dekenat_id', 'paroki_id', 'provinsi_id', 'kabupaten_id', 'kecamatan_id', 'wilayah_id', 'kapela_id', 'kub_id'] as $filter) {
+            if (in_array($slug, ['umat', 'data-umat'], true) && in_array($filter, ['wilayah_id', 'kapela_id', 'kub_id'], true)) {
+                continue;
+            }
+            $value = $request->input($filter);
+            if ($value && in_array($filter, $tableColumns, true)) {
+                $query->where($filter, $value);
+            }
+        }
+
+        $headings = collect($config['columns'])
+            ->reject(fn ($col) => !empty($col['isImage']) || !empty($col['isIcon']))
+            ->pluck('label')
+            ->values()
+            ->all();
+
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            $headings = array_merge([
+                'No KK Paroki',
+                'No KK Sipil',
+                'NIK Kepala Keluarga',
+                'Nama Lengkap Kepala Keluarga',
+                'Nama Baptis Kepala Keluarga',
+                'Nama Pasangan',
+                'Stasi / Kapela',
+                'Wilayah Pastoral',
+                'Lingkungan',
+                'KUB / KBG',
+                'Alamat Domisili',
+                'RT',
+                'RW',
+                'Desa / Kelurahan',
+                'Kecamatan',
+                'Kabupaten / Kota',
+                'No Telepon / WA',
+                'Email',
+                'Status Kepemilikan Rumah',
+                'Kategori Ekonomi Pastoral',
+                'Bantuan Pastoral Khusus',
+                'Pekerjaan',
+                'Pendidikan',
+                'Golongan Darah',
+                'Status Verifikasi',
+                'Status KK',
+            ], $this->kkMemberImportHeadings(2));
+        }
+
+        $statusColumn = collect(['status', 'status_aktif', 'StatusAktif'])->first(fn ($column) => in_array($column, $tableColumns, true));
+        if ($statusColumn && !in_array('Status', $headings, true)) {
+            $headings[] = 'Status';
+        }
+
+        $orderColumn = collect($config['columns'])
+            ->map(fn ($col) => in_array($col['key'], $tableColumns, true) ? $col['key'] : ($col['altKey'] ?? null))
+            ->first(fn ($column) => $column && in_array($column, $tableColumns, true));
+        if ($orderColumn) {
+            $query->orderBy($orderColumn);
+        }
+
+        $rows = $query->get()->map(function ($item) use ($config, $statusColumn, $slug) {
+            if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+                $familyRow = [
+                    $item->no_kk_kw,
+                    $item->no_kk_dukcapil,
+                    $item->nik_pemilik,
+                    $item->nama_lahir_pemilik,
+                    $item->nama_baptis_pemilik,
+                    $item->nama_pasangan,
+                    $item->kapela?->nama_kapela ?? '',
+                    $item->wilayah?->nama_wilayah ?? '',
+                    $item->lingkungan?->nama_lingkungan ?? '',
+                    $item->kub?->nama_kub ?? '',
+                    $item->alamat_sekarang,
+                    $item->rt,
+                    $item->rw,
+                    $item->desa_kelurahan,
+                    $item->kecamatan,
+                    $item->kota_kabupaten,
+                    $item->handphone,
+                    $item->email,
+                    $item->status_kepemilikan_rumah ?? 'Milik Sendiri',
+                    $item->kategori_ekonomi ?? 'Sejahtera / Mandiri',
+                    $item->bantuan_pastoral ?? '-',
+                    $item->pekerjaan ?? '',
+                    $item->pendidikan ?? '',
+                    $item->golongan_darah ?? '',
+                    $item->status_verifikasi,
+                    $item->status_kk,
+                ];
+
+                return array_merge($familyRow, $this->kkMemberExportValues($item, 2));
+            }
+
+            $row = [];
+            foreach ($config['columns'] as $col) {
+                if (!empty($col['isImage']) || !empty($col['isIcon'])) {
+                    continue;
+                }
+                $row[] = $this->moduleExportValue($item, $col);
+            }
+            if ($statusColumn) {
+                $row[] = $this->formatExportStatus($item->{$statusColumn});
+            }
+            return $row;
+        });
+
+        return [$headings, $rows];
+    }
+
+
+    private function moduleExportQuery(string $slug, string $modelClass)
+    {
+        $query = $modelClass::query();
+
+        if ($slug === 'keuskupan') {
+            $query->with(['provinsi', 'kabupaten', 'kecamatan', 'desa']);
+        } elseif ($slug === 'dekenat' || $slug === 'kevikepan') {
+            $query->with(['keuskupan', 'parokis']);
+        } elseif ($slug === 'paroki') {
+            $query->with(['keuskupan', 'dekenat', 'provinsi', 'kabupaten', 'kecamatan', 'desa']);
+        } elseif ($slug === 'kuasi-paroki') {
+            $query->with(['paroki.dekenat']);
+        } elseif ($slug === 'kapela' || $slug === 'stasi') {
+            $with = [];
+            if (Schema::hasColumn('kapela', 'paroki_id')) {
+                $with[] = 'paroki';
+            }
+            if (Schema::hasColumn('kub', 'kapela_id')) {
+                $with[] = 'kubs';
+            }
+            if (Schema::hasColumn('wilayah', 'kapela_id')) {
+                $with[] = 'wilayahs';
+            }
+            if (!empty($with)) {
+                $query->with($with);
+            }
+        } elseif ($slug === 'wilayah') {
+            $query->with(['paroki', 'kapela', 'kubs']);
+        } elseif ($slug === 'kub') {
+            $query->with(['wilayah', 'kapela', 'paroki']);
+        } elseif ($slug === 'provinsi') {
+            $query->with(['kabupatens']);
+        } elseif ($slug === 'kabupaten') {
+            $query->with(['provinsi', 'kecamatans']);
+        } elseif ($slug === 'kecamatan') {
+            $query->with(['kabupaten', 'desas']);
+        } elseif ($slug === 'desa-kelurahan') {
+            $query->with(['kecamatan']);
+        } elseif (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            $query->with(['wilayah', 'kapela', 'kub', 'lingkungan', 'anggota']);
+        }
+
+        return $query;
+    }
+
+
+    private function moduleExportValue($item, array $col)
+    {
+        if (!empty($col['isRelationLink'])) {
+            $relation = $item->{$col['relation']} ?? null;
+            return $relation instanceof \Illuminate\Support\Collection ? $relation->count() : ($relation ? 1 : 0);
+        }
+
         if (!empty($col['relation'])) {
             $relation = $item->{$col['relation']} ?? null;
             if ($relation) {
                 return $relation->{$col['relationKey']} ?? (isset($col['altRelationKey']) ? ($relation->{$col['altRelationKey']} ?? null) : null) ?? '-';
-
             }
             return '-';
         }
+
         return $item->{$col['key']} ?? (isset($col['altKey']) ? ($item->{$col['altKey']} ?? null) : null) ?? '-';
     }
-    private function formatExportStatus($value): string
-    {
-        if ($value === 'Y' || $value === 1 || $value === true) {
-            return 'Aktif';
-        }
-        if ($value === 'N' || $value === 0 || $value === false) {
-            return 'Tidak Aktif';
-        }
-        return $value ?: 'Aktif';
-    }
+
+
     private function normalizeImportHeading(string $heading): string
     {
         return Str::of($heading)->lower()->ascii()->replaceMatches('/[^a-z0-9]+/', '_')->trim('_')->toString();
-
     }
+
+
     private function moduleImportFieldMap(string $slug, array $config, array $validColumns): array
     {
         $map = [];
         $blockedColumns = ['created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by', 'deleted_by', 'delete_reason', 'is_deleted'];
+
         foreach ($validColumns as $column) {
             if (!in_array($column, $blockedColumns, true)) {
                 $map[$this->normalizeImportHeading($column)] = $column;
             }
         }
+
         foreach ($config['columns'] as $col) {
             $field = null;
             if (isset($col['altKey']) && in_array($col['altKey'], $validColumns, true)) {
@@ -1626,16 +2015,17 @@ trait GenericModuleTrait
                 $field = $this->relationFieldForImport($col['relation']);
             }
             if ($field && in_array($field, $validColumns, true)) {
-
                 $map[$this->normalizeImportHeading($col['label'])] = $field;
             }
         }
+
         foreach (['kode' => 'kode_', 'nama' => 'nama_'] as $alias => $prefix) {
             $field = collect($validColumns)->first(fn ($column) => str_starts_with($column, $prefix));
             if ($field) {
                 $map[$alias] = $field;
             }
         }
+
         $aliasMap = [
             'kontak' => ['telepon', 'no_telp', 'no_hp', 'kontak'],
             'telp' => ['telepon', 'no_telp', 'no_hp'],
@@ -1718,14 +2108,18 @@ trait GenericModuleTrait
             'status_kk' => ['status_kk'],
             'status_verifikasi' => ['status_verifikasi'],
         ];
+
         foreach ($aliasMap as $alias => $candidates) {
             $field = collect($candidates)->first(fn ($column) => in_array($column, $validColumns, true));
             if ($field) {
                 $map[$alias] = $field;
             }
         }
+
         return $map;
     }
+
+
     private function relationFieldForImport(string $relation): ?string
     {
         return match ($relation) {
@@ -1735,7 +2129,6 @@ trait GenericModuleTrait
             'provinsi' => 'provinsi_id',
             'kabupaten' => 'kabupaten_id',
             'kecamatan' => 'kecamatan_id',
-
             'desa' => 'desa_id',
             'wilayah' => 'wilayah_id',
             'kapela' => 'kapela_id',
@@ -1743,41 +2136,52 @@ trait GenericModuleTrait
             default => null,
         };
     }
+
+
     private function mapModuleImportRow(array $row, array $headers, array $validColumns): array
     {
         $payload = [];
         $blockedColumns = ['id', 'id_keuskupan', 'id_paroki', 'id_provinsi', 'id_kabupaten', 'id_kecamatan', 'id_desa', 'created_at', 'updated_at', 'deleted_at'];
+
         foreach ($row as $column => $value) {
             $field = $headers[$column] ?? null;
             if (!$field || !in_array($field, $validColumns, true) || in_array($field, $blockedColumns, true)) {
                 continue;
             }
+
             $cleanValue = is_string($value) ? trim($value) : $value;
             if ($cleanValue === '') {
                 $cleanValue = null;
             }
+
             if (in_array($field, ['provinsi_id', 'kabupaten_id', 'kecamatan_id', 'desa_id'], true)) {
                 $cleanValue = is_numeric($cleanValue) ? (int) $cleanValue : $this->resolveTerritoryRelationId($field, $cleanValue);
             }
+
             if (in_array($field, ['keuskupan_id', 'dekenat_id', 'paroki_id', 'wilayah_id', 'kapela_id'], true)) {
                 $cleanValue = is_numeric($cleanValue) ? (int) $cleanValue : $this->resolveChurchRelationId($field, $cleanValue);
             }
+
             if ($field === 'kub_id') {
                 $cleanValue = is_numeric($cleanValue) ? (int) $cleanValue : $this->resolveChurchRelationId($field, $cleanValue);
             }
+
             if (in_array($field, ['no_kk_kw', 'no_kk_dukcapil', 'nik_pemilik', 'handphone'], true) && $cleanValue !== null) {
                 $cleanValue = preg_replace('/\.0$/', '', trim((string) $cleanValue));
             }
+
             if ($field === 'status') {
                 $statusText = Str::of((string) $cleanValue)->lower()->ascii()->replace(' ', '')->toString();
                 $cleanValue = in_array($statusText, ['tidakaktif', 'nonaktif', 'nonactive', 'inactive', 'n', '0'], true)
                     ? 'Tidak Aktif'
                     : 'Aktif';
             }
+
             if ($field === 'StatusAktif' || $field === 'status_aktif') {
                 $statusText = Str::of((string) $cleanValue)->lower()->ascii()->replace(' ', '')->toString();
                 $cleanValue = in_array($statusText, ['tidakaktif', 'nonaktif', 'nonactive', 'inactive', 'n', '0'], true) ? 'N' : 'Y';
             }
+
             if ($field === 'status_verifikasi') {
                 $statusText = Str::of((string) $cleanValue)->lower()->ascii()->replaceMatches('/[^a-z0-9]+/', '')->toString();
                 $cleanValue = match (true) {
@@ -1786,6 +2190,7 @@ trait GenericModuleTrait
                     default => 'Belum',
                 };
             }
+
             if ($field === 'status_kk') {
                 $statusText = Str::of((string) $cleanValue)->lower()->ascii()->replaceMatches('/[^a-z0-9]+/', '')->toString();
                 $cleanValue = match (true) {
@@ -1797,28 +2202,38 @@ trait GenericModuleTrait
                     default => 'Aktif',
                 };
             }
+
             $payload[$field] = $cleanValue;
         }
+
         if (empty($payload['status']) && in_array('status', $validColumns, true)) {
             $payload['status'] = 'Aktif';
         }
+
         if (empty($payload['status_kk']) && in_array('status_kk', $validColumns, true)) {
             $payload['status_kk'] = 'Aktif';
         }
+
         if (empty($payload['status_verifikasi']) && in_array('status_verifikasi', $validColumns, true)) {
             $payload['status_verifikasi'] = 'Belum';
         }
+
         if (in_array('nama_baptis_pemilik', $validColumns, true) && empty($payload['nama_baptis_pemilik'])) {
             $payload['nama_baptis_pemilik'] = $payload['nama_lahir_pemilik'] ?? '-';
         }
+
         if (in_array('nama_lahir_pemilik', $validColumns, true) && empty($payload['nama_lahir_pemilik'])) {
             $payload['nama_lahir_pemilik'] = $payload['nama_baptis_pemilik'] ?? '-';
         }
+
         if (in_array('is_deleted', $validColumns, true)) {
             $payload['is_deleted'] = 0;
         }
+
         return $payload;
     }
+
+
     private function moduleImportLookup(string $slug, array $payload, array $validColumns): array
     {
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
@@ -1827,8 +2242,10 @@ trait GenericModuleTrait
                     return [$column => trim((string) $payload[$column])];
                 }
             }
+
             return [];
         }
+
         $codeCandidates = [
             'keuskupan' => ['kode_keuskupan'],
             'dekenat' => ['kode_kevikepan', 'kode_dekenat'],
@@ -1844,6 +2261,7 @@ trait GenericModuleTrait
             'kecamatan' => ['kode_kecamatan'],
             'desa-kelurahan' => ['kode_desa'],
         ];
+
         $nameCandidates = [
             'keuskupan' => ['nama_keuskupan'],
             'dekenat' => ['nama_kevikepan', 'nama_dekenat'],
@@ -1859,24 +2277,30 @@ trait GenericModuleTrait
             'kecamatan' => ['nama_kecamatan'],
             'desa-kelurahan' => ['nama_desa'],
         ];
+
         foreach ($codeCandidates[$slug] ?? [] as $column) {
             if (in_array($column, $validColumns, true) && !empty($payload[$column])) {
                 return [$column => $payload[$column]];
             }
         }
+
         foreach ($nameCandidates[$slug] ?? [] as $column) {
             if (in_array($column, $validColumns, true) && !empty($payload[$column])) {
                 return [$column => $payload[$column]];
             }
         }
+
         return [];
     }
+
+
     private function resolveTerritoryRelationId(string $field, $value): ?int
     {
         $value = trim((string) $value);
         if ($value === '' || $value === '-') {
             return null;
         }
+
         return match ($field) {
             'provinsi_id' => Provinsi::where('nama_provinsi', $value)->orWhere('kode_provinsi', $value)->value('id_provinsi'),
             'kabupaten_id' => Kabupaten::where('nama_kabupaten', $value)->orWhere('kode_kabupaten', $value)->value('id_kabupaten'),
@@ -1885,12 +2309,15 @@ trait GenericModuleTrait
             default => null,
         };
     }
+
+
     private function resolveChurchRelationId(string $field, $value): ?int
     {
         $value = trim((string) $value);
         if ($value === '' || $value === '-') {
             return null;
         }
+
         return match ($field) {
             'keuskupan_id' => Keuskupan::where('nama_keuskupan', $value)->orWhere('kode_keuskupan', $value)->value('id_keuskupan'),
             'dekenat_id' => Dekenat::where('nama_kevikepan', $value)->orWhere('nama_dekenat', $value)->orWhere('kode_kevikepan', $value)->orWhere('kode_dekenat', $value)->value('id'),
@@ -1901,499 +2328,5 @@ trait GenericModuleTrait
             default => null,
         };
     }
-    private function clearFastAccessCache(): void
-    {
-        foreach ([
-            'frontend.common_data',
-            'frontend.beranda.jadwal_misa',
-            'frontend.beranda.pengumuman',
-            'frontend.beranda.galeri',
-            'frontend.beranda.artikel',
-            'frontend.beranda.stats',
-            'frontend.kapela_geojson',
-            'global_pengaturan_aplikasi_first',
-        ] as $key) {
-            Cache::forget($key);
-        }
-        Cache::forever('global_view_data_version', (int) Cache::get('global_view_data_version', 1) + 1);
-    }
-    private function normalizeKuasiParokiPayload(array $data, $kuasi = null): array
-    {
-        $name = $data['nama_kuasi'] ?? $data['NamaKuasiParoki'] ?? $kuasi?->nama_kuasi ?? null;
-        $code = $data['kode_kuasi'] ?? $data['KodeKuasiParoki'] ?? $kuasi?->kode_kuasi ?? null;
-        $address = $data['lokasi'] ?? $data['AlamatKuasiParoki'] ?? $kuasi?->lokasi ?? null;
-        $pastor = $this->resolvePastorDisplayName($data['pastor_administrator'] ?? $data['PastorKuasiParoki'] ?? $kuasi?->pastor_administrator ?? null);
-        $status = $data['status'] ?? $kuasi?->status ?? 'Aktif';
-        if ($name !== null) {
-            $data['NamaKuasiParoki'] = $name;
-        }
-        if ($code !== null) {
-            $data['KodeKuasiParoki'] = $code;
-        }
-        if ($address !== null) {
-            $data['AlamatKuasiParoki'] = $address;
-        }
-        if ($pastor !== null) {
-            $data['PastorKuasiParoki'] = $pastor;
-        }
-        if (isset($data['keterangan'])) {
-            $data['Keterangan'] = $data['keterangan'];
-        }
-        $data['StatusAktif'] = $this->shouldPromoteKuasiParoki($data) || in_array($status, ['Nonaktif', 'N', 0, '0'], true) ? 'N' : 'Y';
-        return $data;
-    }
-    private function shouldPromoteKuasiParoki(array $data): bool
-    {
-        $status = strtolower((string) ($data['status'] ?? ''));
-        return !empty($data['promote_to_paroki'])
-            || str_contains($status, 'paroki')
-            || str_contains($status, 'definitif');
-    }
-    private function promoteKuasiParokiToParoki(\App\Models\KuasiParoki $kuasi, array $data): Paroki
-    {
-        $kuasi->loadMissing('paroki.dekenat');
-        $rawName = trim((string) ($data['NamaKuasiParoki'] ?? $data['nama_kuasi'] ?? $kuasi->nama_kuasi ?? 'Paroki Baru'));
-        $cleanName = trim(preg_replace('/^Kuasi\s+Paroki\s+/i', '', $rawName));
-        $newParokiName = Str::startsWith(strtolower($cleanName), 'paroki ')
-            ? $cleanName
-            : 'Paroki ' . $cleanName;
-        $oldCode = $data['KodeKuasiParoki'] ?? $data['kode_kuasi'] ?? $kuasi->kode_kuasi;
-        $newCode = trim((string) ($data['kode_paroki_baru'] ?? '')) ?: $this->generateParokiCode($oldCode);
-        $skNumber = trim((string) ($data['no_sk_elevasi'] ?? ''));
-        $promotedAt = now();
-        $actor = auth()->user()?->name ?? auth()->user()?->nama_lengkap ?? auth()->user()?->email ?? 'Sistem';
-        $parentParoki = $kuasi->paroki;
-        $parentParokiLabel = $parentParoki
-            ? trim($parentParoki->nama_paroki . ' (ID: ' . $parentParoki->getKey() . ', Kode: ' . ($parentParoki->kode_paroki ?: '-') . ')')
-            : '-';
-        $dekenatId = $data['dekenat_id'] ?? $kuasi->dekenat_id ?? $parentParoki?->dekenat_id;
-        $keuskupanId = $data['keuskupan_id'] ?? $kuasi->keuskupan_id ?? $parentParoki?->keuskupan_id;
-        $address = $data['AlamatKuasiParoki'] ?? $data['lokasi'] ?? $kuasi->lokasi;
-        $pastor = $this->resolvePastorDisplayName($data['pastor_administrator'] ?? $data['PastorKuasiParoki'] ?? $kuasi->pastor_administrator);
-        $historyBlock = implode("\n", array_filter([
-            '[ELEVASI-KUASI-PAROKI] ' . $promotedAt->format('Y-m-d H:i:s') . ' WITA',
-            'Status: Kuasi Paroki dinaikkan menjadi Paroki definitif.',
-            'Nama kuasi asal: ' . $rawName,
-            'Kode kuasi asal: ' . ($oldCode ?: '-'),
-            'Nama paroki definitif: ' . $newParokiName,
-            'Kode paroki definitif: ' . $newCode,
-            'Paroki induk saat masih kuasi: ' . $parentParokiLabel,
-            'Nomor SK/Dekret: ' . ($skNumber ?: '-'),
-            'Pastor administrator terakhir: ' . ($pastor ?: '-'),
-            'Diproses oleh: ' . $actor,
-        ]));
-        $existingParoki = Paroki::where('kode_paroki', $newCode)
-            ->orWhere('nama_paroki', $newParokiName)
-            ->first();
-        $parokiPayload = [
-            'keuskupan_id' => $keuskupanId,
 
-            'dekenat_id' => $dekenatId,
-            'kode_paroki' => $newCode,
-            'nama_paroki' => $newParokiName,
-            'pelindung_paroki' => $data['pelindung'] ?? $kuasi->pelindung ?? '',
-            'status_paroki' => 'Mandiri',
-            'status' => 'Aktif',
-            'nama_pastor_paroki_aktif' => $pastor ?: '',
-            'alamat' => $address ?: '',
-            'provinsi_id' => $data['provinsi_id'] ?? $kuasi->provinsi_id,
-            'kabupaten_id' => $data['kabupaten_id'] ?? $kuasi->kabupaten_id,
-            'kecamatan_id' => $data['kecamatan_id'] ?? $kuasi->kecamatan_id,
-            'desa_id' => $data['desa_id'] ?? $kuasi->desa_id,
-            'telepon' => $data['Telepon'] ?? $kuasi->Telepon ?? null,
-            'email' => $data['Email'] ?? $kuasi->Email ?? null,
-            'website' => $data['Website'] ?? $kuasi->Website ?? null,
-            'latitude' => $data['Latitude'] ?? $kuasi->Latitude ?? null,
-            'longitude' => $data['Longitude'] ?? $kuasi->Longitude ?? null,
-            'keterangan' => trim(($existingParoki?->keterangan ? $existingParoki->keterangan . "\n\n" : '') . $historyBlock),
-        ];
-        if ($existingParoki) {
-            $existingParoki->update($parokiPayload);
-            $paroki = $existingParoki;
-        } else {
-            $paroki = Paroki::create($parokiPayload);
-        }
-        $kuasiHistory = trim(($kuasi->Keterangan ? $kuasi->Keterangan . "\n\n" : '') . $historyBlock . "\nParoki definitif ID: " . $paroki->getKey());
-        $kuasi->forceFill([
-            'StatusAktif' => 'N',
-            'Keterangan' => $kuasiHistory,
-            'UpdatedAt' => now(),
-            'UpdatedBy' => auth()->id(),
-        ])->save();
-        return $paroki;
-    }
-    private function resolvePastorDisplayName($value): ?string
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-        if (is_numeric($value) && \Illuminate\Support\Facades\Schema::hasTable('master_pastor')) {
-            $pastor = \App\Models\MasterPastor::find($value);
-            if ($pastor) {
-                return trim(implode(' ', array_filter([
-                    $pastor->gelar_depan ?? null,
-                    $pastor->nama_pastor ?? null,
-
-                    if (!\Illuminate\Support\Facades\Schema::hasColumn('galeri', 'lokasi')) {
-                        $table->string('lokasi', 255)->nullable();
-                    }
-                    if (!\Illuminate\Support\Facades\Schema::hasColumn('galeri', 'og_image')) {
-                        $table->string('og_image', 255)->nullable();
-                    }
-                    if (!\Illuminate\Support\Facades\Schema::hasColumn('galeri', 'status_publish')) {
-                        $table->string('status_publish', 30)->default('Publish');
-                    }
-                    if (!\Illuminate\Support\Facades\Schema::hasColumn('galeri', 'urutan')) {
-                        $table->integer('urutan')->default(0);
-                    }
-                    if (!\Illuminate\Support\Facades\Schema::hasColumn('galeri', 'meta_title')) {
-                        $table->string('meta_title', 255)->nullable();
-                    }
-                    if (!\Illuminate\Support\Facades\Schema::hasColumn('galeri', 'meta_description')) {
-                        $table->text('meta_description')->nullable();
-                    }
-
-        try {
-            $checkTable = \Illuminate\Support\Facades\DB::select("SHOW TABLES LIKE 'riwayat_pastor_paroki'");
-            $needsSync = empty($checkTable);
-            if (!$needsSync) {
-                $count = \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')->count();
-
-                $hasDamasus = \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')->where('nama_pastor', 'like', '%Damasus%')->exists();
-                if ($count < 5 || !$hasDamasus) {
-                    $needsSync = true;
-                }
-            }
-            if ($needsSync) {
-                try {
-                    \Illuminate\Support\Facades\DB::statement("DROP TABLE IF EXISTS riwayat_pastor_paroki");
-                    \Illuminate\Support\Facades\DB::statement("CREATE TABLE riwayat_pastor_paroki LIKE parokibenlutuci31.riwayat_pastor_paroki");
-                    \Illuminate\Support\Facades\DB::statement("INSERT INTO riwayat_pastor_paroki SELECT * FROM parokibenlutuci31.riwayat_pastor_paroki");
-                } catch (\Throwable $ex) {
-                    \Illuminate\Support\Facades\Schema::create('riwayat_pastor_paroki', function ($table) {
-                        $table->increments('id');
-                        $table->unsignedInteger('paroki_id')->nullable();
-                        $table->string('nama_pastor', 150);
-                        $table->string('gelar', 50)->nullable();
-                        $table->string('jabatan', 100)->nullable();
-                        $table->string('periode_mulai', 50)->nullable();
-                        $table->string('periode_selesai', 50)->nullable();
-                        $table->string('tahun_mulai', 10)->nullable();
-                        $table->string('tahun_selesai', 10)->nullable();
-                        $table->string('foto', 255)->nullable();
-                        $table->string('status', 50)->default('Aktif');
-                        $table->string('status_pelayanan', 50)->nullable();
-                        $table->integer('urutan')->default(1);
-                        $table->text('keterangan')->nullable();
-                        $table->text('karya_pelayanan')->nullable();
-                    });
-                    \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')->insert([
-                        ['nama_pastor' => 'P. Damasus Sumardi', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2002', 'periode_selesai' => '2007', 'tahun_mulai' => '2002', 'tahun_selesai' => '2007', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 1, 'foto' => 'uploads/pastor/damasus.jpg'],
-                        ['nama_pastor' => 'P. Siprianus Asa', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2007', 'periode_selesai' => '2010', 'tahun_mulai' => '2007', 'tahun_selesai' => '2010', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 2, 'foto' => null],
-                        ['nama_pastor' => 'P. Walburga Poca', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2010', 'periode_selesai' => '2012', 'tahun_mulai' => '2010', 'tahun_selesai' => '2012', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 3, 'foto' => null],
-                        ['nama_pastor' => 'P. Damianus Lamak Tasaeb', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2012', 'periode_selesai' => '2016', 'tahun_mulai' => '2012', 'tahun_selesai' => '2016', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 4, 'foto' => null],
-                        ['nama_pastor' => 'RD. Herman Hillers Penga', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2026', 'periode_selesai' => 'Sekarang', 'tahun_mulai' => '2026', 'tahun_selesai' => 'Sekarang', 'status' => 'Aktif', 'status_pelayanan' => 'Aktif Melayani', 'urutan' => 5, 'foto' => null],
-                    ]);
-                }
-            }
-            if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_pastor_paroki')) {
-                $existingCols = \Illuminate\Support\Facades\Schema::getColumnListing('riwayat_pastor_paroki');
-                \Illuminate\Support\Facades\Schema::table('riwayat_pastor_paroki', function ($table) use ($existingCols) {
-                    if (!in_array('foto', $existingCols, true)) $table->string('foto', 255)->nullable();
-                    if (!in_array('status_pelayanan', $existingCols, true)) $table->string('status_pelayanan', 50)->nullable();
-                    if (!in_array('periode_mulai', $existingCols, true)) $table->string('periode_mulai', 50)->nullable();
-                    if (!in_array('periode_selesai', $existingCols, true)) $table->string('periode_selesai', 50)->nullable();
-                    if (!in_array('tahun_mulai', $existingCols, true)) $table->string('tahun_mulai', 50)->nullable();
-                    if (!in_array('tahun_selesai', $existingCols, true)) $table->string('tahun_selesai', 50)->nullable();
-                    if (!in_array('urutan', $existingCols, true)) $table->integer('urutan')->default(1);
-                    if (!in_array('keterangan', $existingCols, true)) $table->text('keterangan')->nullable();
-                });
-            }
-        } catch (\Throwable $e) {
-            // Silently continue
-        }
-    }
-    protected function ensureKategoriKontenTableAndData(): void
-    {
-        try {
-            if (!\Illuminate\Support\Facades\Schema::hasTable('kategori_konten')) {
-                \Illuminate\Support\Facades\Schema::create('kategori_konten', function ($table) {
-                    $table->increments('id_kategori');
-                    $table->string('nama_kategori', 100);
-                    $table->string('slug', 120)->nullable();
-                    $table->text('deskripsi')->nullable();
-                    $table->string('ikon', 50)->default('fa-newspaper');
-                    $table->integer('urutan')->default(1);
-                    $table->string('status', 20)->default('Aktif');
-                    $table->timestamps();
-                });
-                \Illuminate\Support\Facades\DB::table('kategori_konten')->insert([
-                    ['nama_kategori' => 'Berita & Warta Paroki', 'slug' => 'berita-warta-paroki', 'deskripsi' => 'Liputan kegiatan dan berita terkini di Paroki', 'ikon' => 'fa-newspaper', 'urutan' => 1, 'status' => 'Aktif', 'created_at' => now(), 'updated_at' => now()],
-                    ['nama_kategori' => 'Pengumuman Resmi Paroki', 'slug' => 'pengumuman-resmi-paroki', 'deskripsi' => 'Pengumuman misa, sakramen, dan sekretariat', 'ikon' => 'fa-bullhorn', 'urutan' => 2, 'status' => 'Aktif', 'created_at' => now(), 'updated_at' => now()],
-                    ['nama_kategori' => 'Renungan Harian & Rohani', 'slug' => 'renungan-harian-rohani', 'deskripsi' => 'Santapan rohani, renungan injil, dan katekese', 'ikon' => 'fa-book-open', 'urutan' => 3, 'status' => 'Aktif', 'created_at' => now(), 'updated_at' => now()],
-                    ['nama_kategori' => 'Kategorial & Komunitas', 'slug' => 'kategorial-komunitas', 'deskripsi' => 'Warta kegiatan OMK, WKRI, Legio Mariae, dll.', 'ikon' => 'fa-users', 'urutan' => 4, 'status' => 'Aktif', 'created_at' => now(), 'updated_at' => now()],
-                    ['nama_kategori' => 'Liturgi & Peribadatan', 'slug' => 'liturgi-peribadatan', 'deskripsi' => 'Pedoman dan jadwal perayaan ekaristi & liturgi', 'ikon' => 'fa-cross', 'urutan' => 5, 'status' => 'Aktif', 'created_at' => now(), 'updated_at' => now()],
-                ]);
-            }
-        } catch (\Throwable $e) {
-            // Silently continue
-        }
-    }
-    protected function ensureKomentarArtikelTableAndData(): void
-    {
-        try {
-            \App\Models\KomentarArtikel::ensureTableExists();
-        } catch (\Throwable $e) {
-            // Silently continue
-        }
-    }
-    private function getModuleMap(): array
-    {
-        return [
-            'keuskupan' => ['model' => \App\Models\Keuskupan::class, 'title' => 'Data Keuskupan', 'columns' => [
-                ['key' => 'logo', 'label' => 'Logo', 'isImage' => true],
-                ['key' => 'nama_keuskupan', 'label' => 'Nama Keuskupan', 'isPrimary' => true],
-                ['key' => 'nama_latin', 'altKey' => 'nama_keuskupan_latin', 'label' => 'Nama Latin'],
-                ['key' => 'kode_keuskupan', 'label' => 'Kode'],
-                ['key' => 'uskup', 'altKey' => 'nama_uskup', 'label' => 'Nama Uskup'],
-                ['key' => 'dekenats', 'label' => 'Dekenat', 'isRelationLink' => true, 'relation' => 'dekenats', 'linkTo' => 'dekenat', 'filterParam' => 'keuskupan_id', 'icon' => 'fa-layer-group', 'color' => 'blue'],
-                ['key' => 'no_telp', 'altKey' => 'telepon', 'label' => 'Kontak'],
-            ]],
-            'dekenat' => ['model' => \App\Models\Dekenat::class, 'title' => 'Data Kevikepan / Dekenat', 'columns' => [
-                ['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true],
-                ['key' => 'nama_kevikepan', 'altKey' => 'nama_dekenat', 'label' => 'Nama Kevikepan / Dekenat', 'isPrimary' => true],
-                ['key' => 'kode_kevikepan', 'altKey' => 'kode_dekenat', 'label' => 'Kode'],
-                ['key' => 'keuskupan_nama', 'relation' => 'keuskupan', 'relationKey' => 'nama_keuskupan', 'label' => 'Keuskupan'],
-                ['key' => 'vikep', 'altKey' => 'nama_deken', 'label' => 'Vikep (Deken)'],
-                ['key' => 'parokis', 'label' => 'Paroki', 'isRelationLink' => true, 'relation' => 'parokis', 'linkTo' => 'paroki', 'filterParam' => 'dekenat_id', 'icon' => 'fa-place-of-worship', 'color' => 'emerald'],
-                ['key' => 'telepon', 'altKey' => 'no_telp', 'label' => 'Kontak'],
-            ]],
-            'kevikepan' => ['model' => \App\Models\Kevikepan::class, 'title' => 'Data Kevikepan / Dekenat', 'columns' => [
-                ['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true],
-                ['key' => 'nama_kevikepan', 'altKey' => 'nama_dekenat', 'label' => 'Nama Kevikepan / Dekenat', 'isPrimary' => true],
-                ['key' => 'kode_kevikepan', 'altKey' => 'kode_dekenat', 'label' => 'Kode'],
-                ['key' => 'keuskupan_nama', 'relation' => 'keuskupan', 'relationKey' => 'nama_keuskupan', 'label' => 'Keuskupan'],
-                ['key' => 'vikep', 'altKey' => 'nama_deken', 'label' => 'Vikep (Deken)'],
-                ['key' => 'parokis', 'label' => 'Paroki', 'isRelationLink' => true, 'relation' => 'parokis', 'linkTo' => 'paroki', 'filterParam' => 'dekenat_id', 'icon' => 'fa-place-of-worship', 'color' => 'emerald'],
-                ['key' => 'telepon', 'altKey' => 'no_telp', 'label' => 'Kontak'],
-            ]],
-            'paroki' => ['model' => \App\Models\Paroki::class, 'title' => 'Data Paroki', 'columns' => [['key' => 'logo', 'label' => 'Logo', 'isImage' => true], ['key' => 'banner', 'altKey' => 'foto', 'label' => 'Banner Header (Gambar Latar)', 'isImage' => true], ['key' => 'nama_paroki', 'label' => 'Nama Paroki', 'isPrimary' => true], ['key' => 'kode_paroki', 'label' => 'Kode'], ['key' => 'dekenat_nama', 'relation' => 'dekenat', 'relationKey' => 'nama_kevikepan', 'altRelationKey' => 'nama_dekenat', 'label' => 'Kevikepan / Dekenat'], ['key' => 'pelindung_paroki', 'altKey' => 'pelindung', 'label' => 'Pelindung'], ['key' => 'nama_pastor_paroki_aktif', 'altKey' => 'pastor_paroki', 'label' => 'Pastor Paroki'], ['key' => 'alamat', 'label' => 'Alamat'], ['key' => 'telepon', 'label' => 'Kontak']]],
-            'kuasi-paroki' => ['model' => \App\Models\KuasiParoki::class, 'title' => 'Data Kuasi Paroki', 'columns' => [['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true], ['key' => 'nama_kuasi', 'altKey' => 'NamaKuasiParoki', 'label' => 'Nama Kuasi Paroki', 'isPrimary' => true], ['key' => 'KodeKuasiParoki', 'altKey' => 'kode_kuasi', 'label' => 'Kode'], ['key' => 'paroki_nama', 'relation' => 'paroki', 'relationKey' => 'nama_paroki', 'label' => 'Paroki Induk'], ['key' => 'dekenat_nama', 'label' => 'Kevikepan'], ['key' => 'pastor_administrator', 'altKey' => 'PastorKuasiParoki', 'label' => 'Pastor Administrator'], ['key' => 'lokasi', 'altKey' => 'AlamatKuasiParoki', 'label' => 'Lokasi / Alamat']]],
-            'kapela' => ['model' => \App\Models\Kapela::class, 'title' => 'Data Stasi / Kapela', 'columns' => [['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true], ['key' => 'nama_kapela', 'label' => 'Nama Stasi / Kapela', 'isPrimary' => true], ['key' => 'kode_kapela', 'label' => 'Kode'], ['key' => 'paroki_nama', 'relation' => 'paroki', 'relationKey' => 'nama_paroki', 'label' => 'Paroki Induk'], ['key' => 'kubs', 'label' => 'KUB', 'isRelationLink' => true, 'relation' => 'kubs', 'linkTo' => 'kub', 'filterParam' => 'kapela_id', 'icon' => 'fa-people-group', 'color' => 'teal'], ['key' => 'penanggung_jawab', 'label' => 'Penanggung Jawab'], ['key' => 'lokasi', 'label' => 'Lokasi'], ['key' => 'no_hp', 'label' => 'Kontak']]],
-            'wilayah' => ['model' => \App\Models\Wilayah::class, 'title' => 'Data Wilayah Pelayanan', 'columns' => [['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true], ['key' => 'nama_wilayah', 'label' => 'Nama Wilayah', 'isPrimary' => true], ['key' => 'kode_wilayah', 'label' => 'Kode'], ['key' => 'paroki_nama', 'relation' => 'paroki', 'relationKey' => 'nama_paroki', 'label' => 'Paroki'], ['key' => 'kapela_nama', 'relation' => 'kapela', 'relationKey' => 'nama_kapela', 'label' => 'Stasi / Kapela'], ['key' => 'kubs', 'label' => 'KUB', 'isRelationLink' => true, 'relation' => 'kubs', 'linkTo' => 'kub', 'filterParam' => 'wilayah_id', 'icon' => 'fa-people-group', 'color' => 'teal'], ['key' => 'ketua_wilayah', 'label' => 'Ketua Wilayah'], ['key' => 'no_hp', 'label' => 'Kontak']]],
-            'lingkungan' => ['model' => \App\Models\Lingkungan::class, 'title' => 'Lingkungan', 'columns' => [['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true], ['key' => 'nama_lingkungan', 'label' => 'Nama Lingkungan', 'isPrimary' => true], ['key' => 'kode_lingkungan', 'label' => 'Kode'], ['key' => 'ketua_lingkungan', 'label' => 'Ketua Lingkungan']]],
-            'kub' => ['model' => \App\Models\Kub::class, 'title' => 'Komunitas Umat Basis (KUB)', 'columns' => [['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true], ['key' => 'nama_kub', 'label' => 'Nama KUB', 'isPrimary' => true], ['key' => 'kode_kub', 'label' => 'Kode'], ['key' => 'wilayah_nama', 'relation' => 'wilayah', 'relationKey' => 'nama_wilayah', 'label' => 'Wilayah'], ['key' => 'kapela_nama', 'relation' => 'kapela', 'relationKey' => 'nama_kapela', 'label' => 'Stasi / Kapela'], ['key' => 'paroki_nama', 'relation' => 'paroki', 'relationKey' => 'nama_paroki', 'label' => 'Paroki'], ['key' => 'ketua_kub', 'label' => 'Ketua KUB'], ['key' => 'kontak', 'altKey' => 'no_hp', 'label' => 'Kontak']]],
-            'kk-katolik' => ['model' => \App\Models\KkKatolik::class, 'title' => 'Kartu Keluarga (KK) Katolik', 'columns' => [
-                ['key' => 'no_kk_kw', 'altKey' => 'no_kk_dukcapil', 'label' => 'No KK Katolik', 'isPrimary' => true],
-                ['key' => 'nama_baptis_pemilik', 'altKey' => 'nama_lahir_pemilik', 'label' => 'Nama Kepala Keluarga (Baptis & Lahir)'],
-
-                ['key' => 'wilayah_nama', 'relation' => 'wilayah', 'relationKey' => 'nama_wilayah', 'label' => 'Wilayah Pelayanan'],
-                ['key' => 'alamat_sekarang', 'label' => 'Alamat Domisili'],
-                ['key' => 'handphone', 'altKey' => 'telepon', 'label' => 'Kontak / HP'],
-                ['key' => 'status_kk', 'label' => 'Status'],
-            ]],
-            'kk' => ['model' => \App\Models\KkKatolik::class, 'title' => 'Kartu Keluarga (KK) Katolik', 'columns' => [
-                ['key' => 'no_kk_kw', 'altKey' => 'no_kk_dukcapil', 'label' => 'No KK Katolik', 'isPrimary' => true],
-                ['key' => 'nama_baptis_pemilik', 'altKey' => 'nama_lahir_pemilik', 'label' => 'Nama Kepala Keluarga (Baptis & Lahir)'],
-                ['key' => 'wilayah_nama', 'relation' => 'wilayah', 'relationKey' => 'nama_wilayah', 'label' => 'Wilayah Pelayanan'],
-                ['key' => 'alamat_sekarang', 'label' => 'Alamat Domisili'],
-                ['key' => 'handphone', 'altKey' => 'telepon', 'label' => 'Kontak / HP'],
-                ['key' => 'status_kk', 'label' => 'Status'],
-            ]],
-            'keluarga' => ['model' => \App\Models\KkKatolik::class, 'title' => 'Kartu Keluarga (KK) Katolik', 'columns' => [
-                ['key' => 'no_kk_kw', 'altKey' => 'no_kk_dukcapil', 'label' => 'No KK Katolik', 'isPrimary' => true],
-                ['key' => 'nama_baptis_pemilik', 'altKey' => 'nama_lahir_pemilik', 'label' => 'Nama Kepala Keluarga (Baptis & Lahir)'],
-                ['key' => 'wilayah_nama', 'relation' => 'wilayah', 'relationKey' => 'nama_wilayah', 'label' => 'Wilayah Pelayanan'],
-
-                ['key' => 'alamat_sekarang', 'label' => 'Alamat Domisili'],
-                ['key' => 'handphone', 'altKey' => 'telepon', 'label' => 'Kontak / HP'],
-                ['key' => 'status_kk', 'label' => 'Status'],
-            ]],
-            'umat' => ['model' => \App\Models\Umat::class, 'title' => 'Data Umat / Jiwa Paroki', 'columns' => [
-                ['key' => 'foto', 'label' => 'Foto', 'isImage' => true],
-                ['key' => 'nama_lengkap', 'altKey' => 'nama_baptis', 'label' => 'Nama Lengkap & Baptis', 'isPrimary' => true],
-                ['key' => 'nik', 'label' => 'NIK'],
-                ['key' => 'no_kk_kw', 'label' => 'No KK'],
-                ['key' => 'jenis_kelamin', 'label' => 'L/P'],
-                ['key' => 'tempat_lahir', 'label' => 'Tempat Lahir'],
-                ['key' => 'tanggal_lahir', 'label' => 'Tanggal Lahir', 'isDate' => true],
-                ['key' => 'hubungan_keluarga', 'label' => 'Kedudukan'],
-                ['key' => 'status_menikah', 'label' => 'Status Perkawinan'],
-                ['key' => 'status_umat', 'altKey' => 'status_aktif', 'label' => 'Status'],
-            ]],
-            'data-umat' => ['model' => \App\Models\Umat::class, 'title' => 'Data Umat / Jiwa Paroki', 'columns' => [
-                ['key' => 'foto', 'label' => 'Foto', 'isImage' => true],
-                ['key' => 'nama_lengkap', 'altKey' => 'nama_baptis', 'label' => 'Nama Lengkap & Baptis', 'isPrimary' => true],
-                ['key' => 'nik', 'label' => 'NIK'],
-                ['key' => 'no_kk_kw', 'label' => 'No KK'],
-                ['key' => 'jenis_kelamin', 'label' => 'L/P'],
-                ['key' => 'tempat_lahir', 'label' => 'Tempat Lahir'],
-                ['key' => 'tanggal_lahir', 'label' => 'Tanggal Lahir', 'isDate' => true],
-                ['key' => 'hubungan_keluarga', 'label' => 'Kedudukan'],
-                ['key' => 'status_menikah', 'label' => 'Status Perkawinan'],
-                ['key' => 'status_umat', 'altKey' => 'status_aktif', 'label' => 'Status'],
-            ]],
-            'sakramen' => ['model' => \App\Models\Sakramen::class, 'title' => 'Buku Sakramen', 'columns' => [
-                ['key' => 'tipe_sakramen', 'label' => 'Tipe Sakramen', 'isPrimary' => true],
-                ['key' => 'umat_nama', 'relation' => 'umat', 'relationKey' => 'nama_lengkap', 'label' => 'Nama Penerima / Umat'],
-                ['key' => 'tanggal', 'label' => 'Tanggal Penerimaan', 'isDate' => true],
-                ['key' => 'tempat', 'label' => 'Gereja / Tempat'],
-                ['key' => 'pelaksana', 'altKey' => 'pastor', 'label' => 'Pastor Pelayan'],
-                ['key' => 'no_surat', 'label' => 'No Akta / Surat'],
-                ['key' => 'status', 'label' => 'Status'],
-            ]],
-            'pengajuan-sakramen' => [
-                'model' => \App\Models\PengajuanSakramen::class,
-                'title' => 'Pengajuan & Administrasi Sakramen',
-                'columns' => [
-                    ['key' => 'nama_lengkap', 'label' => 'Nama Pemohon / Penerima', 'isPrimary' => true],
-                    ['key' => 'tipe_sakramen', 'label' => 'Tipe Sakramen'],
-                    ['key' => 'whatsapp', 'label' => 'No. WhatsApp'],
-                    ['key' => 'tanggal_pelaksanaan', 'label' => 'Tgl Pelaksanaan', 'isDate' => true],
-                    ['key' => 'biaya_administrasi', 'label' => 'Biaya Admin (Rp)'],
-                    ['key' => 'status_pembayaran', 'label' => 'Status Bayar'],
-                    ['key' => 'status_pengajuan', 'label' => 'Status Pengajuan'],
-                ],
-            ],
-            'jadwal-misa' => ['model' => \App\Models\JadwalMisa::class, 'title' => 'Jadwal Misa', 'columns' => [['key' => 'jenis_perayaan', 'altKey' => 'jenis_misa', 'label' => 'Nama Misa', 'isPrimary' => true], ['key' => 'tanggal', 'label' => 'Tanggal'], ['key' => 'hari', 'label' => 'Hari'], ['key' => 'waktu', 'altKey' => 'jam_perayaan', 'label' => 'Waktu'], ['key' => 'tempat', 'altKey' => 'lokasi', 'label' => 'Gereja / Tempat']]],
-            'jenis-iuran' => ['model' => \App\Models\JenisIuran::class, 'title' => 'Daftar Jenis Iuran Umat', 'columns' => [
-                ['key' => 'kode_iuran', 'label' => 'Kode'],
-                ['key' => 'nama_iuran', 'label' => 'Nama Iuran', 'isPrimary' => true],
-                ['key' => 'kategori_iuran', 'label' => 'Kategori'],
-                ['key' => 'basis_penagihan', 'label' => 'Basis Penagihan'],
-                ['key' => 'nominal_default', 'label' => 'Nominal Default (Rp)'],
-                ['key' => 'periode', 'label' => 'Periode'],
-                ['key' => 'wajib', 'label' => 'Wajib / Sukarela'],
-                ['key' => 'status', 'label' => 'Status'],
-            ]],
-            'jenis_iuran' => ['model' => \App\Models\JenisIuran::class, 'title' => 'Daftar Jenis Iuran Umat', 'columns' => [
-                ['key' => 'kode_iuran', 'label' => 'Kode'],
-                ['key' => 'nama_iuran', 'label' => 'Nama Iuran', 'isPrimary' => true],
-                ['key' => 'kategori_iuran', 'label' => 'Kategori'],
-                ['key' => 'basis_penagihan', 'label' => 'Basis Penagihan'],
-                ['key' => 'nominal_default', 'label' => 'Nominal Default (Rp)'],
-                ['key' => 'periode', 'label' => 'Periode'],
-                ['key' => 'wajib', 'label' => 'Wajib / Sukarela'],
-                ['key' => 'status', 'label' => 'Status'],
-            ]],
-            'iuran' => ['model' => \App\Models\Iuran::class, 'title' => 'Pencatatan Iuran Umat', 'columns' => [
-                ['key' => 'no_kk', 'label' => 'No KK'],
-                ['key' => 'nama_kepala', 'label' => 'Kepala Keluarga', 'isPrimary' => true],
-                ['key' => 'nama_iuran', 'label' => 'Jenis Iuran'],
-                ['key' => 'tahun', 'label' => 'Tahun'],
-                ['key' => 'bulan_lunas', 'label' => 'Bulan Lunas'],
-                ['key' => 'total_jumlah', 'altKey' => 'jumlah', 'label' => 'Total Bayar (Rp)'],
-                ['key' => 'status_bayar', 'label' => 'Status'],
-                ['key' => 'tanggal_bayar', 'label' => 'Tgl Bayar', 'isDate' => true],
-                ['key' => 'kolektor', 'altKey' => 'petugas', 'label' => 'Petugas / Kolektor'],
-            ]],
-            'kolekte' => ['model' => \App\Models\Kolekte::class, 'title' => 'Pencatatan Kolekte Misa', 'columns' => [
-                ['key' => 'tanggal', 'label' => 'Tanggal Misa', 'isDate' => true, 'isPrimary' => true],
-                ['key' => 'kategori_misa', 'label' => 'Kategori / Perayaan Misa'],
-                ['key' => 'nominal', 'label' => 'Jumlah Kolekte (Rp)'],
-                ['key' => 'lokasi_misa', 'label' => 'Gereja / Tempat'],
-                ['key' => 'petugas_penghitung', 'label' => 'Petugas Penghitung'],
-                ['key' => 'keterangan', 'label' => 'Keterangan'],
-            ]],
-            'intensi-misa' => ['model' => \App\Models\IntensiMisa::class, 'title' => 'Pencatatan Intensi Misa', 'columns' => [
-                ['key' => 'nama_pemohon', 'label' => 'Nama Pemohon', 'isPrimary' => true],
-                ['key' => 'kategori_intensi', 'label' => 'Kategori Intensi'],
-                ['key' => 'deskripsi', 'label' => 'Doa / Ujud Intensi'],
-                ['key' => 'tanggal_misa', 'label' => 'Tanggal Misa', 'isDate' => true],
-
-                ['key' => 'nominal_stipendium', 'label' => 'Stipendium (Rp)'],
-                ['key' => 'status_pembayaran', 'label' => 'Status Bayar'],
-            ]],
-            'intensi' => ['model' => \App\Models\IntensiMisa::class, 'title' => 'Pencatatan Intensi Misa', 'columns' => [
-                ['key' => 'nama_pemohon', 'label' => 'Nama Pemohon', 'isPrimary' => true],
-                ['key' => 'kategori_intensi', 'label' => 'Kategori Intensi'],
-                ['key' => 'deskripsi', 'label' => 'Doa / Ujud Intensi'],
-                ['key' => 'tanggal_misa', 'label' => 'Tanggal Misa', 'isDate' => true],
-                ['key' => 'nominal_stipendium', 'label' => 'Stipendium (Rp)'],
-                ['key' => 'status_pembayaran', 'label' => 'Status Bayar'],
-            ]],
-            'kegiatan' => ['model' => \App\Models\Kegiatan::class, 'title' => 'Agenda Kegiatan Paroki', 'columns' => [
-                ['key' => 'gambar', 'altKey' => 'foto', 'label' => 'Poster', 'isImage' => true],
-                ['key' => 'nama_kegiatan', 'altKey' => 'judul', 'label' => 'Nama Kegiatan', 'isPrimary' => true],
-                ['key' => 'kategori', 'label' => 'Kategori'],
-                ['key' => 'tanggal_mulai', 'label' => 'Tanggal Mulai', 'isDate' => true],
-                ['key' => 'tanggal_selesai', 'label' => 'Tanggal Selesai', 'isDate' => true],
-                ['key' => 'waktu', 'altKey' => 'jam', 'label' => 'Waktu / Jam', 'isTime' => true],
-                ['key' => 'lokasi', 'label' => 'Lokasi / Tempat'],
-                ['key' => 'status', 'label' => 'Status'],
-            ]],
-            'keuangan' => ['model' => \App\Models\Keuangan::class, 'title' => 'Kas & Transaksi Keuangan Paroki', 'columns' => [
-                ['key' => 'tanggal', 'label' => 'Tanggal Transaksi', 'isDate' => true],
-                ['key' => 'jenis', 'altKey' => 'jenis_transaksi', 'label' => 'Jenis (Masuk/Keluar)'],
-                ['key' => 'kategori', 'label' => 'Kategori Transaksi', 'isPrimary' => true],
-                ['key' => 'kode_coa', 'label' => 'Kode COA'],
-                ['key' => 'jumlah', 'altKey' => 'nominal', 'label' => 'Jumlah (Rp)'],
-                ['key' => 'penerima', 'label' => 'Penerima / Pihak Terkait'],
-                ['key' => 'status_approval', 'label' => 'Status Approval'],
-                ['key' => 'keterangan', 'label' => 'Keterangan'],
-            ]],
-            'aset' => ['model' => \App\Models\Aset::class, 'title' => 'Data Aset & Inventaris Paroki', 'columns' => [
-                ['key' => 'foto', 'label' => 'Foto', 'isImage' => true],
-                ['key' => 'kode_aset', 'label' => 'Kode Aset'],
-                ['key' => 'nama_aset', 'label' => 'Nama Barang / Aset', 'isPrimary' => true],
-                ['key' => 'kategori', 'label' => 'Kategori Aset'],
-                ['key' => 'jumlah', 'label' => 'Jumlah'],
-                ['key' => 'satuan', 'label' => 'Satuan'],
-                ['key' => 'kondisi', 'label' => 'Kondisi Fisik'],
-                ['key' => 'nilai_perolehan', 'label' => 'Nilai Perolehan (Rp)'],
-                ['key' => 'lokasi', 'label' => 'Lokasi / Ruangan'],
-                ['key' => 'penanggung_jawab', 'label' => 'Penanggung Jawab'],
-                ['key' => 'tanggal_perolehan', 'label' => 'Tgl Perolehan', 'isDate' => true],
-            ]],
-            'surat-masuk' => ['model' => \App\Models\SuratMasuk::class, 'title' => 'Surat Masuk', 'columns' => [['key' => 'no_surat', 'label' => 'No Surat', 'isPrimary' => true], ['key' => 'pengirim', 'label' => 'Pengirim'], ['key' => 'perihal', 'label' => 'Perihal'], ['key' => 'tgl_surat', 'label' => 'Tanggal']]],
-            'surat-keluar' => ['model' => \App\Models\SuratKeluar::class, 'title' => 'Surat Keluar', 'columns' => [['key' => 'no_surat', 'label' => 'No Surat', 'isPrimary' => true], ['key' => 'tujuan', 'label' => 'Tujuan'], ['key' => 'perihal', 'label' => 'Perihal'], ['key' => 'tgl_surat', 'label' => 'Tanggal']]],
-            'arsip-digital' => ['model' => \App\Models\ArsipDigital::class, 'title' => 'Arsip Digital', 'columns' => [['key' => 'nama_dokumen', 'label' => 'Nama Dokumen', 'isPrimary' => true], ['key' => 'kategori', 'label' => 'Kategori'], ['key' => 'tgl_arsip', 'label' => 'Tanggal Arsip']]],
-            'rapat-notulen' => ['model' => \App\Models\Rapat::class, 'title' => 'Rapat & Notulen', 'columns' => [['key' => 'agenda', 'label' => 'Agenda Rapat', 'isPrimary' => true], ['key' => 'tanggal', 'label' => 'Tanggal Rapat', 'isDate' => true], ['key' => 'waktu', 'label' => 'Waktu / Jam', 'isTime' => true], ['key' => 'lokasi', 'label' => 'Lokasi / Tempat'], ['key' => 'notulen', 'label' => 'Notulen & Hasil Rapat'], ['key' => 'status', 'label' => 'Status']]],
-            'rapat' => ['model' => \App\Models\Rapat::class, 'title' => 'Rapat & Notulen', 'columns' => [['key' => 'agenda', 'label' => 'Agenda Rapat', 'isPrimary' => true], ['key' => 'tanggal', 'label' => 'Tanggal Rapat', 'isDate' => true], ['key' => 'waktu', 'label' => 'Waktu / Jam', 'isTime' => true], ['key' => 'lokasi', 'label' => 'Lokasi / Tempat'], ['key' => 'notulen', 'label' => 'Notulen & Hasil Rapat'], ['key' => 'status', 'label' => 'Status']]],
-            'master-uskup' => ['model' => \App\Models\MasterUskup::class, 'title' => 'Daftar Uskup', 'columns' => [['key' => 'foto', 'label' => 'Foto', 'isImage' => true], ['key' => 'nama_uskup', 'label' => 'Nama Uskup', 'isPrimary' => true], ['key' => 'keuskupan', 'label' => 'Keuskupan'], ['key' => 'status', 'label' => 'Status']]],
-            'master-pastor' => ['model' => \App\Models\MasterPastor::class, 'title' => 'Daftar Pastor / Imam', 'columns' => [['key' => 'foto', 'label' => 'Foto', 'isImage' => true], ['key' => 'nama_pastor', 'label' => 'Nama Pastor', 'isPrimary' => true], ['key' => 'gelar_depan', 'label' => 'Gelar'], ['key' => 'jabatan', 'label' => 'Jabatan'], ['key' => 'jenis_imam', 'label' => 'Jenis Imam'], ['key' => 'ordo', 'label' => 'Ordo'], ['key' => 'keuskupan', 'label' => 'Keuskupan'], ['key' => 'no_hp', 'label' => 'Kontak / WA'], ['key' => 'status', 'label' => 'Status']]],
-            'riwayat-pastor' => ['model' => \App\Models\RiwayatPastorParoki::class, 'title' => 'Riwayat Pastor Paroki', 'columns' => [
-                ['key' => 'foto', 'label' => 'Foto', 'isImage' => true],
-                ['key' => 'nama_pastor', 'label' => 'Nama Pastor / Gembala', 'isPrimary' => true],
-                ['key' => 'jabatan', 'label' => 'Jabatan di Paroki'],
-                ['key' => 'periode_mulai', 'altKey' => 'tahun_mulai', 'label' => 'Mulai Pelayanan'],
-                ['key' => 'periode_selesai', 'altKey' => 'tahun_selesai', 'label' => 'Selesai Pelayanan'],
-                ['key' => 'status_pelayanan', 'altKey' => 'status', 'label' => 'Status Pelayanan'],
-                ['key' => 'urutan', 'label' => 'Urutan'],
-
-                ['key' => 'keterangan', 'altKey' => 'karya_pelayanan', 'label' => 'Catatan / Karya'],
-            ]],
-            'riwayat_pastor_paroki' => ['model' => \App\Models\RiwayatPastorParoki::class, 'title' => 'Riwayat Pastor Paroki', 'columns' => [
-                ['key' => 'foto', 'label' => 'Foto', 'isImage' => true],
-                ['key' => 'nama_pastor', 'label' => 'Nama Pastor / Gembala', 'isPrimary' => true],
-                ['key' => 'jabatan', 'label' => 'Jabatan di Paroki'],
-                ['key' => 'periode_mulai', 'altKey' => 'tahun_mulai', 'label' => 'Mulai Pelayanan'],
-                ['key' => 'periode_selesai', 'altKey' => 'tahun_selesai', 'label' => 'Selesai Pelayanan'],
-                ['key' => 'status_pelayanan', 'altKey' => 'status', 'label' => 'Status Pelayanan'],
-                ['key' => 'urutan', 'label' => 'Urutan'],
-                ['key' => 'keterangan', 'altKey' => 'karya_pelayanan', 'label' => 'Catatan / Karya'],
-            ]],
-            'direktori-dpp' => ['model' => \App\Models\DirektoriDpp::class, 'title' => 'Direktori (DPP)', 'columns' => [['key' => 'foto', 'label' => 'Foto', 'isImage' => true], ['key' => 'nama_lengkap', 'label' => 'Nama Pengurus', 'isPrimary' => true], ['key' => 'jabatan', 'label' => 'Jabatan'], ['key' => 'seksi', 'label' => 'Seksi / Bidang'], ['key' => 'periode', 'label' => 'Periode'], ['key' => 'no_hp', 'label' => 'Kontak / WA'], ['key' => 'status', 'label' => 'Status'], ['key' => 'urutan', 'label' => 'Urutan']]],
-            'direktori-katekis' => ['model' => \App\Models\DirektoriKatekis::class, 'title' => 'Direktori Katekis', 'columns' => [['key' => 'foto', 'label' => 'Foto', 'isImage' => true], ['key' => 'nama_lengkap', 'label' => 'Nama Katekis', 'isPrimary' => true], ['key' => 'jenis_katekis', 'label' => 'Jenis Katekis'], ['key' => 'wilayah_pelayanan', 'label' => 'Wilayah Pelayanan'], ['key' => 'sertifikasi', 'label' => 'Sertifikasi'], ['key' => 'no_hp', 'label' => 'Kontak / WA'], ['key' => 'status_aktif', 'label' => 'Status']]],
-            'direktori-misdinar' => ['model' => \App\Models\DirektoriMisdinar::class, 'title' => 'Direktori Misdinar', 'columns' => [['key' => 'nama_lengkap', 'label' => 'Nama Anggota', 'isPrimary' => true], ['key' => 'stasi', 'label' => 'Stasi / Kapela'], ['key' => 'status_aktif', 'label' => 'Status']]],
-            'kronik' => ['model' => \App\Models\KronikParoki::class, 'title' => 'Kronik Paroki', 'columns' => [['key' => 'foto_utama', 'label' => 'Foto', 'isImage' => true], ['key' => 'judul_kronik', 'label' => 'Judul Kronik', 'isPrimary' => true], ['key' => 'tanggal_peristiwa', 'label' => 'Tanggal Peristiwa'], ['key' => 'kategori_kronik', 'label' => 'Kategori'], ['key' => 'lokasi_peristiwa', 'label' => 'Lokasi'], ['key' => 'penulis', 'label' => 'Penulis'], ['key' => 'status_publish', 'label' => 'Status']]],
-
-            'peran-kategorial' => ['model' => \App\Models\PeranKategorial::class, 'title' => 'Peran Kategorial', 'columns' => [['key' => 'foto', 'label' => 'Foto', 'isImage' => true], ['key' => 'nama_peran', 'label' => 'Nama Peran', 'isPrimary' => true], ['key' => 'kode_peran', 'label' => 'Kode'], ['key' => 'kategori', 'label' => 'Kategori'], ['key' => 'nama_koordinator', 'label' => 'Koordinator'], ['key' => 'lokasi_kegiatan', 'label' => 'Lokasi'], ['key' => 'status', 'label' => 'Status']]],
-            'anggota-kategorial' => ['model' => \App\Models\AnggotaKategorial::class, 'title' => 'Anggota Kategorial', 'columns' => [['key' => 'foto', 'label' => 'Foto', 'isImage' => true], ['key' => 'nama_anggota', 'label' => 'Nama Anggota', 'isPrimary' => true], ['key' => 'peran_nama', 'relation' => 'peranKategorial', 'relationKey' => 'nama_peran', 'label' => 'Peran Kategorial'], ['key' => 'jabatan_dalam_kelompok', 'label' => 'Jabatan'], ['key' => 'tanggal_bergabung', 'label' => 'Tanggal Bergabung'], ['key' => 'status_keanggotaan', 'label' => 'Status']]],
-            'kategori-konten' => ['model' => \App\Models\KategoriKonten::class, 'title' => 'Kategori Konten & Artikel', 'columns' => [
-                ['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true, 'iconClass' => 'fa-solid fa-folder-open'],
-                ['key' => 'nama_kategori', 'label' => 'Nama Kategori', 'isPrimary' => true],
-                ['key' => 'slug', 'label' => 'Slug URL'],
-                ['key' => 'deskripsi', 'label' => 'Deskripsi Kategori'],
-                ['key' => 'urutan', 'label' => 'Urutan'],
-                ['key' => 'status', 'label' => 'Status'],
-            ]],
-            'kategori_konten' => ['model' => \App\Models\KategoriKonten::class, 'title' => 'Kategori Konten & Artikel', 'columns' => [
-                ['key' => 'ikon', 'label' => 'Ikon', 'isIcon' => true, 'iconClass' => 'fa-solid fa-folder-open'],
-                ['key' => 'nama_kategori', 'label' => 'Nama Kategori', 'isPrimary' => true],
-                ['key' => 'slug', 'label' => 'Slug URL'],
-                ['key' => 'deskripsi', 'label' => 'Deskripsi Kategori'],
-                ['key' => 'urutan', 'label' => 'Urutan'],
-                ['key' => 'status', 'label' => 'Status'],
-            ]],
 }

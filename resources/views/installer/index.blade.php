@@ -7,6 +7,10 @@
     <title>SIPAROKI 2026 — Web Installer Wizard</title>
     <!-- Fonts & Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Select2 Searchable Dropdown CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <style>
         :root {
             --primary: #00897b;
@@ -23,6 +27,77 @@
             --slate-50: #f8fafc;
             --danger: #ef4444;
             --success: #10b981;
+        }
+
+        /* Custom Select2 Styling for SIPAROKI */
+        .select2-container {
+            width: 100% !important;
+        }
+        .select2-container--default .select2-selection--single {
+            height: 42px !important;
+            padding: 6px 14px !important;
+            border-radius: 12px !important;
+            border: 1.5px solid var(--slate-200) !important;
+            background-color: var(--slate-50) !important;
+            font-size: 13.5px !important;
+            display: flex !important;
+            align-items: center !important;
+            transition: all 0.2s ease !important;
+        }
+        .select2-container--default.select2-container--open .select2-selection--single,
+        .select2-container--default .select2-selection--single:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.18) !important;
+            background-color: #ffffff !important;
+            outline: none !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: var(--slate-800) !important;
+            font-weight: 600 !important;
+            line-height: normal !important;
+            padding-left: 0 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px !important;
+            right: 12px !important;
+        }
+        .select2-dropdown {
+            border: 1px solid var(--slate-200) !important;
+            border-radius: 14px !important;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16) !important;
+            overflow: hidden !important;
+            background: #ffffff !important;
+            z-index: 9999 !important;
+        }
+        .select2-search--dropdown {
+            padding: 8px 10px !important;
+            background: var(--slate-50) !important;
+            border-bottom: 1px solid var(--slate-200) !important;
+        }
+        .select2-search--dropdown .select2-search__field {
+            border: 1.5px solid var(--slate-200) !important;
+            border-radius: 8px !important;
+            padding: 7px 12px !important;
+            font-size: 13px !important;
+            outline: none !important;
+            background: #ffffff !important;
+        }
+        .select2-search--dropdown .select2-search__field:focus {
+            border-color: var(--primary) !important;
+        }
+        .select2-results__option {
+            padding: 9px 14px !important;
+            font-size: 13px !important;
+            color: var(--slate-800) !important;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--primary) !important;
+            color: #ffffff !important;
+        }
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: var(--primary-light) !important;
+            color: var(--primary-dark) !important;
+            font-weight: 700 !important;
         }
 
         * {
@@ -760,6 +835,10 @@
     </div>
 </div>
 
+<!-- jQuery & Select2 JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     let currentStep = 1;
     const totalSteps = 5;
@@ -872,49 +951,59 @@
         }
     });
 
-    // Handle 3-Tier Cascading Selection (Keuskupan -> Dekenat -> Paroki)
-    const selectKeuskupan = document.getElementById('select_keuskupan');
-    const selectDekenat = document.getElementById('select_dekenat');
-    const selectParoki = document.getElementById('select_paroki');
+    // Handle 3-Tier Cascading Selection (Keuskupan -> Dekenat -> Paroki) with Select2
+    const $selectKeuskupan = $('#select_keuskupan');
+    const $selectDekenat = $('#select_dekenat');
+    const $selectParoki = $('#select_paroki');
     const customKeuskupanWrap = document.getElementById('custom_keuskupan_wrap');
     const customDekenatWrap = document.getElementById('custom_dekenat_wrap');
     const customParokiWrap = document.getElementById('custom_paroki_wrap');
     const inputNamaParoki = document.getElementById('nama_paroki');
     const inputAlamatParoki = document.getElementById('alamat_paroki');
 
-    function populateDekenatOptions(keuskupanId) {
-        selectDekenat.innerHTML = '<option value="">-- Semua Dekenat / Kevikepan --</option><option value="custom">+ Dekenat Baru (Ketik Manual)</option>';
-        if (!keuskupanId || keuskupanId === 'custom') return;
+    // Initialize Select2 on dropdowns
+    $selectKeuskupan.select2({
+        placeholder: '-- Pilih Keuskupan (Cari 39 Keuskupan KWI) --',
+        width: '100%'
+    });
 
-        const filtered = rawDekenatList.filter(d => parseInt(d.keuskupan_id) === parseInt(keuskupanId));
-        filtered.forEach(d => {
-            const opt = document.createElement('option');
-            opt.value = d.id;
-            opt.textContent = d.nama_dekenat || d.nama_kevikepan;
-            selectDekenat.appendChild(opt);
-        });
+    $selectDekenat.select2({
+        placeholder: '-- Semua Dekenat / Kevikepan --',
+        width: '100%'
+    });
+
+    $selectParoki.select2({
+        placeholder: '-- Pilih Paroki Terdaftar --',
+        width: '100%'
+    });
+
+    function populateDekenatOptions(keuskupanId) {
+        let html = '<option value="">-- Semua Dekenat / Kevikepan --</option><option value="custom">+ Dekenat Baru (Ketik Manual)</option>';
+        if (keuskupanId && keuskupanId !== 'custom') {
+            const filtered = rawDekenatList.filter(d => parseInt(d.keuskupan_id) === parseInt(keuskupanId));
+            filtered.forEach(d => {
+                html += `<option value="${d.id}">${d.nama_dekenat || d.nama_kevikepan}</option>`;
+            });
+        }
+        $selectDekenat.html(html).trigger('change.select2');
     }
 
     function populateParokiOptions(keuskupanId, dekenatId) {
-        selectParoki.innerHTML = '<option value="">-- Pilih Paroki Terdaftar --</option><option value="custom" selected>+ Paroki Baru (Ketik Manual)</option>';
-        if (!keuskupanId || keuskupanId === 'custom') return;
-
-        let filtered = rawParokiList.filter(p => parseInt(p.keuskupan_id) === parseInt(keuskupanId));
-        if (dekenatId && dekenatId !== 'custom') {
-            filtered = filtered.filter(p => parseInt(p.dekenat_id) === parseInt(dekenatId));
+        let html = '<option value="">-- Pilih Paroki Terdaftar --</option><option value="custom" selected>+ Paroki Baru (Ketik Manual)</option>';
+        if (keuskupanId && keuskupanId !== 'custom') {
+            let filtered = rawParokiList.filter(p => parseInt(p.keuskupan_id) === parseInt(keuskupanId));
+            if (dekenatId && dekenatId !== 'custom') {
+                filtered = filtered.filter(p => parseInt(p.dekenat_id) === parseInt(dekenatId));
+            }
+            filtered.forEach(p => {
+                html += `<option value="${p.id_paroki}" data-alamat="${p.alamat || ''}">${p.nama_paroki}</option>`;
+            });
         }
-
-        filtered.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id_paroki;
-            opt.textContent = p.nama_paroki;
-            opt.dataset.alamat = p.alamat || '';
-            selectParoki.appendChild(opt);
-        });
+        $selectParoki.html(html).trigger('change.select2');
     }
 
-    selectKeuskupan.addEventListener('change', function() {
-        const kId = this.value;
+    $selectKeuskupan.on('change', function() {
+        const kId = $(this).val();
         if (kId === 'custom') {
             customKeuskupanWrap.style.display = 'block';
             populateDekenatOptions(null);
@@ -922,39 +1011,43 @@
         } else {
             customKeuskupanWrap.style.display = 'none';
             populateDekenatOptions(kId);
-            populateParokiOptions(kId, selectDekenat.value);
+            populateParokiOptions(kId, $selectDekenat.val());
         }
     });
 
-    selectDekenat.addEventListener('change', function() {
-        const dId = this.value;
+    $selectDekenat.on('change', function() {
+        const dId = $(this).val();
         if (dId === 'custom') {
             customDekenatWrap.style.display = 'block';
         } else {
             customDekenatWrap.style.display = 'none';
         }
-        populateParokiOptions(selectKeuskupan.value, dId);
+        populateParokiOptions($selectKeuskupan.val(), dId);
     });
 
-    selectParoki.addEventListener('change', function() {
-        if (this.value === 'custom') {
+    $selectParoki.on('change', function() {
+        const val = $(this).val();
+        if (val === 'custom') {
             customParokiWrap.style.display = 'block';
             inputNamaParoki.value = '';
             inputNamaParoki.focus();
-        } else if (this.value) {
+        } else if (val) {
             customParokiWrap.style.display = 'block';
             const selectedOpt = this.options[this.selectedIndex];
-            inputNamaParoki.value = selectedOpt.textContent;
-            if (selectedOpt.dataset.alamat) {
-                inputAlamatParoki.value = selectedOpt.dataset.alamat;
+            if (selectedOpt) {
+                inputNamaParoki.value = selectedOpt.textContent;
+                if (selectedOpt.dataset.alamat) {
+                    inputAlamatParoki.value = selectedOpt.dataset.alamat;
+                }
             }
         }
     });
 
     // Initial load for default keuskupan
-    if (selectKeuskupan.value && selectKeuskupan.value !== 'custom') {
-        populateDekenatOptions(selectKeuskupan.value);
-        populateParokiOptions(selectKeuskupan.value, selectDekenat.value);
+    const initialKeuskupan = $selectKeuskupan.val();
+    if (initialKeuskupan && initialKeuskupan !== 'custom') {
+        populateDekenatOptions(initialKeuskupan);
+        populateParokiOptions(initialKeuskupan, $selectDekenat.val());
     }
 
     // Submit Installation Execution

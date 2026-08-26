@@ -434,6 +434,12 @@ $all_perms_passed = !in_array(false, $perms, true);
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <style>
         .step-content { display: none; }
         .step-content.active { display: block; animation: fadeIn 0.3s ease-out; }
@@ -444,6 +450,77 @@ $all_perms_passed = !in_array(false, $perms, true);
         .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); border-radius: 9999px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.3); border-radius: 9999px; }
+
+        /* Select2 Dark Theme Customization for SIPAROKI Installer */
+        .select2-container { width: 100% !important; }
+        .select2-container--default .select2-selection--single {
+            height: 42px !important;
+            padding: 6px 14px !important;
+            border-radius: 0.75rem !important;
+            border: 1px solid #334155 !important;
+            background-color: #020617 !important;
+            font-size: 0.75rem !important;
+            display: flex !important;
+            align-items: center !important;
+            transition: all 0.2s ease !important;
+        }
+        .select2-container--default.select2-container--open .select2-selection--single,
+        .select2-container--default .select2-selection--single:focus {
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+            background-color: #020617 !important;
+            outline: none !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            line-height: normal !important;
+            padding-left: 0 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px !important;
+            right: 12px !important;
+        }
+        .select2-dropdown {
+            border: 1px solid #334155 !important;
+            border-radius: 0.75rem !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
+            overflow: hidden !important;
+            background: #0f172a !important;
+            z-index: 9999 !important;
+        }
+        .select2-search--dropdown {
+            padding: 8px 10px !important;
+            background: #020617 !important;
+            border-bottom: 1px solid #1e293b !important;
+        }
+        .select2-search--dropdown .select2-search__field {
+            border: 1px solid #334155 !important;
+            border-radius: 0.5rem !important;
+            padding: 7px 10px !important;
+            font-size: 0.75rem !important;
+            outline: none !important;
+            background: #0f172a !important;
+            color: #ffffff !important;
+        }
+        .select2-search--dropdown .select2-search__field:focus {
+            border-color: #f59e0b !important;
+        }
+        .select2-results__option {
+            padding: 8px 12px !important;
+            font-size: 0.75rem !important;
+            color: #cbd5e1 !important;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #f59e0b !important;
+            color: #020617 !important;
+            font-weight: 700 !important;
+        }
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: rgba(245, 158, 11, 0.15) !important;
+            color: #fbbf24 !important;
+            font-weight: 700 !important;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-white relative font-sans">
@@ -708,10 +785,28 @@ $all_perms_passed = !in_array(false, $perms, true);
         let masterData = <?= $embedded_master_json ?>;
 
         $(document).ready(function() {
+            // Initialize Select2
+            $('#sel_keuskupan').select2({
+                placeholder: '-- Pilih Keuskupan (Cari Nama) --',
+                width: '100%'
+            });
+            $('#sel_dekenat').select2({
+                placeholder: '-- Semua Dekenat / Kevikepan --',
+                width: '100%'
+            });
+            $('#sel_paroki').select2({
+                placeholder: '-- Pilih / Cari Paroki Terdaftar --',
+                width: '100%'
+            });
+
             populateKeuskupan();
             if ($('#sel_keuskupan').val()) {
                 onKeuskupanChange();
             }
+
+            $('#sel_keuskupan').on('change', onKeuskupanChange);
+            $('#sel_dekenat').on('change', onDekenatChange);
+            $('#sel_paroki').on('change', onParokiSelect);
         });
 
         function goToStep(num) {
@@ -723,21 +818,21 @@ $all_perms_passed = !in_array(false, $perms, true);
         }
 
         function populateKeuskupan() {
-            let html = '<option value="">-- Pilih Keuskupan --</option>';
+            let html = '<option value="">-- Pilih Keuskupan (39 Keuskupan KWI) --</option>';
             if (masterData.keuskupan && masterData.keuskupan.length > 0) {
                 masterData.keuskupan.forEach(function(k) {
-                    let isSelected = (parseInt(k.id_keuskupan) === 5 || k.nama_keuskupan === 'Keuskupan Agung Kupang') ? ' selected' : '';
-                    html += `<option value="${k.id_keuskupan}"${isSelected}>${k.nama_keuskupan}</option>`;
+                    let isSelected = (parseInt(k.id_keuskupan) === 8 || parseInt(k.id_keuskupan) === 5 || k.nama_keuskupan === 'Keuskupan Agung Kupang') ? ' selected' : '';
+                    html += `<option value="${k.id_keuskupan}"${isSelected}>${k.nama_keuskupan} (Regio ${k.regio || 'Indonesia'})</option>`;
                 });
             } else {
-                html += '<option value="5" selected>Keuskupan Agung Kupang</option>';
+                html += '<option value="8" selected>Keuskupan Agung Kupang</option>';
             }
-            $('#sel_keuskupan').html(html);
+            $('#sel_keuskupan').html(html).trigger('change.select2');
         }
 
         function onKeuskupanChange() {
             let kId = parseInt($('#sel_keuskupan').val());
-            let dekenatHtml = '<option value="">-- Semua Dekenat --</option>';
+            let dekenatHtml = '<option value="">-- Semua Dekenat / Kevikepan --</option>';
             let parokiHtml = '<option value="">-- Pilih dari Paroki Terdaftar --</option>';
 
             if (masterData.dekenat) {
@@ -745,14 +840,14 @@ $all_perms_passed = !in_array(false, $perms, true);
                     dekenatHtml += `<option value="${d.id}">${d.nama_dekenat}</option>`;
                 });
             }
-            $('#sel_dekenat').html(dekenatHtml);
+            $('#sel_dekenat').html(dekenatHtml).trigger('change.select2');
 
             if (masterData.paroki) {
                 masterData.paroki.filter(p => p.keuskupan_id == kId).forEach(function(p) {
                     parokiHtml += `<option value="${p.id_paroki}" data-name="${p.nama_paroki}" data-alamat="${p.alamat || ''}">${p.nama_paroki}</option>`;
                 });
             }
-            $('#sel_paroki').html(parokiHtml);
+            $('#sel_paroki').html(parokiHtml).trigger('change.select2');
         }
 
         function onDekenatChange() {
@@ -769,7 +864,7 @@ $all_perms_passed = !in_array(false, $perms, true);
                     parokiHtml += `<option value="${p.id_paroki}" data-name="${p.nama_paroki}" data-alamat="${p.alamat || ''}">${p.nama_paroki}</option>`;
                 });
             }
-            $('#sel_paroki').html(parokiHtml);
+            $('#sel_paroki').html(parokiHtml).trigger('change.select2');
         }
 
         function onParokiSelect() {
