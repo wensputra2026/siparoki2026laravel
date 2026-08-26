@@ -80,20 +80,32 @@ Artisan::command('siparoki:setup {--force : Paksa timpa database yang ada}', fun
 })->purpose('Setup otomatis database, master data, dan akun superadmin SIPAROKI');
 
 Artisan::command('admin:reset {email=superadmin@paroki.org} {password=Admin@Paroki2026!}', function ($email, $password) {
-    $user = \App\Models\User::firstOrNew(['email' => $email]);
-    $user->nama_lengkap = $user->nama_lengkap ?: 'Super Administrator';
-    $user->name = $user->name ?: 'Super Administrator';
-    $user->username = $user->username ?: 'superadmin';
-    $user->role_id = 1;
-    $user->status_aktif = 1;
-    $user->status_user = 'Aktif';
-    $user->password = Hash::make($password);
+    $userCols = Schema::getColumnListing('users');
+    $user = \App\Models\User::where('email', $email)->orWhere('username', 'superadmin')->orWhere('id', 1)->first()
+        ?? new \App\Models\User();
+
+    $data = [
+        'email' => $email,
+        'username' => $user->username ?: 'superadmin',
+        'nama_lengkap' => $user->nama_lengkap ?: 'Super Administrator',
+        'role_id' => 1,
+        'password' => Hash::make($password),
+        'status' => 1,
+    ];
+
+    foreach ($data as $col => $val) {
+        if (in_array($col, $userCols, true)) {
+            $user->{$col} = $val;
+        }
+    }
+
     $user->save();
 
     $this->info('====================================================');
     $this->info('  AKUN SUPER ADMIN BERHASIL DI-RESET / DISIAPKAN!   ');
     $this->info('====================================================');
     $this->line("  Email    : {$email}");
+    $this->line("  Username : " . ($user->username ?: 'superadmin'));
     $this->line("  Password : {$password}");
     $this->info('====================================================');
 })->purpose('Reset atau buat akun Super Administrator baru');
