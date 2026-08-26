@@ -609,16 +609,16 @@
             <div class="step-title">
                 <i class="fa-solid fa-place-of-worship text-teal-600"></i> Identitas Keuskupan &amp; Paroki
             </div>
-            <p class="step-desc">Pilih Keuskupan dan Paroki Anda dari master data referensi gerejawi yang sudah siap pakai.</p>
+            <p class="step-desc">Pilih Keuskupan, Dekenat/Kevikepan, dan Paroki Anda dari master data referensi gerejawi nasional KWI.</p>
 
             <div class="form-grid">
                 <div class="form-group col-full">
                     <label>Keuskupan <span class="req">*</span></label>
                     <select id="select_keuskupan" class="form-control">
-                        <option value="">-- Pilih Keuskupan --</option>
+                        <option value="">-- Pilih Keuskupan (39 Keuskupan KWI) --</option>
                         @foreach($keuskupanList as $k)
-                            <option value="{{ $k['id_keuskupan'] }}" data-nama="{{ $k['nama_keuskupan'] }}" {{ ($k['nama_keuskupan'] === 'Keuskupan Agung Kupang') ? 'selected' : '' }}>
-                                {{ $k['nama_keuskupan'] }}
+                            <option value="{{ $k['id_keuskupan'] }}" data-nama="{{ $k['nama_keuskupan'] }}" {{ ($k['nama_keuskupan'] === 'Keuskupan Agung Kupang' || $k['id_keuskupan'] == 8 || $k['id_keuskupan'] == 5) ? 'selected' : '' }}>
+                                {{ $k['nama_keuskupan'] }} (Regio {{ $k['regio'] ?? 'Indonesia' }})
                             </option>
                         @endforeach
                         <option value="custom">+ Keuskupan Lainnya (Ketik Manual)</option>
@@ -631,7 +631,20 @@
                 </div>
 
                 <div class="form-group col-full">
-                    <label>Paroki <span class="req">*</span></label>
+                    <label>Dekenat / Kevikepan</label>
+                    <select id="select_dekenat" class="form-control">
+                        <option value="">-- Semua Dekenat / Kevikepan --</option>
+                        <option value="custom">+ Dekenat Baru (Ketik Manual)</option>
+                    </select>
+                </div>
+
+                <div class="form-group col-full" id="custom_dekenat_wrap" style="display: none;">
+                    <label>Nama Dekenat / Kevikepan Baru</label>
+                    <input type="text" id="custom_dekenat" class="form-control" placeholder="Contoh: Dekenat Timor Tengah Selatan (TTS)">
+                </div>
+
+                <div class="form-group col-full">
+                    <label>Paroki Terdaftar <span class="req">*</span></label>
                     <select id="select_paroki" class="form-control">
                         <option value="">-- Pilih Paroki Terdaftar --</option>
                         <option value="custom" selected>+ Paroki Baru (Ketik Manual)</option>
@@ -752,6 +765,7 @@
     const totalSteps = 5;
     const allPassed = {{ $allPassed ? 'true' : 'false' }};
 
+    const rawDekenatList = @json($dekenatList);
     const rawParokiList = @json($parokiList);
 
     function updateStepView(step) {
@@ -858,19 +872,38 @@
         }
     });
 
-    // Handle Keuskupan Selection & Dynamic Paroki Loading
+    // Handle 3-Tier Cascading Selection (Keuskupan -> Dekenat -> Paroki)
     const selectKeuskupan = document.getElementById('select_keuskupan');
+    const selectDekenat = document.getElementById('select_dekenat');
     const selectParoki = document.getElementById('select_paroki');
     const customKeuskupanWrap = document.getElementById('custom_keuskupan_wrap');
+    const customDekenatWrap = document.getElementById('custom_dekenat_wrap');
     const customParokiWrap = document.getElementById('custom_paroki_wrap');
     const inputNamaParoki = document.getElementById('nama_paroki');
+    const inputAlamatParoki = document.getElementById('alamat_paroki');
 
-    function loadParokiOptions(keuskupanId) {
-        selectParoki.innerHTML = '<option value="">-- Pilih Paroki Terdaftar --</option><option value="custom" selected>+ Paroki Baru (Ketik Manual)</option>';
-        
+    function populateDekenatOptions(keuskupanId) {
+        selectDekenat.innerHTML = '<option value="">-- Semua Dekenat / Kevikepan --</option><option value="custom">+ Dekenat Baru (Ketik Manual)</option>';
         if (!keuskupanId || keuskupanId === 'custom') return;
 
-        const filtered = rawParokiList.filter(p => parseInt(p.keuskupan_id) === parseInt(keuskupanId));
+        const filtered = rawDekenatList.filter(d => parseInt(d.keuskupan_id) === parseInt(keuskupanId));
+        filtered.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.textContent = d.nama_dekenat || d.nama_kevikepan;
+            selectDekenat.appendChild(opt);
+        });
+    }
+
+    function populateParokiOptions(keuskupanId, dekenatId) {
+        selectParoki.innerHTML = '<option value="">-- Pilih Paroki Terdaftar --</option><option value="custom" selected>+ Paroki Baru (Ketik Manual)</option>';
+        if (!keuskupanId || keuskupanId === 'custom') return;
+
+        let filtered = rawParokiList.filter(p => parseInt(p.keuskupan_id) === parseInt(keuskupanId));
+        if (dekenatId && dekenatId !== 'custom') {
+            filtered = filtered.filter(p => parseInt(p.dekenat_id) === parseInt(dekenatId));
+        }
+
         filtered.forEach(p => {
             const opt = document.createElement('option');
             opt.value = p.id_paroki;
@@ -881,13 +914,26 @@
     }
 
     selectKeuskupan.addEventListener('change', function() {
-        if (this.value === 'custom') {
+        const kId = this.value;
+        if (kId === 'custom') {
             customKeuskupanWrap.style.display = 'block';
-            loadParokiOptions(null);
+            populateDekenatOptions(null);
+            populateParokiOptions(null, null);
         } else {
             customKeuskupanWrap.style.display = 'none';
-            loadParokiOptions(this.value);
+            populateDekenatOptions(kId);
+            populateParokiOptions(kId, selectDekenat.value);
         }
+    });
+
+    selectDekenat.addEventListener('change', function() {
+        const dId = this.value;
+        if (dId === 'custom') {
+            customDekenatWrap.style.display = 'block';
+        } else {
+            customDekenatWrap.style.display = 'none';
+        }
+        populateParokiOptions(selectKeuskupan.value, dId);
     });
 
     selectParoki.addEventListener('change', function() {
@@ -900,14 +946,15 @@
             const selectedOpt = this.options[this.selectedIndex];
             inputNamaParoki.value = selectedOpt.textContent;
             if (selectedOpt.dataset.alamat) {
-                document.getElementById('alamat_paroki').value = selectedOpt.dataset.alamat;
+                inputAlamatParoki.value = selectedOpt.dataset.alamat;
             }
         }
     });
 
     // Initial load for default keuskupan
     if (selectKeuskupan.value && selectKeuskupan.value !== 'custom') {
-        loadParokiOptions(selectKeuskupan.value);
+        populateDekenatOptions(selectKeuskupan.value);
+        populateParokiOptions(selectKeuskupan.value, selectDekenat.value);
     }
 
     // Submit Installation Execution
@@ -932,6 +979,13 @@
             namaKeuskupan = selectKeuskupan.options[selectKeuskupan.selectedIndex].dataset.nama || selectKeuskupan.options[selectKeuskupan.selectedIndex].textContent.trim();
         }
 
+        let namaDekenat = '';
+        if (selectDekenat.value === 'custom') {
+            namaDekenat = document.getElementById('custom_dekenat').value.trim();
+        } else if (selectDekenat.selectedIndex > 0) {
+            namaDekenat = selectDekenat.options[selectDekenat.selectedIndex].textContent.trim();
+        }
+
         const payload = {
             db_host: document.getElementById('db_host').value.trim(),
             db_port: document.getElementById('db_port').value.trim(),
@@ -940,6 +994,8 @@
             db_password: document.getElementById('db_password').value,
             keuskupan_id: selectKeuskupan.value,
             nama_keuskupan: namaKeuskupan,
+            dekenat_id: selectDekenat.value,
+            nama_dekenat: namaDekenat,
             paroki_id: selectParoki.value,
             nama_paroki: document.getElementById('nama_paroki').value.trim(),
             pastor_paroki: document.getElementById('pastor_paroki').value.trim(),

@@ -33,7 +33,7 @@ class InstallController extends Controller
         $permissions = $this->checkPermissions();
         $allPassed = $requirements['allPassed'] && $permissions['allPassed'];
 
-        // Load master keuskupan & paroki
+        // Load master keuskupan, dekenat & paroki
         $masterData = $this->getMasterData();
 
         return view('installer.index', [
@@ -41,6 +41,7 @@ class InstallController extends Controller
             'permissions' => $permissions,
             'allPassed' => $allPassed,
             'keuskupanList' => $masterData['keuskupan'] ?? [],
+            'dekenatList' => $masterData['dekenat'] ?? [],
             'parokiList' => $masterData['paroki'] ?? [],
             'currentEnv' => [
                 'host' => env('DB_HOST', '127.0.0.1'),
@@ -119,11 +120,14 @@ class InstallController extends Controller
     }
 
     /**
-     * Load Master Keuskupan & Paroki JSON Data.
+     * Load Master Keuskupan, Dekenat & Paroki JSON Data.
      */
     protected function getMasterData(): array
     {
         $jsonPath = public_path('installer/master_keuskupan_paroki.json');
+        if (!File::exists($jsonPath)) {
+            $jsonPath = database_path('data/master_keuskupan_paroki.json');
+        }
         if (File::exists($jsonPath)) {
             $content = File::get($jsonPath);
             $data = json_decode($content, true);
@@ -138,11 +142,12 @@ class InstallController extends Controller
                 }
                 return [
                     'keuskupan' => array_values($keuskupanMap),
+                    'dekenat' => $data['dekenat'] ?? [],
                     'paroki' => $data['paroki'] ?? [],
                 ];
             }
         }
-        return ['keuskupan' => [], 'paroki' => []];
+        return ['keuskupan' => [], 'dekenat' => [], 'paroki' => []];
     }
 
     /**
@@ -180,19 +185,30 @@ class InstallController extends Controller
     }
 
     /**
-     * AJAX Endpoint to get Paroki by Keuskupan ID.
+     * AJAX Endpoint to get Paroki & Dekenat by Keuskupan ID.
      */
     public function getParokiByKeuskupan(Request $request)
     {
         $keuskupanId = (int) $request->input('keuskupan_id', 0);
+        $dekenatId = (int) $request->input('dekenat_id', 0);
         $masterData = $this->getMasterData();
-        $filtered = array_filter($masterData['paroki'] ?? [], function ($p) use ($keuskupanId) {
-            return (int) ($p['keuskupan_id'] ?? 0) === $keuskupanId;
-        });
+
+        $dekenats = array_values(array_filter($masterData['dekenat'] ?? [], function ($d) use ($keuskupanId) {
+            return (int) ($d['keuskupan_id'] ?? 0) === $keuskupanId;
+        }));
+
+        $parokis = array_values(array_filter($masterData['paroki'] ?? [], function ($p) use ($keuskupanId, $dekenatId) {
+            $matchK = (int) ($p['keuskupan_id'] ?? 0) === $keuskupanId;
+            if ($dekenatId > 0) {
+                return $matchK && (int) ($p['dekenat_id'] ?? 0) === $dekenatId;
+            }
+            return $matchK;
+        }));
 
         return response()->json([
             'success' => true,
-            'data' => array_values($filtered),
+            'dekenats' => $dekenats,
+            'parokis' => $parokis,
         ]);
     }
 
@@ -270,16 +286,18 @@ class InstallController extends Controller
             // 4. Run Migrations
             Artisan::call('migrate', ['--force' => true]);
 
-            // 5. Setup Master Keuskupan & Paroki
+            // 5. Setup Master Keuskupan, Dekenat & Paroki
+            $masterData = $this->getMasterData();
             $namaKeuskupan = trim($request->input('nama_keuskupan'));
+            $namaDekenat = trim($request->input('nama_dekenat', ''));
             $namaParoki = trim($request->input('nama_paroki'));
             $alamatParoki = trim($request->input('alamat_paroki', ''));
             $pastorParoki = trim($request->input('pastor_paroki'));
             $keuskupanId = (int) $request->input('keuskupan_id', 0);
+            $dekenatId = (int) $request->input('dekenat_id', 0);
 
-            // Populate Keuskupan table if empty
+            // Seed Keuskupan table if empty
             if (Schema::hasTable('keuskupan')) {
-                $masterData = $this->getMasterData();
                 if (DB::table('keuskupan')->count() === 0 && !empty($masterData['keuskupan'])) {
                     foreach ($masterData['keuskupan'] as $k) {
                         DB::table('keuskupan')->insertOrIgnore([
@@ -308,28 +326,61 @@ class InstallController extends Controller
                 }
             }
 
+            // Seed Kevikepan/Dekenat table if empty
+            if (Schema::hasTable('kevikepan')) {
+                if (DB::table('kevikepan')->count() === 0 && !empty($masterData['dekenat'])) {
+                    foreach ($masterData['dekenat'] as $d) {
+                        DB::table('kevikepan')->insertOrIgnore([
+                            'id' => $d['id'],
+                            'keuskupan_id' => $d['keuskupan_id'] ?? $keuskupanId,
+                            'nama_kevikepan' => $d['nama_dekenat'] ?? $d['nama_kevikepan'] ?? 'Dekenat',
+                            'status' => 'Aktif',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+
+                if (!empty($namaDekenat)) {
+                    $activeDekenat = DB::table('kevikepan')
+                        ->where('nama_kevikepan', $namaDekenat)
+                        ->orWhere('id', $dekenatId)
+                        ->first();
+
+                    if (!$activeDekenat) {
+                        $dekenatId = DB::table('kevikepan')->insertGetId([
+                            'keuskupan_id' => $keuskupanId,
+                            'nama_kevikepan' => $namaDekenat,
+                            'status' => 'Aktif',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    } else {
+                        $dekenatId = $activeDekenat->id;
+                    }
+                }
+            }
+
             // Populate / Update Paroki & Profil Paroki
             $parokiId = 1;
             if (Schema::hasTable('paroki')) {
                 $existingParoki = DB::table('paroki')->where('nama_paroki', $namaParoki)->first();
+                $parokiData = [
+                    'keuskupan_id' => $keuskupanId,
+                    'dekenat_id' => $dekenatId ?: null,
+                    'nama_paroki' => $namaParoki,
+                    'alamat' => $alamatParoki,
+                    'nama_pastor_paroki_aktif' => $pastorParoki,
+                    'status' => 'Aktif',
+                    'updated_at' => now(),
+                ];
+
                 if ($existingParoki) {
                     $parokiId = $existingParoki->id_paroki ?? $existingParoki->id ?? 1;
-                    DB::table('paroki')->where('id_paroki', $parokiId)->update([
-                        'keuskupan_id' => $keuskupanId,
-                        'nama_paroki' => $namaParoki,
-                        'alamat' => $alamatParoki,
-                        'nama_pastor_paroki_aktif' => $pastorParoki,
-                        'updated_at' => now(),
-                    ]);
+                    DB::table('paroki')->where('id_paroki', $parokiId)->update($parokiData);
                 } else {
-                    $parokiId = DB::table('paroki')->insertGetId([
-                        'keuskupan_id' => $keuskupanId,
-                        'nama_paroki' => $namaParoki,
-                        'alamat' => $alamatParoki,
-                        'nama_pastor_paroki_aktif' => $pastorParoki,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+                    $parokiData['created_at'] = now();
+                    $parokiId = DB::table('paroki')->insertGetId($parokiData);
                 }
             }
 
