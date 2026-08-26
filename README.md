@@ -113,42 +113,69 @@ Aplikasi ini bersifat **Universal Multi-Parish Ready**, artinya dapat langsung d
 
 ## 🚀 Panduan Instalasi (Installation Guide)
 
-SIPAROKI 2026 telah dilengkapi dengan **Interactive Web Installer Wizard** yang langsung aktif secara otomatis saat aplikasi pertama kali dijalankan oleh paroki baru.
+SIPAROKI 2026 menyediakan **3 Pilihan Cara Pemasangan** yang sangat mudah, baik melalui Web Browser maupun Terminal:
 
 ---
 
-### 🌟 Metode 1: Web Installer Wizard Otomatis (Plug & Play - Sangat Mudah)
+### 🌟 Pilihan 1: Web Installer Visual (Paling Mudah - Melalui Browser)
 
-Cocok untuk pengguna **Laragon, XAMPP, Shared Hosting (cPanel), maupun Localhost**:
+Cocok untuk pengguna **Laragon, XAMPP, maupun Shared Hosting (cPanel)**:
 
-1. **Unduh / Klon Repositori**:
+1. **Unduh / Klon Repositori ke folder web server**:
+   * **Laragon**: Masuk ke folder `C:\laragon\www\` dan jalankan:
+     ```bash
+     git clone https://github.com/wensputra2026/siparoki2026laravel.git siparokilaravel
+     ```
+   * *(Atau download file ZIP dari GitHub dan ekstrak ke `C:\laragon\www\siparokilaravel`).*
+
+2. **Buka Web Installer di Browser**:
+   * Akses URL:
+     👉 **`http://localhost/siparokilaravel/install.php`** atau **`http://siparokilaravel.test/install.php`**
+
+3. **Langkah-Langkah di Halaman Installer**:
+   * 🔍 **Pemeriksaan Server**: Memastikan versi PHP `>= 8.2` dan ekstensi pendukung aktif.
+   * 🗄️ **Koneksi Database**:
+     * **Host**: `127.0.0.1` (atau `localhost`)
+     * **Port**: `3306`
+     * **User**: `root` *(default Laragon/XAMPP)*
+     * **Password**: *(kosongkan jika tanpa password)*
+     * **Nama Database**: `siparoki_db` *(akan dibuatkan otomatis jika belum ada)*
+     * Klik tombol **"Tes Koneksi Database"**.
+   * ⛪ **Identitas Paroki**: Pilih **Keuskupan** dan **Nama Paroki** Anda dari dropdown master se-Indonesia.
+   * 🛡️ **Akun Super Admin**: Masukkan Email & Password Administrator utama Anda (Default: `superadmin@paroki.org` / `Admin@Paroki2026!`).
+   * 🚀 Klik **"Mulai Instalasi Otomatis"** dan tunggu hingga selesai.
+
+4. **Siapkan Pustaka Laravel (Cukup 1x di Terminal)**:
+   Buka terminal di folder proyek Anda (`C:\laragon\www\siparokilaravel`) dan jalankan:
    ```bash
-   git clone https://github.com/wensputra2026/siparoki2026laravel.git
+   composer install
    ```
-   *(Atau klik tombol **Code > Download ZIP** di GitHub dan ekstrak ke folder web server Anda, contoh: `C:/laragon/www/siparoki` atau `public_html`).*
 
-2. **Buka Aplikasi di Browser**:
-   - Jika menggunakan Laragon / PHP built-in server: Buka `http://127.0.0.1:8000` atau `http://localhost/siparoki/public`
-   - Jika menggunakan Domain Hosting: Buka `https://namadomainparoki.org`
-   - *Sistem secara otomatis mendeteksi instalasi baru dan langsung mengarahkan Anda ke antarmuka **Web Installer Wizard (`/installer` atau `/install.php`)**.*
-
-3. **Ikuti 5 Langkah Mudah Installer Wizard**:
-   - 🔍 **Langkah 1 (Pemeriksaan Server)**: Sistem memeriksa otomatis versi PHP (`>= 8.2`), 12 ekstensi PHP penting, serta izin tulis folder. Klik **"Lanjut"**.
-   - 🗄️ **Langkah 2 (Konfigurasi Database)**: Masukkan Host (`127.0.0.1` atau `localhost`), Port (`3306`), Nama Database, Username, dan Password MySQL Anda. Klik tombol **"Uji Koneksi Database"** (Database akan dibuatkan otomatis jika belum ada).
-   - ⛪ **Langkah 3 (Pilih Keuskupan, Dekenat & Paroki)**: 
-     - Pilih **Keuskupan** Anda dari daftar master 39 Keuskupan KWI se-Indonesia.
-     - Pilih **Dekenat / Kevikepan** (otomatis memfilter paroki sesuai wilayah gerejawi).
-     - Pilih **Paroki Terdaftar** (nama & alamat langsung terisi) atau pilih opsi *"+ Paroki Baru"* jika paroki Anda belum terdaftar.
-     - Masukkan nama **Pastor Paroki Aktif** dan alamat sekretariat.
-   - 🛡️ **Langkah 4 (Akun Super Admin Pertama)**: Masukkan Nama Lengkap, Username, Email, dan Password untuk akun Super Administrator utama Anda.
-   - 🚀 **Langkah 5 (Mulai Instalasi)**: Klik **"Mulai Instalasi Sekarang"**. Sistem akan otomatis menyusun file konfigurasi `.env`, menjalankan seluruh migrasi database, menetapkan identitas paroki Anda, membuat akun Super Admin, dan mengunci file installer demi keamanan.
-
-4. **Selesai & Siap Digunakan**:
-   Klik tombol **"Masuk ke Panel SIPAROKI"** untuk langsung login ke dashboard administrator paroki Anda!
+5. **Buka Aplikasi & Login**:
+   👉 **`http://siparokilaravel.test/login`** atau **`http://localhost/siparokilaravel/login`**
+   * **Email:** `superadmin@paroki.org`
+   * **Password:** `Admin@Paroki2026!`
 
 ---
 
-### 🌐 Metode 2: Panduan Lengkap Instalasi di Shared Hosting (cPanel / DirectAdmin / Plesk)
+### ⚡ Pilihan 2: 1-Klik Otomatis Lewat Terminal (Artisan CLI)
+
+Jika Anda terbiasa menggunakan terminal / command prompt:
+
+```bash
+git clone https://github.com/wensputra2026/siparoki2026laravel.git
+cd siparoki2026laravel
+copy .env.example .env
+composer install
+php artisan siparoki:setup
+php artisan serve
+```
+
+*Perintah `php artisan siparoki:setup` akan otomatis membuat database, mengimpor master referensi se-Indonesia, menjalankan seluruh migrasi, dan menyiapkan akun Super Admin.*
+
+---
+
+### 🌐 Pilihan 3: Panduan Instalasi di Shared Hosting (cPanel / DirectAdmin)
 
 Bagi paroki yang menggunakan layanan web hosting bersama (*Shared Hosting cPanel*):
 
