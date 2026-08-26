@@ -1293,6 +1293,23 @@ const openCreateModal = () => {
         };
     }
 
+    if (props.moduleKey === 'direktori-dpp') {
+        formData.value = {
+            nama_lengkap: '',
+            nama: '',
+            jabatan: 'Anggota Pleno',
+            bidang: 'Bidang Liturgi & Peribadatan',
+            seksi: 'Bidang Liturgi & Peribadatan',
+            periode: '2024 - 2027',
+            no_hp: '',
+            status: 'Aktif',
+            status_aktif: 'Aktif',
+            urutan: 1,
+            foto: '',
+            keterangan: '',
+        };
+    }
+
     if (props.moduleKey === 'provinsi') {
         formData.value = {
             nama_provinsi: '',
@@ -1395,6 +1412,28 @@ const openEditModal = (item) => {
     if (!desaId && item.desa && typeof item.desa === 'string') {
         const found = (props.desaList || []).find(d => d.nama_desa?.toLowerCase() === item.desa.toLowerCase());
         if (found) desaId = found.id_desa || found.id;
+    }
+
+    if (props.moduleKey === 'direktori-dpp') {
+        const seksiVal = item.bidang || item.seksi || 'Bidang Liturgi & Peribadatan';
+        formData.value = {
+            id_dpp: item.id_dpp || item.id,
+            id: item.id_dpp || item.id,
+            nama_lengkap: item.nama_lengkap || item.nama || '',
+            nama: item.nama_lengkap || item.nama || '',
+            jabatan: item.jabatan || 'Anggota Pleno',
+            bidang: seksiVal,
+            seksi: seksiVal,
+            periode: item.periode || (item.periode_mulai && item.periode_selesai ? `${item.periode_mulai} - ${item.periode_selesai}` : '2024 - 2027'),
+            no_hp: item.no_hp || item.kontak || '',
+            status: item.status || item.status_aktif || 'Aktif',
+            status_aktif: item.status_aktif || item.status || 'Aktif',
+            urutan: item.urutan !== undefined ? item.urutan : 1,
+            foto: item.foto || '',
+            keterangan: item.keterangan || '',
+        };
+        showFormModal.value = true;
+        return;
     }
 
     if (props.moduleKey === 'kabupaten') {
@@ -1755,6 +1794,20 @@ const submitForm = () => {
     if (props.moduleKey === 'iuran' || props.moduleKey === 'iuran-umat') {
         if (formData.value.total_jumlah !== undefined && formData.value.total_jumlah !== null && formData.value.total_jumlah !== '') {
             formData.value.jumlah = formData.value.total_jumlah;
+        }
+    }
+
+    if (props.moduleKey === 'direktori-dpp') {
+        const sVal = formData.value.seksi || formData.value.bidang;
+        if (sVal) {
+            formData.value.seksi = sVal;
+            formData.value.bidang = sVal;
+        }
+        if (formData.value.nama_lengkap) {
+            formData.value.nama = formData.value.nama_lengkap;
+        }
+        if (formData.value.status) {
+            formData.value.status_aktif = formData.value.status;
         }
     }
 

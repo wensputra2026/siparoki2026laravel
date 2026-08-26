@@ -659,6 +659,9 @@ trait GenericModuleTrait
         if ($slug === 'kuasi-paroki') {
             $data = $this->normalizeKuasiParokiPayload($data);
         }
+        if ($slug === 'direktori-dpp' || $slug === 'direktori_dpp') {
+            $data = $this->normalizeDirektoriDppPayload($data);
+        }
         if ($slug === 'iuran') {
             $data = $this->normalizeIuranPayload($data);
         }
@@ -803,6 +806,9 @@ trait GenericModuleTrait
 
         if ($slug === 'kuasi-paroki') {
             $data = $this->normalizeKuasiParokiPayload($data, $item);
+        }
+        if ($slug === 'direktori-dpp' || $slug === 'direktori_dpp') {
+            $data = $this->normalizeDirektoriDppPayload($data);
         }
         if ($slug === 'iuran') {
             $data = $this->normalizeIuranPayload($data);
@@ -2405,6 +2411,38 @@ trait GenericModuleTrait
             'kub_id' => Kub::where('nama_kub', $value)->orWhere('kode_kub', $value)->value('id'),
             default => null,
         };
+    }
+
+
+    protected function normalizeDirektoriDppPayload(array $data): array
+    {
+        if (isset($data['seksi']) && !empty($data['seksi'])) {
+            $data['bidang'] = $data['seksi'];
+        } elseif (isset($data['bidang']) && !empty($data['bidang'])) {
+            $data['seksi'] = $data['bidang'];
+        }
+        if (isset($data['nama']) && !isset($data['nama_lengkap'])) {
+            $data['nama_lengkap'] = $data['nama'];
+        } elseif (isset($data['nama_lengkap']) && !isset($data['nama'])) {
+            $data['nama'] = $data['nama_lengkap'];
+        }
+        if (isset($data['status'])) {
+            $data['status_aktif'] = $data['status'];
+        } elseif (isset($data['status_aktif'])) {
+            $data['status'] = $data['status_aktif'];
+        }
+        if (isset($data['kontak']) && !isset($data['no_hp'])) {
+            $data['no_hp'] = $data['kontak'];
+        }
+        if (isset($data['periode']) && str_contains((string)$data['periode'], '-')) {
+            $parts = explode('-', (string)$data['periode']);
+            $data['periode_mulai'] = trim($parts[0] ?? '');
+            $data['periode_selesai'] = trim($parts[1] ?? '');
+        }
+        if (empty($data['paroki_id']) && Schema::hasColumn('direktori_dpp', 'paroki_id')) {
+            $data['paroki_id'] = $this->defaultParokiIdFromProfile();
+        }
+        return $data;
     }
 
 }
