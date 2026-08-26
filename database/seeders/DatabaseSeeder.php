@@ -49,21 +49,17 @@ class DatabaseSeeder extends Seeder
                 'email' => 'superadmin@paroki.org',
                 'password' => Hash::make('Admin@Paroki2026!'),
                 'role_id' => 1,
+                'nama_lengkap' => 'Super Administrator SIPAROKI',
+                'status_aktif' => 1,
+                'status_user' => 'Aktif',
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
 
-            if (Schema::hasColumn('users', 'nama_lengkap')) {
-                $adminData['nama_lengkap'] = 'Super Administrator SIPAROKI';
-            }
-            if (Schema::hasColumn('users', 'status_aktif')) {
-                $adminData['status_aktif'] = 1;
-            }
-            if (Schema::hasColumn('users', 'status_user')) {
-                $adminData['status_user'] = 'Aktif';
-            }
+            $userCols = Schema::getColumnListing('users');
+            $filteredAdmin = array_intersect_key($adminData, array_flip($userCols));
 
-            DB::table('users')->updateOrInsert(['email' => 'superadmin@paroki.org'], $adminData);
+            DB::table('users')->updateOrInsert(['email' => 'superadmin@paroki.org'], $filteredAdmin);
         }
 
         // 3. Seed Default Profil Paroki

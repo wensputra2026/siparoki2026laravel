@@ -14,9 +14,18 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('nama_lengkap')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->unsignedBigInteger('role_id')->default(1)->nullable()->index();
+            $table->unsignedBigInteger('wilayah_id')->nullable()->index();
+            $table->unsignedBigInteger('kapela_id')->nullable()->index();
+            $table->unsignedBigInteger('kub_id')->nullable()->index();
+            $table->unsignedBigInteger('pastor_id')->nullable()->index();
+            $table->string('foto')->nullable();
+            $table->tinyInteger('status_aktif')->default(1);
+            $table->string('status_user')->default('Aktif');
             $table->rememberToken();
             $table->timestamps();
         });
