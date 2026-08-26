@@ -168,9 +168,9 @@
                     Belum memiliki akun umat?
                     <a href="{{ route('register') }}" class="font-semibold text-amber-600 dark:text-amber-400 hover:underline">Daftar Sekarang</a>
                 </p>
-                <div class="mt-3">
-                    <a href="{{ route('beranda') }}" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition inline-flex items-center gap-1">
-                        <i class="fa-solid fa-arrow-left text-[10px]"></i> Kembali ke Beranda
+                <div class="mt-4 flex justify-center">
+                    <a href="{{ route('beranda') }}" title="Kembali ke Beranda" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200" aria-label="Beranda">
+                        <i class="fa-solid fa-house text-sm"></i>
                     </a>
                 </div>
             </div>
