@@ -269,14 +269,8 @@ $legacyModuleAliases = [
     'backup_restore' => 'backup-database',
     'security-center' => 'security-settings',
     'clean-uploads' => 'backup-database',
-    'sambutan-pastor' => 'profil-paroki',
     'katekumen' => 'pengajuan-sakramen',
     'kanonikal' => 'sakramen',
-    'video-header' => 'pengaturan-aplikasi',
-    'menu' => 'pengaturan-aplikasi',
-    'seo' => 'pengaturan-aplikasi',
-    'slider' => 'pengaturan-aplikasi',
-    'widget' => 'pengaturan-aplikasi',
 ];
 
 Route::middleware([\App\Http\Middleware\PanelAccess::class])->group(function () use ($rolePrefixes, $legacyModuleAliases) {
@@ -365,6 +359,7 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::get('/pengaturan-aplikasi', [\App\Http\Controllers\InertiaPanelController::class, 'pengaturanHub'])->name("panel.{$prefix}.pengaturan-aplikasi");
         Route::get('/pengaturan/pembayaran', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'pembayaran'))->name("panel.{$prefix}.pengaturan.pembayaran");
         Route::get('/pengaturan-pembayaran', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'pembayaran'))->name("panel.{$prefix}.pengaturan-pembayaran");
+        Route::get('/metode-pembayaran', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'pembayaran'))->name("panel.{$prefix}.metode-pembayaran");
         Route::get('/pengaturan/otp', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'otp'))->name("panel.{$prefix}.pengaturan.otp");
         Route::get('/pengaturan-otp', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'otp'))->name("panel.{$prefix}.pengaturan-otp");
         Route::get('/pengaturan/meta_tag', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'seo'))->name("panel.{$prefix}.pengaturan.meta_tag");
