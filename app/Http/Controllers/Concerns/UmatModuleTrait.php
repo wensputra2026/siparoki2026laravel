@@ -361,4 +361,39 @@ trait UmatModuleTrait
         return redirect("/{$firstSegment}/umat")->with('success', 'Data Umat berhasil diperbarui.');
     }
 
+    public function umatOptions(\Illuminate\Http\Request $request)
+    {
+        $q = trim((string) $request->input('q', ''));
+        $id = $request->input('id');
+
+        $query = \App\Models\Umat::query();
+
+        if ($id) {
+            $query->where('id', $id);
+        } elseif ($q !== '') {
+            $query->where(function ($qq) use ($q) {
+                $qq->where('nama_lengkap', 'like', '%' . $q . '%')
+                   ->orWhere('nama_baptis', 'like', '%' . $q . '%')
+                   ->orWhere('nik', 'like', '%' . $q . '%');
+            });
+        }
+
+        $rows = $query->orderBy('nama_lengkap')
+            ->limit(50)
+            ->get(['id', 'nama_lengkap', 'nama_baptis', 'nik', 'handphone', 'no_hp'])
+            ->map(function ($u) {
+                $nama = trim(trim(($u->nama_baptis ?: '') . ' ' . ($u->nama_lengkap ?: '')));
+                $nama = $nama ?: ($u->nama_lengkap ?: '');
+                return [
+                    'id'           => $u->id,
+                    'name'         => $nama . ($u->nik ? ' (NIK: ' . $u->nik . ')' : ''),
+                    'nama_lengkap' => $u->nama_lengkap,
+                    'nama_baptis'  => $u->nama_baptis,
+                    'handphone'    => $u->handphone ?: $u->no_hp,
+                    'nik'          => $u->nik,
+                ];
+            });
+
+        return response()->json($rows->all());
+    }
 }
