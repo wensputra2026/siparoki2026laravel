@@ -60,7 +60,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-B07pWWkj.css",
+    "file": "assets/app-BuaBk13I.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -96,6 +96,16 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
+  "resources/js/Pages/Errors/Error.vue": {
+    "file": "assets/Error-CGa7cTxs.js",
+    "name": "Error",
+    "src": "resources/js/Pages/Errors/Error.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-vue-DGgJRxBm.js",
+      "_vendor-DwcH5o34.js"
+    ]
+  },
   "resources/js/Pages/Inertia/BackupDatabase.vue": {
     "file": "assets/BackupDatabase-CyKfIdJ6.js",
     "name": "BackupDatabase",
@@ -118,6 +128,17 @@
       "_AppLayout-Dr1A9g8S.js",
       "_vendor-DwcH5o34.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
+    ]
+  },
+  "resources/js/Pages/Inertia/Error.vue": {
+    "file": "assets/Error-CrnvmsYr.js",
+    "name": "Error",
+    "src": "resources/js/Pages/Inertia/Error.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/Pages/Errors/Error.vue",
+      "_vendor-vue-DGgJRxBm.js",
+      "_vendor-DwcH5o34.js"
     ]
   },
   "resources/js/Pages/Inertia/GaleriForm.vue": {
@@ -376,7 +397,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BKrkl3Kr.js",
+    "file": "assets/app-mGel2Ln-.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -388,8 +409,10 @@
       "resources/js/Pages/Auth/ForgotPassword.vue",
       "resources/js/Pages/Auth/Login.vue",
       "resources/js/Pages/Auth/Register.vue",
+      "resources/js/Pages/Errors/Error.vue",
       "resources/js/Pages/Inertia/BackupDatabase.vue",
       "resources/js/Pages/Inertia/Dashboard.vue",
+      "resources/js/Pages/Inertia/Error.vue",
       "resources/js/Pages/Inertia/GaleriForm.vue",
       "resources/js/Pages/Inertia/GenericModule.vue",
       "resources/js/Pages/Inertia/KkDetail.vue",
