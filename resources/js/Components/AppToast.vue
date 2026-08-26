@@ -18,7 +18,7 @@ defineEmits(['close']);
     >
         <div
             v-if="show"
-            class="fixed top-20 right-4 sm:right-6 z-50 max-w-sm w-full shadow-lg rounded-2xl p-4 flex items-start gap-3 border backdrop-blur-md"
+            class="fixed top-20 right-4 sm:right-6 z-[9999] max-w-sm w-full shadow-2xl rounded-2xl p-4 flex items-start gap-3 border backdrop-blur-md"
             :class="[
                 type === 'success'
                     ? 'bg-emerald-50/95 border-emerald-200 text-emerald-900 shadow-emerald-500/10'

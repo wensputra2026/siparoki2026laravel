@@ -260,7 +260,28 @@ const init = (page) => {
     if (_initialized) return;
     _initialized = true;
 
-    // Watch for incoming flash messages from Laravel (e.g. login success alert)
+    // 1. Router event listener: langsung menangkap respon Inertia beserta flash message
+    router.on('success', (event) => {
+        const flash = event.detail.page?.props?.flash || usePage().props?.flash;
+        if (flash?.success) {
+            triggerToast(flash.success, 'success');
+        } else if (flash?.status) {
+            triggerToast(flash.status, 'success');
+        } else if (flash?.error) {
+            triggerToast(flash.error, 'error');
+        }
+    });
+
+    router.on('error', (errors) => {
+        const firstError = typeof errors === 'object' ? Object.values(errors)[0] : null;
+        if (firstError) {
+            triggerToast(Array.isArray(firstError) ? firstError[0] : firstError, 'error');
+        } else {
+            triggerToast('Terjadi kesalahan validasi atau sistem.', 'error');
+        }
+    });
+
+    // 2. Watch for reactive flash messages from Laravel
     watch(
         () => page.props.flash,
         (flash) => {
@@ -310,6 +331,8 @@ const init = (page) => {
     );
 };
 
+export { triggerToast };
+
 export function useRoleMenu(props) {
     const page = usePage();
     _page = page;
@@ -325,6 +348,7 @@ export function useRoleMenu(props) {
         showToast,
         toastMessage,
         toastType,
+        triggerToast,
         userAvatar,
         userName,
         selectedPastorId,
