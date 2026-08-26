@@ -1310,6 +1310,42 @@ const openCreateModal = () => {
         };
     }
 
+    if (props.moduleKey === 'direktori-katekis') {
+        formData.value = {
+            nama_lengkap: '',
+            nama: '',
+            jenis_katekis: 'Katekis Paroki',
+            wilayah_pelayanan: '',
+            sertifikasi: '',
+            nomor_sk: '',
+            no_hp: '',
+            kontak: '',
+            email: '',
+            status_aktif: 'Aktif',
+            status: 'Aktif',
+            foto: '',
+            keterangan: '',
+        };
+    }
+
+    if (props.moduleKey === 'direktori-misdinar') {
+        formData.value = {
+            nama_lengkap: '',
+            nama: '',
+            tingkat: 'Junior',
+            stasi_kapela_id: '',
+            nama_orang_tua: '',
+            no_hp_orang_tua: '',
+            no_hp: '',
+            kontak: '',
+            tanggal_bergabung: new Date().toISOString().substring(0, 10),
+            status_aktif: 'Aktif',
+            status: 'Aktif',
+            foto: '',
+            catatan: '',
+        };
+    }
+
     if (props.moduleKey === 'provinsi') {
         formData.value = {
             nama_provinsi: '',
@@ -1431,6 +1467,50 @@ const openEditModal = (item) => {
             urutan: item.urutan !== undefined ? item.urutan : 1,
             foto: item.foto || '',
             keterangan: item.keterangan || '',
+        };
+        showFormModal.value = true;
+        return;
+    }
+
+    if (props.moduleKey === 'direktori-katekis') {
+        formData.value = {
+            id_katekis: item.id_katekis || item.id,
+            id: item.id_katekis || item.id,
+            nama_lengkap: item.nama_lengkap || item.nama || '',
+            nama: item.nama_lengkap || item.nama || '',
+            jenis_katekis: item.jenis_katekis || 'Katekis Paroki',
+            wilayah_pelayanan: item.wilayah_pelayanan || '',
+            sertifikasi: item.sertifikasi || '',
+            nomor_sk: item.nomor_sk || '',
+            no_hp: item.no_hp || item.kontak || '',
+            kontak: item.no_hp || item.kontak || '',
+            email: item.email || '',
+            status_aktif: (item.status_aktif == 1 || item.status_aktif === '1' || item.status_aktif === 'Aktif' || item.status === 'Aktif') ? 'Aktif' : 'Nonaktif',
+            status: (item.status_aktif == 1 || item.status_aktif === '1' || item.status_aktif === 'Aktif' || item.status === 'Aktif') ? 'Aktif' : 'Nonaktif',
+            foto: item.foto || '',
+            keterangan: item.keterangan || '',
+        };
+        showFormModal.value = true;
+        return;
+    }
+
+    if (props.moduleKey === 'direktori-misdinar') {
+        formData.value = {
+            id_misdinar: item.id_misdinar || item.id,
+            id: item.id_misdinar || item.id,
+            nama_lengkap: item.nama_lengkap || item.nama || '',
+            nama: item.nama_lengkap || item.nama || '',
+            tingkat: item.tingkat || 'Junior',
+            stasi_kapela_id: item.stasi_kapela_id || '',
+            nama_orang_tua: item.nama_orang_tua || '',
+            no_hp_orang_tua: item.no_hp_orang_tua || '',
+            no_hp: item.no_hp || item.kontak || '',
+            kontak: item.no_hp || item.kontak || '',
+            tanggal_bergabung: item.tanggal_bergabung ? String(item.tanggal_bergabung).substring(0, 10) : '',
+            status_aktif: (item.status_aktif == 1 || item.status_aktif === '1' || item.status_aktif === 'Aktif' || item.status === 'Aktif') ? 'Aktif' : 'Nonaktif',
+            status: (item.status_aktif == 1 || item.status_aktif === '1' || item.status_aktif === 'Aktif' || item.status === 'Aktif') ? 'Aktif' : 'Nonaktif',
+            foto: item.foto || '',
+            catatan: item.catatan || item.keterangan || '',
         };
         showFormModal.value = true;
         return;
@@ -5131,6 +5211,255 @@ const statusLabel = (item) => {
                                         rows="2"
                                         placeholder="Keterangan tugas atau catatan tambahan..."
                                         class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 5B. DIREKTORI KATEKIS FORM -->
+                    <template v-else-if="moduleKey === 'direktori-katekis'">
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-book-bible text-emerald-600"></i>
+                                <span>Informasi Katekis & Tenaga Pengajar</span>
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Lengkap & Gelar Katekis *</label>
+                                    <input
+                                        v-model="formData.nama_lengkap"
+                                        type="text"
+                                        placeholder="Contoh: Petrus Paulus, S.Ag"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition font-semibold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Jenis / Kategori Katekis *</label>
+                                    <select
+                                        v-model="formData.jenis_katekis"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition font-semibold"
+                                    >
+                                        <option value="Katekis Paroki">Katekis Paroki</option>
+                                        <option value="Katekis Paroki Resmi">Katekis Paroki Resmi</option>
+                                        <option value="Katekis Wilayah">Katekis Wilayah</option>
+                                        <option value="Katekis Stasi">Katekis Stasi / Kapela</option>
+                                        <option value="Katekis KUB">Katekis KUB</option>
+                                        <option value="Pendamping Komuni Pertama">Pendamping Komuni Pertama</option>
+                                        <option value="Pendamping Krisma">Pendamping Krisma</option>
+                                        <option value="Pendamping Baptis">Pendamping Baptis</option>
+                                        <option value="Guru Agama / Pembina Katekese">Guru Agama / Pembina Katekese</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Wilayah / Tempat Pelayanan</label>
+                                    <input
+                                        v-model="formData.wilayah_pelayanan"
+                                        type="text"
+                                        placeholder="Contoh: Pusat Paroki / Kapela Ekanaek"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Sertifikasi / Pelatihan</label>
+                                    <input
+                                        v-model="formData.sertifikasi"
+                                        type="text"
+                                        placeholder="Contoh: Kursus Katekese Keuskupan 2023"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nomor SK Penugasan</label>
+                                    <input
+                                        v-model="formData.nomor_sk"
+                                        type="text"
+                                        placeholder="Contoh: SK-PAR/KAT/2024/01"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">No. Kontak / WhatsApp</label>
+                                    <input
+                                        v-model="formData.no_hp"
+                                        type="text"
+                                        placeholder="Contoh: 081234567890"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Keaktifan</label>
+                                    <select
+                                        v-model="formData.status_aktif"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition font-semibold"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Foto Katekis</label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-16 h-16 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                                            <img
+                                                v-if="previewImage || (formData.foto && typeof formData.foto === 'string')"
+                                                :src="previewImage || getImageUrl(formData.foto)"
+                                                class="w-full h-full object-cover"
+                                            />
+                                            <i v-else class="fa-solid fa-user text-slate-400 text-lg"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                @change="handleFileUpload($event, 'foto')"
+                                                class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 file:cursor-pointer"
+                                            />
+                                            <p class="text-[10px] text-slate-400 mt-1">Format: JPG, PNG, WEBP. Maksimal 2MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Keterangan / Catatan</label>
+                                    <textarea
+                                        v-model="formData.keterangan"
+                                        rows="2"
+                                        placeholder="Catatan tambahan mengenai tugas pelayanan katekese..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 5C. DIREKTORI MISDINAR FORM -->
+                    <template v-else-if="moduleKey === 'direktori-misdinar'">
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-hands-praying text-sky-600"></i>
+                                <span>Informasi Anggota Putra / Putri Altar (Misdinar)</span>
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Lengkap Misdinar *</label>
+                                    <input
+                                        v-model="formData.nama_lengkap"
+                                        type="text"
+                                        placeholder="Contoh: Fransiskus Xaverius"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition font-semibold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tingkat / Jenjang *</label>
+                                    <select
+                                        v-model="formData.tingkat"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition font-semibold"
+                                    >
+                                        <option value="Junior">Junior (Pemula)</option>
+                                        <option value="Senior">Senior</option>
+                                        <option value="Koordinator">Koordinator / Ketua</option>
+                                        <option value="Pembina">Pembina / Pendamping</option>
+                                        <option value="Pengurus">Pengurus Misdinar</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Orang Tua / Wali</label>
+                                    <input
+                                        v-model="formData.nama_orang_tua"
+                                        type="text"
+                                        placeholder="Contoh: Bapak Antonius"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">No. Kontak Misdinar / WA</label>
+                                    <input
+                                        v-model="formData.no_hp"
+                                        type="text"
+                                        placeholder="Contoh: 081234567890"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">No. Kontak Orang Tua</label>
+                                    <input
+                                        v-model="formData.no_hp_orang_tua"
+                                        type="text"
+                                        placeholder="Contoh: 081298765432"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Bergabung</label>
+                                    <input
+                                        v-model="formData.tanggal_bergabung"
+                                        type="date"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Keaktifan</label>
+                                    <select
+                                        v-model="formData.status_aktif"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition font-semibold"
+                                    >
+                                        <option value="Aktif">Aktif Bertugas</option>
+                                        <option value="Purna Tugas">Purna Tugas / Alumni</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Foto Misdinar</label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-16 h-16 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                                            <img
+                                                v-if="previewImage || (formData.foto && typeof formData.foto === 'string')"
+                                                :src="previewImage || getImageUrl(formData.foto)"
+                                                class="w-full h-full object-cover"
+                                            />
+                                            <i v-else class="fa-solid fa-user text-slate-400 text-lg"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                @change="handleFileUpload($event, 'foto')"
+                                                class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 file:cursor-pointer"
+                                            />
+                                            <p class="text-[10px] text-slate-400 mt-1">Format: JPG, PNG, WEBP. Maksimal 2MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Catatan Tambahan</label>
+                                    <textarea
+                                        v-model="formData.catatan"
+                                        rows="2"
+                                        placeholder="Catatan jadwal tugas atau keterangan lainnya..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
                                     ></textarea>
                                 </div>
                             </div>

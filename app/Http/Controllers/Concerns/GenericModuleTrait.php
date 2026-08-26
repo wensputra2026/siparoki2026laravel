@@ -662,6 +662,12 @@ trait GenericModuleTrait
         if ($slug === 'direktori-dpp' || $slug === 'direktori_dpp') {
             $data = $this->normalizeDirektoriDppPayload($data);
         }
+        if ($slug === 'direktori-katekis' || $slug === 'direktori_katekis') {
+            $data = $this->normalizeDirektoriKatekisPayload($data);
+        }
+        if ($slug === 'direktori-misdinar' || $slug === 'direktori_misdinar') {
+            $data = $this->normalizeDirektoriMisdinarPayload($data);
+        }
         if ($slug === 'iuran') {
             $data = $this->normalizeIuranPayload($data);
         }
@@ -809,6 +815,12 @@ trait GenericModuleTrait
         }
         if ($slug === 'direktori-dpp' || $slug === 'direktori_dpp') {
             $data = $this->normalizeDirektoriDppPayload($data);
+        }
+        if ($slug === 'direktori-katekis' || $slug === 'direktori_katekis') {
+            $data = $this->normalizeDirektoriKatekisPayload($data);
+        }
+        if ($slug === 'direktori-misdinar' || $slug === 'direktori_misdinar') {
+            $data = $this->normalizeDirektoriMisdinarPayload($data);
         }
         if ($slug === 'iuran') {
             $data = $this->normalizeIuranPayload($data);
@@ -2440,6 +2452,50 @@ trait GenericModuleTrait
             $data['periode_selesai'] = trim($parts[1] ?? '');
         }
         if (empty($data['paroki_id']) && Schema::hasColumn('direktori_dpp', 'paroki_id')) {
+            $data['paroki_id'] = $this->defaultParokiIdFromProfile();
+        }
+        return $data;
+    }
+
+
+    protected function normalizeDirektoriKatekisPayload(array $data): array
+    {
+        if (isset($data['nama']) && !isset($data['nama_lengkap'])) {
+            $data['nama_lengkap'] = $data['nama'];
+        } elseif (isset($data['nama_lengkap']) && !isset($data['nama'])) {
+            $data['nama'] = $data['nama_lengkap'];
+        }
+        if (isset($data['status'])) {
+            $data['status_aktif'] = ($data['status'] === 'Aktif' || $data['status'] == 1 || $data['status'] === '1') ? 1 : 0;
+        } elseif (isset($data['status_aktif'])) {
+            $data['status'] = ($data['status_aktif'] == 1 || $data['status_aktif'] === '1' || $data['status_aktif'] === 'Aktif') ? 'Aktif' : 'Nonaktif';
+        }
+        if (isset($data['kontak']) && !isset($data['no_hp'])) {
+            $data['no_hp'] = $data['kontak'];
+        }
+        if (empty($data['paroki_id']) && Schema::hasColumn('direktori_katekis', 'paroki_id')) {
+            $data['paroki_id'] = $this->defaultParokiIdFromProfile();
+        }
+        return $data;
+    }
+
+
+    protected function normalizeDirektoriMisdinarPayload(array $data): array
+    {
+        if (isset($data['nama']) && !isset($data['nama_lengkap'])) {
+            $data['nama_lengkap'] = $data['nama'];
+        } elseif (isset($data['nama_lengkap']) && !isset($data['nama'])) {
+            $data['nama'] = $data['nama_lengkap'];
+        }
+        if (isset($data['status'])) {
+            $data['status_aktif'] = ($data['status'] === 'Aktif' || $data['status'] == 1 || $data['status'] === '1') ? 1 : 0;
+        } elseif (isset($data['status_aktif'])) {
+            $data['status'] = ($data['status_aktif'] == 1 || $data['status_aktif'] === '1' || $data['status_aktif'] === 'Aktif') ? 'Aktif' : 'Nonaktif';
+        }
+        if (isset($data['kontak']) && !isset($data['no_hp'])) {
+            $data['no_hp'] = $data['kontak'];
+        }
+        if (empty($data['paroki_id']) && Schema::hasColumn('direktori_misdinar', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
         }
         return $data;
