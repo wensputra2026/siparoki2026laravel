@@ -638,45 +638,85 @@ trait KkModuleTrait
         $members = [];
         $mapping = [
             'hubungan_keluarga' => 'hubungan_keluarga',
+            'hubungan' => 'hubungan_keluarga',
             'nik' => 'nik',
+            'no_ktp' => 'nik',
             'nama_lengkap_sipil' => 'nama_lengkap',
+            'nama_lengkap' => 'nama_lengkap',
+            'nama_lahir' => 'nama_lengkap',
+            'nama' => 'nama_lengkap',
             'nama_baptis_santo_santa' => 'nama_baptis',
+            'nama_baptis' => 'nama_baptis',
+            'nama_santo' => 'nama_baptis',
             'jenis_kelamin' => 'jenis_kelamin',
+            'jk' => 'jenis_kelamin',
+            'gender' => 'jenis_kelamin',
             'tempat_lahir' => 'tempat_lahir',
             'tanggal_lahir' => 'tanggal_lahir',
+            'tgl_lahir' => 'tanggal_lahir',
             'golongan_darah' => 'golongan_darah',
+            'gol_darah' => 'golongan_darah',
             'agama_asal' => 'agama_asal',
             'pendidikan' => 'pendidikan_saat_ini',
+            'pendidikan_saat_ini' => 'pendidikan_saat_ini',
             'pekerjaan' => 'pekerjaan',
             'bidang_keahlian_talenta_paroki' => 'talenta',
+            'talenta' => 'talenta',
             'disabilitas_kebutuhan_khusus' => 'disabilitas',
+            'disabilitas' => 'disabilitas',
             'status_baptis' => 'status_baptis',
             'jenis_penerimaan_baptis' => 'jenis_penerimaan_baptis',
             'tanggal_baptis' => 'tgl_baptis',
+            'tgl_baptis' => 'tgl_baptis',
             'paroki_tempat_baptis' => 'paroki_baptis',
+            'paroki_baptis' => 'paroki_baptis',
             'pastor_pembaptis' => 'pastor_baptis',
+            'pastor_baptis' => 'pastor_baptis',
             'nama_wali_baptis' => 'wali_baptis',
+            'wali_baptis' => 'wali_baptis',
             'buku_baptis_vol' => 'buku_baptis_vol',
             'buku_baptis_hal' => 'buku_baptis_hal',
             'buku_baptis_no' => 'buku_baptis_no',
             'tanggal_krisma' => 'tgl_krisma',
+            'tgl_krisma' => 'tgl_krisma',
             'paroki_krisma' => 'paroki_krisma',
             'tanggal_perkawinan' => 'tgl_perkawinan',
+            'tgl_perkawinan' => 'tgl_perkawinan',
             'paroki_perkawinan' => 'paroki_perkawinan',
             'nama_pasangan' => 'nama_pasangan',
             'status_perkawinan_kanonik' => 'status_perkawinan_kanonik',
+            'status_menikah' => 'status_menikah',
+            'status_perkawinan' => 'status_menikah',
             'peristiwa_lain' => 'peristiwa_lain',
             'no_surat_peristiwa' => 'no_surat_peristiwa',
         ];
 
         foreach ($rawHeaders as $column => $heading) {
-            if (!preg_match('/^anggota_(\d+)_(.+)$/', $heading, $matches)) {
+            $index = null;
+            $fieldKey = null;
+
+            if (preg_match('/^anggota_(\d+)_(.+)$/', $heading, $matches)) {
+                $index = (int) $matches[1] - 1;
+                $fieldKey = $matches[2];
+            } elseif (preg_match('/^(.+)_anggota_(\d+)$/', $heading, $matches)) {
+                $index = (int) $matches[2] - 1;
+                $fieldKey = $matches[1];
+            }
+
+            if ($index === null || $fieldKey === null) {
                 continue;
             }
 
-            $index = (int) $matches[1] - 1;
-            $fieldKey = $matches[2];
             $target = $mapping[$fieldKey] ?? null;
+            if (!$target) {
+                foreach ($mapping as $mk => $mt) {
+                    if (str_contains($fieldKey, $mk) || str_contains($mk, $fieldKey)) {
+                        $target = $mt;
+                        break;
+                    }
+                }
+            }
+
             if (!$target) {
                 continue;
             }

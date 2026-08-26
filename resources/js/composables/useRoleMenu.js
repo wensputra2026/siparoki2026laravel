@@ -231,17 +231,27 @@ const syncActiveGroup = () => {
         return;
     }
 
+    let activeGroupName = null;
     currentMenuTree.value.forEach((section) => {
         section.menus.forEach((menu) => {
             if (menu.submenus && isGroupActive(menu)) {
-                openGroups.value[menu.name] = true;
+                activeGroupName = menu.name;
             }
         });
+    });
+
+    Object.keys(openGroups.value).forEach((key) => {
+        openGroups.value[key] = (key === activeGroupName);
     });
 };
 
 const toggleGroup = (groupName) => {
-    openGroups.value[groupName] = openGroups.value[groupName] === false ? true : false;
+    const isCurrentlyOpen = !!openGroups.value[groupName];
+    // Tutup grup lain agar rapi (single accordion)
+    Object.keys(openGroups.value).forEach((key) => {
+        openGroups.value[key] = false;
+    });
+    openGroups.value[groupName] = !isCurrentlyOpen;
 };
 
 // Inisialisasi watcher & lifecycle HANYA SEKALI (singleton), agar remount

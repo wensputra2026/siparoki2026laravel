@@ -2249,8 +2249,12 @@ trait GenericModuleTrait
             $payload['nama_baptis_pemilik'] = $payload['nama_lahir_pemilik'] ?? '-';
         }
 
-        if (in_array('nama_lahir_pemilik', $validColumns, true) && empty($payload['nama_lahir_pemilik'])) {
-            $payload['nama_lahir_pemilik'] = $payload['nama_baptis_pemilik'] ?? '-';
+        if (in_array('nama_lahir', $validColumns, true) && empty($payload['nama_lahir'])) {
+            $payload['nama_lahir'] = $payload['nama_lengkap'] ?? $payload['nama_baptis'] ?? '-';
+        }
+
+        if (in_array('nama_lengkap', $validColumns, true) && empty($payload['nama_lengkap'])) {
+            $payload['nama_lengkap'] = $payload['nama_lahir'] ?? $payload['nama_baptis'] ?? '-';
         }
 
         if (in_array('is_deleted', $validColumns, true)) {
@@ -2273,6 +2277,38 @@ trait GenericModuleTrait
             return [];
         }
 
+        if (in_array($slug, ['umat', 'data-umat'], true)) {
+            if (!empty($payload['nik']) && strlen(preg_replace('/\D+/', '', (string) $payload['nik'])) >= 8) {
+                return ['nik' => preg_replace('/\D+/', '', (string) $payload['nik'])];
+            }
+            if (!empty($payload['niu'])) {
+                return ['niu' => trim((string) $payload['niu'])];
+            }
+            if (!empty($payload['nama_lengkap'])) {
+                return ['nama_lengkap' => trim((string) $payload['nama_lengkap'])];
+            }
+
+            return [];
+        }
+
+        if (in_array($slug, ['user', 'users'], true)) {
+            if (!empty($payload['email'])) {
+                return ['email' => strtolower(trim((string) $payload['email']))];
+            }
+            if (!empty($payload['username'])) {
+                return ['username' => strtolower(trim((string) $payload['username']))];
+            }
+            return [];
+        }
+
+        if (in_array($slug, ['master-pastor', 'pastor', 'riwayat-pastor'], true)) {
+            foreach (['nama_pastor', 'nama'] as $col) {
+                if (!empty($payload[$col])) {
+                    return [$col => trim((string) $payload[$col])];
+                }
+            }
+        }
+
         $codeCandidates = [
             'keuskupan' => ['kode_keuskupan'],
             'dekenat' => ['kode_kevikepan', 'kode_dekenat'],
@@ -2282,11 +2318,14 @@ trait GenericModuleTrait
             'kapela' => ['kode_kapela'],
             'stasi' => ['kode_kapela'],
             'wilayah' => ['kode_wilayah'],
+            'lingkungan' => ['kode_lingkungan'],
             'kub' => ['kode_kub'],
             'provinsi' => ['kode_provinsi'],
             'kabupaten' => ['kode_kabupaten'],
             'kecamatan' => ['kode_kecamatan'],
-            'desa-kelurahan' => ['kode_desa'],
+            'desa-kelurahan' => ['kode_desa', 'kode_desa_kelurahan'],
+            'kategori-konten' => ['slug', 'kode_kategori'],
+            'konten' => ['slug'],
         ];
 
         $nameCandidates = [
@@ -2298,11 +2337,14 @@ trait GenericModuleTrait
             'kapela' => ['nama_kapela'],
             'stasi' => ['nama_kapela'],
             'wilayah' => ['nama_wilayah'],
+            'lingkungan' => ['nama_lingkungan'],
             'kub' => ['nama_kub'],
             'provinsi' => ['nama_provinsi'],
             'kabupaten' => ['nama_kabupaten'],
             'kecamatan' => ['nama_kecamatan'],
-            'desa-kelurahan' => ['nama_desa'],
+            'desa-kelurahan' => ['nama_desa', 'nama_kelurahan'],
+            'kategori-konten' => ['nama_kategori', 'nama'],
+            'konten' => ['judul', 'title'],
         ];
 
         foreach ($codeCandidates[$slug] ?? [] as $column) {
@@ -2314,6 +2356,15 @@ trait GenericModuleTrait
         foreach ($nameCandidates[$slug] ?? [] as $column) {
             if (in_array($column, $validColumns, true) && !empty($payload[$column])) {
                 return [$column => $payload[$column]];
+            }
+        }
+
+        // Generic fallback for any other table
+        foreach ($validColumns as $col) {
+            if (str_starts_with($col, 'nama_') || str_starts_with($col, 'kode_') || $col === 'nama' || $col === 'judul') {
+                if (!empty($payload[$col])) {
+                    return [$col => $payload[$col]];
+                }
             }
         }
 

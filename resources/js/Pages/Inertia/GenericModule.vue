@@ -1687,6 +1687,8 @@ const exportModuleUrl = (format) => {
     return `${moduleBasePath.value}/export/${format}${params.toString() ? `?${params.toString()}` : ''}`;
 };
 
+const isImporting = ref(false);
+
 const triggerImportFile = () => {
     importFileInput.value?.click();
 };
@@ -1695,6 +1697,7 @@ const handleImportFile = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    isImporting.value = true;
     const payload = new FormData();
     payload.append('file', file);
 
@@ -1702,6 +1705,7 @@ const handleImportFile = (event) => {
         forceFormData: true,
         preserveScroll: true,
         onFinish: () => {
+            isImporting.value = false;
             event.target.value = '';
         },
     });
