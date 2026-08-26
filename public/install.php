@@ -656,11 +656,25 @@ $all_perms_passed = !in_array(false, $perms, true);
             <div class="step-content active" id="step-1">
                 <div class="space-y-5">
                     <div>
-                        <h2 class="text-xl font-black text-white">1. Pemeriksaan Lingkungan &amp; Server</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Memastikan modul PHP dan izin folder memenuhi kriteria operasional SIPAROKI.</p>
+                        <h2 class="text-xl font-black text-white flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 text-sm flex items-center justify-center font-bold">1</span>
+                            <span>Pemeriksaan Lingkungan &amp; Server</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Memastikan versi PHP dan izin folder memenuhi kriteria operasional SIPAROKI.</p>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                    <!-- Petunjuk Ringkas Langkah 1 -->
+                    <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-slate-300 text-xs flex items-start gap-3">
+                        <i class="fa-solid fa-circle-info text-amber-400 text-base mt-0.5 shrink-0"></i>
+                        <div class="space-y-1">
+                            <p class="font-bold text-amber-300">Petunjuk Pra-Instalasi:</p>
+                            <p class="text-[11px] text-slate-300 leading-relaxed">
+                                Pastikan server lokal (Laragon/XAMPP) atau hosting Anda menggunakan <strong>PHP 8.2</strong> atau lebih baru. Seluruh ekstensi penting (seperti PDO MySQL, OpenSSL, Mbstring) harus dalam status <span class="text-emerald-400 font-semibold">Tersedia</span>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
                         <?php foreach ($reqs as $label => $pass): ?>
                         <div class="p-3 rounded-xl border <?= $pass ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30' ?> flex items-center justify-between">
                             <span class="text-xs font-semibold text-slate-200"><?= htmlspecialchars($label) ?></span>
@@ -684,14 +698,30 @@ $all_perms_passed = !in_array(false, $perms, true);
             <div class="step-content" id="step-2">
                 <div class="space-y-5">
                     <div>
-                        <h2 class="text-xl font-black text-white">2. Konfigurasi Database MySQL</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Masukkan kredensial koneksi database MySQL / MariaDB (Localhost, cPanel, atau VPS).</p>
+                        <h2 class="text-xl font-black text-white flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 text-sm flex items-center justify-center font-bold">2</span>
+                            <span>Konfigurasi Database MySQL</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Masukkan kredensial koneksi database MySQL / MariaDB (Localhost, cPanel, atau VPS).</p>
+                    </div>
+
+                    <!-- Petunjuk Pengisian Database -->
+                    <div class="p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-slate-300 text-xs flex items-start gap-3">
+                        <i class="fa-solid fa-lightbulb text-sky-400 text-base mt-0.5 shrink-0"></i>
+                        <div class="space-y-1">
+                            <p class="font-bold text-sky-300">Panduan Pengisian Database:</p>
+                            <ul class="text-[11px] text-slate-300 list-disc list-inside space-y-0.5 leading-relaxed">
+                                <li><strong>Laragon / XAMPP Lokal:</strong> Gunakan User <code class="bg-slate-950 px-1 py-0.5 rounded text-amber-300">root</code> dan <strong>kosongkan kolom password</strong>.</li>
+                                <li><strong>Pembuatan Otomatis:</strong> Database <code class="bg-slate-950 px-1 py-0.5 rounded text-amber-300">siparoki_db</code> akan dibuatkan otomatis jika belum ada di MySQL Anda.</li>
+                                <li><strong>cPanel Hosting:</strong> Buat database dan user di cPanel MySQL Wizard terlebih dahulu, lalu masukkan nama database dan password-nya di sini.</li>
+                            </ul>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="space-y-1">
                             <label class="text-xs font-bold text-slate-300">Host Database</label>
-                            <input type="text" id="db_host" value="127.0.0.1" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:border-amber-500 outline-none" />
+                            <input type="text" id="db_host" value="127.0.0.1" placeholder="127.0.0.1 atau localhost" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:border-amber-500 outline-none" />
                         </div>
                         <div class="space-y-1">
                             <label class="text-xs font-bold text-slate-300">Port Database</label>
@@ -699,7 +729,7 @@ $all_perms_passed = !in_array(false, $perms, true);
                         </div>
                         <div class="space-y-1">
                             <label class="text-xs font-bold text-slate-300">Nama Database</label>
-                            <input type="text" id="db_name" value="siparoki_db" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:border-amber-500 outline-none" />
+                            <input type="text" id="db_name" value="siparoki_db" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:border-amber-500 outline-none font-semibold text-amber-400" />
                         </div>
                         <div class="space-y-1">
                             <label class="text-xs font-bold text-slate-300">Username Database</label>
@@ -718,6 +748,7 @@ $all_perms_passed = !in_array(false, $perms, true);
                             <i class="fa-solid fa-arrow-left"></i> Kembali
                         </button>
                         <button type="button" id="btn_test_db" onclick="testDatabase()" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition flex items-center gap-2">
+                            <i class="fa-solid fa-plug"></i>
                             <span>Uji Koneksi &amp; Lanjut</span>
                             <i class="fa-solid fa-arrow-right"></i>
                         </button>
@@ -729,8 +760,22 @@ $all_perms_passed = !in_array(false, $perms, true);
             <div class="step-content" id="step-3">
                 <div class="space-y-5">
                     <div>
-                        <h2 class="text-xl font-black text-white">3. Pilih Keuskupan, Paroki &amp; Administrator</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Pilih Keuskupan &amp; Paroki Anda dari daftar master nasional atau daftarkan nama baru.</p>
+                        <h2 class="text-xl font-black text-white flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 text-sm flex items-center justify-center font-bold">3</span>
+                            <span>Pilih Keuskupan, Paroki &amp; Administrator</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Pilih Keuskupan &amp; Paroki Anda dari daftar master nasional atau daftarkan nama baru.</p>
+                    </div>
+
+                    <!-- Petunjuk Identitas Paroki -->
+                    <div class="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-slate-300 text-xs flex items-start gap-3">
+                        <i class="fa-solid fa-church text-indigo-400 text-base mt-0.5 shrink-0"></i>
+                        <div class="space-y-1">
+                            <p class="font-bold text-indigo-300">Petunjuk Identitas Paroki:</p>
+                            <p class="text-[11px] text-slate-300 leading-relaxed">
+                                Pilih <strong>Keuskupan</strong> dan <strong>Paroki</strong> Anda dari dropdown master KWI se-Indonesia. Nama paroki dan alamat akan terisi otomatis. Anda juga dapat mengubah nama paroki secara bebas sesuai dokumen resmi.
+                            </p>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -774,20 +819,26 @@ $all_perms_passed = !in_array(false, $perms, true);
                         </div>
 
                         <!-- Akun Administrator -->
-                        <div class="sm:col-span-2 pt-2 border-t border-slate-800">
-                            <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">Akun Super Administrator</h3>
+                        <div class="sm:col-span-2 pt-3 border-t border-slate-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <span>Akun Super Administrator</span>
+                                </h3>
+                                <span class="text-[10px] text-slate-400">Hak Akses Penuh Sistem</span>
+                            </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div class="space-y-1">
-                                    <label class="text-[11px] font-semibold text-slate-400">Nama Admin</label>
+                                    <label class="text-[11px] font-semibold text-slate-400">Nama Lengkap</label>
                                     <input type="text" id="admin_name" value="Administrator Paroki" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white outline-none" />
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-[11px] font-semibold text-slate-400">Email Admin</label>
-                                    <input type="email" id="admin_email" value="admin@paroki.org" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white outline-none" />
+                                    <label class="text-[11px] font-semibold text-slate-400">Email Login</label>
+                                    <input type="email" id="admin_email" value="superadmin@paroki.org" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white outline-none font-semibold text-amber-400" />
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-[11px] font-semibold text-slate-400">Password</label>
-                                    <input type="text" id="admin_pass" value="password" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white outline-none font-mono" />
+                                    <label class="text-[11px] font-semibold text-slate-400">Password Login</label>
+                                    <input type="text" id="admin_pass" value="Admin@Paroki2026!" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white outline-none font-mono font-bold text-amber-400" />
                                 </div>
                             </div>
                         </div>
