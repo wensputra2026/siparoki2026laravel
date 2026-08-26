@@ -56,10 +56,12 @@ function siparoki_table_columns(PDO $pdo, $table) {
 // 1. Check if already installed
 if (file_exists($lock_file) || file_exists($public_lock_file) || file_exists($storage_dir . '/installed')) {
     if (!isset($_GET['force'])) {
+        $vendor_installed = file_exists($base_dir . '/vendor/autoload.php') || file_exists(__DIR__ . '/../vendor/autoload.php');
         $login_url = htmlspecialchars($root_app_url . '/login');
         $home_url = htmlspecialchars($root_app_url . '/');
         $superadmin_url = htmlspecialchars($root_app_url . '/superadmin');
         $force_url = htmlspecialchars($_SERVER['PHP_SELF'] ?? 'install.php') . '?force=1';
+        $folder_name = basename($base_dir);
         
         die('<!DOCTYPE html>
 <html lang="id">
@@ -83,7 +85,7 @@ if (file_exists($lock_file) || file_exists($public_lock_file) || file_exists($st
         <div class="space-y-2">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Instalasi Selesai & Aktif</span>
+                <span>Instalasi Database Selesai & Aktif</span>
             </span>
             <h2 class="text-2xl font-black text-white">SIPAROKI Siap Digunakan</h2>
             <p class="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto">
@@ -91,13 +93,32 @@ if (file_exists($lock_file) || file_exists($public_lock_file) || file_exists($st
             </p>
         </div>
 
+        ' . (!$vendor_installed ? '
+        <!-- NOTIFIKASI WAJIB COMPOSER INSTALL -->
+        <div class="p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-500/50 text-left space-y-2.5">
+            <div class="flex items-center gap-2 text-amber-300 font-bold text-xs">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base"></i>
+                <span>1 Langkah Terakhir di Terminal:</span>
+            </div>
+            <p class="text-[11.5px] text-slate-200 leading-relaxed">
+                Pustaka Laravel (<code class="text-amber-300">vendor/</code>) belum di-install di folder ini. Buka <strong>PowerShell / Terminal</strong> di folder proyek Anda dan ketik:
+            </p>
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 font-mono text-xs text-amber-400 flex items-center justify-between">
+                <span>composer install</span>
+                <span class="text-[10px] text-slate-400 font-sans">Ketik di PowerShell</span>
+            </div>
+            <p class="text-[11px] text-slate-400">
+                Setelah proses composer selesai, klik tombol di bawah untuk langsung membuka login.
+            </p>
+        </div>' : '') . '
+
         <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800/80 text-xs text-left space-y-2 text-slate-300">
             <div class="flex items-center justify-between text-slate-400">
-                <span>Akun Default:</span>
+                <span>Email Login:</span>
                 <span class="font-mono text-amber-400 font-bold">superadmin@paroki.org</span>
             </div>
             <div class="flex items-center justify-between text-slate-400">
-                <span>Password Default:</span>
+                <span>Password Login:</span>
                 <span class="font-mono text-amber-400 font-bold">Admin@Paroki2026!</span>
             </div>
         </div>
@@ -105,7 +126,7 @@ if (file_exists($lock_file) || file_exists($public_lock_file) || file_exists($st
         <div class="space-y-3">
             <a href="' . $login_url . '" id="btn-login" class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3.5 px-6 rounded-xl transition shadow-lg shadow-amber-500/25 text-sm cursor-pointer">
                 <i class="fa-solid fa-right-to-bracket"></i>
-                <span>Masuk ke Halaman Login (<span id="countdown">4</span>s)</span>
+                <span>' . ($vendor_installed ? 'Masuk ke Halaman Login' : 'Buka Halaman Login (Setelah Composer Selesai)') . '</span>
             </a>
             
             <div class="grid grid-cols-2 gap-2">
@@ -125,19 +146,6 @@ if (file_exists($lock_file) || file_exists($public_lock_file) || file_exists($st
             <a href="' . $force_url . '" class="text-amber-400/80 hover:text-amber-300 hover:underline">Pasang Ulang / Reset &rarr;</a>
         </div>
     </div>
-
-    <script>
-        let timeLeft = 4;
-        const countdownEl = document.getElementById("countdown");
-        const timer = setInterval(() => {
-            timeLeft--;
-            if (countdownEl) countdownEl.innerText = timeLeft;
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                window.location.href = "' . $login_url . '";
-            }
-        }, 1000);
-    </script>
 </body>
 </html>');
     }
