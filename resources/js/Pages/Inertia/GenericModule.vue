@@ -24,6 +24,22 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    hasImport: {
+        type: Boolean,
+        default: false,
+    },
+    hasExport: {
+        type: Boolean,
+        default: true,
+    },
+    hasPdf: {
+        type: Boolean,
+        default: true,
+    },
+    hasCreate: {
+        type: Boolean,
+        default: true,
+    },
     moduleKey: {
         type: String,
         required: true,
@@ -1873,8 +1889,8 @@ const statusLabel = (item) => {
                         <span>Mode Lihat & Ubah (Tambah/Hapus di Paroki)</span>
                     </div>
 
-                    <!-- 1. Tambah Button (Hidden for Read-Only or View/Edit Only on Wilayah/Kapela) -->
-                    <template v-if="!isUmatReadOnlyRole && !isViewAndEditOnlyRole">
+                    <!-- 1. Tambah Button (Conditional based on hasCreate & Role) -->
+                    <template v-if="hasCreate && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <Link
                             v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
                             :href="moduleKey === 'konten' ? `${basePrefix}/konten/create` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/kk-katolik/create` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/create` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/create` : `${basePrefix}/role/create`)))"
@@ -1894,8 +1910,8 @@ const statusLabel = (item) => {
                         </button>
                     </template>
 
-                    <!-- 2. Import Excel Button (Hidden for Read-Only or View/Edit Only on Wilayah/Kapela) -->
-                    <template v-if="!isUmatReadOnlyRole && !isViewAndEditOnlyRole">
+                    <!-- 2. Import Excel & Template Download Buttons (Only active for modules with hasImport = true) -->
+                    <template v-if="hasImport && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <input
                             ref="importFileInput"
                             type="file"
@@ -1911,30 +1927,31 @@ const statusLabel = (item) => {
                         >
                             <i v-if="isImporting" class="fa-solid fa-circle-notch fa-spin text-[11px]"></i>
                             <i v-else class="fa-solid fa-arrow-up-from-bracket text-[11px]"></i>
-                            <span>{{ isImporting ? 'Mengimpor...' : 'Impor' }}</span>
+                            <span>{{ isImporting ? 'Mengimpor...' : 'Impor Excel' }}</span>
                         </button>
+
+                        <a
+                            :href="exportModuleUrl('template')"
+                            class="px-3.5 py-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-300 text-cyan-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap"
+                        >
+                            <i class="fa-solid fa-file-excel text-[11px]"></i>
+                            <span>Template</span>
+                        </a>
                     </template>
 
-                    <!-- 3. Export Excel Button -->
+                    <!-- 3. Export Excel Button (Only active for modules with hasExport = true) -->
                     <a
+                        v-if="hasExport"
                         :href="exportModuleUrl('excel')"
                         class="px-3.5 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap"
                     >
                         <i class="fa-solid fa-arrow-right-from-bracket text-[11px]"></i>
-                        <span>Ekspor</span>
+                        <span>Ekspor Excel</span>
                     </a>
 
-                    <!-- 4. Template Download -->
+                    <!-- 4. Print / PDF Button (Only active for modules with hasPdf = true) -->
                     <a
-                        :href="exportModuleUrl('template')"
-                        class="px-3.5 py-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-300 text-cyan-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap"
-                    >
-                        <i class="fa-solid fa-file-excel text-[11px]"></i>
-                        <span>Template</span>
-                    </a>
-
-                    <!-- 5. Print / PDF Button -->
-                    <a
+                        v-if="hasPdf"
                         :href="exportModuleUrl('print')"
                         target="_blank"
                         class="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap"
@@ -1943,7 +1960,7 @@ const statusLabel = (item) => {
                         <span>Cetak / PDF</span>
                     </a>
 
-                    <!-- 6. Reload Data dari Database -->
+                    <!-- 5. Reload Data dari Database -->
                     <button
                         @click="reloadModuleData"
                         :disabled="isReloadingData"
@@ -2163,8 +2180,8 @@ const statusLabel = (item) => {
                                 </div>
 
                                 <div v-else-if="col.isPrimary" class="flex items-center gap-2.5">
-                                    <!-- Only show inline icon if there's no dedicated logo/icon column -->
-                                    <div v-if="!columns.some(c => c.key === 'logo' || c.isImage || c.isIcon)" :class="[
+                                    <!-- Only show inline icon for ecclesiastical hierarchy if there's no dedicated logo/image column -->
+                                    <div v-if="!columns.some(c => c.key === 'logo' || c.isImage || c.isIcon) && ['keuskupan', 'dekenat', 'kevikepan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'wilayah', 'kub', 'lingkungan'].includes(moduleKey)" :class="[
                                         'w-7 h-7 rounded-lg border flex items-center justify-center text-xs font-bold shrink-0',
                                         (moduleKey === 'dekenat' || moduleKey === 'kevikepan') ? 'bg-blue-50 text-blue-600 border-blue-200' :
                                         (moduleKey === 'paroki') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
