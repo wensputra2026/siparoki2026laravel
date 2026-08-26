@@ -108,14 +108,6 @@
                                 {{ $r->nama_lengkap_gelar ?? \App\Models\MasterPastor::formatNama($r) }}
                             </h4>
 
-                            <!-- Tarekat / Keuskupan if available -->
-                            @if(!empty($r->tarekat) || !empty($r->status_imamat))
-                                <p style="font-size: 0.78rem; color: #64748b; margin: 0;">
-                                    <i class="fa-solid fa-church text-teal-600 me-1"></i>
-                                    {{ $r->tarekat ? $r->tarekat . ' • ' : '' }} {{ $r->status_imamat ?? 'Diosesan' }}
-                                </p>
-                            @endif
-
                             @if(!empty($r->catatan_pelayanan) || !empty($r->biografi_singkat))
                                 <p style="font-size: 0.8rem; color: #64748b; margin: 6px 0 0; line-height: 1.5; max-width: 600px;">
                                     {{ Str::limit($r->catatan_pelayanan ?? $r->biografi_singkat, 140) }}
@@ -132,7 +124,7 @@
                         
                         <div style="margin-top: 8px; font-size: 0.78rem; font-weight: 700; color: {{ $isAktif ? '#10b981' : '#64748b' }}; display: flex; align-items: center; justify-content: flex-end; gap: 5px;">
                             <i class="fa-solid fa-circle" style="font-size: 7px;"></i>
-                            <span>{{ $isAktif ? 'Sedang Bertugas' : 'Mantan Gembala' }}</span>
+                            <span>{{ $isAktif ? 'Sedang Bertugas' : 'Mantan Pastor Paroki' }}</span>
                         </div>
                     </div>
 
