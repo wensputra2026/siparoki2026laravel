@@ -119,15 +119,16 @@ Cocok untuk pengguna **Laragon, XAMPP, Shared Hosting (cPanel), maupun Localhost
 2. **Buka Aplikasi di Browser**:
    - Jika menggunakan Laragon / PHP built-in server: Buka `http://127.0.0.1:8000` atau `http://localhost/siparoki/public`
    - Jika menggunakan Domain Hosting: Buka `https://namadomainparoki.org`
-   - *Sistem secara otomatis mendeteksi instalasi baru dan langsung mengarahkan Anda ke antarmuka **Web Installer Wizard (`/installer`)**.*
+   - *Sistem secara otomatis mendeteksi instalasi baru dan langsung mengarahkan Anda ke antarmuka **Web Installer Wizard (`/installer` atau `/install.php`)**.*
 
 3. **Ikuti 5 Langkah Mudah Installer Wizard**:
    - 🔍 **Langkah 1 (Pemeriksaan Server)**: Sistem memeriksa otomatis versi PHP (`>= 8.2`), 12 ekstensi PHP penting, serta izin tulis folder. Klik **"Lanjut"**.
-   - 🗄️ **Langkah 2 (Konfigurasi Database)**: Masukkan Host (`127.0.0.1`), Port (`3306`), Nama Database (`siparoki_db`), Username (`root`), dan Password MySQL Anda. Klik tombol **"Uji Koneksi Database"** untuk memastikan koneksi berhasil.
-   - ⛪ **Langkah 3 (Pilih Keuskupan & Paroki)**: 
-     - Pilih **Keuskupan** Anda dari daftar master referensi seluruh Keuskupan di Indonesia.
-     - Pilih **Paroki** yang tersedia atau pilih opsi *"+ Paroki Baru"* untuk mengetik nama paroki Anda.
-     - Masukkan nama **Pastor Paroki** dan alamat sekretariat paroki.
+   - 🗄️ **Langkah 2 (Konfigurasi Database)**: Masukkan Host (`127.0.0.1` atau `localhost`), Port (`3306`), Nama Database, Username, dan Password MySQL Anda. Klik tombol **"Uji Koneksi Database"** (Database akan dibuatkan otomatis jika belum ada).
+   - ⛪ **Langkah 3 (Pilih Keuskupan, Dekenat & Paroki)**: 
+     - Pilih **Keuskupan** Anda dari daftar master 39 Keuskupan KWI se-Indonesia.
+     - Pilih **Dekenat / Kevikepan** (otomatis memfilter paroki sesuai wilayah gerejawi).
+     - Pilih **Paroki Terdaftar** (nama & alamat langsung terisi) atau pilih opsi *"+ Paroki Baru"* jika paroki Anda belum terdaftar.
+     - Masukkan nama **Pastor Paroki Aktif** dan alamat sekretariat.
    - 🛡️ **Langkah 4 (Akun Super Admin Pertama)**: Masukkan Nama Lengkap, Username, Email, dan Password untuk akun Super Administrator utama Anda.
    - 🚀 **Langkah 5 (Mulai Instalasi)**: Klik **"Mulai Instalasi Sekarang"**. Sistem akan otomatis menyusun file konfigurasi `.env`, menjalankan seluruh migrasi database, menetapkan identitas paroki Anda, membuat akun Super Admin, dan mengunci file installer demi keamanan.
 
@@ -136,7 +137,147 @@ Cocok untuk pengguna **Laragon, XAMPP, Shared Hosting (cPanel), maupun Localhost
 
 ---
 
-### 💻 Metode 2: Instalasi Manual via Terminal / VPS Linux (Untuk Pengembang)
+### 🌐 Metode 2: Panduan Lengkap Instalasi di Shared Hosting (cPanel / DirectAdmin / Plesk)
+
+Bagi paroki yang menggunakan layanan web hosting bersama (*Shared Hosting cPanel*):
+
+#### Langkah 1: Persiapan Versi PHP & Ekstensi di cPanel
+1. Masuk ke **cPanel Hosting** Anda.
+2. Cari dan buka menu **Select PHP Version** (atau *MultiPHP Manager*).
+3. Atur versi PHP ke **PHP 8.2** atau **PHP 8.3**.
+4. Masuk ke tab **Extensions**, pastikan ekstensi berikut dicentang aktif:
+   - `pdo_mysql`, `openssl`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `gd`, `curl`, `zip`.
+
+#### Langkah 2: Unggah Source Code SIPAROKI
+Pilih salah satu cara berikut:
+- **Cara A (Menggunakan Git cPanel - Disarankan)**:
+  1. Buka menu **Git™ Version Control** di cPanel.
+  2. Klik **Create**.
+  3. Masukkan Clone URL: `https://github.com/wensputra2026/siparoki2026laravel.git`
+  4. Tentukan Repository Path: `repositories/siparoki` atau langsung di `public_html`.
+  5. Klik **Create**.
+- **Cara B (Upload Berkas ZIP)**:
+  1. Download ZIP dari repository: [Download ZIP](https://github.com/wensputra2026/siparoki2026laravel/archive/refs/heads/main.zip).
+  2. Buka **File Manager** cPanel &rarr; Masuk ke direktori `public_html` (atau folder subdomain Anda).
+  3. Upload file ZIP dan ekstrak semua berkasnya.
+
+#### Langkah 3: Penataan Folder Root Web
+SIPAROKI sudah dilengkapi file `.htaccess` dan `index.php` di folder utama yang otomatis meneruskan permintaan ke folder `public/`, sehingga Anda **tidak perlu memindahkan berkas secara manual**.
+- Jika Anda ingin keamanan maksimal, arahkan *Document Root* domain paroki Anda di menu cPanel **Domains / Subdomains** langsung ke folder:
+  `public_html/public`
+
+#### Langkah 4: Buat Database MySQL
+1. Buka menu **MySQL&reg; Database Wizard** di cPanel.
+2. Buat nama database baru (contoh: `u1234_siparoki`).
+3. Buat pengguna database & password baru (contoh: `u1234_adminparoki`).
+4. Berikan hak akses penuh (**ALL PRIVILEGES**), lalu klik *Make Changes*.
+
+#### Langkah 5: Jalankan Web Installer
+1. Buka browser dan akses domain paroki Anda:
+   `https://namaparoki-anda.org/install.php` (atau `https://namaparoki-anda.org/installer`)
+2. Masukkan nama database, username database, dan password yang baru saja dibuat di Langkah 4.
+3. Pilih Keuskupan, Dekenat, dan Paroki Anda.
+4. Klik **Mulai Instalasi Sekarang**. Sistem paroki Anda langsung aktif dan siap melayani umat!
+
+---
+
+### 🔄 Panduan Update Otomatis dari GitHub (Ketika Programmer Menambah Fitur / Perbaikan)
+
+Ketika tim programmer merilis perbaikan bug, penambahan fitur sakramen baru, atau pembaruan modul di repository [https://github.com/wensputra2026/siparoki2026laravel](https://github.com/wensputra2026/siparoki2026laravel), paroki dapat memperbarui sistem secara instan tanpa kehilangan data database maupun berkas konfigurasi paroki yang sudah berjalan.
+
+```mermaid
+flowchart LR
+    A["Programmer Push Update ke GitHub"] --> B["cPanel / Server Paroki"]
+    B --> C["Tarik Kode Terbaru (Git Pull)"]
+    C --> D["Jalankan Migrasi Database Baru"]
+    D --> E["SIPAROKI Paroki Terupdate & Data Aman!"]
+```
+
+Pilih salah satu metode pembaruan berikut sesuai kebutuhan hosting Anda:
+
+---
+
+#### 🌟 Pilihan 1: Update 1-Klik via cPanel Git™ Version Control (Paling Praktis untuk Shared Hosting)
+
+Jika instalasi di cPanel menggunakan Git Version Control:
+1. Masuk ke **cPanel Hosting** &rarr; Buka menu **Git™ Version Control**.
+2. Klik tombol **Manage** pada repository SIPAROKI Anda.
+3. Klik tab **Pull or Deploy**.
+4. Klik tombol biru **"Update from Remote"** (atau *Pull from Remote*).
+5. cPanel akan otomatis mengunduh seluruh penambahan fitur dan pembaruan kode terbaru dari GitHub.
+6. *(Opsional)* Jika ada penambahan tabel/struktur data baru dari programmer, buka menu **Terminal cPanel** (atau Cron Job 1x) dan jalankan:
+   ```bash
+   php artisan migrate --force
+   php artisan optimize:clear
+   ```
+7. Selesai! Seluruh fitur baru langsung aktif dan data umat Anda tetap 100% aman.
+
+---
+
+#### ⚡ Pilihan 2: Update Otomatis Tanpa Sentuh via GitHub Webhook (Zero-Click Auto Deploy)
+
+Anda dapat membuat server hosting paroki otomatis terupdate setiap kali programmer melakukan `push` ke GitHub:
+
+1. Di hosting paroki, buat file script updater sederhana di `public/deploy-webhook.php`:
+   ```php
+   <?php
+   // Secret token pengaman
+   $secret = 'KUNCI_RAHASIA_PAROKI_ANDA_123';
+   if (($_GET['token'] ?? '') !== $secret) {
+       http_response_code(403);
+       die('Access Denied');
+   }
+
+   $output = shell_exec('cd .. && git pull origin main 2>&1 && php artisan migrate --force 2>&1 && php artisan optimize:clear 2>&1');
+   echo "<pre>$output</pre>";
+   ```
+2. Buka repository GitHub: [https://github.com/wensputra2026/siparoki2026laravel](https://github.com/wensputra2026/siparoki2026laravel) &rarr; **Settings** &rarr; **Webhooks** &rarr; **Add Webhook**.
+3. Masukkan **Payload URL**: `https://namaparoki-anda.org/deploy-webhook.php?token=KUNCI_RAHASIA_PAROKI_ANDA_123`
+4. Pilih Content type: `application/json` &rarr; Centang *Just the push event* &rarr; Klik **Add Webhook**.
+5. **Hasil**: Setiap kali tim pengembang merilis pembaruan, server paroki otomatis terupdate secara *real-time*.
+
+---
+
+#### 🖥️ Pilihan 3: Update via SSH Terminal (Untuk VPS / Cloud Server)
+
+Jika menggunakan VPS Linux (Ubuntu/Debian) atau hosting dengan akses SSH:
+```bash
+# 1. Masuk ke direktori aplikasi
+cd /var/www/siparoki
+
+# 2. Tarik update terbaru dari GitHub
+git pull origin main
+
+# 3. Jalankan migrasi database jika ada skema baru
+php artisan migrate --force
+
+# 4. Bersihkan cache aplikasi agar fitur baru langsung terbaca
+php artisan optimize:clear
+```
+
+---
+
+#### 📦 Pilihan 4: Update Manual (Bagi Hosting Tanpa Fitur Git)
+
+Bagi paroki yang menggunakan shared hosting biasa tanpa akses Git/SSH:
+1. Download berkas rilis terbaru berupa ZIP dari GitHub: [Download Update ZIP](https://github.com/wensputra2026/siparoki2026laravel/archive/refs/heads/main.zip).
+2. Ekstrak ZIP di komputer Anda.
+3. Unggah dan timpa (*overwrite*) folder-folder sistem berikut ke File Manager cPanel:
+   - `app/`
+   - `resources/`
+   - `routes/`
+   - `public/build/`
+   - `database/migrations/`
+4. > [!IMPORTANT]
+   > **JANGAN PERNAH MENIMPA / MENGHAPUS**:
+   > - Berkas `.env` (berisi password database paroki Anda)
+   > - Direktori `storage/` (berisi log, sesi, dan status instalasi)
+   > - Direktori `public/uploads/` (berisi foto umat, logo paroki, surat baptis, dan dokumen arsip)
+5. Akses URL: `https://namaparoki-anda.org/` &rarr; sistem otomatis berjalan dengan versi terbaru!
+
+---
+
+### 💻 Metode 3: Instalasi Manual via Terminal / VPS Linux (Untuk Pengembang)
 
 Untuk instalasi di server VPS (Ubuntu / Debian / CentOS / Nginx / Apache):
 
@@ -198,7 +339,7 @@ Untuk instalasi di server VPS (Ubuntu / Debian / CentOS / Nginx / Apache):
    ```
 
 7. **Buka Aplikasi**:
-   Akses `http://paroki-anda.org/setup-paroki` untuk memilih Keuskupan dan Paroki default Anda.
+   Akses `http://paroki-anda.org/installer` untuk menyelesaikan penyesuaian paroki Anda.
 
 ---
 
@@ -243,7 +384,7 @@ siparoki/
 ├── resources/
 │   ├── js/
 │   │   ├── Components/        # Komponen UI Vue (SearchableSelect, RichTextEditor, dll.)
-│   │   ├── Layouts/           # Layout utama (AppLayout, Dashboard layout)
+│   │   └── Layouts/           # Layout utama (AppLayout, Dashboard layout)
 │   │   └── Pages/             # Halaman Inertia Vue (Auth, ProfilParoki, SetupParoki, dll.)
 │   └── views/                 # Blade templates (Halaman publik, register, login)
 ├── routes/
