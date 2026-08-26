@@ -205,6 +205,17 @@ const disabilitasOptions = [
     { id: 'Lansia Perawatan', name: 'Lansia Perawatan Khusus' },
 ];
 
+const statusBaptisOptions = [
+    { id: 1, name: 'Sudah Baptis' },
+    { id: 0, name: 'Belum / Katekumen' },
+];
+
+const jenisPenerimaanBaptisOptions = [
+    { id: 'Baptis Bayi (Infantis)', name: 'Baptis Bayi (Infantis)' },
+    { id: 'Baptis Dewasa (Adultus)', name: 'Baptis Dewasa (Adultus)' },
+    { id: 'Receptio (Penerimaan ke Katolik)', name: 'Receptio (Penerimaan ke Katolik)' },
+];
+
 const statusPanggilanOptions = [
     { id: 'Awam', name: 'Awam (Umat Biasa)' },
     { id: 'Imam Projo / Diosesan (RD)', name: 'Imam Projo / Diosesan (RD)' },
@@ -710,11 +721,16 @@ const submitForm = () => {
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-700 mb-1">Jenis Penerimaan</label>
-                                <select v-model="form.jenis_penerimaan_baptis" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">
-                                    <option value="Baptis Bayi (Infantis)">Baptis Bayi (Infantis)</option>
-                                    <option value="Baptis Dewasa (Adultus)">Baptis Dewasa (Adultus)</option>
-                                    <option value="Receptio (Penerimaan ke Katolik)">Receptio (Penerimaan ke Katolik)</option>
-                                </select>
+                                <SearchableSelect
+                                    v-model="form.jenis_penerimaan_baptis"
+                                    :options="jenisPenerimaanBaptisOptions"
+                                    valueKey="id"
+                                    labelKey="name"
+                                    placeholder="Pilih jenis penerimaan..."
+                                    searchPlaceholder="Cari jenis..."
+                                    icon="fa-certificate"
+                                    iconColor="text-indigo-600"
+                                />
                             </div>
                         </div>
                     </div>

@@ -20,11 +20,144 @@ const props = defineProps({
     kubList: { type: Array, default: () => [] },
     kapelaList: { type: Array, default: () => [] },
     parokiList: { type: Array, default: () => [] },
+    pastorList: { type: Array, default: () => [] },
     provinsiList: { type: Array, default: () => [] },
     kabupatenList: { type: Array, default: () => [] },
     kecamatanList: { type: Array, default: () => [] },
     desaList: { type: Array, default: () => [] },
     civilRegion: { type: Object, default: () => ({}) },
+});
+
+const pekerjaanOptions = [
+    { id: 'PNS / ASN', name: 'PNS / ASN' },
+    { id: 'TNI / Polri', name: 'TNI / Polri' },
+    { id: 'Karyawan Swasta', name: 'Karyawan Swasta' },
+    { id: 'Wiraswasta / Pedagang', name: 'Wiraswasta / Pedagang' },
+    { id: 'Petani / Pekebun', name: 'Petani / Pekebun' },
+    { id: 'Peternak', name: 'Peternak' },
+    { id: 'Nelayan', name: 'Nelayan' },
+    { id: 'Guru / Dosen', name: 'Guru / Dosen' },
+    { id: 'Tenaga Medis / Perawat / Dokter', name: 'Tenaga Medis / Perawat / Dokter' },
+    { id: 'Tukang / Buruh Bangunan', name: 'Tukang / Buruh Bangunan' },
+    { id: 'Pelajar / Mahasiswa', name: 'Pelajar / Mahasiswa' },
+    { id: 'Ibu Rumah Tangga', name: 'Ibu Rumah Tangga' },
+    { id: 'Pensiunan', name: 'Pensiunan' },
+    { id: 'Belum / Tidak Bekerja', name: 'Belum / Tidak Bekerja' },
+    { id: 'Lainnya', name: 'Lainnya' },
+];
+
+const pendidikanOptions = [
+    { id: 'Tidak / Belum Sekolah', name: 'Tidak / Belum Sekolah' },
+    { id: 'SD / Sederajat', name: 'SD / Sederajat' },
+    { id: 'SMP / Sederajat', name: 'SMP / Sederajat' },
+    { id: 'SMA / SMK / Sederajat', name: 'SMA / SMK / Sederajat' },
+    { id: 'Diploma (D1-D3)', name: 'Diploma (D1-D3)' },
+    { id: 'Sarjana (S1)', name: 'Sarjana (S1)' },
+    { id: 'Magister (S2)', name: 'Magister (S2)' },
+    { id: 'Doktoral (S3)', name: 'Doktoral (S3)' },
+];
+
+const golonganDarahOptions = [
+    { id: 'A', name: 'A' },
+    { id: 'B', name: 'B' },
+    { id: 'AB', name: 'AB' },
+    { id: 'O', name: 'O' },
+    { id: 'Tidak Tahu', name: 'Tidak Tahu' },
+];
+
+const penghasilanOptions = [
+    { id: '< Rp 1.000.000', name: '< Rp 1.000.000' },
+    { id: 'Rp 1.000.000 - Rp 2.500.000', name: 'Rp 1.000.000 - Rp 2.500.000' },
+    { id: 'Rp 2.500.000 - Rp 5.000.000', name: 'Rp 2.500.000 - Rp 5.000.000' },
+    { id: 'Rp 5.000.000 - Rp 10.000.000', name: 'Rp 5.000.000 - Rp 10.000.000' },
+    { id: '> Rp 10.000.000', name: '> Rp 10.000.000' },
+];
+
+const kepemilikanRumahOptions = [
+    { id: 'Milik Sendiri', name: 'Milik Sendiri' },
+    { id: 'Sewa / Kontrak', name: 'Sewa / Kontrak' },
+    { id: 'Ikut Orang Tua / Menumpang', name: 'Ikut Orang Tua / Menumpang' },
+    { id: 'Rumah Dinas / Pastoran / Biara', name: 'Rumah Dinas / Pastoran / Biara' },
+];
+
+const kategoriEkonomiOptions = [
+    { id: 'Sejahtera / Mandiri', name: 'Sejahtera / Mandiri' },
+    { id: 'Pra-Sejahtera / Membutuhkan Bantuan', name: 'Pra-Sejahtera / Membutuhkan Bantuan' },
+    { id: 'Rentan Ekonomi', name: 'Rentan Ekonomi' },
+    { id: 'Mampu', name: 'Mampu' },
+];
+
+const statusBaptisOptions = [
+    { id: 'Sudah', name: 'Sudah Baptis' },
+    { id: 'Belum', name: 'Belum / Katekumen' },
+];
+
+const jenisPenerimaanBaptisOptions = [
+    { id: 'Baptis Bayi (Infantis)', name: 'Baptis Bayi (Infantis)' },
+    { id: 'Baptis Dewasa (Adultus)', name: 'Baptis Dewasa (Adultus)' },
+    { id: 'Receptio (Penerimaan)', name: 'Receptio (Penerimaan)' },
+];
+
+const disabilitasOptions = [
+    { id: 'Tidak Ada', name: 'Tidak Ada' },
+    { id: 'Rungu / Wicara', name: 'Rungu / Wicara' },
+    { id: 'Netra', name: 'Netra' },
+    { id: 'Daksa / Fisik', name: 'Daksa / Fisik' },
+    { id: 'Mental', name: 'Mental' },
+    { id: 'Lansia Perawatan', name: 'Lansia Perawatan' },
+    { id: 'Lainnya', name: 'Lainnya' },
+];
+
+const hubunganKeluargaOptions = [
+    { id: 'Kepala Keluarga', name: 'Kepala Keluarga' },
+    { id: 'Istri', name: 'Istri' },
+    { id: 'Suami', name: 'Suami' },
+    { id: 'Anak Kandung', name: 'Anak Kandung' },
+    { id: 'Anak Angkat', name: 'Anak Angkat' },
+    { id: 'Orang Tua', name: 'Orang Tua' },
+    { id: 'Mertua', name: 'Mertua' },
+    { id: 'Menantu', name: 'Menantu' },
+    { id: 'Cucu', name: 'Cucu' },
+    { id: 'Lainnya', name: 'Lainnya' },
+];
+
+const sukuEtnisOptions = [
+    { id: 'Timor / Dawan', name: 'Timor / Dawan' },
+    { id: 'Rote', name: 'Rote' },
+    { id: 'Sabu', name: 'Sabu' },
+    { id: 'Flores / Manggarai', name: 'Flores / Manggarai' },
+    { id: 'Sumba', name: 'Sumba' },
+    { id: 'Jawa', name: 'Jawa' },
+    { id: 'Tionghoa', name: 'Tionghoa' },
+    { id: 'Lainnya', name: 'Lainnya' },
+];
+
+const agamaAsalOptions = [
+    { id: 'Katolik sejak lahir', name: 'Katolik sejak lahir' },
+    { id: 'Katekumen', name: 'Katekumen' },
+    { id: 'Protestan', name: 'Protestan' },
+    { id: 'Islam', name: 'Islam' },
+    { id: 'Hindu', name: 'Hindu' },
+    { id: 'Budha', name: 'Budha' },
+    { id: 'Lainnya', name: 'Lainnya' },
+];
+
+const parokiSelectOptions = computed(() => {
+    const list = (props.parokiList || []).map(p => ({
+        id: p.nama_paroki || p.nama || p.id_paroki,
+        name: p.nama_paroki || p.nama || p.id_paroki,
+    }));
+    if (props.namaParoki && !list.some(p => p.id === props.namaParoki)) {
+        list.unshift({ id: props.namaParoki, name: props.namaParoki });
+    }
+    return list;
+});
+
+const pastorSelectOptions = computed(() => {
+    return (props.pastorList || []).map(p => ({
+        id: p.nama_pastor || p.name || p.id,
+        name: p.nama_pastor ? `${p.nama_pastor} (${p.jabatan || 'Pastor'})` : (p.name || p.id),
+    }));
 });
 
 const basePrefix = computed(() => `/${props.prefix}`);
@@ -660,27 +793,16 @@ const submitForm = () => {
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
                                 Pekerjaan / Profesi Kepala Keluarga
                             </label>
-                            <select
+                            <SearchableSelect
                                 v-model="form.pekerjaan"
-                                class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition cursor-pointer"
-                            >
-                                <option value="">-- Pilih Pekerjaan --</option>
-                                <option value="PNS / ASN">PNS / ASN</option>
-                                <option value="TNI / Polri">TNI / Polri</option>
-                                <option value="Karyawan Swasta">Karyawan Swasta</option>
-                                <option value="Wiraswasta / Pedagang">Wiraswasta / Pedagang</option>
-                                <option value="Petani / Pekebun">Petani / Pekebun</option>
-                                <option value="Peternak">Peternak</option>
-                                <option value="Nelayan">Nelayan</option>
-                                <option value="Guru / Dosen">Guru / Dosen</option>
-                                <option value="Tenaga Medis / Perawat / Dokter">Tenaga Medis / Perawat / Dokter</option>
-                                <option value="Tukang / Buruh Bangunan">Tukang / Buruh Bangunan</option>
-                                <option value="Pelajar / Mahasiswa">Pelajar / Mahasiswa</option>
-                                <option value="Ibu Rumah Tangga">Ibu Rumah Tangga</option>
-                                <option value="Pensiunan">Pensiunan</option>
-                                <option value="Belum / Tidak Bekerja">Belum / Tidak Bekerja</option>
-                                <option value="Lainnya">Lainnya</option>
-                            </select>
+                                :options="pekerjaanOptions"
+                                value-key="id"
+                                label-key="name"
+                                placeholder="-- Pilih Pekerjaan --"
+                                search-placeholder="Ketik cari pekerjaan..."
+                                icon="fa-briefcase"
+                                icon-color="text-emerald-600"
+                            />
                         </div>
 
                         <!-- Pendidikan Terakhir -->
@@ -688,20 +810,16 @@ const submitForm = () => {
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
                                 Pendidikan Terakhir
                             </label>
-                            <select
+                            <SearchableSelect
                                 v-model="form.pendidikan"
-                                class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition cursor-pointer"
-                            >
-                                <option value="">-- Pilih Pendidikan --</option>
-                                <option value="Tidak / Belum Sekolah">Tidak / Belum Sekolah</option>
-                                <option value="SD / Sederajat">SD / Sederajat</option>
-                                <option value="SMP / Sederajat">SMP / Sederajat</option>
-                                <option value="SMA / SMK / Sederajat">SMA / SMK / Sederajat</option>
-                                <option value="Diploma (D1-D3)">Diploma (D1-D3)</option>
-                                <option value="Sarjana (S1)">Sarjana (S1)</option>
-                                <option value="Magister (S2)">Magister (S2)</option>
-                                <option value="Doktoral (S3)">Doktoral (S3)</option>
-                            </select>
+                                :options="pendidikanOptions"
+                                value-key="id"
+                                label-key="name"
+                                placeholder="-- Pilih Pendidikan --"
+                                search-placeholder="Ketik cari jenjang pendidikan..."
+                                icon="fa-graduation-cap"
+                                icon-color="text-blue-600"
+                            />
                         </div>
 
                         <!-- Golongan Darah -->
@@ -709,17 +827,16 @@ const submitForm = () => {
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
                                 Golongan Darah
                             </label>
-                            <select
+                            <SearchableSelect
                                 v-model="form.golongan_darah"
-                                class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition cursor-pointer"
-                            >
-                                <option value="">-- Pilih Golongan Darah --</option>
-                                <option value="A">A</option>
-                                <option value="B">B</option>
-                                <option value="AB">AB</option>
-                                <option value="O">O</option>
-                                <option value="Tidak Tahu">Tidak Tahu</option>
-                            </select>
+                                :options="golonganDarahOptions"
+                                value-key="id"
+                                label-key="name"
+                                placeholder="-- Pilih Golongan Darah --"
+                                search-placeholder="Ketik cari golongan darah..."
+                                icon="fa-droplet"
+                                icon-color="text-rose-600"
+                            />
                         </div>
 
                         <!-- Penghasilan / Ekonomi -->
@@ -727,17 +844,16 @@ const submitForm = () => {
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
                                 Penghasilan / Ekonomi
                             </label>
-                            <select
+                            <SearchableSelect
                                 v-model="form.penghasilan"
-                                class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition cursor-pointer"
-                            >
-                                <option value="">-- Pilih Rentang Penghasilan --</option>
-                                <option value="< Rp 1.000.000">&lt; Rp 1.000.000</option>
-                                <option value="Rp 1.000.000 - Rp 3.000.000">Rp 1.000.000 - Rp 3.000.000</option>
-                                <option value="Rp 3.000.000 - Rp 5.000.000">Rp 3.000.000 - Rp 5.000.000</option>
-                                <option value="Rp 5.000.000 - Rp 10.000.000">Rp 5.000.000 - Rp 10.000.000</option>
-                                <option value="> Rp 10.000.000">&gt; Rp 10.000.000</option>
-                            </select>
+                                :options="penghasilanOptions"
+                                value-key="id"
+                                label-key="name"
+                                placeholder="-- Pilih Rentang Penghasilan --"
+                                search-placeholder="Ketik cari rentang penghasilan..."
+                                icon="fa-money-bill-wave"
+                                icon-color="text-amber-600"
+                            />
                         </div>
 
                         <!-- Status Kepemilikan Rumah -->
@@ -745,15 +861,16 @@ const submitForm = () => {
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
                                 Status Kepemilikan Rumah
                             </label>
-                            <select
+                            <SearchableSelect
                                 v-model="form.status_kepemilikan_rumah"
-                                class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition cursor-pointer"
-                            >
-                                <option value="Milik Sendiri">Milik Sendiri</option>
-                                <option value="Sewa / Kontrak">Sewa / Kontrak</option>
-                                <option value="Ikut Orang Tua">Ikut Orang Tua</option>
-                                <option value="Rumah Dinas">Rumah Dinas</option>
-                            </select>
+                                :options="kepemilikanRumahOptions"
+                                value-key="id"
+                                label-key="name"
+                                placeholder="-- Pilih Status Kepemilikan Rumah --"
+                                search-placeholder="Ketik cari status rumah..."
+                                icon="fa-house"
+                                icon-color="text-indigo-600"
+                            />
                         </div>
 
                         <!-- Kategori Ekonomi Pastoral -->
@@ -761,14 +878,16 @@ const submitForm = () => {
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
                                 Kategori Ekonomi Pastoral
                             </label>
-                            <select
+                            <SearchableSelect
                                 v-model="form.kategori_ekonomi"
-                                class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition cursor-pointer"
-                            >
-                                <option value="Prasejahtera">Prasejahtera</option>
-                                <option value="Sejahtera / Mandiri">Sejahtera / Mandiri</option>
-                                <option value="Mampu">Mampu</option>
-                            </select>
+                                :options="kategoriEkonomiOptions"
+                                value-key="id"
+                                label-key="name"
+                                placeholder="-- Pilih Kategori Ekonomi --"
+                                search-placeholder="Ketik cari kategori ekonomi..."
+                                icon="fa-hand-holding-heart"
+                                icon-color="text-teal-600"
+                            />
                         </div>
 
                         <!-- Bantuan Pastoral Khusus -->
@@ -967,21 +1086,16 @@ const submitForm = () => {
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Hubungan Keluarga</label>
-                                        <select
+                                        <SearchableSelect
                                             v-model="member.hubungan_keluarga"
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
-                                        >
-                                            <option value="Kepala Keluarga">Kepala Keluarga</option>
-                                            <option value="Istri">Istri</option>
-                                            <option value="Suami">Suami</option>
-                                            <option value="Anak Kandung">Anak Kandung</option>
-                                            <option value="Anak Angkat">Anak Angkat</option>
-                                            <option value="Orang Tua">Orang Tua</option>
-                                            <option value="Mertua">Mertua</option>
-                                            <option value="Menantu">Menantu</option>
-                                            <option value="Cucu">Cucu</option>
-                                            <option value="Lainnya">Lainnya</option>
-                                        </select>
+                                            :options="hubunganKeluargaOptions"
+                                            value-key="id"
+                                            label-key="name"
+                                            placeholder="Pilih hubungan..."
+                                            search-placeholder="Cari kedudukan..."
+                                            icon="fa-people-roof"
+                                            icon-color="text-blue-600"
+                                        />
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">NIK (16 Digit)</label>
@@ -1023,19 +1137,16 @@ const submitForm = () => {
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Suku / Etnis</label>
-                                        <select
+                                        <SearchableSelect
                                             v-model="member.suku_etnis"
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
-                                        >
-                                            <option value="Timor / Dawan">Timor / Dawan</option>
-                                            <option value="Rote">Rote</option>
-                                            <option value="Sabu">Sabu</option>
-                                            <option value="Flores / Manggarai">Flores / Manggarai</option>
-                                            <option value="Sumba">Sumba</option>
-                                            <option value="Jawa">Jawa</option>
-                                            <option value="Tionghoa">Tionghoa</option>
-                                            <option value="Lainnya">Lainnya</option>
-                                        </select>
+                                            :options="sukuEtnisOptions"
+                                            value-key="id"
+                                            label-key="name"
+                                            placeholder="Pilih suku / etnis..."
+                                            search-placeholder="Cari suku..."
+                                            icon="fa-users-line"
+                                            icon-color="text-indigo-600"
+                                        />
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Tempat Lahir</label>
@@ -1061,18 +1172,16 @@ const submitForm = () => {
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Agama Asal</label>
-                                        <select
+                                        <SearchableSelect
                                             v-model="member.agama_asal"
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
-                                        >
-                                            <option value="Katolik sejak lahir">Katolik sejak lahir</option>
-                                            <option value="Katekumen">Katekumen</option>
-                                            <option value="Protestan">Protestan</option>
-                                            <option value="Islam">Islam</option>
-                                            <option value="Hindu">Hindu</option>
-                                            <option value="Budha">Budha</option>
-                                            <option value="Lainnya">Lainnya</option>
-                                        </select>
+                                            :options="agamaAsalOptions"
+                                            value-key="id"
+                                            label-key="name"
+                                            placeholder="Pilih agama asal..."
+                                            search-placeholder="Cari agama..."
+                                            icon="fa-hands-praying"
+                                            icon-color="text-amber-600"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -1086,35 +1195,29 @@ const submitForm = () => {
                                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Pendidikan</label>
-                                        <select
+                                        <SearchableSelect
                                             v-model="member.pendidikan"
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
-                                        >
-                                            <option value="Tidak / Belum Sekolah">Tidak / Belum Sekolah</option>
-                                            <option value="SD">SD</option>
-                                            <option value="SMP">SMP</option>
-                                            <option value="SMA / SMK">SMA / SMK</option>
-                                            <option value="D1-D3">D1-D3</option>
-                                            <option value="S1">S1</option>
-                                            <option value="S2 / S3">S2 / S3</option>
-                                        </select>
+                                            :options="pendidikanOptions"
+                                            value-key="id"
+                                            label-key="name"
+                                            placeholder="-- Pilih Pendidikan --"
+                                            search-placeholder="Cari jenjang pendidikan..."
+                                            icon="fa-graduation-cap"
+                                            icon-color="text-blue-600"
+                                        />
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Pekerjaan</label>
-                                        <select
+                                        <SearchableSelect
                                             v-model="member.pekerjaan"
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
-                                        >
-                                            <option value="PNS / TNI / Polri">PNS / TNI / Polri</option>
-                                            <option value="Swasta">Swasta</option>
-                                            <option value="Wiraswasta">Wiraswasta</option>
-                                            <option value="Petani / Peternak">Petani / Peternak</option>
-                                            <option value="Pelajar / Mahasiswa">Pelajar / Mahasiswa</option>
-                                            <option value="IRT">IRT (Ibu Rumah Tangga)</option>
-                                            <option value="Pensiunan">Pensiunan</option>
-                                            <option value="Belum / Tidak Bekerja">Belum / Tidak Bekerja</option>
-                                            <option value="Lainnya">Lainnya</option>
-                                        </select>
+                                            :options="pekerjaanOptions"
+                                            value-key="id"
+                                            label-key="name"
+                                            placeholder="-- Pilih Pekerjaan --"
+                                            search-placeholder="Cari profesi / pekerjaan..."
+                                            icon="fa-briefcase"
+                                            icon-color="text-emerald-600"
+                                        />
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Talenta / Keahlian Paroki</label>
@@ -1122,22 +1225,21 @@ const submitForm = () => {
                                             v-model="member.talenta"
                                             type="text"
                                             placeholder="Contoh: Organis, Lektor, Paduan Suara, Tukang..."
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+                                            class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 font-medium"
                                         />
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Disabilitas / Khusus</label>
-                                        <select
+                                        <SearchableSelect
                                             v-model="member.disabilitas"
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
-                                        >
-                                            <option value="Tidak Ada">Tidak Ada</option>
-                                            <option value="Rungu / Wicara">Rungu / Wicara</option>
-                                            <option value="Netra">Netra</option>
-                                            <option value="Daksa / Fisik">Daksa / Fisik</option>
-                                            <option value="Mental">Mental</option>
-                                            <option value="Lansia Perawatan">Lansia Perawatan</option>
-                                        </select>
+                                            :options="disabilitasOptions"
+                                            value-key="id"
+                                            label-key="name"
+                                            placeholder="-- Pilih Kebutuhan Khusus --"
+                                            search-placeholder="Cari opsi..."
+                                            icon="fa-wheelchair"
+                                            icon-color="text-teal-600"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -1151,40 +1253,47 @@ const submitForm = () => {
                                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Status Baptis</label>
-                                        <select
+                                        <SearchableSelect
                                             v-model="member.status_baptis"
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
-                                        >
-                                            <option value="Sudah">Sudah Baptis</option>
-                                            <option value="Belum">Belum / Katekumen</option>
-                                        </select>
+                                            :options="statusBaptisOptions"
+                                            value-key="id"
+                                            label-key="name"
+                                            placeholder="-- Pilih Status Baptis --"
+                                            icon="fa-water"
+                                            icon-color="text-sky-600"
+                                        />
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Jenis Penerimaan</label>
-                                        <select
+                                        <SearchableSelect
                                             v-model="member.jenis_penerimaan_baptis"
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
-                                        >
-                                            <option value="Baptis Bayi (Infantis)">Baptis Bayi (Infantis)</option>
-                                            <option value="Baptis Dewasa (Adultus)">Baptis Dewasa (Adultus)</option>
-                                            <option value="Receptio">Receptio (Penerimaan)</option>
-                                        </select>
+                                            :options="jenisPenerimaanBaptisOptions"
+                                            value-key="id"
+                                            label-key="name"
+                                            placeholder="-- Pilih Jenis Penerimaan --"
+                                            icon="fa-certificate"
+                                            icon-color="text-indigo-600"
+                                        />
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Tanggal Baptis</label>
                                         <input
                                             v-model="member.tgl_baptis"
                                             type="date"
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+                                            class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 font-medium"
                                         />
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Paroki Tempat Baptis</label>
-                                        <input
+                                        <SearchableSelect
                                             v-model="member.paroki_baptis"
-                                            type="text"
-                                            placeholder="Nama paroki..."
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+                                            :options="parokiSelectOptions"
+                                            value-key="id"
+                                            label-key="name"
+                                            placeholder="Pilih / ketik nama paroki..."
+                                            search-placeholder="Cari nama paroki..."
+                                            icon="fa-church"
+                                            icon-color="text-blue-600"
                                         />
                                     </div>
                                     <div>
@@ -1192,25 +1301,33 @@ const submitForm = () => {
                                         <input
                                             v-model="member.tgl_komuni_1"
                                             type="date"
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+                                            class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 font-medium"
                                         />
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Paroki Komuni Pertama</label>
-                                        <input
+                                        <SearchableSelect
                                             v-model="member.paroki_komuni_1"
-                                            type="text"
+                                            :options="parokiSelectOptions"
+                                            value-key="id"
+                                            label-key="name"
                                             placeholder="Paroki Komuni 1..."
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+                                            search-placeholder="Cari nama paroki..."
+                                            icon="fa-bread-slice"
+                                            icon-color="text-amber-600"
                                         />
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Pastor Pembaptis</label>
-                                        <input
+                                        <SearchableSelect
                                             v-model="member.pastor_baptis"
-                                            type="text"
+                                            :options="pastorSelectOptions"
+                                            value-key="id"
+                                            label-key="name"
                                             placeholder="Rm. Pembaptis..."
-                                            class="w-full px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
+                                            search-placeholder="Cari nama pastor..."
+                                            icon="fa-user-tie"
+                                            icon-color="text-purple-600"
                                         />
                                     </div>
                                     <div>
