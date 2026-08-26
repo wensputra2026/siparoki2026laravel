@@ -277,9 +277,75 @@ Bagi paroki yang menggunakan shared hosting biasa tanpa akses Git/SSH:
 
 ---
 
-### 💻 Metode 3: Instalasi Manual via Terminal / VPS Linux (Untuk Pengembang)
+### 🐧 Metode 3: Panduan Instalasi di VPS aaPanel (Linux / Nginx / OpenLiteSpeed / Apache)
 
-Untuk instalasi di server VPS (Ubuntu / Debian / CentOS / Nginx / Apache):
+Bagi paroki yang mengelola server VPS sendiri menggunakan **aaPanel** (Control Panel VPS grafis yang ringan & populer):
+
+#### Langkah 1: Persiapan Environment & PHP di aaPanel App Store
+1. Masuk ke **Dashboard aaPanel VPS** Anda (`http://IP-SERVER:8888`).
+2. Buka menu **App Store** di bilah navigasi kiri.
+3. Pastikan komponen berikut sudah terpasang:
+   - **Nginx** (versi 1.22+ atau versi OpenLiteSpeed/Apache).
+   - **MySQL** (versi 5.7 atau 8.0) atau **MariaDB**.
+   - **PHP-8.2** atau **PHP-8.3**.
+4. Klik **Setting** pada `PHP-8.2` (atau `PHP-8.3`):
+   - 📦 **Tab "Install extensions"**: Install ekstensi `fileinfo`, `opcache`, `redis` (opsional), dan `exif`.
+   - ⚙️ **Tab "Disabled functions"**: Hapus fungsi `putenv`, `proc_open`, `pcntl_signal`, dan `symlink` dari daftar agar Laravel & Composer dapat berjalan normal tanpa batasan.
+   - 🔄 Klik **Restart** pada PHP service.
+
+#### Langkah 2: Tambahkan Website Baru di aaPanel
+1. Buka menu **Website** &rarr; Klik tombol **Add site**.
+2. Masukkan nama domain paroki Anda di kolom **Domain** (contoh: `paroki-anda.org` dan `www.paroki-anda.org`).
+3. Pada opsi **Database**, pilih **MySQL**:
+   - aaPanel akan otomatis membuatkan nama database dan kata sandi acak. Catat kredensial ini untuk installer.
+4. Pada opsi **PHP Version**, pilih **PHP-82** (atau **PHP-83**).
+5. Klik **Submit**.
+
+#### Langkah 3: Deploy Kode Sumber SIPAROKI
+1. Masuk ke folder website yang baru dibuat: `/www/wwwroot/paroki-anda.org`.
+2. Buka menu **Terminal** di aaPanel (atau via SSH) dan jalankan:
+   ```bash
+   cd /www/wwwroot/paroki-anda.org
+   # Hapus file default index.html 404.html jika ada
+   rm -f index.html 404.html .user.ini
+   # Klon repositori SIPAROKI
+   git clone https://github.com/wensputra2026/siparoki2026laravel.git .
+   ```
+
+#### Langkah 4: Pengaturan Running Directory & URL Rewrite Laravel di aaPanel
+1. Di menu **Website** aaPanel &rarr; Klik nama domain website paroki Anda.
+2. Buka tab **Site directory**:
+   - Ubah **Running directory** dari `/` menjadi **/public**.
+   - Klik **Save**.
+3. Buka tab **URL rewrite**:
+   - Pilih preset template **laravel5** dari dropdown (aaPanel otomatis mengisi aturan `try_files $uri $uri/ /index.php?$query_string;`).
+   - Klik **Save**.
+
+#### Langkah 5: Atur Hak Akses Folder (Permissions)
+Buka menu **Terminal** aaPanel dan jalankan perintah izin folder Laravel:
+```bash
+cd /www/wwwroot/paroki-anda.org
+chown -R www:www storage bootstrap/cache public/uploads
+chmod -R 775 storage bootstrap/cache public/uploads
+```
+
+#### Langkah 6: Pasang SSL Gratis (HTTPS)
+1. Di jendela pengaturan website aaPanel &rarr; Buka tab **SSL**.
+2. Pilih tab **Let's Encrypt** &rarr; Centang domain paroki Anda.
+3. Klik **Apply**. Setelah berhasil terbit, aktifkan toggle **Force HTTPS** (Otomatis mengalihkan seluruh lalu lintas HTTP ke HTTPS).
+
+#### Langkah 7: Jalankan Web Installer Wizard
+1. Buka browser Anda: `https://paroki-anda.org/installer` (atau `https://paroki-anda.org/install.php`).
+2. Masukkan kredensial database yang didapatkan pada Langkah 2.
+3. Pilih Keuskupan, Dekenat, dan Paroki Anda dari master data 39 Keuskupan KWI.
+4. Masukkan akun Super Administrator paroki Anda.
+5. Klik **Mulai Instalasi Sekarang**. Website paroki siap online dan dapat diakses publik!
+
+---
+
+### 💻 Metode 4: Instalasi Manual via Terminal / VPS Linux (Untuk Pengembang)
+
+Untuk instalasi di server VPS murni tanpa control panel (Ubuntu / Debian / CentOS / Nginx / Apache):
 
 1. **Klon Repositori**:
    ```bash
