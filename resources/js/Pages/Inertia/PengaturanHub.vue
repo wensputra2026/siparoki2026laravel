@@ -8,6 +8,8 @@ const props = defineProps({
     prefix: { type: String, default: 'superadmin' },
     initialTab: { type: String, default: 'pembayaran' },
     metodePembayaran: { type: Array, default: () => [] },
+    pengaturanMidtrans: { type: Object, default: () => ({}) },
+    webhookUrl: { type: String, default: '' },
     pengaturanOtp: { type: Object, default: () => ({}) },
     sliders: { type: Array, default: () => [] },
     pengaturanAplikasi: { type: Object, default: () => ({}) },
@@ -81,6 +83,144 @@ const deletePayment = (item) => {
         router.post(`/${props.prefix}/pengaturan/pembayaran/${item.id}/delete`, {}, {
             preserveScroll: true,
         });
+    }
+};
+
+// Midtrans Payment Gateway Form & Logic
+const showServerKey = ref(false);
+const showClientKey = ref(false);
+const isTestingMidtrans = ref(false);
+const isTestingSnap = ref(false);
+const copiedWebhook = ref(false);
+
+const midtransForm = useForm({
+    is_active: Boolean(props.pengaturanMidtrans?.is_active),
+    is_production: Boolean(props.pengaturanMidtrans?.is_production),
+    merchant_id: props.pengaturanMidtrans?.merchant_id || '',
+    client_key: props.pengaturanMidtrans?.client_key || '',
+    server_key: props.pengaturanMidtrans?.server_key || '',
+    enable_qris: props.pengaturanMidtrans ? Boolean(props.pengaturanMidtrans.enable_qris) : true,
+    enable_va: props.pengaturanMidtrans ? Boolean(props.pengaturanMidtrans.enable_va) : true,
+    enable_gopay: props.pengaturanMidtrans ? Boolean(props.pengaturanMidtrans.enable_gopay) : true,
+    enable_credit_card: Boolean(props.pengaturanMidtrans?.enable_credit_card),
+    enable_cstore: Boolean(props.pengaturanMidtrans?.enable_cstore),
+    custom_expiry_duration: props.pengaturanMidtrans?.custom_expiry_duration || 60,
+    keterangan: props.pengaturanMidtrans?.keterangan || 'Konfigurasi Midtrans Snap SIPAROKI',
+});
+
+const submitMidtrans = () => {
+    midtransForm.post(`/${props.prefix}/pengaturan/midtrans/save`, {
+        preserveScroll: true,
+    });
+};
+
+const testMidtransConnection = () => {
+    if (!midtransForm.server_key) {
+        alert('Silakan masukkan Server Key terlebih dahulu.');
+        return;
+    }
+    isTestingMidtrans.value = true;
+    router.post(`/${props.prefix}/pengaturan/midtrans/test`, {
+        server_key: midtransForm.server_key,
+        is_production: midtransForm.is_production,
+    }, {
+        preserveScroll: true,
+        onFinish: () => {
+            isTestingMidtrans.value = false;
+        },
+    });
+};
+
+const copyWebhookUrl = () => {
+    const url = props.webhookUrl || `${window.location.origin}/midtrans/callback`;
+    navigator.clipboard.writeText(url).then(() => {
+        copiedWebhook.value = true;
+        setTimeout(() => {
+            copiedWebhook.value = false;
+        }, 3000);
+    }).catch(() => {
+        alert('Gagal menyalin URL Webhook. Silakan salin secara manual.');
+    });
+};
+
+const loadSnapScript = (clientKey, isProd) => {
+    return new Promise((resolve, reject) => {
+        const scriptId = 'midtrans-snap-script';
+        const existing = document.getElementById(scriptId);
+        if (existing) {
+            existing.remove();
+        }
+        const snapUrl = isProd
+            ? 'https://app.midtrans.com/snap/snap.js'
+            : 'https://app.sandbox.midtrans.com/snap/snap.js';
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = snapUrl;
+        if (clientKey) {
+            script.setAttribute('data-client-key', clientKey);
+        }
+        script.onload = () => resolve(window.snap);
+        script.onerror = () => reject(new Error('Gagal memuat script Midtrans Snap.js dari server Midtrans.'));
+        document.head.appendChild(script);
+    });
+};
+
+const runSnapSimulation = async () => {
+    if (!midtransForm.server_key) {
+        alert('Silakan isi Server Key terlebih dahulu untuk melakukan simulasi transaksi Snap.');
+        return;
+    }
+    isTestingSnap.value = true;
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const response = await fetch('/midtrans/snap-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({
+                gross_amount: 10000,
+                tipe_transaksi: 'uji_coba',
+                customer_name: 'Umat Simulasi Sandbox',
+                customer_email: 'simulasi@siparoki.id',
+                customer_phone: '081234567890',
+                item_name: 'Simulasi Persembahan Uji Coba Snap Rp 10.000',
+            }),
+        });
+
+        const data = await response.json();
+        if (!data.success || !data.snap_token) {
+            alert(data.message || 'Gagal menghasilkan token Midtrans Snap.');
+            isTestingSnap.value = false;
+            return;
+        }
+
+        await loadSnapScript(data.client_key || midtransForm.client_key, data.is_production);
+
+        if (window.snap) {
+            window.snap.pay(data.snap_token, {
+                onSuccess: function (result) {
+                    alert('🎉 Pembayaran Simulasi Sukses! (Status: Settlement)');
+                },
+                onPending: function (result) {
+                    alert('⏳ Transaksi Simulasi Dibuat (Status: Pending). Nomor VA / QRIS siap digunakan.');
+                },
+                onError: function (result) {
+                    alert('❌ Transaksi Simulasi Ditolak / Gagal.');
+                },
+                onClose: function () {
+                    console.log('Pengguna menutup popup Snap sebelum selesai.');
+                },
+            });
+        } else {
+            alert('Gagal menginisialisasi modal window.snap.');
+        }
+    } catch (err) {
+        alert('Terjadi kesalahan koneksi simulasi: ' + err.message);
+    } finally {
+        isTestingSnap.value = false;
     }
 };
 
@@ -310,6 +450,20 @@ const getYoutubeEmbed = (url) => {
             <!-- 2. TAB NAVIGATION (Consistent with Statistik & GenericModule) -->
             <div class="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200/80">
                 <button
+                    @click="activeTab = 'midtrans'"
+                    :class="[
+                        'px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
+                        activeTab === 'midtrans'
+                            ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
+                            : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+                    ]"
+                >
+                    <i class="fa-solid fa-bolt text-amber-400"></i>
+                    <span>Midtrans Gateway</span>
+                    <span v-if="midtransForm.is_active" class="px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider">Aktif</span>
+                </button>
+
+                <button
                     @click="activeTab = 'pembayaran'"
                     :class="[
                         'px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
@@ -319,7 +473,7 @@ const getYoutubeEmbed = (url) => {
                     ]"
                 >
                     <i class="fa-solid fa-credit-card"></i>
-                    <span>Pembayaran &amp; QRIS</span>
+                    <span>Rekening &amp; QRIS Manual</span>
                 </button>
 
                 <button
@@ -409,6 +563,330 @@ const getYoutubeEmbed = (url) => {
                     <i class="fa-solid fa-sliders text-amber-300"></i>
                     <span>Setup Paroki Wizard</span>
                 </Link>
+            </div>
+
+            <!-- Tab Midtrans: Midtrans Snap Payment Gateway -->
+            <div v-show="activeTab === 'midtrans'" class="space-y-6">
+                <!-- Header Banner Card -->
+                <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 border border-indigo-900/50 shadow-xl text-white relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="space-y-2">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold border border-indigo-400/30">
+                                <i class="fa-solid fa-bolt text-amber-400"></i>
+                                <span>Multi-Payment Gateway Otomatis</span>
+                            </div>
+                            <h2 class="text-xl sm:text-2xl font-black">
+                                Integrasi Midtrans Snap
+                            </h2>
+                            <p class="text-slate-300 text-xs max-w-2xl leading-relaxed">
+                                Satu integrasi untuk menerima pembayaran persembahan, iuran, donasi, dan intensi misa secara real-time melalui QRIS Dinamis, Virtual Account Bank (BCA, Mandiri, BNI, BRI, Permata), E-Wallet, dan Gerai Minimarket dengan verifikasi webhook otomatis.
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 text-white text-xs font-bold border border-white/20 backdrop-blur-md">
+                                <i class="fa-solid fa-qrcode text-amber-400"></i> QRIS Dinamis
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 text-white text-xs font-bold border border-white/20 backdrop-blur-md">
+                                <i class="fa-solid fa-building-columns text-sky-400"></i> Virtual Account
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 text-white text-xs font-bold border border-white/20 backdrop-blur-md">
+                                <i class="fa-solid fa-wallet text-emerald-400"></i> E-Wallet
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left: Form Konfigurasi -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <form @submit.prevent="submitMidtrans" class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-6">
+                            <!-- Toggle Status & Environment -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
+                                        Status Layanan Gateway
+                                    </label>
+                                    <div class="flex items-center gap-3">
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" v-model="midtransForm.is_active" class="sr-only peer">
+                                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-600"></div>
+                                        </label>
+                                        <span :class="['text-xs font-bold', midtransForm.is_active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400']">
+                                            {{ midtransForm.is_active ? 'Aktif (Menerima Pembayaran)' : 'Nonaktif (Hanya Manual)' }}
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-1">
+                                        Jika aktif, opsi bayar online Midtrans akan otomatis muncul saat umat checkout.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
+                                        Mode Lingkungan (Environment)
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            @click="midtransForm.is_production = false"
+                                            :class="[
+                                                'px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5',
+                                                !midtransForm.is_production
+                                                    ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/30'
+                                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300'
+                                            ]"
+                                        >
+                                            <i class="fa-solid fa-flask"></i> Sandbox (Uji Coba)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            @click="midtransForm.is_production = true"
+                                            :class="[
+                                                'px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5',
+                                                midtransForm.is_production
+                                                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300'
+                                            ]"
+                                        >
+                                            <i class="fa-solid fa-shield-check"></i> Production (Live)
+                                        </button>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-1">
+                                        {{ midtransForm.is_production ? 'Mode Live menggunakan uang asli dari rekening jemaat.' : 'Mode Sandbox gratis untuk simulasi tanpa transaksi uang sungguhan.' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Credentials -->
+                            <div class="space-y-4">
+                                <h4 class="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                    <i class="fa-solid fa-key text-indigo-500"></i> Kredensial API Midtrans
+                                </h4>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Merchant ID</label>
+                                    <input
+                                        v-model="midtransForm.merchant_id"
+                                        type="text"
+                                        placeholder="Contoh: G123456789"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                    />
+                                    <p class="text-[11px] text-slate-400 mt-1">Dapat ditemukan di pojok kiri atas Dashboard Midtrans.</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Client Key</label>
+                                    <div class="relative">
+                                        <input
+                                            v-model="midtransForm.client_key"
+                                            :type="showClientKey ? 'text' : 'password'"
+                                            placeholder="Contoh: SB-Mid-client-xxxxxxxxxxxxxx atau Mid-client-xxxxxxxxxxxxxx"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none pe-10"
+                                        />
+                                        <button
+                                            type="button"
+                                            @click="showClientKey = !showClientKey"
+                                            class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                                            title="Tampilkan / Sembunyikan"
+                                        >
+                                            <i :class="['fa-solid', showClientKey ? 'fa-eye-slash' : 'fa-eye']"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-1">Client Key publik digunakan untuk memuat antarmuka popup pembayaran Snap di browser.</p>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-200">Server Key (Rahasia)</label>
+                                        <button
+                                            type="button"
+                                            :disabled="isTestingMidtrans"
+                                            @click="testMidtransConnection"
+                                            class="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                        >
+                                            <i :class="['fa-solid fa-plug', isTestingMidtrans ? 'fa-spin' : '']"></i>
+                                            <span>{{ isTestingMidtrans ? 'Menguji...' : 'Tes Koneksi Server' }}</span>
+                                        </button>
+                                    </div>
+                                    <div class="relative">
+                                        <input
+                                            v-model="midtransForm.server_key"
+                                            :type="showServerKey ? 'text' : 'password'"
+                                            placeholder="Contoh: SB-Mid-server-xxxxxxxxxxxxxx atau Mid-server-xxxxxxxxxxxxxx"
+                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none pe-10"
+                                        />
+                                        <button
+                                            type="button"
+                                            @click="showServerKey = !showServerKey"
+                                            class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                                            title="Tampilkan / Sembunyikan"
+                                        >
+                                            <i :class="['fa-solid', showServerKey ? 'fa-eye-slash' : 'fa-eye']"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-1">Digunakan untuk otorisasi transaksi di backend dan verifikasi keamanan SHA512 Webhook.</p>
+                                </div>
+                            </div>
+
+                            <!-- Payment Channels Toggles -->
+                            <div class="space-y-3">
+                                <h4 class="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                    <i class="fa-solid fa-list-check text-emerald-500"></i> Kanal Pembayaran yang Diaktifkan
+                                </h4>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <label class="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                        <input type="checkbox" v-model="midtransForm.enable_qris" class="mt-0.5 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                                        <div>
+                                            <span class="block text-xs font-extrabold text-slate-800 dark:text-slate-200">QRIS Dinamis</span>
+                                            <span class="block text-[11px] text-slate-400">BCA, GoPay, OVO, Dana, ShopeePay, LinkAja</span>
+                                        </div>
+                                    </label>
+
+                                    <label class="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                        <input type="checkbox" v-model="midtransForm.enable_va" class="mt-0.5 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                                        <div>
+                                            <span class="block text-xs font-extrabold text-slate-800 dark:text-slate-200">Virtual Account (VA) Bank</span>
+                                            <span class="block text-[11px] text-slate-400">BCA, Mandiri Bill, BNI, BRI, Permata, CIMB</span>
+                                        </div>
+                                    </label>
+
+                                    <label class="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                        <input type="checkbox" v-model="midtransForm.enable_gopay" class="mt-0.5 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                                        <div>
+                                            <span class="block text-xs font-extrabold text-slate-800 dark:text-slate-200">Direct E-Wallet</span>
+                                            <span class="block text-[11px] text-slate-400">Pembayaran langsung via aplikasi GoPay / ShopeePay</span>
+                                        </div>
+                                    </label>
+
+                                    <label class="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                        <input type="checkbox" v-model="midtransForm.enable_credit_card" class="mt-0.5 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                                        <div>
+                                            <span class="block text-xs font-extrabold text-slate-800 dark:text-slate-200">Kartu Kredit / Debit</span>
+                                            <span class="block text-[11px] text-slate-400">Visa, Mastercard, JCB (3D Secure)</span>
+                                        </div>
+                                    </label>
+
+                                    <label class="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition sm:col-span-2">
+                                        <input type="checkbox" v-model="midtransForm.enable_cstore" class="mt-0.5 w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                                        <div>
+                                            <span class="block text-xs font-extrabold text-slate-800 dark:text-slate-200">Gerai Minimarket (Convenience Store)</span>
+                                            <span class="block text-[11px] text-slate-400">Bayar tunai via kasir Indomaret / Alfamart</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Expiry Duration & Note -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Masa Berlaku Tagihan (Menit)</label>
+                                    <input
+                                        v-model="midtransForm.custom_expiry_duration"
+                                        type="number"
+                                        min="15"
+                                        max="43200"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                    />
+                                    <p class="text-[11px] text-slate-400 mt-1">Default: 60 menit (1 jam).</p>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Catatan Konfigurasi</label>
+                                    <input
+                                        v-model="midtransForm.keterangan"
+                                        type="text"
+                                        placeholder="Catatan / deskripsi..."
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-700">
+                                <button
+                                    type="submit"
+                                    class="px-6 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-lg shadow-indigo-600/25 transition cursor-pointer flex items-center gap-2"
+                                >
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    <span>Simpan Konfigurasi Midtrans Snap</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Right: Webhook Info & Live Simulation Box -->
+                    <div class="space-y-6">
+                        <!-- Webhook URL Card -->
+                        <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-base shadow-sm">
+                                    <i class="fa-solid fa-satellite-dish"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm">
+                                        Webhook Notification URL
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400">Notifikasi status otomatis real-time</p>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Salin URL di bawah ini lalu tempelkan ke menu <strong>Settings &gt; Configuration &gt; Payment Notification URL</strong> di Dashboard Midtrans Anda:
+                            </p>
+
+                            <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
+                                <div class="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 break-all font-bold">
+                                    {{ webhookUrl || `${$page.props.appUrl || 'http://127.0.0.1:8000'}/midtrans/callback` }}
+                                </div>
+                                <button
+                                    type="button"
+                                    @click="copyWebhookUrl"
+                                    class="w-full py-2 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border border-indigo-200 dark:border-indigo-800"
+                                >
+                                    <i :class="['fa-solid', copiedWebhook ? 'fa-check text-emerald-600' : 'fa-copy']"></i>
+                                    <span>{{ copiedWebhook ? 'Tersalin ke Clipboard!' : 'Salin Webhook URL' }}</span>
+                                </button>
+                            </div>
+
+                            <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] leading-relaxed">
+                                <i class="fa-solid fa-circle-info text-amber-600 me-1"></i>
+                                Pastikan server Anda memiliki koneksi internet publik atau menggunakan ngrok/tunnel saat testing lokal agar Midtrans dapat mengirimkan notifikasi callback.
+                            </div>
+                        </div>
+
+                        <!-- Live Snap Simulation Button -->
+                        <div class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-6 border border-indigo-800/50 shadow-lg text-white space-y-4">
+                            <div class="flex items-center gap-2 text-amber-400 text-xs font-black uppercase tracking-wider">
+                                <i class="fa-solid fa-gamepad"></i>
+                                <span>Simulator Midtrans Snap</span>
+                            </div>
+
+                            <div>
+                                <h4 class="font-extrabold text-base">Uji Coba Popup Pembayaran</h4>
+                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                    Buka modal popup Snap interaktif untuk mencoba simulasi pembayaran Rp 10.000 menggunakan simulator Midtrans.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                :disabled="isTestingSnap"
+                                @click="runSnapSimulation"
+                                class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                            >
+                                <i :class="['fa-solid fa-play', isTestingSnap ? 'fa-spin' : '']"></i>
+                                <span>{{ isTestingSnap ? 'Menghubungkan ke Snap...' : 'Uji Coba Popup Snap Sekarang' }}</span>
+                            </button>
+
+                            <div class="text-[11px] text-slate-400 space-y-1">
+                                <p>• <strong>Simulator Midtrans Sandbox:</strong></p>
+                                <a href="https://simulator.sandbox.midtrans.com" target="_blank" class="text-amber-300 hover:underline inline-flex items-center gap-1">
+                                    <span>https://simulator.sandbox.midtrans.com</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Tab 1: Pembayaran & QRIS -->

@@ -355,8 +355,10 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::post('/security/clear-logs', [\App\Http\Controllers\InertiaPanelController::class, 'clearSecurityLogs'])->name("panel.{$prefix}.security.clear-logs");
         Route::post('/security/clear-cache', [\App\Http\Controllers\InertiaPanelController::class, 'clearSystemSecurityCache'])->name("panel.{$prefix}.security.clear-cache");
 
-        // Settings Hub (Pengaturan Terpadu: Pembayaran, OTP, Video, Slider, SEO, Widget)
+        // Settings Hub (Pengaturan Terpadu: Pembayaran, Midtrans, OTP, Video, Slider, SEO, Widget)
         Route::get('/pengaturan-aplikasi', [\App\Http\Controllers\InertiaPanelController::class, 'pengaturanHub'])->name("panel.{$prefix}.pengaturan-aplikasi");
+        Route::get('/pengaturan/midtrans', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'midtrans'))->name("panel.{$prefix}.pengaturan.midtrans");
+        Route::get('/pengaturan-midtrans', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'midtrans'))->name("panel.{$prefix}.pengaturan-midtrans");
         Route::get('/pengaturan/pembayaran', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'pembayaran'))->name("panel.{$prefix}.pengaturan.pembayaran");
         Route::get('/pengaturan-pembayaran', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'pembayaran'))->name("panel.{$prefix}.pengaturan-pembayaran");
         Route::get('/metode-pembayaran', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'pembayaran'))->name("panel.{$prefix}.metode-pembayaran");
@@ -372,6 +374,8 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::get('/maintenance', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'maintenance'))->name("panel.{$prefix}.maintenance");
 
         // Settings Hub POST Actions
+        Route::post('/pengaturan/midtrans/save', [\App\Http\Controllers\InertiaPanelController::class, 'savePengaturanMidtrans'])->name("panel.{$prefix}.pengaturan.midtrans.save");
+        Route::post('/pengaturan/midtrans/test', [\App\Http\Controllers\InertiaPanelController::class, 'testMidtransConnection'])->name("panel.{$prefix}.pengaturan.midtrans.test");
         Route::post('/pengaturan/pembayaran/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveMetodePembayaran'])->name("panel.{$prefix}.pengaturan.pembayaran.save");
         Route::delete('/pengaturan/pembayaran/{id}/delete', [\App\Http\Controllers\InertiaPanelController::class, 'deleteMetodePembayaran'])->name("panel.{$prefix}.pengaturan.pembayaran.delete");
         Route::post('/pengaturan/pembayaran/{id}/delete', [\App\Http\Controllers\InertiaPanelController::class, 'deleteMetodePembayaran'])->name("panel.{$prefix}.pengaturan.pembayaran.delete.post");
@@ -627,6 +631,14 @@ Route::get('/media_library/{path}', function ($path) {
     }
     return response('', 204);
 })->where('path', '.*');
+
+// ==========================================
+// MIDTRANS SNAP PAYMENT GATEWAY & WEBHOOK
+// ==========================================
+Route::post('/midtrans/snap-token', [\App\Http\Controllers\MidtransController::class, 'createSnapToken'])->name('midtrans.snap-token');
+Route::post('/midtrans/callback', [\App\Http\Controllers\MidtransController::class, 'handleCallback'])->name('midtrans.callback');
+Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransController::class, 'handleCallback'])->name('midtrans.webhook');
+Route::get('/midtrans/status/{orderId}', [\App\Http\Controllers\MidtransController::class, 'checkStatus'])->name('midtrans.status');
 
 // Fallback redirect untuk URL lawas /v2/* ke /superadmin/*
 Route::get('/v2/{path?}', function ($path = '') {

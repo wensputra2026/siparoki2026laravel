@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\EnsureParokiConfigured::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'midtrans/*',
+            'api/midtrans/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->respond(function ($response, \Throwable $exception, \Illuminate\Http\Request $request) {

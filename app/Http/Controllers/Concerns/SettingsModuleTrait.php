@@ -47,7 +47,9 @@ trait SettingsModuleTrait
         // Resolve active tab from URL path if not explicitly provided
         $path = $request->path();
         $activeTab = $tab ?? 'pembayaran';
-        if (str_contains($path, 'pembayaran')) {
+        if (str_contains($path, 'midtrans')) {
+            $activeTab = 'midtrans';
+        } elseif (str_contains($path, 'pembayaran')) {
             $activeTab = 'pembayaran';
         } elseif (str_contains($path, 'otp')) {
             $activeTab = 'otp';
@@ -65,6 +67,7 @@ trait SettingsModuleTrait
 
         // Data for each tab
         $metodePembayaran = DB::table('metode_pembayaran')->orderBy('urutan')->get();
+        $pengaturanMidtrans = \App\Models\PengaturanMidtrans::getActiveConfig();
         $pengaturanOtp = DB::table('pengaturan_otp')->first() ?? (object) [
             'provider' => 'Fonnte',
             'api_key' => '',
@@ -82,6 +85,8 @@ trait SettingsModuleTrait
             'prefix' => $firstSegment,
             'initialTab' => $activeTab,
             'metodePembayaran' => $metodePembayaran,
+            'pengaturanMidtrans' => $pengaturanMidtrans,
+            'webhookUrl' => url('/midtrans/callback'),
             'pengaturanOtp' => $pengaturanOtp,
             'sliders' => $sliders,
             'pengaturanAplikasi' => $pengaturanAplikasi,
@@ -139,6 +144,71 @@ trait SettingsModuleTrait
         $this->ensureSettingsHubTables();
         DB::table('metode_pembayaran')->where('id', $id)->delete();
         return back()->with('success', 'Metode pembayaran berhasil dihapus.');
+    }
+
+
+    public function savePengaturanMidtrans(Request $request)
+    {
+        $this->ensureSettingsHubTables();
+        $validated = $request->validate([
+            'is_active' => 'nullable|boolean',
+            'is_production' => 'nullable|boolean',
+            'merchant_id' => 'nullable|string|max:100',
+            'client_key' => 'nullable|string|max:255',
+            'server_key' => 'nullable|string|max:255',
+            'enable_qris' => 'nullable|boolean',
+            'enable_va' => 'nullable|boolean',
+            'enable_gopay' => 'nullable|boolean',
+            'enable_credit_card' => 'nullable|boolean',
+            'enable_cstore' => 'nullable|boolean',
+            'custom_expiry_duration' => 'nullable|integer|min:15|max:43200',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        $payload = [
+            'is_active' => (bool) ($validated['is_active'] ?? false),
+            'is_production' => (bool) ($validated['is_production'] ?? false),
+            'merchant_id' => trim($validated['merchant_id'] ?? ''),
+            'client_key' => trim($validated['client_key'] ?? ''),
+            'server_key' => trim($validated['server_key'] ?? ''),
+            'enable_qris' => (bool) ($validated['enable_qris'] ?? true),
+            'enable_va' => (bool) ($validated['enable_va'] ?? true),
+            'enable_gopay' => (bool) ($validated['enable_gopay'] ?? true),
+            'enable_credit_card' => (bool) ($validated['enable_credit_card'] ?? false),
+            'enable_cstore' => (bool) ($validated['enable_cstore'] ?? false),
+            'custom_expiry_duration' => (int) ($validated['custom_expiry_duration'] ?? 60),
+            'keterangan' => $validated['keterangan'] ?? 'Konfigurasi Midtrans Snap SIPAROKI',
+            'updated_at' => now(),
+        ];
+
+        $first = DB::table('pengaturan_midtrans')->first();
+        if ($first) {
+            DB::table('pengaturan_midtrans')->where('id', $first->id)->update($payload);
+        } else {
+            $payload['created_at'] = now();
+            DB::table('pengaturan_midtrans')->insert($payload);
+        }
+
+        return back()->with('success', 'Pengaturan Payment Gateway Midtrans Snap berhasil diperbarui.');
+    }
+
+
+    public function testMidtransConnection(Request $request)
+    {
+        $this->ensureSettingsHubTables();
+        $validated = $request->validate([
+            'server_key' => 'required|string|max:255',
+            'is_production' => 'nullable|boolean',
+        ]);
+
+        $service = app(\App\Services\MidtransService::class);
+        $result = $service->testConnection($validated['server_key'], (bool) ($validated['is_production'] ?? false));
+
+        if ($result['success']) {
+            return back()->with('success', $result['message']);
+        }
+
+        return back()->with('error', $result['message']);
     }
 
 
@@ -406,6 +476,9 @@ trait SettingsModuleTrait
     protected function ensureSettingsHubTables(): void
     {
         try {
+            \App\Models\PengaturanMidtrans::ensureTableExists();
+            \App\Models\TransaksiPembayaran::ensureTableExists();
+
             if (!Schema::hasTable('metode_pembayaran')) {
                 Schema::create('metode_pembayaran', function ($table) {
                     $table->increments('id');
