@@ -247,6 +247,35 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
             $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
         }
 
+        // Step B2: Ensure Laravel System Tables (sessions, cache, cache_locks)
+        try {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `sessions` (
+              `id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+              `user_id` bigint unsigned DEFAULT NULL,
+              `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+              `user_agent` text COLLATE utf8mb4_unicode_ci,
+              `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+              `last_activity` int NOT NULL,
+              PRIMARY KEY (`id`),
+              KEY `sessions_user_id_index` (`user_id`),
+              KEY `sessions_last_activity_index` (`last_activity`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `cache` (
+              `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+              `value` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
+              `expiration` int NOT NULL,
+              PRIMARY KEY (`key`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `cache_locks` (
+              `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+              `owner` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+              `expiration` int NOT NULL,
+              PRIMARY KEY (`key`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+        } catch (Exception $e) {}
+
         // Step C: Ensure Paroki Record & Defaults
         $paroki_cols = siparoki_table_columns($pdo, 'paroki');
         if (!empty($paroki_cols)) {
@@ -352,8 +381,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
                 'email' => $admin_email,
                 'password' => $hashed_password,
                 'role_id' => $role_id,
-                'status' => 'Aktif',
-                'paroki_id' => $paroki_id,
+                'status_aktif' => 1,
+                'status_user' => 'Aktif',
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
 
@@ -408,9 +437,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
         // Step H: Generate & Write .env File
         $app_key = 'base64:' . base64_encode(random_bytes(32));
         $env_content = "APP_NAME=\"" . addslashes($app_name) . "\"\n"
-            . "APP_ENV=production\n"
+            . "APP_ENV=local\n"
             . "APP_KEY={$app_key}\n"
-            . "APP_DEBUG=false\n"
+            . "APP_DEBUG=true\n"
             . "APP_URL=" . addslashes($root_app_url) . "\n\n"
             . "LOG_CHANNEL=stack\n"
             . "LOG_DEPRECATIONS_CHANNEL=null\n"
@@ -421,12 +450,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'process_install') {
             . "DB_DATABASE={$db_name}\n"
             . "DB_USERNAME={$db_user}\n"
             . "DB_PASSWORD=\"{$db_pass}\"\n\n"
-            . "SESSION_DRIVER=database\n"
+            . "SESSION_DRIVER=file\n"
             . "SESSION_LIFETIME=120\n"
             . "SESSION_ENCRYPT=false\n"
             . "SESSION_PATH=/\n"
             . "SESSION_DOMAIN=null\n\n"
-            . "CACHE_STORE=database\n"
+            . "CACHE_STORE=file\n"
             . "QUEUE_CONNECTION=sync\n";
 
         @file_put_contents($env_file, $env_content);
