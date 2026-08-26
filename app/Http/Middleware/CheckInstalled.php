@@ -22,19 +22,9 @@ class CheckInstalled
             || File::exists(public_path('installed.lock'));
         $isInstallerRoute = $request->is('installer') || $request->is('installer/*');
 
-        // Allow static assets
-        if ($request->is('build/*') || $request->is('assets/*') || $request->is('fonts/*') || $request->is('images/*') || $request->is('favicon.ico') || $request->is('env.js') || $request->is('css/*') || $request->is('js/*')) {
-            return $next($request);
-        }
-
-        // If not installed and not on installer route, redirect to /installer
-        if (!$isInstalled && !$isInstallerRoute) {
-            return redirect()->route('installer.index');
-        }
-
-        // If already installed and attempting to access /installer, redirect to home
-        if ($isInstalled && $isInstallerRoute) {
-            return redirect('/')->with('info', 'Aplikasi SIPAROKI sudah terpasang. Installer telah dikunci.');
+        // If already installed and attempting to access /installer, gracefully redirect to home
+        if ($isInstalled && $isInstallerRoute && !$request->has('force')) {
+            return redirect('/')->with('info', 'Aplikasi SIPAROKI sudah aktif.');
         }
 
         return $next($request);
