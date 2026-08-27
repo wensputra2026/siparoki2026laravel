@@ -1728,22 +1728,41 @@ body.public-portal .navbar-collapse,
 /* ===== FIX: Mobile navbar — keep brand + hamburger on the same row ===== */
 @media (max-width: 991px) {
     body.public-portal .navbar-brand {
-        font-size: 15px !important;
+        font-size: clamp(0.72rem, 3.2vw, 1rem) !important;
         min-width: 0 !important;
         flex: 0 1 auto !important;
         margin-right: 0 !important;
-        max-width: calc(100% - 64px) !important;
+        max-width: calc(100% - 56px) !important;
+    }
+
+    body.public-portal .navbar-brand img {
+        width: 34px !important;
+        height: 34px !important;
     }
 
     body.public-portal .navbar-brand span {
+        font-size: clamp(0.72rem, 3.2vw, 1rem) !important;
         white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
         min-width: 0 !important;
+        letter-spacing: -0.02em !important;
     }
 
     body.public-portal .navbar-toggler {
         margin-left: auto !important;
         flex-shrink: 0 !important;
+        padding: 0.25rem 0.5rem !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.public-portal .navbar-brand img {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    body.public-portal .navbar-brand span {
+        font-size: 0.68rem !important;
+        letter-spacing: -0.03em !important;
     }
 }

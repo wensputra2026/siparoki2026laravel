@@ -164,13 +164,13 @@
         <!-- Navbar -->
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container">
-                <a class="navbar-brand d-inline-flex align-items-center gap-2" href="/" style="text-decoration: none;">
+                <a class="navbar-brand d-inline-flex align-items-center gap-1 gap-sm-2" href="/" style="text-decoration: none;">
                     @if(!empty($globalLogo))
                         <img src="{{ $globalLogo }}" alt="Logo {{ $globalNamaParoki ?? 'Paroki' }}" style="width: 42px; height: 42px; object-fit: contain; border-radius: 50%; background: #fff; padding: 2px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); flex-shrink: 0; display: inline-block;">
                     @else
                         <i class="bi bi-church" style="font-size: 1.8rem; color: var(--primary-teal, #00897b); flex-shrink: 0;"></i>
                     @endif
-                    <span style="font-weight: 800; font-size: 1.15rem; color: var(--primary-orange, #ff9800); white-space: nowrap; line-height: 1; letter-spacing: -0.01em;">{{ $globalNamaParoki ?? 'SIPAROKI' }}</span>
+                    <span style="font-weight: 800; font-size: clamp(0.72rem, 3.2vw, 1.15rem); color: var(--primary-orange, #ff9800); white-space: nowrap; line-height: 1.1; letter-spacing: -0.02em;">{{ $globalNamaParoki ?? 'SIPAROKI' }}</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
