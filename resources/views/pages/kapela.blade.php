@@ -207,6 +207,4 @@
     </div>
 </section>
 
-@include('partials.kapela-detail-modal')
-
 @endsection
