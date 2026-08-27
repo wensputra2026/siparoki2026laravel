@@ -54,10 +54,11 @@
             </div>
         @endif
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; align-items: start;">
+        <div class="row g-4 align-items-start">
             
             <!-- Left: Contact Information Card -->
-            <div class="contact-info" style="background: #ffffff; padding: 35px 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); height: 100%;">
+            <div class="col-lg-5">
+                <div class="contact-info" style="background: #ffffff; padding: 30px 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); height: 100%;">
                 <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 25px; border-left: 4px solid var(--primary-orange, #ff9800); padding-left: 12px;">
                     Informasi Sekretariat
                 </h4>
@@ -128,51 +129,53 @@
             </div>
 
             <!-- Right: Contact Form Card -->
-            <div class="contact-form" style="background: #ffffff; padding: 35px 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
-                <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 8px; border-left: 4px solid var(--primary-orange, #ff9800); padding-left: 12px;">
-                    Kirim Pesan
-                </h4>
-                <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 24px; padding-left: 16px;">
-                    Sampaikan permohonan informasi, intensi misa, atau pertanyaan ke sekretariat paroki.
-                </p>
+            <div class="col-lg-7">
+                <div class="contact-form" style="background: #ffffff; padding: 30px 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+                    <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 8px; border-left: 4px solid var(--primary-orange, #ff9800); padding-left: 12px;">
+                        Kirim Pesan
+                    </h4>
+                    <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 24px; padding-left: 16px;">
+                        Sampaikan permohonan informasi, intensi misa, atau pertanyaan ke sekretariat paroki.
+                    </p>
 
-                <form action="{{ route('kontak.kirim') }}" method="POST">
-                    @csrf
-                    <div class="hidden" style="display: none;">
-                        <input id="website_url" name="website_url" type="text" tabindex="-1" autocomplete="off">
-                    </div>
-
-                    <div style="margin-bottom: 16px;">
-                        <label for="nama" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Nama Lengkap <span style="color: #ef4444;">*</span></label>
-                        <input id="nama" name="nama" type="text" value="{{ old('nama') }}" required class="form-control" placeholder="Masukkan nama lengkap Anda..." style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
-                        <div>
-                            <label for="email" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Email</label>
-                            <input id="email" name="email" type="email" value="{{ old('email') }}" class="form-control" placeholder="nama@email.com" style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
+                    <form action="{{ route('kontak.kirim') }}" method="POST">
+                        @csrf
+                        <div class="hidden" style="display: none;">
+                            <input id="website_url" name="website_url" type="text" tabindex="-1" autocomplete="off">
                         </div>
-                        <div>
-                            <label for="telepon" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">WhatsApp / Telepon</label>
-                            <input id="telepon" name="telepon" type="text" value="{{ old('telepon') }}" class="form-control" placeholder="081234567890" style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
+
+                        <div style="margin-bottom: 16px;">
+                            <label for="nama" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Nama Lengkap <span style="color: #ef4444;">*</span></label>
+                            <input id="nama" name="nama" type="text" value="{{ old('nama') }}" required class="form-control" placeholder="Masukkan nama lengkap Anda..." style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
                         </div>
-                    </div>
 
-                    <div style="margin-bottom: 16px;">
-                        <label for="subjek" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Subjek Pesan</label>
-                        <input id="subjek" name="subjek" type="text" value="{{ old('subjek') }}" class="form-control" placeholder="Contoh: Informasi Sakramen Baptis, Intensi Misa, dll" style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
-                    </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label for="email" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Email</label>
+                                <input id="email" name="email" type="email" value="{{ old('email') }}" class="form-control" placeholder="nama@email.com" style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="telepon" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">WhatsApp / Telepon</label>
+                                <input id="telepon" name="telepon" type="text" value="{{ old('telepon') }}" class="form-control" placeholder="081234567890" style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
+                            </div>
+                        </div>
 
-                    <div style="margin-bottom: 20px;">
-                        <label for="pesan" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Isi Pesan <span style="color: #ef4444;">*</span></label>
-                        <textarea id="pesan" name="pesan" required rows="5" class="form-control" placeholder="Tuliskan pesan atau pertanyaan Anda secara rinci..." style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">{{ old('pesan') }}</textarea>
-                    </div>
+                        <div style="margin-bottom: 16px;">
+                            <label for="subjek" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Subjek Pesan</label>
+                            <input id="subjek" name="subjek" type="text" value="{{ old('subjek') }}" class="form-control" placeholder="Contoh: Informasi Sakramen Baptis, Intensi Misa, dll" style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">
+                        </div>
 
-                    <button type="submit" class="btn-submit" style="background: var(--primary-teal, #00897b); color: white; padding: 12px 36px; border-radius: 25px; border: none; font-weight: 600; font-size: 0.92rem; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-paper-plane"></i>
-                        <span>Kirim Pesan Sekarang</span>
-                    </button>
-                </form>
+                        <div style="margin-bottom: 20px;">
+                            <label for="pesan" style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Isi Pesan <span style="color: #ef4444;">*</span></label>
+                            <textarea id="pesan" name="pesan" required rows="5" class="form-control" placeholder="Tuliskan pesan atau pertanyaan Anda secara rinci..." style="width: 100%; border: 1.5px solid #E0E0E0; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;">{{ old('pesan') }}</textarea>
+                        </div>
+
+                        <button type="submit" class="btn-submit" style="background: var(--primary-teal, #00897b); color: white; padding: 12px 36px; border-radius: 25px; border: none; font-weight: 600; font-size: 0.92rem; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Kirim Pesan Sekarang</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
 

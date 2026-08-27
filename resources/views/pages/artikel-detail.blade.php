@@ -108,11 +108,11 @@
             </a>
         </div>
 
-        <div style="display: grid; grid-template-columns: minmax(0, 3fr) minmax(320px, 1.15fr); gap: 32px; align-items: start;">
+        <div class="row g-4 align-items-start">
             
             <!-- Left: Main Article Card -->
-            <div>
-                <div class="detail-content" style="background: #ffffff; padding: 35px 40px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+            <div class="col-lg-8">
+                <div class="detail-content" style="background: #ffffff; padding: 30px 32px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
                     
                     <!-- 1. Category Pill Badge -->
                     <div style="margin-bottom: 20px;">
@@ -282,12 +282,12 @@
 
                         <form id="commentForm" onsubmit="handleCommentSubmit(event)">
                             <input type="hidden" id="replyParentId" value="">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                                <div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-sm-6">
                                     <label for="commentName" style="display: block; font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Nama Lengkap <span style="color: #ef4444;">*</span></label>
                                     <input type="text" id="commentName" class="form-control" placeholder="Contoh: Maria Goretti" required style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 0.88rem; width: 100%;">
                                 </div>
-                                <div>
+                                <div class="col-sm-6">
                                     <label for="commentEmail" style="display: block; font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 6px;">Email (Opsional)</label>
                                     <input type="email" id="commentEmail" class="form-control" placeholder="nama@email.com" style="border-radius: 10px; border: 1px solid #cbd5e1; padding: 10px 14px; font-size: 0.88rem; width: 100%;">
                                 </div>
@@ -553,7 +553,8 @@
             </div>
 
             <!-- Right: Sidebar Column (Complete Paroki Widgets) -->
-            <div style="display: flex; flex-direction: column; gap: 24px;">
+            <div class="col-lg-4">
+                <div style="display: flex; flex-direction: column; gap: 24px;">
 
                 <!-- 1. WIDGET KATA SAMBUTAN PASTOR PAROKI (PALING ATAS) -->
                 @php
@@ -730,6 +731,7 @@
                     </div>
                 </div>
 
+                </div>
             </div>
         </div>
     </div>
