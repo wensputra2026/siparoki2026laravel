@@ -49,10 +49,24 @@
 @section('image', $imageUrl)
 
 @section('content')
+<style>
+@media (max-width: 768px) {
+    .detail-content {
+        padding: 20px 16px !important;
+        border-radius: 14px !important;
+    }
+    .page-header h1 {
+        font-size: clamp(1.4rem, 5vw, 2.2rem) !important;
+    }
+    .sidebar-widget {
+        padding: 18px 16px !important;
+    }
+}
+</style>
 <!-- Page Header / Breadcrumb Style -->
 <section class="page-header">
     <div class="container">
-        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 18px; color: #ffffff; line-height: 1.25; margin-left: auto; margin-right: auto; text-align: center;">
+        <h1 style="font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 700; margin-bottom: 18px; color: #ffffff; line-height: 1.25; margin-left: auto; margin-right: auto; text-align: center;">
             {{ $nama }}
         </h1>
         <nav aria-label="breadcrumb">
