@@ -51,7 +51,7 @@ class SecurityHardeningTest extends TestCase
 
         $superRole = Role::where('slug', 'super_admin')->first();
 
-        $res = $this->post('/bendahara/user/store', [
+        $res = $this->post('/bendahara/user', [
             'nama_lengkap' => 'Hacker',
             'email' => 'hacker' . uniqid() . '@example.com',
             'username' => 'hacker_' . uniqid(),

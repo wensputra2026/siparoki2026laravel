@@ -23,7 +23,7 @@ class MutasiUmatController extends Controller
 
     protected function currentParoki(): ?Paroki
     {
-        return Paroki::orderBy('id')->first();
+        return Paroki::orderBy('id_paroki')->first();
     }
 
     /**
