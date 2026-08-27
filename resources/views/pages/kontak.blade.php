@@ -127,9 +127,10 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Right: Contact Form Card -->
-            <div class="col-lg-7">
+        <!-- Right: Contact Form Card -->
+        <div class="col-lg-7">
                 <div class="contact-form" style="background: #ffffff; padding: 30px 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
                     <h4 style="font-size: 1.2rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 8px; border-left: 4px solid var(--primary-orange, #ff9800); padding-left: 12px;">
                         Kirim Pesan
