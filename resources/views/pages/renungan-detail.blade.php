@@ -136,7 +136,7 @@
                             Pastor Paroki
                         </span>
                         <h5 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 2px;">
-                            RD. Herman Hilers Penga
+                            {{ !empty($pastor_paroki) ? $pastor_paroki : ($globalProfil->nama_pastor_paroki_aktif ?? 'Pastor Paroki') }}
                         </h5>
                         <p style="color: #64748b; font-size: 0.8rem; margin: 0 0 12px;">
                             Pastor Paroki St. Vinsensius a Paulo - Benlutu

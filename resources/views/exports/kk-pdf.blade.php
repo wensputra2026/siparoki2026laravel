@@ -428,7 +428,7 @@
             <div>Benlutu, {{ now()->translatedFormat('d F Y') }}</div>
             <div><strong>Pastor Paroki / Sekretariat</strong></div>
             <div class="ttd-space"></div>
-            <div class="ttd-name">(RD. Herman Hillers Penga)</div>
+            <div class="ttd-name">({{ $paroki->nama_pastor_paroki_aktif ?? ($profil->pastor_paroki ?? ($namaPastor ?? 'Pastor Paroki')) }})</div>
             <div style="font-size: 9px; margin-top: 2px;">Pastor Paroki St. Vinsensius a Paulo</div>
         </div>
     </div>

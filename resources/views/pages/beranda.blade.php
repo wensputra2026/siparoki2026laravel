@@ -145,22 +145,18 @@
 <!-- ===== SAMBUTAN PASTOR PAROKI SECTION ===== -->
 @php
     $pastorNameDisplay = $pastor_paroki ?? 'Data Pastor Paroki Belum Tersedia';
-    $imamImage = file_exists(public_path('assets/frontend/siparoki/images/default-pastor.jpg'))
-        ? asset('assets/frontend/siparoki/images/default-pastor.jpg')
-        : (file_exists(public_path('assets/frontend/siparoki/images/default-principal.jpg'))
-            ? asset('assets/frontend/siparoki/images/default-principal.jpg')
-            : asset('images/pastor-avatar.svg'));
+    $imamImage = asset('images/avatar-default.jpg');
 @endphp
 <section id="sambutan-pastor-ringkas" class="sambutan-pastor-section" aria-label="Sambutan Pastor Paroki">
     <div class="sambutan-pastor-card">
         <div class="sambutan-pastor-photo">
             <span class="sambutan-pastor-badge">KATA SAMBUTAN</span>
-            <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" alt="Pastor Paroki {{ $globalNamaParoki ?? 'SIPAROKI' }}">
+            <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" alt="Pastor Paroki {{ $globalNamaParoki ?? 'St. Vinsensius a Paulo - Benlutu' }}">
         </div>
         <div class="sambutan-pastor-body">
             <h3>{{ $pastorNameDisplay }}</h3>
-            <span class="sambutan-pastor-role">Pastor Paroki {{ $globalNamaParoki ?? 'SIPAROKI' }}</span>
-            <p>Salve, Salam Sehat dan Berkah Dalem. Selamat Datang di Website Resmi {{ $globalNamaParoki ?? 'SIPAROKI' }}.</p>
+            <span class="sambutan-pastor-role">Pastor Paroki {{ $globalNamaParoki ?? 'St. Vinsensius a Paulo - Benlutu' }}</span>
+            <p>Salve, Salam Sehat dan Berkah Dalem. Selamat Datang di Website Resmi {{ $globalNamaParoki ?? 'St. Vinsensius a Paulo - Benlutu' }}.</p>
             <div>
                 <a href="/sambutan" class="btn-sambutan">
                     Baca Selengkapnya <i class="fas fa-arrow-right text-xs"></i>

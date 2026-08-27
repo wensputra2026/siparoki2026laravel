@@ -506,7 +506,7 @@ const saveParoki = () => {
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5 items-center">
                                     <span class="text-slate-500 font-semibold">Pastor Paroki</span>
                                     <div class="sm:col-span-2 flex items-center gap-2">
-                                        <span class="font-bold text-slate-900">{{ paroki?.nama_pastor_paroki_aktif || 'RD. Herman Hilers Penga' }}</span>
+                                        <span class="font-bold text-slate-900">{{ paroki?.nama_pastor_paroki_aktif || 'Belum diatur' }}</span>
                                         <span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold">Pastor Paroki</span>
                                     </div>
                                 </div>

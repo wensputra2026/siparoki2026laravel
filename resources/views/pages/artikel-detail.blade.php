@@ -558,11 +558,7 @@
 
                 <!-- 1. WIDGET KATA SAMBUTAN PASTOR PAROKI (PALING ATAS) -->
                 @php
-                    $imamWidgetImage = file_exists(public_path('assets/frontend/siparoki/images/default-pastor.jpg'))
-                        ? asset('assets/frontend/siparoki/images/default-pastor.jpg')
-                        : (file_exists(public_path('assets/frontend/siparoki/images/default-principal.jpg'))
-                            ? asset('assets/frontend/siparoki/images/default-principal.jpg')
-                            : asset('images/pastor-avatar.svg'));
+                    $imamWidgetImage = asset('images/avatar-default.jpg');
                     $pastorNameDisplay = !empty($pastor_paroki) ? $pastor_paroki : 'Pastor Paroki';
                 @endphp
                 <div style="background: #ffffff; border-radius: 18px; box-shadow: 0 8px 25px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #e2e8f0; border-top: 4px solid var(--primary-teal, #00897b);">

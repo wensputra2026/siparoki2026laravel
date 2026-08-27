@@ -48,13 +48,13 @@
 
     <!-- Favicon -->
     @if(!empty($globalLogo))
-        <link rel="icon" type="image/x-icon" href="{{ $globalLogo }}">
-        <link rel="shortcut icon" type="image/x-icon" href="{{ $globalLogo }}">
+        <link rel="icon" type="image/png" href="{{ $globalLogo }}">
+        <link rel="shortcut icon" type="image/png" href="{{ $globalLogo }}">
         <link rel="apple-touch-icon" href="{{ $globalLogo }}">
     @else
-        <link rel="icon" type="image/jpeg" href="/assets/uploads/profil/logo_paroki_1787370466.jpeg">
-        <link rel="shortcut icon" type="image/jpeg" href="/assets/uploads/profil/logo_paroki_1787370466.jpeg">
-        <link rel="apple-touch-icon" href="/assets/uploads/profil/logo_paroki_1787370466.jpeg">
+        <link rel="icon" type="image/png" href="{{ asset('images/church-logo.png') }}">
+        <link rel="shortcut icon" type="image/png" href="{{ asset('images/church-logo.png') }}">
+        <link rel="apple-touch-icon" href="{{ asset('images/church-logo.png') }}">
     @endif
 
     <!-- SIPAROKI Theme: Bootstrap 5 + Icons + Fonts + Theme CSS -->

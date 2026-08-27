@@ -57,14 +57,13 @@ const returnToSuperAdmin = () => {
             </button>
 
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-white font-black text-lg shadow-md shadow-amber-500/25 shrink-0 overflow-hidden border border-amber-300/40">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-white font-black text-lg shadow-md shadow-amber-500/25 shrink-0 overflow-hidden border border-amber-300/40 bg-white">
                     <img
-                        v-if="page.props.app?.logo"
-                        :src="page.props.app.logo"
+                        :src="page.props.app?.logo || '/images/church-logo.png'"
                         :alt="page.props.app?.nama_paroki || 'Logo'"
                         class="w-full h-full object-cover"
+                        @error="(e) => { e.target.onerror = null; e.target.src = '/images/church-logo.png'; }"
                     />
-                    <i v-else class="fa-solid fa-church text-sm"></i>
                 </div>
                 <div>
                     <h1 class="font-bold text-sm sm:text-base tracking-tight text-slate-900 leading-none">
@@ -198,12 +197,11 @@ const returnToSuperAdmin = () => {
                 title="Profil Saya"
             >
                 <img
-                    v-if="userAvatar"
-                    :src="userAvatar"
+                    :src="userAvatar || '/images/avatar-default.jpg'"
                     alt="Foto Profil"
                     class="w-5 h-5 rounded-full object-cover border border-amber-500/50 shadow-2xs shrink-0"
+                    @error="(e) => { e.target.onerror = null; e.target.src = '/images/avatar-default.jpg'; }"
                 />
-                <i v-else class="fa-solid fa-circle-user text-amber-600 text-sm"></i>
                 <span class="hidden sm:inline font-bold truncate max-w-[120px]">{{ userName }}</span>
             </Link>
 

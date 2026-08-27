@@ -3,7 +3,7 @@
 
 @section('content')
 @php
-    $defaultAvatar = asset('images/avatar-dpp.svg');
+    $defaultAvatar = asset('images/avatar-default.jpg');
 @endphp
 
 <!-- Page Header / Breadcrumb -->

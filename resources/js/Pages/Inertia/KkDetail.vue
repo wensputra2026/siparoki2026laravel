@@ -317,7 +317,7 @@ const isReadOnlyRole = computed(() => {
                         <p class="text-slate-500">Sekretariat Paroki,</p>
                         <p class="font-bold text-slate-800">Pastor Paroki</p>
                         <div class="h-14"></div>
-                        <p class="font-bold underline">(RD. Herman Hillers Penga)</p>
+                        <p class="font-bold underline">({{ paroki?.nama_pastor_paroki_aktif || 'Pastor Paroki' }})</p>
                     </div>
                 </div>
             </div>

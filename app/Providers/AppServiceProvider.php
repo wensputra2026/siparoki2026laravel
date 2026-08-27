@@ -177,23 +177,42 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     if (!$activeParoki) {
-                        $pengaturan = Cache::remember('global_pengaturan_aplikasi_first', 600, function () {
-                            return \Illuminate\Support\Facades\Schema::hasTable('pengaturan_aplikasi')
-                                ? \Illuminate\Support\Facades\DB::table('pengaturan_aplikasi')->first()
-                                : null;
-                        });
+                        $pengaturan = \Illuminate\Support\Facades\Schema::hasTable('pengaturan_aplikasi')
+                            ? \Illuminate\Support\Facades\DB::table('pengaturan_aplikasi')->first()
+                            : null;
 
-                        if ($pengaturan && !empty($pengaturan->nama_paroki)) {
+                        if ($pengaturan && !empty($pengaturan->paroki_id)) {
+                            $activeParoki = \App\Models\Paroki::find($pengaturan->paroki_id);
+                        }
+                        if (!$activeParoki && $pengaturan && !empty($pengaturan->nama_paroki)) {
                             $activeParoki = \App\Models\Paroki::where('nama_paroki', $pengaturan->nama_paroki)->first();
                         }
                     }
 
                     if (!$activeParoki) {
-                        $activeParoki = \App\Models\Paroki::first();
+                        $profil = \Illuminate\Support\Facades\Schema::hasTable('profil_paroki')
+                            ? \Illuminate\Support\Facades\DB::table('profil_paroki')->first()
+                            : null;
+                        if ($profil && !empty($profil->paroki_id)) {
+                            $activeParoki = \App\Models\Paroki::find($profil->paroki_id);
+                        }
+                        if (!$activeParoki && $profil && !empty($profil->nama_paroki)) {
+                            $activeParoki = \App\Models\Paroki::where('nama_paroki', $profil->nama_paroki)->first();
+                        }
                     }
 
-                    $namaParoki = $activeParoki->nama_paroki ?? 'SIPAROKI';
-                    $logoUrl = $activeParoki->logo ?? asset('favicon.ico');
+                    if (!$activeParoki) {
+                        $activeParoki = \App\Models\Paroki::where('nama_paroki', 'like', '%Benlutu%')->first()
+                            ?: \App\Models\Paroki::find(380);
+                    }
+
+                    $namaParoki = $activeParoki->nama_paroki
+                        ?? $profil->nama_paroki
+                        ?? $pengaturan->nama_paroki
+                        ?? 'St. Vinsensius a Paulo - Benlutu';
+                    $logoUrl = (!empty($activeParoki->logo) && file_exists(public_path(ltrim($activeParoki->logo, '/'))))
+                        ? asset(ltrim($activeParoki->logo, '/'))
+                        : asset('images/church-logo.png');
                     $bannerUrl = $activeParoki->banner ?? $activeParoki->foto ?? null;
 
                     return [
@@ -203,13 +222,17 @@ class AppServiceProvider extends ServiceProvider
                         'globalFavicon' => $logoUrl,
                         'globalBanner' => $bannerUrl,
                         'globalNamaParoki' => $namaParoki,
+                        'globalDefaultAvatar' => asset('images/avatar-default.jpg'),
+                        'globalDefaultChurch' => asset('images/church-logo.png'),
                     ];
                 } catch (\Throwable $e) {
                     return [
-                        'globalLogo' => asset('favicon.ico'),
-                        'globalFavicon' => asset('favicon.ico'),
+                        'globalLogo' => asset('images/church-logo.png'),
+                        'globalFavicon' => asset('images/church-logo.png'),
                         'globalBanner' => null,
                         'globalNamaParoki' => 'SIPAROKI',
+                        'globalDefaultAvatar' => asset('images/avatar-default.jpg'),
+                        'globalDefaultChurch' => asset('images/church-logo.png'),
                     ];
                 }
             });

@@ -51,8 +51,13 @@ const {
             <!-- Mobile Drawer Header -->
             <div class="h-16 px-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-white font-black text-lg shadow-md shadow-amber-500/25 shrink-0">
-                        <i class="fa-solid fa-church text-sm"></i>
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-white font-black text-lg shadow-md shadow-amber-500/25 shrink-0 overflow-hidden border border-amber-300/40 bg-white">
+                        <img
+                            :src="$page.props.app?.logo || '/images/church-logo.png'"
+                            :alt="$page.props.app?.nama_paroki || 'Logo'"
+                            class="w-full h-full object-cover"
+                            @error="(e) => { e.target.onerror = null; e.target.src = '/images/church-logo.png'; }"
+                        />
                     </div>
                     <div>
                         <h1 class="font-bold text-sm tracking-tight text-slate-900 leading-none">

@@ -34,8 +34,8 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                 @forelse($dpp ?? [] as $d)
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 14px;">
-                        <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,137,123,0.1); color: var(--primary-teal, #00897b); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
-                            <i class="fas fa-user"></i>
+                        <div style="width: 46px; height: 46px; border-radius: 50%; overflow: hidden; border: 2px solid #cbd5e1; flex-shrink: 0; background: #fff;">
+                            <img src="{{ !empty($d->foto) ? (str_starts_with($d->foto, 'http') ? $d->foto : asset('uploads/direktori_dpp/' . $d->foto)) : asset('images/avatar-default.jpg') }}" alt="{{ $d->nama ?? 'Pengurus DPP' }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null;this.src='{{ asset('images/avatar-default.jpg') }}';">
                         </div>
                         <div>
                             <h5 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0 0 3px;">{{ $d->nama ?? 'Pengurus DPP' }}</h5>

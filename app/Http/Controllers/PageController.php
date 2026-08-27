@@ -52,7 +52,11 @@ class PageController extends Controller
                     ->leftJoin('desa_kelurahan', 'paroki.desa_id', '=', 'desa_kelurahan.id_desa')
                     ->select($parokiSelect);
 
-                if (!empty($profil?->paroki_id)) {
+                if (!empty($pengaturan?->paroki_id)) {
+                    $activeParoki = $parokiQuery()->where('paroki.id_paroki', $pengaturan->paroki_id)->first();
+                }
+
+                if (!$activeParoki && !empty($profil?->paroki_id)) {
                     $activeParoki = $parokiQuery()->where('paroki.id_paroki', $profil->paroki_id)->first();
                 }
 
@@ -69,12 +73,19 @@ class PageController extends Controller
                         ->orWhere('paroki.nama_paroki', 'like', '%' . $profil->nama_paroki . '%')
                         ->first();
                 }
+
+                if (!$activeParoki) {
+                    $activeParoki = $parokiQuery()
+                        ->where('paroki.nama_paroki', 'like', '%Benlutu%')
+                        ->orWhere('paroki.id_paroki', 380)
+                        ->first();
+                }
             }
 
             $namaParoki = $activeParoki->nama_paroki
                 ?? $profil->nama_paroki
                 ?? $pengaturan->nama_paroki
-                ?? 'SIPAROKI';
+                ?? 'St. Vinsensius a Paulo - Benlutu';
 
             $alamat = $activeParoki->alamat
                 ?? $profil->alamat

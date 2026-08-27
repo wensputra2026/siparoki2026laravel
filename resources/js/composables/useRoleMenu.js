@@ -96,7 +96,7 @@ const confirmLogout = () => {
 
 const userAvatar = computed(() => {
     const foto = _page?.props.auth?.user?.foto;
-    if (!foto) return null;
+    if (!foto) return '/images/avatar-default.jpg';
     if (foto.startsWith('http://') || foto.startsWith('https://') || foto.startsWith('data:')) {
         return foto;
     }

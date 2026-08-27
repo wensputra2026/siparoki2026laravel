@@ -3,11 +3,7 @@
 
 @section('content')
 @php
-    $imamImage = file_exists(public_path('assets/frontend/siparoki/images/default-pastor.jpg'))
-        ? asset('assets/frontend/siparoki/images/default-pastor.jpg')
-        : (file_exists(public_path('assets/frontend/siparoki/images/default-principal.jpg'))
-            ? asset('assets/frontend/siparoki/images/default-principal.jpg')
-            : asset('images/pastor-avatar.svg'));
+    $imamImage = asset('images/avatar-default.jpg');
 @endphp
 
 <!-- Page Header / Breadcrumb Konoha Style -->

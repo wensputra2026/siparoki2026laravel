@@ -18,7 +18,7 @@ return new class extends Migration
             ]);
         }
 
-        // 2. Update paroki
+        // 2. Update paroki (Hanya untuk Paroki Benlutu)
         if (Schema::hasTable('paroki')) {
             $updateData = [];
             if (Schema::hasColumn('paroki', 'nama_pastor_paroki_aktif')) {
@@ -28,7 +28,10 @@ return new class extends Migration
                 $updateData['pastor_paroki'] = 'RD. Herman Hilers Penga';
             }
             if (!empty($updateData)) {
-                DB::table('paroki')->update($updateData);
+                DB::table('paroki')
+                    ->where('nama_paroki', 'like', '%Benlutu%')
+                    ->orWhere('id_paroki', 380)
+                    ->update($updateData);
             }
         }
 
