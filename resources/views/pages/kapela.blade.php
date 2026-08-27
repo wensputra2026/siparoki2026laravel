@@ -16,49 +16,194 @@
     </div>
 </section>
 
-<section class="content-section chapel-page">
+<style>
+/* Responsive Chapel Toolbar & Search System */
+.chapel-toolbar-wrap {
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    padding: 18px 24px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+    margin-bottom: 30px !important;
+    border-left: 5px solid #00897b !important;
+}
+
+.chapel-toolbar-grid {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 0;
+}
+
+.chapel-info-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chapel-search-box {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 30px;
+    padding: 4px 6px 4px 16px;
+    transition: all 0.25s ease;
+    flex: 1;
+    min-width: 260px;
+    max-width: 480px;
+}
+
+.chapel-search-box:focus-within {
+    border-color: #00897b !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.15) !important;
+}
+
+.chapel-search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 0.88rem;
+    color: #0f172a;
+    font-weight: 500;
+    padding: 6px 0;
+    min-width: 0;
+}
+
+.chapel-search-box .btn-search {
+    background: linear-gradient(135deg, #00897b, #004d40) !important;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 25px;
+    padding: 7px 18px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 2px 8px rgba(0,137,123,0.25);
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.chapel-search-box .btn-search:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,137,123,0.35);
+}
+
+.chapel-map-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 25px;
+    padding: 9px 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.chapel-map-btn:hover {
+    background: #1e293b;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* Tablet & Mobile Adjustments */
+@media (max-width: 991px) {
+    .chapel-toolbar-grid {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+    .chapel-search-form {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    .chapel-search-box {
+        max-width: 100%;
+        width: 100%;
+    }
+    .chapel-map-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .chapel-toolbar-wrap {
+        padding: 14px 16px !important;
+        border-radius: 16px !important;
+    }
+    .chapel-search-box {
+        padding: 3px 4px 3px 12px;
+    }
+    .chapel-search-box input {
+        font-size: 0.82rem;
+    }
+    .chapel-search-box .btn-search {
+        padding: 6px 14px;
+        font-size: 0.78rem;
+    }
+}
+</style>
+
+<section class="content-section chapel-page" style="background: #f8fafc; padding: 40px 0 80px;">
     <div class="container">
         <!-- Toolbar Header & Search -->
-        <div class="chapel-toolbar d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 bg-white rounded-4 shadow-sm border mb-4">
-            <!-- Left: Total info -->
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 44px; height: 44px; background: rgba(0, 137, 123, 0.1); color: #00897b; font-size: 1.25rem;">
-                    <i class="fas fa-church"></i>
+        <div class="chapel-toolbar-wrap">
+            <div class="chapel-toolbar-grid">
+                <!-- Left: Total info -->
+                <div class="chapel-info-box">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width: 44px; height: 44px; background: rgba(0, 137, 123, 0.1); color: #00897b; font-size: 1.25rem;">
+                        <i class="fas fa-church"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small fw-bold text-uppercase d-block" style="letter-spacing: 0.5px; font-size: 0.72rem; margin-bottom: 2px;">Total Wilayah Pelayanan</span>
+                        <strong class="fs-5 text-dark fw-bold" style="letter-spacing: -0.3px;">{{ method_exists($kapela, 'total') ? $kapela->total() : count($kapelaItems) }} <span class="fs-6 fw-normal text-muted">Stasi &amp; Kapela</span></strong>
+                    </div>
                 </div>
-                <div>
-                    <span class="chapel-kicker text-muted small fw-bold text-uppercase d-block" style="letter-spacing: 0.5px; font-size: 0.72rem; margin-bottom: 2px;">Total Wilayah Pelayanan</span>
-                    <strong class="fs-5 text-dark fw-bold">{{ method_exists($kapela, 'total') ? $kapela->total() : count($kapelaItems) }} <span class="fs-6 fw-normal text-muted">Stasi &amp; Kapela</span></strong>
-                </div>
+
+                <!-- Center: Responsive Search Form -->
+                <form action="/profil-kapela" method="GET" class="chapel-search-form m-0" style="flex: 1; max-width: 480px;">
+                    <div class="chapel-search-box">
+                        <i class="fas fa-search me-2 text-muted" style="font-size: 0.88rem; flex-shrink: 0; color: #94a3b8 !important;"></i>
+                        <input 
+                            type="text" 
+                            name="q" 
+                            value="{{ $search ?? '' }}" 
+                            placeholder="Cari nama stasi, pelindung, lokasi..." 
+                            aria-label="Cari stasi atau kapela"
+                        >
+                        @if(!empty($search))
+                            <a href="/profil-kapela" style="color: #94a3b8; text-decoration: none; padding: 0 8px; font-size: 0.95rem; display: flex; align-items: center;" onmouseover="this.style.color='#ef4444';" onmouseout="this.style.color='#94a3b8';" title="Reset pencarian">
+                                <i class="fas fa-circle-xmark"></i>
+                            </a>
+                        @endif
+                        <button type="submit" class="btn-search">
+                            <span>Cari</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Right: Map Button -->
+                <a href="/peta-kapela" class="chapel-map-btn">
+                    <i class="fas fa-map-location-dot" style="color: #14b8a6;"></i>
+                    <span>Lihat Peta Interaktif</span>
+                </a>
             </div>
-
-            <!-- Center: Modern Search Form -->
-            <form action="/profil-kapela" method="GET" class="my-1" style="flex: 1; max-width: 440px; min-width: 260px;">
-                <div class="d-flex align-items-center" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 30px; padding: 4px 6px 4px 14px; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='#94a3b8';" onfocusin="this.style.borderColor='#00897b'; this.style.boxShadow='0 0 0 3px rgba(0,137,123,0.15)'; this.style.background='#ffffff';" onfocusout="this.style.borderColor='#cbd5e1'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.02)'; this.style.background='#f8fafc';">
-                    <i class="fas fa-search me-2" style="color: #94a3b8; font-size: 0.88rem; flex-shrink: 0;"></i>
-                    <input 
-                        type="text" 
-                        name="q" 
-                        value="{{ $search ?? '' }}" 
-                        style="border: none; outline: none; background: transparent; width: 100%; font-size: 0.86rem; color: #0f172a; font-weight: 500; padding: 4px 0;" 
-                        placeholder="Cari nama stasi, pelindung, lokasi..." 
-                        aria-label="Cari stasi atau kapela"
-                    >
-                    @if(!empty($search))
-                        <a href="/profil-kapela" style="color: #94a3b8; text-decoration: none; padding: 0 8px; font-size: 0.95rem; display: flex; align-items: center;" onmouseover="this.style.color='#ef4444';" onmouseout="this.style.color='#94a3b8';" title="Reset pencarian">
-                            <i class="fas fa-circle-xmark"></i>
-                        </a>
-                    @endif
-                    <button type="submit" class="btn text-white rounded-pill fw-bold d-inline-flex align-items-center justify-content-center flex-shrink-0" style="background: linear-gradient(135deg, #00897b, #004d40); border: none; padding: 6px 16px; font-size: 0.8rem; height: 32px; box-shadow: 0 2px 8px rgba(0,137,123,0.25);">
-                        <span>Cari</span>
-                    </button>
-                </div>
-            </form>
-
-            <!-- Right: Map Button -->
-            <a href="/peta-kapela" class="btn text-white rounded-pill px-3.5 py-2 fw-bold d-inline-flex align-items-center gap-2 shadow-sm" style="background: #0f172a; font-size: 0.85rem; text-decoration: none;">
-                <i class="fas fa-map-location-dot" style="color: #14b8a6;"></i>
-                <span>Lihat Peta Interaktif</span>
-            </a>
         </div>
 
         @if(!empty($search))
