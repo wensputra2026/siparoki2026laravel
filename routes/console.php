@@ -23,9 +23,9 @@ Artisan::command('siparoki:setup {--force : Paksa timpa database yang ada}', fun
     }
 
     // 2. Import Master SQL Schema
-    $sqlPath = database_path('data/siparoki.sql');
+    $sqlPath = database_path('siparoki.sql');
     if (!File::exists($sqlPath)) {
-        $sqlPath = public_path('installer/database/siparoki.sql');
+        $sqlPath = database_path('data/siparoki.sql');
     }
 
     if (File::exists($sqlPath)) {

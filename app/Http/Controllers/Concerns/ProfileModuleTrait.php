@@ -103,7 +103,10 @@ trait ProfileModuleTrait
         });
 
         $pastors = \Illuminate\Support\Facades\Schema::hasTable('master_pastor')
-            ? \App\Models\MasterPastor::orderBy('nama_pastor')->get()
+            ? \App\Models\MasterPastor::orderBy('urutan')->orderBy('nama_pastor')->get()->map(function($p) {
+                $p->nama_formatted = \App\Models\MasterPastor::formatNama($p);
+                return $p;
+            })
             : [];
 
         $totalUmat = \Illuminate\Support\Facades\Schema::hasTable('umat') ? \App\Models\Umat::count() : 1850;

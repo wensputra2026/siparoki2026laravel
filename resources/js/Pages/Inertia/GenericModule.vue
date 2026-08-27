@@ -242,6 +242,22 @@ const filteredFormKubs = computed(() => {
     return list;
 });
 
+const onMutasiUmatSelected = (umatId) => {
+    formData.value.umat_id = umatId;
+    const selected = (props.umatList || []).find(u => String(u.id) === String(umatId));
+    if (selected) {
+        if (selected.kub_id && !formData.value.kub_asal_id) {
+            formData.value.kub_asal_id = selected.kub_id;
+        }
+        if (selected.wilayah_id && !formData.value.wilayah_asal_id) {
+            formData.value.wilayah_asal_id = selected.wilayah_id;
+        }
+        if (selected.kk_id) {
+            formData.value.kk_id = selected.kk_id;
+        }
+    }
+};
+
 const activeProfileParoki = computed(() => {
     if (props.defaultParoki) return props.defaultParoki;
     if (!props.defaultParokiId) return props.parokiList?.[0] || null;
@@ -519,6 +535,9 @@ const importExportModuleKeys = [
     'kk-katolik',
     'kk',
     'keluarga',
+    'umat',
+    'data-umat',
+    'data_umat',
 ];
 
 const hasImportExportActions = computed(() => importExportModuleKeys.includes(props.moduleKey));
@@ -1432,6 +1451,22 @@ const openCreateModal = () => {
         };
     }
 
+    if (props.moduleKey === 'riwayat-mutasi-umat' || props.moduleKey === 'mutasi-umat' || props.moduleKey === 'riwayat-mutasi') {
+        const today = new Date().toISOString().split('T')[0];
+        formData.value = {
+            umat_id: props.umatList?.[0]?.id || '',
+            kk_id: props.umatList?.[0]?.kk_id || '',
+            jenis_mutasi: 'Mutasi Antar KUB (Dalam Paroki)',
+            kub_asal_id: props.umatList?.[0]?.kub_id || '',
+            kub_tujuan_id: '',
+            wilayah_asal_id: props.umatList?.[0]?.wilayah_id || '',
+            wilayah_tujuan_id: '',
+            tgl_mutasi: today,
+            no_surat_pindah: '',
+            alasan: '',
+        };
+    }
+
     uploadedFile.value = null;
     previewImage.value = null;
     props.columns.forEach((col) => {
@@ -1648,6 +1683,24 @@ const openEditModal = (item) => {
             nama_provinsi: item.nama_provinsi || item.nama || '',
             kode_provinsi: item.kode_provinsi || item.kode || '',
             status: item.status || 'Aktif',
+        };
+        showFormModal.value = true;
+        return;
+    }
+
+    if (props.moduleKey === 'riwayat-mutasi-umat' || props.moduleKey === 'mutasi-umat' || props.moduleKey === 'riwayat-mutasi') {
+        formData.value = {
+            id: item.id,
+            umat_id: item.umat_id || (item.umat ? item.umat.id : ''),
+            kk_id: item.kk_id || '',
+            jenis_mutasi: item.jenis_mutasi || 'Mutasi Antar KUB (Dalam Paroki)',
+            kub_asal_id: item.kub_asal_id || '',
+            kub_tujuan_id: item.kub_tujuan_id || '',
+            wilayah_asal_id: item.wilayah_asal_id || '',
+            wilayah_tujuan_id: item.wilayah_tujuan_id || '',
+            tgl_mutasi: item.tgl_mutasi ? String(item.tgl_mutasi).substring(0, 10) : '',
+            no_surat_pindah: item.no_surat_pindah || '',
+            alasan: item.alasan || item.keterangan || '',
         };
         showFormModal.value = true;
         return;
@@ -2045,6 +2098,64 @@ const toggleUserStatus = (item) => {
     });
 };
 
+// Bulk Selection State
+const selectedIds = ref([]);
+const showBulkDeleteModal = ref(false);
+const isBulkDeleting = ref(false);
+
+const selectableItems = computed(() => {
+    return (props.items?.data || []).filter(item => !isSelfUser(item));
+});
+
+const isAllSelected = computed(() => {
+    if (selectableItems.value.length === 0) return false;
+    return selectableItems.value.every(item => selectedIds.value.includes(resolveEntityId(item)));
+});
+
+const isPartiallySelected = computed(() => {
+    return selectedIds.value.length > 0 && !isAllSelected.value;
+});
+
+const toggleSelectAll = () => {
+    if (isAllSelected.value) {
+        selectedIds.value = [];
+    } else {
+        selectedIds.value = selectableItems.value.map(item => resolveEntityId(item)).filter(Boolean);
+    }
+};
+
+const toggleSelectItem = (id) => {
+    if (!id) return;
+    const idx = selectedIds.value.indexOf(id);
+    if (idx > -1) {
+        selectedIds.value.splice(idx, 1);
+    } else {
+        selectedIds.value.push(id);
+    }
+};
+
+const confirmBulkDelete = () => {
+    if (selectedIds.value.length === 0) return;
+    isBulkDeleting.value = true;
+    const currentPath = window.location.pathname.replace(/\/$/, '');
+    router.post(`${currentPath}/bulk-delete`, {
+        ids: selectedIds.value,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showBulkDeleteModal.value = false;
+            selectedIds.value = [];
+            isBulkDeleting.value = false;
+        },
+        onError: () => {
+            isBulkDeleting.value = false;
+        },
+        onFinish: () => {
+            isBulkDeleting.value = false;
+        }
+    });
+};
+
 const confirmDelete = () => {
     if (!selectedItem.value) return;
     if (isSelfUser(selectedItem.value)) {
@@ -2159,6 +2270,26 @@ const statusLabel = (item) => {
     if (isPromotedKuasi(item)) return 'Menjadi Paroki';
     return isInactiveStatus(item) ? 'Nonaktif' : 'Aktif';
 };
+
+const showRoleFilter = computed(() => {
+    return ['user', 'users'].includes(props.moduleKey);
+});
+
+const showWilayahFilter = computed(() => {
+    return ['wilayah', 'kapela', 'stasi', 'kub', 'umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'user', 'users', 'iuran', 'sakramen', 'buku-sakramen'].includes(props.moduleKey);
+});
+
+const showKapelaFilter = computed(() => {
+    return ['kapela', 'stasi', 'kub', 'umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'user', 'users', 'iuran', 'sakramen', 'buku-sakramen'].includes(props.moduleKey);
+});
+
+const showKubFilter = computed(() => {
+    return ['kub', 'umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'user', 'users', 'iuran'].includes(props.moduleKey);
+});
+
+const showStatusFilter = computed(() => {
+    return ['user', 'users', 'kategori-konten', 'kategori_konten', 'konten', 'agenda', 'pengumuman', 'renungan'].includes(props.moduleKey) || props.columns?.some(c => c.key === 'status');
+});
 </script>
 
 <template>
@@ -2166,39 +2297,37 @@ const statusLabel = (item) => {
         <Head :title="`${title} - SIPAROKI`" />
 
         <!-- Responsive layout: natural flow on mobile/tablet, full-height pinned on desktop -->
-        <div class="flex flex-col h-auto min-h-0 lg:h-full gap-2.5 pb-4 lg:pb-0">
+        <div class="flex flex-col h-auto min-h-0 lg:h-full gap-3 pb-8 lg:pb-4">
 
         <!-- Header Card with Actions -->
-        <div class=
-        
-        "rounded-2xl bg-white border border-slate-200/80 p-3 sm:p-4 shadow-2xs shrink-0 space-y-3.5">
+        <div class="rounded-xl bg-white border border-slate-200/80 p-3 sm:p-4 shadow-2xs shrink-0 space-y-3.5">
             <!-- Top Row: Title + Action Buttons -->
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-3 border-b border-slate-100">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-sm shrink-0">
+            <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-3 pb-3 border-b border-slate-100">
+                <div class="flex items-start gap-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-sm shrink-0">
                         <i v-if="moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga'" class="fa-regular fa-folder-open"></i>
                         <i v-else-if="moduleKey === 'umat' || moduleKey === 'data-umat'" class="fa-solid fa-users"></i>
                         <i v-else class="fa-solid fa-layer-group"></i>
                     </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h1 class="text-base font-black text-slate-900 tracking-tight">
-                                {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'Daftar Kartu Keluarga Terdaftar' : title }}
-                            </h1>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                                {{ items.total || 0 }} Data Terdaftar
+                    <div class="min-w-0">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
+                            <h2 class="text-base sm:text-lg font-black text-slate-900 leading-tight">{{ title }}</h2>
+                            <span class="w-fit px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[11px] font-bold border border-blue-200">
+                                {{ items.total || 0 }} Data
                             </span>
                         </div>
-                        <p v-if="moduleKey !== 'direktori-dpp'" class="text-[11px] text-slate-500">Kelola dan pantau data master {{ title.toLowerCase() }} paroki secara terintegrasi.</p>
+                        <p v-if="moduleKey !== 'direktori-dpp'" class="text-[11px] text-slate-500 leading-relaxed max-w-xl">
+                            Kelola dan pantau data master {{ title.toLowerCase() }} paroki secara terintegrasi.
+                        </p>
                     </div>
                 </div>
 
                 <!-- Right: Action Buttons Group -->
-                <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <div class="grid grid-cols-2 sm:flex sm:flex-wrap xl:justify-end gap-2 w-full xl:w-auto">
                     <!-- 0. Read-Only Indicator for Wilayah / Kapela on KK & Umat Data -->
                     <div
                         v-if="isUmatReadOnlyRole"
-                        class="px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
+                        class="col-span-2 px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
                     >
                         <i class="fa-solid fa-eye text-blue-600 text-[11px]"></i>
                         <span>{{ ['wilayah', 'kub', 'sakramen', 'buku-sakramen'].includes(moduleKey) ? 'Mode Lihat Saja (Kelola di Paroki)' : 'Mode Lihat Saja (CRUD di KUB)' }}</span>
@@ -2207,7 +2336,7 @@ const statusLabel = (item) => {
                     <!-- 0.1 View & Edit Only Indicator for Wilayah / Kapela on Sakramen Data -->
                     <div
                         v-else-if="isViewAndEditOnlyRole"
-                        class="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1.5 shrink-0"
+                        class="col-span-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1.5 shrink-0"
                     >
                         <i class="fa-solid fa-pen-to-square text-amber-600 text-[11px]"></i>
                         <span>Mode Lihat & Ubah (Tambah/Hapus di Paroki)</span>
@@ -2218,7 +2347,7 @@ const statusLabel = (item) => {
                         <Link
                             v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
                             :href="moduleKey === 'konten' ? `${basePrefix}/konten/create` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/kk-katolik/create` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/create` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/create` : `${basePrefix}/role/create`)))"
-                            class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                            class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
                         >
                             <i class="fa-solid fa-plus text-[11px]"></i>
                             <span>Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : (['umat', 'data-umat'].includes(moduleKey) ? 'Umat' : (moduleKey === 'galeri' ? 'Album Galeri' : title)) }}</span>
@@ -2227,15 +2356,15 @@ const statusLabel = (item) => {
                             v-else
                             type="button"
                             @click="openCreateModal"
-                            class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                            class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
                         >
                             <i class="fa-solid fa-plus text-[11px]"></i>
                             <span>Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : title }}</span>
                         </button>
                     </template>
 
-                    <!-- 2. Import Excel & Template Download Buttons (Only active for modules with hasImport = true) -->
-                    <template v-if="hasImport && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
+                    <!-- 2. Import Excel & Template Download Buttons (Only for whitelisted data-master modules) -->
+                    <template v-if="hasImportExportActions && hasImport && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <input
                             ref="importFileInput"
                             type="file"
@@ -2247,7 +2376,7 @@ const statusLabel = (item) => {
                             type="button"
                             :disabled="isImporting"
                             @click="triggerImportFile"
-                            class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60"
+                            class="px-3.5 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60"
                         >
                             <i v-if="isImporting" class="fa-solid fa-circle-notch fa-spin text-[11px]"></i>
                             <i v-else class="fa-solid fa-arrow-up-from-bracket text-[11px]"></i>
@@ -2256,18 +2385,18 @@ const statusLabel = (item) => {
 
                         <a
                             :href="exportModuleUrl('template')"
-                            class="px-3.5 py-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-300 text-cyan-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap"
+                            class="px-3.5 py-2 rounded-lg bg-cyan-50 hover:bg-cyan-100 border border-cyan-300 text-cyan-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
                         >
                             <i class="fa-solid fa-file-excel text-[11px]"></i>
                             <span>Template</span>
                         </a>
                     </template>
 
-                    <!-- 3. Export Excel Button (Only active for modules with hasExport = true) -->
+                    <!-- 3. Export Excel Button (Only for whitelisted data-master modules) -->
                     <a
-                        v-if="hasExport"
+                        v-if="hasImportExportActions && hasExport"
                         :href="exportModuleUrl('excel')"
-                        class="px-3.5 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap"
+                        class="px-3.5 py-2 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
                     >
                         <i class="fa-solid fa-arrow-right-from-bracket text-[11px]"></i>
                         <span>Ekspor Excel</span>
@@ -2278,7 +2407,7 @@ const statusLabel = (item) => {
                         v-if="hasPdf"
                         :href="exportModuleUrl('print')"
                         target="_blank"
-                        class="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap"
+                        class="px-3.5 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
                     >
                         <i class="fa-solid fa-print text-[11px]"></i>
                         <span>Cetak / PDF</span>
@@ -2286,10 +2415,10 @@ const statusLabel = (item) => {
 
                     <!-- 5. Reload Data dari Database -->
                     <button
-                        @click="reloadModuleData"
+                        @click="refreshData"
                         :disabled="isReloadingData"
                         title="Reload data tabel dari database (tanpa reload browser)"
-                        class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-300 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60 shadow-2xs"
+                        class="px-3.5 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-300 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60 shadow-2xs"
                     >
                         <i :class="['fa-solid fa-arrows-rotate text-[11px]', isReloadingData ? 'fa-spin text-blue-600' : 'text-slate-600']"></i>
                         <span>{{ isReloadingData ? 'Memuat...' : 'Reload' }}</span>
@@ -2298,9 +2427,9 @@ const statusLabel = (item) => {
             </div>
 
             <!-- Bottom Row: Filter Bar (Role, Wilayah, Kapela, KUB, Status, Search) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 text-xs">
                 <!-- 0. Filter Level / Role -->
-                <div>
+                <div v-if="showRoleFilter" class="w-full">
                     <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Filter Level</label>
                     <SearchableSelect
                         v-model="roleFilter"
@@ -2315,7 +2444,7 @@ const statusLabel = (item) => {
                 </div>
 
                 <!-- 1. Filter Wilayah -->
-                <div>
+                <div v-if="showWilayahFilter" class="w-full">
                     <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
                         Filter Wilayah
                         <span v-if="kapelaFilter" class="text-rose-500 text-[10px] font-normal lowercase">(stasi aktif)</span>
@@ -2334,7 +2463,7 @@ const statusLabel = (item) => {
                 </div>
 
                 <!-- 2. Filter Kapela / Stasi -->
-                <div>
+                <div v-if="showKapelaFilter" class="w-full">
                     <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
                         Filter Kapela / Stasi
                         <span v-if="wilayahFilter" class="text-rose-500 text-[10px] font-normal lowercase">(wilayah aktif)</span>
@@ -2353,7 +2482,7 @@ const statusLabel = (item) => {
                 </div>
 
                 <!-- 3. Filter KUB -->
-                <div>
+                <div v-if="showKubFilter" class="w-full">
                     <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Filter KUB</label>
                     <SearchableSelect
                         v-model="kubFilter"
@@ -2367,9 +2496,9 @@ const statusLabel = (item) => {
                     />
                 </div>
 
-                <!-- Status Verifikasi -->
-                <div>
-                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Status Verifikasi</label>
+                <!-- Status Verifikasi / Status Data -->
+                <div v-if="showStatusFilter" class="w-full">
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Status</label>
                     <SearchableSelect
                         v-model="statusFilter"
                         :options="statusOptions"
@@ -2383,7 +2512,7 @@ const statusLabel = (item) => {
                 </div>
 
                 <!-- Cari Data -->
-                <div>
+                <div class="w-full sm:col-span-2 lg:col-span-2 xl:col-span-1">
                     <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Cari Data</label>
                     <div class="relative">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
@@ -2391,20 +2520,71 @@ const statusLabel = (item) => {
                             v-model="search"
                             type="text"
                             placeholder="Kata kunci..."
-                            class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-[12.5px] text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 min-h-[40px]"
+                            class="w-full pl-8 pr-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs sm:text-[12.5px] text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 min-h-[40px]"
                         />
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Floating Bulk Action Toolbar -->
+        <transition
+            enter-active-class="transition ease-out duration-200"
+            enter-from-class="transform opacity-0 -translate-y-2"
+            enter-to-class="transform opacity-100 translate-y-0"
+            leave-active-class="transition ease-in duration-150"
+            leave-from-class="transform opacity-100 translate-y-0"
+            leave-to-class="transform opacity-0 -translate-y-2"
+        >
+            <div
+                v-if="selectedIds.length > 0"
+                class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl border border-slate-800 shrink-0"
+            >
+                <div class="flex items-center gap-2.5">
+                    <span class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 font-black text-xs flex items-center justify-center border border-rose-500/40">
+                        {{ selectedIds.length }}
+                    </span>
+                    <span class="text-xs font-bold text-slate-200">
+                        {{ selectedIds.length }} data {{ title.toLowerCase() }} dipilih
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        @click="selectedIds = []"
+                        class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition cursor-pointer"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        @click="showBulkDeleteModal = true"
+                        class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm shadow-rose-600/30 flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>Hapus Terpilih (Bulk Delete)</span>
+                    </button>
+                </div>
+            </div>
+        </transition>
+
         <!-- Table Container: flex-1 so it fills remaining height, with internal scroll on desktop, natural scroll on mobile -->
-        <div class="flex-1 min-h-[380px] lg:min-h-0 rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-2xs flex flex-col">
+        <div class="flex-1 min-h-[420px] lg:min-h-0 rounded-xl bg-white border border-slate-200/80 overflow-hidden shadow-2xs flex flex-col">
             <div class="flex-1 overflow-auto custom-scrollbar">
-                <table class="w-full text-left text-xs sm:text-[13px]">
+                <table class="w-full min-w-[980px] text-left text-xs sm:text-[13px]">
                     <thead class="bg-slate-100/90 text-slate-700 uppercase tracking-wider text-xs sm:text-[12px] font-bold border-b border-slate-200/90 sticky top-0 z-10">
                         <tr>
-                            <th class="px-3.5 py-3 w-12 text-center">#</th>
+                            <th class="px-3 py-3 w-10 text-center">
+                                <input
+                                    type="checkbox"
+                                    :checked="isAllSelected"
+                                    :indeterminate="isPartiallySelected"
+                                    @change="toggleSelectAll"
+                                    class="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                                    title="Pilih Semua di Halaman Ini"
+                                />
+                            </th>
+                            <th class="px-3 py-3 w-10 text-center">#</th>
                             <th v-for="col in columns" :key="col.key" class="px-4 py-3">
                                 {{ col.label }}
                             </th>
@@ -2416,10 +2596,22 @@ const statusLabel = (item) => {
                         <tr
                             v-for="(item, idx) in items.data"
                             :key="item.id || item.id_keuskupan || item.id_dekenat || item.id_paroki || idx"
-                            class="hover:bg-slate-50/80 transition-colors group"
+                            :class="['hover:bg-slate-50/80 transition-colors group', selectedIds.includes(resolveEntityId(item)) ? 'bg-rose-50/30' : '']"
                         >
+                            <!-- Checkbox Column -->
+                            <td class="px-3 py-3 text-center">
+                                <input
+                                    type="checkbox"
+                                    :value="resolveEntityId(item)"
+                                    :checked="selectedIds.includes(resolveEntityId(item))"
+                                    :disabled="isSelfUser(item)"
+                                    @change="toggleSelectItem(resolveEntityId(item))"
+                                    class="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                                />
+                            </td>
+
                             <!-- Row Number -->
-                            <td class="px-3.5 py-3 text-center font-bold text-slate-400 text-xs">
+                            <td class="px-3 py-3 text-center font-bold text-slate-400 text-xs">
                                 {{ (items.from || 1) + idx }}
                             </td>
 
@@ -2576,6 +2768,27 @@ const statusLabel = (item) => {
                                     {{ getFieldValue(item, col) }}
                                 </span>
 
+                                <!-- Kategori Konten: Jumlah Konten Badge -->
+                                <template v-else-if="col.key === 'total_konten'">
+                                    <Link
+                                        v-if="item.total_konten > 0"
+                                        :href="`${basePrefix}/konten?category=${encodeURIComponent(item.nama_kategori || item.kategori || '')}`"
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11.5px] font-bold border shadow-2xs bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition cursor-pointer"
+                                        :title="`Lihat ${item.total_konten} artikel dalam kategori ini`"
+                                    >
+                                        <i class="fa-solid fa-newspaper text-emerald-600"></i>
+                                        <span>{{ item.total_konten }} Artikel</span>
+                                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-emerald-600/70 ml-0.5"></i>
+                                    </Link>
+                                    <span
+                                        v-else
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11.5px] font-semibold border bg-slate-50 text-slate-400 border-slate-200"
+                                    >
+                                        <i class="fa-solid fa-folder-open text-slate-300"></i>
+                                        <span>0 Artikel</span>
+                                    </span>
+                                </template>
+
                                 <!-- General Text Column -->
                                 <span v-else class="text-slate-700 font-medium text-xs sm:text-[12.5px]">
                                     {{ getFieldValue(item, col) }}
@@ -2657,6 +2870,33 @@ const statusLabel = (item) => {
                                     >
                                         <i class="fa-solid fa-print text-xs"></i>
                                     </a>
+                                    <!-- Mutasi KUB, Pisah KK, & Riwayat Buttons (For Umat) -->
+                                    <template v-if="['umat', 'data-umat'].includes(moduleKey)">
+                                        <Link
+                                            v-if="!isUmatReadOnlyRole"
+                                            :href="`${basePrefix}/umat/${item.id}/mutasi`"
+                                            title="Mutasi / Pindah KUB"
+                                            class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-teal-50 hover:text-teal-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
+                                        >
+                                            <i class="fa-solid fa-arrows-split-up-and-left text-xs"></i>
+                                        </Link>
+                                        <Link
+                                            v-if="!isUmatReadOnlyRole"
+                                            :href="`${basePrefix}/umat/${item.id}/pisah-kk`"
+                                            title="Pisah KK (Menikah / Bentuk Keluarga Baru)"
+                                            class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-purple-50 hover:text-purple-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
+                                        >
+                                            <i class="fa-solid fa-people-roof text-xs"></i>
+                                        </Link>
+                                        <Link
+                                            :href="`${basePrefix}/umat/${item.id}/riwayat`"
+                                            title="Riwayat Mutasi & Pergerakan Umat"
+                                            class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
+                                        >
+                                            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                                        </Link>
+                                    </template>
+
                                     <!-- Edit Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
                                     <template v-if="!isUmatReadOnlyRole">
                                         <Link
@@ -5876,6 +6116,147 @@ const statusLabel = (item) => {
                         </div>
                     </template>
 
+                    <!-- 8. RIWAYAT MUTASI UMAT FORM (100% Menggunakan Dropdown Database Gerejawi) -->
+                    <template v-else-if="moduleKey === 'riwayat-mutasi-umat' || moduleKey === 'mutasi-umat' || moduleKey === 'riwayat-mutasi'">
+                        <div class="space-y-4">
+                            <div class="p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200/80 flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base shrink-0 shadow-xs">
+                                    <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-black text-amber-950">Form Mutasi Umat &amp; Wilayah Gerejawi</h4>
+                                    <p class="text-[11px] text-amber-800">Pilih data Umat, KUB, dan Wilayah yang terhubung langsung ke database paroki.</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <!-- 1. Pilih Umat -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Pilih Umat (Dari Database) *</label>
+                                    <SearchableSelect
+                                        v-model="formData.umat_id"
+                                        :options="umatList"
+                                        valueKey="id"
+                                        labelKey="label"
+                                        placeholder="-- Cari Nama atau NIK Umat --"
+                                        searchPlaceholder="Ketik nama umat atau NIK..."
+                                        icon="fa-user"
+                                        iconColor="text-blue-600"
+                                        @update:modelValue="onMutasiUmatSelected"
+                                    />
+                                </div>
+
+                                <!-- 2. Jenis Mutasi -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Jenis Mutasi *</label>
+                                    <select
+                                        v-model="formData.jenis_mutasi"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition cursor-pointer"
+                                    >
+                                        <option value="Mutasi Antar KUB (Dalam Paroki)">Mutasi Antar KUB (Dalam Paroki)</option>
+                                        <option value="Pindah Wilayah Pastoral">Pindah Wilayah Pastoral</option>
+                                        <option value="Pecah KK / Keluarga Baru">Pecah KK / Bentuk Keluarga Baru</option>
+                                        <option value="Pindah Paroki (Keluar)">Pindah Paroki (Keluar)</option>
+                                        <option value="Pindah Masuk dari Paroki Lain">Pindah Masuk dari Paroki Lain</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+
+                                <!-- 3. KUB Asal -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">KUB Asal (Database)</label>
+                                    <SearchableSelect
+                                        v-model="formData.kub_asal_id"
+                                        :options="kubList"
+                                        valueKey="id"
+                                        labelKey="nama_kub"
+                                        placeholder="-- Pilih KUB Asal --"
+                                        searchPlaceholder="Cari KUB asal..."
+                                        icon="fa-people-roof"
+                                        iconColor="text-rose-500"
+                                    />
+                                </div>
+
+                                <!-- 4. KUB Tujuan -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">KUB Tujuan (Database)</label>
+                                    <SearchableSelect
+                                        v-model="formData.kub_tujuan_id"
+                                        :options="kubList"
+                                        valueKey="id"
+                                        labelKey="nama_kub"
+                                        placeholder="-- Pilih KUB Tujuan --"
+                                        searchPlaceholder="Cari KUB tujuan..."
+                                        icon="fa-people-roof"
+                                        iconColor="text-emerald-600"
+                                    />
+                                </div>
+
+                                <!-- 5. Wilayah Asal -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Wilayah Pastoral Asal (Database)</label>
+                                    <SearchableSelect
+                                        v-model="formData.wilayah_asal_id"
+                                        :options="wilayahList"
+                                        valueKey="id"
+                                        labelKey="nama_wilayah"
+                                        placeholder="-- Pilih Wilayah Asal --"
+                                        searchPlaceholder="Cari wilayah asal..."
+                                        icon="fa-map-location-dot"
+                                        iconColor="text-rose-500"
+                                    />
+                                </div>
+
+                                <!-- 6. Wilayah Tujuan -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Wilayah Pastoral Tujuan (Database)</label>
+                                    <SearchableSelect
+                                        v-model="formData.wilayah_tujuan_id"
+                                        :options="wilayahList"
+                                        valueKey="id"
+                                        labelKey="nama_wilayah"
+                                        placeholder="-- Pilih Wilayah Tujuan --"
+                                        searchPlaceholder="Cari wilayah tujuan..."
+                                        icon="fa-map-location-dot"
+                                        iconColor="text-emerald-600"
+                                    />
+                                </div>
+
+                                <!-- 7. Tanggal Mutasi -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Mutasi *</label>
+                                    <input
+                                        v-model="formData.tgl_mutasi"
+                                        type="date"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <!-- 8. No. Surat Pindah / Pengantar -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">No. Surat Pengantar / Pindah</label>
+                                    <input
+                                        v-model="formData.no_surat_pindah"
+                                        type="text"
+                                        placeholder="Contoh: SP/001/VIII/2026"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <!-- 9. Alasan / Keterangan -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Alasan / Catatan Pastoral</label>
+                                    <textarea
+                                        v-model="formData.alasan"
+                                        rows="2"
+                                        placeholder="Tuliskan keterangan mutasi (misal: Menikah dan bentuk keluarga baru, domisili kerja, pindah alamat)..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
                     <template v-else-if="moduleKey === 'user'">
                         <div class="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-4">
                             <div class="rounded-2xl bg-slate-50 border border-slate-200/80 p-4 space-y-3">
@@ -8218,12 +8599,23 @@ const statusLabel = (item) => {
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs"
         >
             <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95">
-                <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 mx-auto flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
+                <div :class="['w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-xl border', (['kategori-konten', 'kategori_konten'].includes(moduleKey) && Number(selectedItem.total_konten) > 0) ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-rose-50 text-rose-600 border-rose-200']">
+                    <i :class="['fa-solid', (['kategori-konten', 'kategori_konten'].includes(moduleKey) && Number(selectedItem.total_konten) > 0) ? 'fa-shield-halved' : 'fa-triangle-exclamation']"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-slate-900">Konfirmasi Hapus Data</h3>
-                    <p class="text-xs text-slate-500 mt-1">
+                    <h3 class="text-sm font-bold text-slate-900">
+                        {{ (['kategori-konten', 'kategori_konten'].includes(moduleKey) && Number(selectedItem.total_konten) > 0) ? 'Kategori Memiliki Berita Terkait' : 'Konfirmasi Hapus Data' }}
+                    </h3>
+                    <div v-if="['kategori-konten', 'kategori_konten'].includes(moduleKey) && Number(selectedItem.total_konten) > 0" class="text-xs text-amber-900 bg-amber-50/90 p-3.5 rounded-2xl border border-amber-200 mt-2.5 text-left leading-relaxed space-y-1.5">
+                        <div class="font-bold flex items-center gap-1.5 text-amber-800">
+                            <i class="fa-solid fa-circle-exclamation text-amber-600"></i>
+                            <span>Tidak Dapat Dihapus Langsung</span>
+                        </div>
+                        <p class="text-[11.5px] text-amber-800/90">
+                            Kategori <b>"{{ selectedItem.nama_kategori || selectedItem.kategori }}"</b> masih memuat <b>{{ selectedItem.total_konten }}</b> artikel/berita aktif. Silakan hapus atau pindahkan konten di dalamnya ke kategori lain terlebih dahulu.
+                        </p>
+                    </div>
+                    <p v-else class="text-xs text-slate-500 mt-1">
                         Apakah Anda yakin ingin menghapus data <b>{{ selectedItem[columns[0]?.key] || 'ini' }}</b>? Tindakan ini tidak dapat dibatalkan.
                     </p>
                 </div>
@@ -8233,9 +8625,10 @@ const statusLabel = (item) => {
                         @click="showDeleteModal = false"
                         class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
                     >
-                        Batal
+                        {{ (['kategori-konten', 'kategori_konten'].includes(moduleKey) && Number(selectedItem.total_konten) > 0) ? 'Tutup' : 'Batal' }}
                     </button>
                     <button
+                        v-if="!(['kategori-konten', 'kategori_konten'].includes(moduleKey) && Number(selectedItem.total_konten) > 0)"
                         type="button"
                         @click="confirmDelete"
                         class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm shadow-rose-600/30 transition cursor-pointer"
@@ -8246,6 +8639,46 @@ const statusLabel = (item) => {
             </div>
         </div>
         <!-- end delete modal -->
+
+        <!-- BULK DELETE CONFIRMATION MODAL -->
+        <div
+            v-if="showBulkDeleteModal && selectedIds.length > 0"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs"
+        >
+            <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95">
+                <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 mx-auto flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">Konfirmasi Hapus Massal (Bulk Delete)</h3>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Apakah Anda yakin ingin menghapus <b>{{ selectedIds.length }}</b> data {{ title.toLowerCase() }} yang dipilih secara massal?
+                    </p>
+                    <p v-if="['kategori-konten', 'kategori_konten'].includes(moduleKey)" class="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-xl border border-amber-200 mt-2 text-left">
+                        <i class="fa-solid fa-circle-info me-1"></i> Catatan: Kategori yang masih memiliki berita/konten aktif akan otomatis dilindungi dari penghapusan.
+                    </p>
+                </div>
+                <div class="flex items-center justify-center gap-2.5 pt-2">
+                    <button
+                        type="button"
+                        @click="showBulkDeleteModal = false"
+                        class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        :disabled="isBulkDeleting"
+                        @click="confirmBulkDelete"
+                        class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm shadow-rose-600/30 transition cursor-pointer flex items-center gap-2"
+                    >
+                        <i v-if="isBulkDeleting" class="fa-solid fa-circle-notch fa-spin text-xs"></i>
+                        <span>Ya, Hapus Semua Terpilih</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- end bulk delete modal -->
         </div>
         <!-- end flex full-height wrapper -->
     </AppLayout>

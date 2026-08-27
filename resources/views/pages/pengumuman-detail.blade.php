@@ -104,7 +104,7 @@
             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #eef2f6; font-size: 0.9rem; color: #64748b;">
                 <span style="display: inline-flex; align-items: center; gap: 7px;">
                     <i class="far fa-calendar-alt" style="color: #ff9800; font-size: 1rem;"></i> 
-                    {{ \Carbon\Carbon::parse($publishedAt)->translatedFormat('l, d F Y') }}
+                    {{ format_tanggal_indonesia($publishedAt, true) }}
                 </span>
                 <span style="display: inline-flex; align-items: center; gap: 7px;">
                     <i class="far fa-user" style="color: #ff9800; font-size: 1rem;"></i> 

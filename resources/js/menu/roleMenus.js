@@ -75,6 +75,7 @@ export const roleMenus = {
                     submenus: [
                         { name: 'KK Katolik', href: '/superadmin/kk-katolik', icon: 'fa-house-chimney-user' },
                         { name: 'Data Umat / Jiwa', href: '/superadmin/umat', icon: 'fa-user' },
+                        { name: 'Riwayat Mutasi Umat', href: '/superadmin/riwayat-mutasi-umat', icon: 'fa-arrows-split-up-and-left' },
                         { name: 'Data Umat Meninggal', href: '/superadmin/defunctorum', icon: 'fa-book-skull' },
                         { name: 'Demografi & Statistik', href: '/superadmin/statistik', icon: 'fa-chart-pie' },
                     ],
@@ -210,6 +211,7 @@ export const roleMenus = {
                 },
                 { name: 'KK Katolik', href: '/pastor/kk-katolik', icon: 'fa-house-chimney-user' },
                 { name: 'Data Umat / Jiwa', href: '/pastor/umat', icon: 'fa-user' },
+                { name: 'Riwayat Mutasi Umat', href: '/pastor/riwayat-mutasi-umat', icon: 'fa-arrows-split-up-and-left' },
                 { name: 'Data Umat Meninggal', href: '/pastor/defunctorum', icon: 'fa-book-skull' },
                 { name: 'Demografi & Statistik', href: '/pastor/statistik', icon: 'fa-chart-pie' },
                 { name: 'Data Sakramen', href: '/pastor/sakramen', icon: 'fa-book-bible' },
@@ -296,7 +298,8 @@ export const roleMenus = {
                         { name: 'Direktori Misdinar', href: '/paroki/direktori-misdinar', icon: 'fa-hands-praying' },
                         { name: 'Riwayat Pastor', href: '/paroki/riwayat-pastor', icon: 'fa-user-tie' },
                         { name: 'Kronik Paroki', href: '/paroki/kronik-paroki', icon: 'fa-timeline' },
-                        { name: 'Peran & Anggota Kategorial', href: '/paroki/anggota-kategorial', icon: 'fa-user-check' },
+                        { name: 'Peran Kategorial', href: '/paroki/peran-kategorial', icon: 'fa-layer-group' },
+                        { name: 'Anggota Kategorial', href: '/paroki/anggota-kategorial', icon: 'fa-user-check' },
                     ],
                 },
                 {
@@ -305,8 +308,6 @@ export const roleMenus = {
                     submenus: [
                         { name: 'Daftar Jadwal Misa', href: '/paroki/jadwal-misa', icon: 'fa-calendar-day' },
                         { name: 'Petugas Liturgi', href: '/paroki/jadwal-petugas-liturgi', icon: 'fa-hands-praying' },
-                        { name: 'Master Pastor', href: '/paroki/master-pastor', icon: 'fa-address-book' },
-                        { name: 'Notifikasi WA', href: '/paroki/pengaturan-otp', icon: 'fa-comment-sms' },
                         { name: 'Pengaturan Jadwal', href: '/paroki/pengaturan-aplikasi', icon: 'fa-gear' },
                     ],
                 },
@@ -316,6 +317,7 @@ export const roleMenus = {
                     submenus: [
                         { name: 'KK Katolik', href: '/paroki/kk-katolik', icon: 'fa-house-chimney-user' },
                         { name: 'Data Umat / Jiwa', href: '/paroki/umat', icon: 'fa-user' },
+                        { name: 'Riwayat Mutasi Umat', href: '/paroki/riwayat-mutasi-umat', icon: 'fa-arrows-split-up-and-left' },
                         { name: 'Data Umat Meninggal', href: '/paroki/defunctorum', icon: 'fa-book-skull' },
                         { name: 'Demografi & Statistik', href: '/paroki/statistik', icon: 'fa-chart-pie' },
                     ],
@@ -445,6 +447,7 @@ export const roleMenus = {
             menus: [
                 { name: 'KK Katolik', href: '/wilayah/kk-katolik', icon: 'fa-house-chimney-user' },
                 { name: 'Data Umat / Jiwa', href: '/wilayah/umat', icon: 'fa-user' },
+                { name: 'Riwayat Mutasi Umat', href: '/wilayah/riwayat-mutasi-umat', icon: 'fa-arrows-split-up-and-left' },
                 { name: 'Demografi & Statistik', href: '/wilayah/statistik', icon: 'fa-chart-pie' },
                 { name: 'Data Sakramen', href: '/wilayah/sakramen', icon: 'fa-feather' },
             ],
@@ -491,6 +494,7 @@ export const roleMenus = {
             menus: [
                 { name: 'KK Katolik', href: '/kapela/kk-katolik', icon: 'fa-house-chimney-user' },
                 { name: 'Data Umat / Jiwa', href: '/kapela/umat', icon: 'fa-user' },
+                { name: 'Riwayat Mutasi Umat', href: '/kapela/riwayat-mutasi-umat', icon: 'fa-arrows-split-up-and-left' },
                 { name: 'Demografi & Grafik', href: '/kapela/statistik', icon: 'fa-chart-pie' },
                 { name: 'Data Sakramen', href: '/kapela/sakramen', icon: 'fa-feather' },
                 { name: 'Pengajuan Sakramen', href: '/kapela/pengajuan-sakramen', icon: 'fa-envelope-open-text' },
@@ -523,6 +527,7 @@ export const roleMenus = {
                 { name: 'KUB Saya', href: '/kub/kub', icon: 'fa-people-group' },
                 { name: 'KK Katolik', href: '/kub/kk-katolik', icon: 'fa-house-chimney-user' },
                 { name: 'Data Umat / Jiwa', href: '/kub/umat', icon: 'fa-user' },
+                { name: 'Riwayat Mutasi Umat', href: '/kub/riwayat-mutasi-umat', icon: 'fa-arrows-split-up-and-left' },
                 { name: 'Demografi & Statistik', href: '/kub/statistik', icon: 'fa-chart-pie' },
                 { name: 'Data Sakramen', href: '/kub/sakramen', icon: 'fa-feather' },
                 { name: 'Pengajuan Sakramen', href: '/kub/pengajuan-sakramen', icon: 'fa-envelope-open-text' },

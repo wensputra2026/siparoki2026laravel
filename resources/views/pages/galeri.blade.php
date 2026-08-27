@@ -51,10 +51,10 @@
     </div>
 </section>
 
-<section class="content-section" style="padding: 60px 0 80px; background: #f4faf9;" id="gallery" aria-label="Galeri dokumentasi">
+<section class="content-section" style="padding: 60px 0 80px; background: #f8fafc;" id="gallery" aria-label="Galeri dokumentasi">
     <div class="container">
         @if(($galeri ?? collect())->count())
-            <div class="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;">
+            <div class="row g-3 g-md-4">
                 @foreach($galeri as $i => $item)
                     @php
                         $img = $galleryImage($item);
@@ -62,15 +62,35 @@
                     @endphp
 
                     @if($img)
-                        <a href="{{ $img }}" class="gallery-item" data-lightbox="galeri" data-title="{{ $title }}" style="display: block; border-radius: 15px; overflow: hidden; height: 240px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); position: relative; transition: transform 0.3s, box-shadow 0.3s;">
-                            <img src="{{ $img }}" alt="{{ $title }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s;">
-                            <span class="gi-overlay" style="position: absolute; inset: 0; background: rgba(0,137,123,0.5); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; opacity: 0; transition: opacity 0.3s;">
-                                <i class="fas fa-search-plus" aria-hidden="true"></i>
-                            </span>
-                        </a>
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <a href="{{ $img }}" 
+                               class="home-gallery-card" 
+                               data-lightbox="galeri" 
+                               data-title="{{ $title }}">
+                                <img src="{{ $img }}" 
+                                     alt="{{ $title }}" 
+                                     loading="lazy">
+                                <div class="home-gallery-overlay">
+                                    <span class="home-gallery-badge">
+                                        <i class="fas fa-search-plus me-1"></i> Perbesar
+                                    </span>
+                                    @if(!empty($title))
+                                        <p class="home-gallery-title" title="{{ $title }}">
+                                            {{ $title }}
+                                        </p>
+                                    @endif
+                                </div>
+                            </a>
+                        </div>
                     @endif
                 @endforeach
             </div>
+
+            @if(method_exists($galeri, 'links'))
+                <div class="d-flex justify-content-center mt-5">
+                    {{ $galeri->links() }}
+                </div>
+            @endif
         @else
             <div style="background: #ffffff; border-radius: 15px; padding: 60px 20px; text-align: center; color: #94a3b8; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
                 <i class="far fa-images" style="font-size: 3rem; margin-bottom: 15px; display: block; color: #cbd5e1;"></i>

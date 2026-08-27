@@ -21,7 +21,7 @@
                             {{ \Carbon\Carbon::parse($item->tanggal_mulai ?? $item->tanggal ?? now())->format('d') }}
                         </span>
                         <span class="text-amber-600 text-xs leading-none">
-                            {{ \Carbon\Carbon::parse($item->tanggal_mulai ?? $item->tanggal ?? now())->format('M') }}
+                            {{ \Carbon\Carbon::parse($item->tanggal_mulai ?? $item->tanggal ?? now())->translatedFormat('M') }}
                         </span>
                     </div>
                     <div>

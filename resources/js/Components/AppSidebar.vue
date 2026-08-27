@@ -202,7 +202,7 @@ const {
         :class="[
             'hidden lg:flex flex-col border-r border-slate-200 bg-white shrink-0 select-none shadow-xs h-full overflow-hidden',
             isMounted ? 'transition-[width] duration-300 ease-in-out' : '',
-            isSidebarOpen ? 'w-64' : 'w-20',
+            isSidebarOpen ? 'w-72' : 'w-20',
         ]"
     >
         <!-- Nav Scrollable Menu Area -->
@@ -281,15 +281,16 @@ const {
                         <!-- Submenu Items -->
                         <div
                             v-show="isSidebarOpen && openGroups[item.name]"
-                            class="pl-7 pr-1 space-y-0.5 border-l-2 border-slate-100 ml-5 my-1"
+                            class="pl-4 pr-0.5 space-y-0.5 border-l-2 border-slate-100 ml-3 my-1"
                         >
                             <Link
                                 v-for="sub in item.submenus"
                                 :key="sub.name"
                                 :href="getHref(sub.href)"
                                 :data-active="isItemActive(sub.href)"
+                                :title="sub.name"
                                 :class="[
-                                    'flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[12.5px] font-medium transition-all duration-150 group',
+                                    'flex items-center gap-2 px-2 py-1.5 rounded-lg text-[12.5px] font-medium transition-all duration-150 group',
                                     isItemActive(sub.href)
                                         ? 'bg-amber-50 text-amber-800 font-bold border border-amber-200'
                                         : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70',
@@ -300,7 +301,7 @@ const {
                                     isItemActive(sub.href) ? 'text-amber-600' : 'text-slate-400 group-hover:text-slate-600',
                                     sub.icon
                                 ]"></i>
-                                <span class="truncate">{{ sub.name }}</span>
+                                <span class="min-w-0 flex-1 truncate">{{ sub.name }}</span>
                             </Link>
                         </div>
                     </div>

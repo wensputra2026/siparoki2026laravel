@@ -117,6 +117,8 @@ trait GenericModuleTrait
             $query->with(['peranKategorial']);
         } elseif ($slug === 'komentar-artikel' || $slug === 'komentar_artikel') {
             $query->with(['konten']);
+        } elseif (in_array($slug, ['riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'mutasi_umat'], true)) {
+            $query->with(['umat', 'kk', 'kubAsal', 'kubTujuan', 'wilayahAsal', 'wilayahTujuan']);
         }
 
         $modelInstance = new $modelClass;
@@ -284,12 +286,39 @@ trait GenericModuleTrait
 
         $items = $query->paginate($perPage)->withQueryString();
 
-        $items->getCollection()->transform(function ($item) {
+        $items->getCollection()->transform(function ($item) use ($slug) {
             if (is_object($item)) {
                 $pkVal = method_exists($item, 'getKey') ? $item->getKey() : ($item->id ?? null);
                 if ($pkVal) {
                     $item->hashid = encode_id($pkVal);
                     $item->iid = $item->hashid;
+                }
+                if (in_array($slug, ['kategori-konten', 'kategori_konten'], true)) {
+                    $catId = $pkVal;
+                    $catName = $item->nama_kategori ?? $item->kategori ?? '';
+                    $catSlug = $item->slug ?? '';
+                    if (\Illuminate\Support\Facades\Schema::hasTable('konten')) {
+                        $item->total_konten = \Illuminate\Support\Facades\DB::table('konten')
+                            ->where(function ($q) use ($catId, $catName, $catSlug) {
+                                if ($catId) {
+                                    $q->where('kategori_id', $catId);
+                                }
+                                if (!empty($catName)) {
+                                    $q->orWhere('kategori', $catName)
+                                      ->orWhereRaw('LOWER(kategori) = ?', [strtolower($catName)]);
+                                }
+                                if (!empty($catSlug)) {
+                                    $q->orWhere('kategori', $catSlug)
+                                      ->orWhereRaw('LOWER(kategori) = ?', [strtolower($catSlug)]);
+                                }
+                            })
+                            ->when(\Illuminate\Support\Facades\Schema::hasColumn('konten', 'is_deleted'), fn ($q) => $q->where(function ($qq) {
+                                $qq->whereNull('is_deleted')->orWhere('is_deleted', 0)->orWhere('is_deleted', false);
+                            }))
+                            ->count();
+                    } else {
+                        $item->total_konten = 0;
+                    }
                 }
             }
             return $item;
@@ -316,7 +345,7 @@ trait GenericModuleTrait
         $needsKecamatanReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'desa-kelurahan'], true);
         $needsParokiReferences = in_array($slug, ['keuskupan', 'dekenat', 'kevikepan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'wilayah', 'kub', 'user'], true);
         $needsPastors = in_array($slug, ['paroki', 'kuasi-paroki', 'dekenat', 'kevikepan', 'master-pastor', 'riwayat-pastor', 'sakramen', 'pengajuan-sakramen']);
-        $needsUmatReferences = in_array($slug, ['pengajuan-sakramen', 'sakramen', 'iuran', 'umat', 'data-umat'], true);
+        $needsUmatReferences = in_array($slug, ['pengajuan-sakramen', 'sakramen', 'iuran', 'umat', 'data-umat', 'riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'mutasi_umat'], true);
         $needsKontenReferences = $slug === 'konten';
 
         $keuskupanList = $needsKeuskupanReferences
@@ -401,7 +430,25 @@ trait GenericModuleTrait
         $kapelaList = \Illuminate\Support\Facades\Cache::remember('ref_kapela_list_v2', 1800, fn () => \App\Models\Kapela::orderBy('nama_kapela')->get());
         $kubList = \Illuminate\Support\Facades\Cache::remember('ref_kub_list_v2', 1800, fn () => \App\Models\Kub::orderBy('nama_kub')->get());
         $umatList = $needsUmatReferences
-            ? \Illuminate\Support\Facades\Cache::remember('ref_umat_select_list_v1', 600, fn () => \App\Models\Umat::orderBy('nama_lengkap')->take(500)->get(['id', 'nama_lengkap', 'nik', 'no_kk_kw', 'handphone']))
+            ? \Illuminate\Support\Facades\Cache::remember('ref_umat_select_list_v2', 600, function() {
+                return \App\Models\Umat::with(['kk'])
+                    ->orderBy('nama_lengkap')
+                    ->get(['id', 'nama_lengkap', 'nama_baptis', 'nama_lahir', 'nik', 'no_kk_kw', 'handphone', 'kk_id'])
+                    ->map(function ($u) {
+                        $nama = trim($u->nama_lengkap ?: ($u->nama_baptis . ' ' . $u->nama_lahir));
+                        $nik = $u->nik ? " [NIK: {$u->nik}]" : '';
+                        $kk = $u->no_kk_kw ? " [KK: {$u->no_kk_kw}]" : '';
+                        return [
+                            'id' => $u->id,
+                            'nama_lengkap' => $nama,
+                            'label' => "{$nama}{$nik}{$kk}",
+                            'kk_id' => $u->kk_id,
+                            'kub_id' => $u->kk?->kub_id,
+                            'wilayah_id' => $u->kk?->wilayah_id,
+                            'kapela_id' => $u->kk?->kapela_id,
+                        ];
+                    });
+            })
             : [];
 
         if (str_contains($userRoleSlug, 'wilayah') && !empty($authUser?->wilayah_id)) {
@@ -868,10 +915,67 @@ trait GenericModuleTrait
 
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
             DB::transaction(function () use ($item, $cleanData, $request) {
+                $oldKubId = $item->kub_id;
+                $oldWilayahId = $item->wilayah_id;
+                $newKubId = $cleanData['kub_id'] ?? $item->kub_id;
+                $newWilayahId = $cleanData['wilayah_id'] ?? $item->wilayah_id;
+
                 $item->update($cleanData);
                 $item->refresh();
+
+                // Catat riwayat mutasi otomatis jika KUB atau Wilayah berpindah
+                if (!empty($oldKubId) && !empty($newKubId) && (int)$oldKubId !== (int)$newKubId) {
+                    if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_mutasi_umat')) {
+                        $members = \App\Models\Umat::where('kk_id', $item->id)->get();
+                        foreach ($members as $m) {
+                            \Illuminate\Support\Facades\DB::table('riwayat_mutasi_umat')->insert([
+                                'umat_id' => $m->id,
+                                'kk_id' => $item->id,
+                                'jenis_mutasi' => 'Pindah KUB',
+                                'status_sebelum' => 'Aktif',
+                                'status_sesudah' => 'Aktif',
+                                'kub_asal_id' => $oldKubId,
+                                'kub_tujuan_id' => $newKubId,
+                                'wilayah_asal_id' => $oldWilayahId,
+                                'wilayah_tujuan_id' => $newWilayahId,
+                                'tgl_mutasi' => now()->toDateString(),
+                                'alasan' => 'Mutasi/Pindah KUB Keluarga dalam Paroki',
+                                'created_by' => auth()->id(),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        }
+                    }
+                }
+
                 $this->syncKkAnggota($item, $request->input('anggota', []));
             });
+        } elseif (in_array($slug, ['umat', 'data-umat'], true)) {
+            $oldKubId = $item->kub_id;
+            $newKubId = $cleanData['kub_id'] ?? $item->kub_id;
+
+            $item->update($cleanData);
+
+            if (!empty($oldKubId) && !empty($newKubId) && (int)$oldKubId !== (int)$newKubId) {
+                if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_mutasi_umat')) {
+                    \Illuminate\Support\Facades\DB::table('riwayat_mutasi_umat')->insert([
+                        'umat_id' => $item->id,
+                        'kk_id' => $item->kk_id,
+                        'jenis_mutasi' => 'Pindah KUB',
+                        'status_sebelum' => 'Aktif',
+                        'status_sesudah' => 'Aktif',
+                        'kub_asal_id' => $oldKubId,
+                        'kub_tujuan_id' => $newKubId,
+                        'wilayah_asal_id' => $item->wilayah_id,
+                        'wilayah_tujuan_id' => $cleanData['wilayah_id'] ?? $item->wilayah_id,
+                        'tgl_mutasi' => now()->toDateString(),
+                        'alasan' => 'Mutasi/Pindah KUB perorangan',
+                        'created_by' => auth()->id(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
         } elseif ($slug === 'kuasi-paroki' && $this->shouldPromoteKuasiParoki($data)) {
             DB::transaction(function () use ($item, $cleanData, $data) {
                 $item->update($cleanData);
@@ -899,6 +1003,253 @@ trait GenericModuleTrait
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil diperbarui.');
     }
 
+
+    /**
+     * Cek apakah sebuah record masih memiliki data terhubung yang harus
+     * mencegah penghapusan (integrity check).
+     * Mengembalikan null bila aman dihapus, atau string pesan error bila diblokir.
+     */
+    protected function getDeleteRestrictionMessage(string $slug, $item): ?string
+    {
+        $id = $item->getKey();
+
+        // 1. Proteksi Kartu Keluarga (KK Katolik)
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            $noKk = $item->no_kk_kw ?? $item->nomor_kk ?? $item->no_kk_dukcapil ?? ('ID ' . $id);
+            $links = [];
+            
+            $checks = [
+                'umat (anggota keluarga)' => \App\Models\Umat::where('kk_id', $id)->count(),
+            ];
+
+            $optionalTables = [
+                'kk_tambahan' => 'kk_id',
+                'riwayat_mutasi_umat' => 'kk_id',
+                'umat_peran' => 'kk_id',
+                'anggota_kategorial' => 'kk_id',
+                'defunctorum' => 'kk_id',
+                'transaksi_iuran' => 'kk_id',
+                'iuran_wajib' => 'kk_id',
+                'iuran_kk' => 'kk_id',
+                'pembayaran_cetak_sakramen' => 'kk_id',
+            ];
+
+            foreach ($optionalTables as $t => $col) {
+                if (\Illuminate\Support\Facades\Schema::hasTable($t) && \Illuminate\Support\Facades\Schema::hasColumn($t, $col)) {
+                    $c = \Illuminate\Support\Facades\DB::table($t)->where($col, $id)->count();
+                    if ($c > 0) {
+                        $checks[$t] = $c;
+                    }
+                }
+            }
+
+            foreach ($checks as $label => $c) {
+                if ($c > 0) {
+                    $links[] = $label . ' (' . $c . ')';
+                }
+            }
+            if (!empty($links)) {
+                return "Kartu Keluarga No. {$noKk} tidak dapat dihapus karena masih terhubung dengan: " . implode(', ', $links) . ". Pindahkan atau hapus data terkait terlebih dahulu.";
+            }
+            return null;
+        }
+
+        // 2. Proteksi Data Umat
+        if (in_array($slug, ['umat', 'data-umat'], true)) {
+            $namaUmat = $item->nama_lengkap ?? $item->nama_lahir ?? $item->nama_baptis ?? ('ID ' . $id);
+            $links = [];
+            
+            // Cek sakramen & catatan gerejani
+            $tables = [
+                'sakramen_umat', 'sakramen', 'sakramen_verifikasi', 'sakramen_margo',
+                'liber_baptis', 'liber_krisma', 'liber_komuni_pertama', 'liber_kematian', 'liber_defunctorum',
+                'defunctorum', 'pengajuan_sakramen', 'katekumen', 'umat_peran', 'anggota_kategorial',
+                'users', 'riwayat_mutasi_umat', 'riwayat_peran_umat', 'riwayat_panggilan',
+                'rapat_peserta', 'jadwal_petugas_liturgi', 'direktori_dpp', 'direktori_katekis',
+                'direktori_misdinar', 'pembinaan_peserta', 'pembayaran_cetak_sakramen',
+            ];
+
+            foreach ($tables as $t) {
+                if (\Illuminate\Support\Facades\Schema::hasTable($t) && \Illuminate\Support\Facades\Schema::hasColumn($t, 'umat_id')) {
+                    $c = \Illuminate\Support\Facades\DB::table($t)->where('umat_id', $id)->count();
+                    if ($c > 0) {
+                        $links[] = $t . ' (' . $c . ')';
+                    }
+                }
+            }
+
+            // Cek liber perkawinan (suami / istri)
+            if (\Illuminate\Support\Facades\Schema::hasTable('liber_perkawinan')) {
+                $cKawin = \Illuminate\Support\Facades\DB::table('liber_perkawinan')
+                    ->where('suami_id', $id)
+                    ->orWhere('istri_id', $id)
+                    ->count();
+                if ($cKawin > 0) {
+                    $links[] = 'liber_perkawinan (' . $cKawin . ')';
+                }
+            }
+
+            // Cek apakah tercatat sebagai Kepala Keluarga di kk_katolik
+            if (!empty($item->nik) && \Illuminate\Support\Facades\Schema::hasTable('kk_katolik')) {
+                $cKk = \Illuminate\Support\Facades\DB::table('kk_katolik')
+                    ->where('nik_pemilik', $item->nik)
+                    ->count();
+                if ($cKk > 0) {
+                    $links[] = 'kepala_keluarga_di_kk (' . $cKk . ')';
+                }
+            }
+
+            // Cek relasi orang tua / anak
+            if (\Illuminate\Support\Facades\Schema::hasTable('umat')) {
+                $cAnak = \Illuminate\Support\Facades\DB::table('umat')
+                    ->where(function($q) use ($id) {
+                        $q->where('ayah_id', $id)
+                          ->orWhere('ibu_id', $id)
+                          ->orWhere('pasangan_id', $id);
+                    })
+                    ->where('id', '!=', $id)
+                    ->count();
+                if ($cAnak > 0) {
+                    $links[] = 'anggota_keluarga_terhubung (' . $cAnak . ')';
+                }
+            }
+
+            if (!empty($links)) {
+                return "Data Umat '{$namaUmat}' tidak dapat dihapus karena masih terhubung dengan: " . implode(', ', $links) . ". Pindahkan atau selesaikan relasi data terkait terlebih dahulu.";
+            }
+            return null;
+        }
+
+        // 3. Proteksi KUB (Komunitas Umat Basis)
+        if ($slug === 'kub') {
+            $namaKub = $item->nama_kub ?? ('ID ' . $id);
+            $links = [];
+            if (\Illuminate\Support\Facades\Schema::hasTable('kk_katolik') && \Illuminate\Support\Facades\Schema::hasColumn('kk_katolik', 'kub_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('kk_katolik')->where('kub_id', $id)->count();
+                if ($c > 0) $links[] = "KK Katolik ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('umat') && \Illuminate\Support\Facades\Schema::hasColumn('umat', 'kub_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('umat')->where('kub_id', $id)->count();
+                if ($c > 0) $links[] = "Data Umat ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('umat_peran') && \Illuminate\Support\Facades\Schema::hasColumn('umat_peran', 'kub_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('umat_peran')->where('kub_id', $id)->count();
+                if ($c > 0) $links[] = "Pengurus/Peran KUB ({$c})";
+            }
+            if (!empty($links)) {
+                return "KUB '{$namaKub}' tidak dapat dihapus karena masih memiliki relasi data aktif: " . implode(', ', $links) . ". Silakan mutasikan atau pindahkan data KK/Umat terlebih dahulu.";
+            }
+            return null;
+        }
+
+        // 4. Proteksi Lingkungan
+        if ($slug === 'lingkungan') {
+            $namaLing = $item->nama_lingkungan ?? ('ID ' . $id);
+            $links = [];
+            if (\Illuminate\Support\Facades\Schema::hasTable('kub') && \Illuminate\Support\Facades\Schema::hasColumn('kub', 'lingkungan_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('kub')->where('lingkungan_id', $id)->count();
+                if ($c > 0) $links[] = "KUB ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('kk_katolik') && \Illuminate\Support\Facades\Schema::hasColumn('kk_katolik', 'lingkungan_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('kk_katolik')->where('lingkungan_id', $id)->count();
+                if ($c > 0) $links[] = "KK Katolik ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('umat') && \Illuminate\Support\Facades\Schema::hasColumn('umat', 'lingkungan_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('umat')->where('lingkungan_id', $id)->count();
+                if ($c > 0) $links[] = "Data Umat ({$c})";
+            }
+            if (!empty($links)) {
+                return "Lingkungan '{$namaLing}' tidak dapat dihapus karena masih memuat: " . implode(', ', $links) . ". Silakan hapus atau pindahkan data terkait terlebih dahulu.";
+            }
+            return null;
+        }
+
+        // 5. Proteksi Kapela / Stasi
+        if (in_array($slug, ['kapela', 'stasi', 'stasi-kapela'], true)) {
+            $namaKapela = $item->nama_kapela ?? $item->nama_stasi ?? ('ID ' . $id);
+            $links = [];
+            if (\Illuminate\Support\Facades\Schema::hasTable('lingkungan') && \Illuminate\Support\Facades\Schema::hasColumn('lingkungan', 'kapela_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('lingkungan')->where('kapela_id', $id)->count();
+                if ($c > 0) $links[] = "Lingkungan ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('kub') && \Illuminate\Support\Facades\Schema::hasColumn('kub', 'kapela_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('kub')->where('kapela_id', $id)->count();
+                if ($c > 0) $links[] = "KUB ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('kk_katolik') && \Illuminate\Support\Facades\Schema::hasColumn('kk_katolik', 'kapela_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('kk_katolik')->where('kapela_id', $id)->count();
+                if ($c > 0) $links[] = "KK Katolik ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('umat') && \Illuminate\Support\Facades\Schema::hasColumn('umat', 'kapela_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('umat')->where('kapela_id', $id)->count();
+                if ($c > 0) $links[] = "Data Umat ({$c})";
+            }
+            if (!empty($links)) {
+                return "Kapela/Stasi '{$namaKapela}' tidak dapat dihapus karena masih memuat: " . implode(', ', $links) . ". Silakan hapus atau pindahkan data terkait terlebih dahulu.";
+            }
+            return null;
+        }
+
+        // 6. Proteksi Wilayah
+        if ($slug === 'wilayah') {
+            $namaWil = $item->nama_wilayah ?? ('ID ' . $id);
+            $links = [];
+            if (\Illuminate\Support\Facades\Schema::hasTable('lingkungan') && \Illuminate\Support\Facades\Schema::hasColumn('lingkungan', 'wilayah_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('lingkungan')->where('wilayah_id', $id)->count();
+                if ($c > 0) $links[] = "Lingkungan ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('kub') && \Illuminate\Support\Facades\Schema::hasColumn('kub', 'wilayah_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('kub')->where('wilayah_id', $id)->count();
+                if ($c > 0) $links[] = "KUB ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('kk_katolik') && \Illuminate\Support\Facades\Schema::hasColumn('kk_katolik', 'wilayah_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('kk_katolik')->where('wilayah_id', $id)->count();
+                if ($c > 0) $links[] = "KK Katolik ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('umat') && \Illuminate\Support\Facades\Schema::hasColumn('umat', 'wilayah_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('umat')->where('wilayah_id', $id)->count();
+                if ($c > 0) $links[] = "Data Umat ({$c})";
+            }
+            if (!empty($links)) {
+                return "Wilayah '{$namaWil}' tidak dapat dihapus karena masih memuat: " . implode(', ', $links) . ".";
+            }
+            return null;
+        }
+
+        // 7. Proteksi Jenis Iuran
+        if (in_array($slug, ['jenis-iuran', 'jenis_iuran'], true)) {
+            $namaIuran = $item->nama_iuran ?? $item->nama_jenis_iuran ?? ('ID ' . $id);
+            $links = [];
+            if (\Illuminate\Support\Facades\Schema::hasTable('transaksi_iuran') && \Illuminate\Support\Facades\Schema::hasColumn('transaksi_iuran', 'jenis_iuran_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('transaksi_iuran')->where('jenis_iuran_id', $id)->count();
+                if ($c > 0) $links[] = "Transaksi Iuran ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('iuran_wajib') && \Illuminate\Support\Facades\Schema::hasColumn('iuran_wajib', 'jenis_iuran_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('iuran_wajib')->where('jenis_iuran_id', $id)->count();
+                if ($c > 0) $links[] = "Iuran Wajib ({$c})";
+            }
+            if (!empty($links)) {
+                return "Jenis Iuran '{$namaIuran}' tidak dapat dihapus karena telah digunakan pada: " . implode(', ', $links) . ".";
+            }
+            return null;
+        }
+
+        // 8. Proteksi Master Pastor
+        if (in_array($slug, ['master-pastor', 'master_pastor', 'pastor'], true)) {
+            $namaPastor = $item->nama_pastor ?? ('ID ' . $id);
+            $links = [];
+            if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_pastor_paroki') && \Illuminate\Support\Facades\Schema::hasColumn('riwayat_pastor_paroki', 'pastor_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')->where('pastor_id', $id)->count();
+                if ($c > 0) $links[] = "Riwayat Pastor Paroki ({$c})";
+            }
+            if (!empty($links)) {
+                return "Pastor '{$namaPastor}' tidak dapat dihapus karena masih terhubung dengan: " . implode(', ', $links) . ".";
+            }
+            return null;
+        }
+
+        return null;
+    }
 
     public function destroyModule(Request $request, string $slug, $id)
     {
@@ -938,11 +1289,163 @@ trait GenericModuleTrait
             return back()->with('error', 'Akun yang sedang digunakan tidak dapat dihapus.');
         }
 
+        // Integrity check: prevent deleting categories that have active/associated contents
+        if (in_array($slug, ['kategori-konten', 'kategori_konten'], true)) {
+            $catId = $item->getKey();
+            $catName = $item->nama_kategori ?? $item->kategori ?? '';
+            $catSlug = $item->slug ?? '';
+
+            $relatedCount = 0;
+            if (\Illuminate\Support\Facades\Schema::hasTable('konten')) {
+                $relatedCount = \Illuminate\Support\Facades\DB::table('konten')
+                    ->where(function ($q) use ($catId, $catName, $catSlug) {
+                        if ($catId) {
+                            $q->where('kategori_id', $catId);
+                        }
+                        if (!empty($catName)) {
+                            $q->orWhere('kategori', $catName)
+                              ->orWhereRaw('LOWER(kategori) = ?', [strtolower($catName)]);
+                        }
+                        if (!empty($catSlug)) {
+                            $q->orWhere('kategori', $catSlug)
+                              ->orWhereRaw('LOWER(kategori) = ?', [strtolower($catSlug)]);
+                        }
+                    })
+                    ->when(\Illuminate\Support\Facades\Schema::hasColumn('konten', 'is_deleted'), fn ($q) => $q->where(function ($qq) {
+                        $qq->whereNull('is_deleted')->orWhere('is_deleted', 0)->orWhere('is_deleted', false);
+                    }))
+                    ->count();
+            }
+
+            if ($relatedCount > 0) {
+                return back()->with('error', "Kategori '{$catName}' tidak dapat dihapus karena masih memuat {$relatedCount} berita/artikel/konten aktif. Silakan pindahkan atau hapus konten tersebut terlebih dahulu.");
+            }
+        }
+
+        // Integrity check: block deletion when related data still exists (KK & Umat)
+        $restriction = $this->getDeleteRestrictionMessage($slug, $item);
+        if ($restriction !== null) {
+            return back()->with('error', $restriction);
+        }
+
         $this->logAudit('DELETE_' . strtoupper($slug), $slug, $item->getKey());
         $item->delete();
         $this->clearFastAccessCache();
 
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil dihapus.');
+    }
+
+    public function bulkDestroyModule(Request $request, string $slug)
+    {
+        $moduleMap = $this->getModuleMap();
+        if (!isset($moduleMap[$slug])) {
+            return back()->with('error', 'Modul tidak ditemukan.');
+        }
+
+        $ids = $request->input('ids', []);
+        if (empty($ids) || !is_array($ids)) {
+            return back()->with('error', 'Tidak ada data yang dipilih untuk dihapus.');
+        }
+
+        $config = $moduleMap[$slug];
+        $modelClass = $config['model'];
+        $modelInstance = new $modelClass;
+        $pk = $modelInstance->getKeyName();
+
+        $decodedIds = array_map(function ($id) {
+            return decode_id($id) ?: $id;
+        }, $ids);
+
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
+        if (in_array($slug, ['umat', 'data-umat'], true) && (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'))) {
+            return back()->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
+        }
+
+        if ($slug === 'user' && auth()->id()) {
+            $decodedIds = array_values(array_filter($decodedIds, fn ($id) => (int)$id !== (int)auth()->id()));
+        }
+
+        $items = $modelClass::whereIn($pk, $decodedIds)->get();
+        if ($items->isEmpty() && in_array('slug', \Illuminate\Support\Facades\Schema::getColumnListing($modelInstance->getTable()))) {
+            $items = $modelClass::whereIn('slug', $ids)->get();
+        }
+
+        $protectedCats = [];
+        $allowedItems = [];
+
+        if (in_array($slug, ['kategori-konten', 'kategori_konten'], true)) {
+            foreach ($items as $item) {
+                $catId = $item->getKey();
+                $catName = $item->nama_kategori ?? $item->kategori ?? '';
+                $catSlug = $item->slug ?? '';
+
+                $relatedCount = 0;
+                if (\Illuminate\Support\Facades\Schema::hasTable('konten')) {
+                    $relatedCount = \Illuminate\Support\Facades\DB::table('konten')
+                        ->where(function ($q) use ($catId, $catName, $catSlug) {
+                            if ($catId) {
+                                $q->where('kategori_id', $catId);
+                            }
+                            if (!empty($catName)) {
+                                $q->orWhere('kategori', $catName)
+                                  ->orWhereRaw('LOWER(kategori) = ?', [strtolower($catName)]);
+                            }
+                            if (!empty($catSlug)) {
+                                $q->orWhere('kategori', $catSlug)
+                                  ->orWhereRaw('LOWER(kategori) = ?', [strtolower($catSlug)]);
+                            }
+                        })
+                        ->when(\Illuminate\Support\Facades\Schema::hasColumn('konten', 'is_deleted'), fn ($q) => $q->where(function ($qq) {
+                            $qq->whereNull('is_deleted')->orWhere('is_deleted', 0)->orWhere('is_deleted', false);
+                        }))
+                        ->count();
+                }
+
+                if ($relatedCount > 0) {
+                    $protectedCats[] = "'{$catName}' ({$relatedCount} konten)";
+                } else {
+                    $allowedItems[] = $item;
+                }
+            }
+
+            if (!empty($protectedCats) && empty($allowedItems)) {
+                $names = implode(', ', $protectedCats);
+                return back()->with('error', "Penghapusan dibatalkan. Kategori {$names} tidak dapat dihapus karena masih memuat konten terkait.");
+            }
+
+            $items = collect($allowedItems);
+        }
+
+        // Integrity check for KK & Umat bulk delete
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat'], true)) {
+            $allowedItems = [];
+            foreach ($items as $it) {
+                $r = $this->getDeleteRestrictionMessage($slug, $it);
+                if ($r !== null) {
+                    $protectedCats[] = $r;
+                } else {
+                    $allowedItems[] = $it;
+                }
+            }
+            $items = collect($allowedItems);
+        }
+
+        $deletedCount = 0;
+        foreach ($items as $item) {
+            $this->logAudit('BULK_DELETE_' . strtoupper($slug), $slug, $item->getKey());
+            $item->delete();
+            $deletedCount++;
+        }
+
+        $this->clearFastAccessCache();
+
+        if (!empty($protectedCats)) {
+            $names = implode(', ', $protectedCats);
+            return back()->with('success', "Sebanyak {$deletedCount} kategori berhasil dihapus. Kategori {$names} dilewati karena masih memiliki konten aktif.");
+        }
+
+        return back()->with('success', "Sebanyak {$deletedCount} data " . ($config['title'] ?? $slug) . ' berhasil dihapus.');
     }
 
 
@@ -1344,7 +1847,8 @@ trait GenericModuleTrait
             : ($slug === 'user' ? 'uploads/users' : ($slug === 'paroki' ? 'uploads/paroki' : 'uploads/' . str_replace('-', '_', $slug)));
 
         $imageExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        // Only ever store non-executable document types. Anything that could
+        $videoExt = ['mp4', 'mov', 'ogg', 'webm', 'mkv', 'avi'];
+        // Only ever store non-executable document and media types. Anything that could
         // be interpreted as code (php, phtml, pht, html, js, svg, etc.) is rejected.
         $docExt = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv', 'zip', 'ppt', 'pptx'];
 
@@ -1358,9 +1862,9 @@ trait GenericModuleTrait
             );
         }
 
-        if (!in_array($extension, $docExt, true)) {
+        if (!in_array($extension, array_merge($docExt, $videoExt), true)) {
             throw new \Illuminate\Http\Exceptions\PostTooLargeException(
-                'Tipe file tidak diizinkan. Hanya gambar (jpg/png/webp/gif) dan dokumen (pdf/doc/xls/csv/zip) yang diperbolehkan.'
+                'Tipe file tidak diizinkan. Hanya gambar (jpg/png/webp/gif), video (mp4/webm/mov/ogg), dan dokumen (pdf/doc/xls/csv/zip) yang diperbolehkan.'
             );
         }
 

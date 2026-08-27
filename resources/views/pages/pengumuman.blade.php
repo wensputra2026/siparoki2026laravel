@@ -35,7 +35,7 @@
                             <i class="fas fa-bullhorn" style="margin-right: 4px;"></i> {{ $item->kategori ?? 'PENGUMUMAN' }}
                         </span>
                         <span style="font-size: 0.82rem; color: #94a3b8; font-weight: 500;">
-                            <i class="far fa-calendar-alt" style="color: #ff9800; margin-right: 4px;"></i> {{ \Carbon\Carbon::parse($pDate)->translatedFormat('l, d F Y') }}
+                            <i class="far fa-calendar-alt" style="color: #ff9800; margin-right: 4px;"></i> {{ format_tanggal_indonesia($pDate, true) }}
                         </span>
                     </div>
 

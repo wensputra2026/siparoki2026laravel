@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { triggerToast } from '@/composables/useRoleMenu';
 
 const props = defineProps({
     role: { type: String, default: 'Super Admin' },
@@ -445,6 +446,22 @@ const removeAnggota = (index) => {
 };
 
 const submitForm = () => {
+    if (!form.no_kk_kw) {
+        activeTab.value = 'identitas';
+        triggerToast('Nomor KK Paroki wajib diisi.', 'error');
+        return;
+    }
+    if (!form.nik_pemilik || !form.nama_baptis_pemilik || !form.nama_lahir_pemilik || !form.handphone) {
+        activeTab.value = 'kepala';
+        triggerToast('Silakan lengkapi data NIK, Nama Baptis, Nama Lahir, dan Kontak Kepala Keluarga.', 'error');
+        return;
+    }
+    if (!form.alamat_sekarang) {
+        activeTab.value = 'domisili';
+        triggerToast('Alamat domisili lengkap wajib diisi.', 'error');
+        return;
+    }
+
     if (props.isEdit && props.kkItem?.id) {
         form.put(`${basePrefix.value}/kk-katolik/${props.kkItem.id}`);
     } else {
@@ -551,7 +568,7 @@ const submitForm = () => {
             </div>
 
             <!-- Form Container -->
-            <form @submit.prevent="submitForm" class="space-y-3">
+            <form @submit.prevent="submitForm" novalidate class="space-y-3">
                 <!-- TAB 1: HIRARKI PASTORAL & DOKUMEN KK -->
                 <div v-show="activeTab === 'identitas'" class="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-2xs space-y-5">
                     <div class="border-b border-slate-100 pb-3">
@@ -628,7 +645,6 @@ const submitForm = () => {
                                 <input
                                     v-model="form.no_kk_kw"
                                     type="text"
-                                    required
                                     placeholder="Contoh: K012001001"
                                     class="w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-mono font-bold transition tracking-wider"
                                 />
@@ -707,7 +723,6 @@ const submitForm = () => {
                                 v-model="form.nik_pemilik"
                                 type="text"
                                 maxlength="16"
-                                required
                                 placeholder="Masukkan 16 digit NIK kepala keluarga..."
                                 class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition"
                             />
@@ -722,7 +737,6 @@ const submitForm = () => {
                             <input
                                 v-model="form.handphone"
                                 type="text"
-                                required
                                 placeholder="Masukkan kontak / hp... (contoh: 081234567890)"
                                 class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition"
                             />
@@ -736,7 +750,6 @@ const submitForm = () => {
                             <input
                                 v-model="form.nama_baptis_pemilik"
                                 type="text"
-                                required
                                 placeholder="Masukkan nama baptis... (contoh: Yohanes, Fransiskus)"
                                 class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition"
                             />
@@ -750,7 +763,6 @@ const submitForm = () => {
                             <input
                                 v-model="form.nama_lahir_pemilik"
                                 type="text"
-                                required
                                 placeholder="Masukkan nama lahir kepala keluarga..."
                                 class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition"
                             />
@@ -918,7 +930,6 @@ const submitForm = () => {
                             <textarea
                                 v-model="form.alamat_sekarang"
                                 rows="2"
-                                required
                                 placeholder="Masukkan alamat domisili lengkap... (nama jalan, nomor rumah, patokan)"
                                 class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white font-medium transition resize-none"
                             ></textarea>

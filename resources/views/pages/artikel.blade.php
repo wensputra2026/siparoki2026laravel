@@ -58,7 +58,7 @@
                     </a>
                     <div style="padding: 24px; display: flex; flex-direction: column; flex-grow: 1;">
                         <span class="news-date" style="display: inline-flex; align-items: center; gap: 6px; color: var(--primary-orange, #ff9800); font-size: 0.8rem; font-weight: 600; margin-bottom: 10px;">
-                            <i class="far fa-calendar-alt"></i> {{ \Carbon\Carbon::parse($date)->translatedFormat('d M Y') }}
+                            <i class="far fa-calendar-alt"></i> {{ format_tanggal_indonesia($date) }}
                         </span>
                         <h4 class="card-title" style="font-size: 1.1rem; font-weight: 700; line-height: 1.45; margin-bottom: 10px; color: #1e293b;">
                             <a href="/artikel/{{ $item->slug }}" style="color: inherit; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-teal, #00897b)'" onmouseout="this.style.color='#1e293b'">

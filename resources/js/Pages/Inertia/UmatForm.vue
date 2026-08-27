@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { triggerToast } from '@/composables/useRoleMenu';
 
 const props = defineProps({
     role: { type: String, default: 'Super Admin' },
@@ -257,7 +258,7 @@ const onKkChange = (kkId) => {
 
 const submitForm = () => {
     if (!form.value.nama_lengkap) {
-        alert('Nama Lengkap Wajib Diisi!');
+        triggerToast('Nama Lengkap Umat wajib diisi.', 'error');
         return;
     }
 
@@ -306,6 +307,30 @@ const submitForm = () => {
                         >
                             <i class="fa-solid fa-arrow-left"></i>
                             <span>Kembali ke Data Umat</span>
+                        </Link>
+                        <Link
+                            v-if="isEdit && umatItem?.id"
+                            :href="route(`panel.${prefix}.umat.mutasi`, [umatItem.id])"
+                            class="px-4 py-2.5 rounded-2xl bg-emerald-500/90 hover:bg-emerald-500 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2"
+                        >
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>Mutasi KUB</span>
+                        </Link>
+                        <Link
+                            v-if="isEdit && umatItem?.id"
+                            :href="route(`panel.${prefix}.umat.pisah`, [umatItem.id])"
+                            class="px-4 py-2.5 rounded-2xl bg-sky-500/90 hover:bg-sky-500 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2"
+                        >
+                            <i class="fa-solid fa-ring"></i>
+                            <span>Pisah KK (Menikah)</span>
+                        </Link>
+                        <Link
+                            v-if="isEdit && umatItem?.id"
+                            :href="route(`panel.${prefix}.umat.riwayat`, [umatItem.id])"
+                            class="px-4 py-2.5 rounded-2xl bg-fuchsia-600/90 hover:bg-fuchsia-600 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2"
+                        >
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span>Riwayat Mutasi</span>
                         </Link>
                     </div>
                 </div>

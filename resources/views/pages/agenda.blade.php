@@ -41,10 +41,10 @@
 
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 20px; border-radius: 12px; text-align: center;">
                         <span style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">
-                            {{ \Carbon\Carbon::parse($aDate)->translatedFormat('l') }}
+                            {{ nama_hari_indonesia(\Carbon\Carbon::parse($aDate)->dayOfWeek) }}
                         </span>
                         <span style="font-size: 1.05rem; font-weight: 700; color: var(--primary-teal, #00897b);">
-                            {{ \Carbon\Carbon::parse($aDate)->translatedFormat('d M Y') }}
+                            {{ format_tanggal_indonesia($aDate) }}
                         </span>
                     </div>
                 </div>

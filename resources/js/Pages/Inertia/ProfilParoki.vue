@@ -59,6 +59,21 @@ const selectParokiItem = (p) => {
     parokiSearchQuery.value = '';
 };
 
+// Filter pastors assigned to this paroki from master_pastor
+const pastorsBertugas = computed(() => {
+    const parokiName = props.paroki?.nama_paroki || 'Benlutu';
+    const list = (props.pastors || []).filter((p) => {
+        const pTugas = p.paroki_tugas || p.paroki || '';
+        return (
+            pTugas.toLowerCase().includes('benlutu') ||
+            pTugas.toLowerCase().includes(parokiName.toLowerCase()) ||
+            p.tampil_frontend === 'Ya' ||
+            (p.nama_pastor && (p.nama_pastor.toLowerCase().includes('herman') || p.nama_pastor.toLowerCase().includes('patrisius')))
+        );
+    });
+    return list;
+});
+
 const handleDropdownClickOutside = (e) => {
     if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
         isDropdownOpen.value = false;
@@ -229,53 +244,123 @@ const saveParoki = () => {
     <AppLayout title="Profil Paroki">
         <Head title="Profil Paroki - SIPAROKI" />
 
-        <div class="w-full space-y-6 pb-12 overflow-y-auto">
+        <div class="w-full space-y-5 pb-24 overflow-y-auto">
+            <!-- 6 QUICK STAT CARDS -->
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-black shrink-0">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block truncate">Wilayah</span>
+                        <span class="text-sm font-black text-slate-900">{{ totalWilayah }}</span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-black shrink-0">
+                        <i class="fa-solid fa-tree-city"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block truncate">Lingkungan</span>
+                        <span class="text-sm font-black text-slate-900">{{ totalLingkungan }}</span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-black shrink-0">
+                        <i class="fa-solid fa-church"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block truncate">Kapela / Stasi</span>
+                        <span class="text-sm font-black text-slate-900">{{ totalKapela }}</span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-black shrink-0">
+                        <i class="fa-solid fa-users-rectangle"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block truncate">KUB</span>
+                        <span class="text-sm font-black text-slate-900">{{ totalKub }}</span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center text-sm font-black shrink-0">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block truncate">Total Umat</span>
+                        <span class="text-sm font-black text-slate-900">{{ totalUmat.toLocaleString('id-ID') }}</span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-sm font-black shrink-0">
+                        <i class="fa-solid fa-people-roof"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block truncate">Kepala Keluarga</span>
+                        <span class="text-sm font-black text-slate-900">{{ totalKk.toLocaleString('id-ID') }}</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 2-COLUMN MAIN LAYOUT MATCHING KATEDRAL -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
                 
                 <!-- LEFT COLUMN: DETAIL PROFIL PAROKI (8/12 = ~67%) -->
-                <div class="lg:col-span-8 space-y-5">
+                <div class="xl:col-span-8 space-y-4 min-w-0">
                     <!-- Top Action Card -->
-                    <div class="rounded-2xl bg-white border border-slate-200/90 p-4 sm:p-5 shadow-2xs space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-                            <div class="flex items-center gap-2.5">
-                                <i class="fa-solid fa-house-chimney-window text-amber-500 text-base"></i>
-                                <h1 class="text-sm sm:text-base font-black text-slate-900 tracking-tight">Detail Profil Paroki</h1>
-                                <span class="px-2.5 py-0.5 rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                    <div class="rounded-xl bg-white border border-slate-200/90 p-4 sm:p-5 shadow-2xs space-y-4">
+                        <div class="flex flex-col gap-3 pb-4 border-b border-slate-100">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 min-w-0">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-house-chimney-window text-sm"></i>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <h1 class="text-base font-black text-slate-900 tracking-tight">Detail Profil Paroki</h1>
+                                        <p class="text-[11px] text-slate-500 truncate">Data utama, wilayah, kontak, pastor, dan lokasi</p>
+                                    </div>
+                                </div>
+                                <span class="w-fit max-w-full px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold truncate">
                                     {{ paroki?.nama_paroki }}
                                 </span>
                             </div>
 
                             <!-- Buttons -->
-                            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 <Link
                                     href="/setup-paroki"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
                                     title="Pilih atau inisialisasi ulang Keuskupan & Paroki Default"
                                 >
                                     <i class="fa-solid fa-sliders text-xs"></i>
-                                    <span>Ganti / Setup Paroki Default</span>
+                                    <span class="truncate">Setup Default</span>
                                 </Link>
                                 <button
                                     type="button"
                                     @click="showImageModal = true"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
                                 >
                                     <i class="fa-regular fa-image text-xs"></i>
-                                    <span>Edit Gambar & Sejarah</span>
+                                    <span class="truncate">Gambar & Sejarah</span>
                                 </button>
                                 <Link
                                     :href="`/${prefix}/paroki?search=${encodeURIComponent(paroki?.nama_paroki || '')}&edit_id=${paroki?.id_paroki}`"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
                                 >
                                     <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                    <span>Edit Data Paroki</span>
+                                    <span class="truncate">Edit Data</span>
                                 </Link>
                             </div>
                         </div>
 
                         <!-- Read-Only Sync Notice -->
-                        <div class="p-3.5 rounded-xl bg-cyan-50/80 border border-cyan-200/90 flex items-start gap-2.5 text-xs text-cyan-950">
+                        <div class="p-3 rounded-lg bg-cyan-50/80 border border-cyan-200/90 flex items-start gap-2.5 text-xs text-cyan-950">
                             <i class="fa-solid fa-lock text-cyan-600 text-xs mt-0.5 shrink-0"></i>
                             <div class="leading-relaxed text-[11.5px]">
                                 <span class="font-bold text-cyan-900">Data Tersinkron (Read-Only):</span>
@@ -284,8 +369,8 @@ const saveParoki = () => {
                         </div>
 
                         <!-- Paroki Header Title & Badges -->
-                        <div class="flex items-center gap-4 pt-1">
-                            <div class="w-16 h-16 rounded-full border-2 border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-4 pt-1 min-w-0">
+                            <div class="w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
                                 <img
                                     v-if="paroki?.logo"
                                     :src="paroki.logo"
@@ -294,7 +379,7 @@ const saveParoki = () => {
                                 />
                                 <i v-else class="fa-solid fa-church text-2xl text-amber-500"></i>
                             </div>
-                            <div>
+                            <div class="min-w-0">
                                 <h2 class="text-lg font-black text-slate-900 leading-snug">{{ paroki?.nama_paroki }}</h2>
                                 <div class="flex flex-wrap items-center gap-2 mt-1">
                                     <span class="px-2 py-0.5 rounded-md bg-emerald-500 text-white text-[10px] font-bold">{{ paroki?.status || 'Aktif' }}</span>
@@ -306,40 +391,40 @@ const saveParoki = () => {
                     </div>
 
                     <!-- STRUCTURED SECTIONS TABLE -->
-                    <div class="rounded-2xl bg-white border border-slate-200/90 shadow-2xs overflow-hidden divide-y divide-slate-100">
+                    <div class="rounded-xl bg-white border border-slate-200/90 shadow-2xs overflow-hidden divide-y divide-slate-100">
                         
                         <!-- SECTION 1: IDENTITAS PAROKI -->
                         <div>
-                            <div class="bg-slate-50/90 px-4 py-2.5 border-b border-slate-200 flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider">
+                            <div class="bg-slate-50/90 px-4 py-2.5 border-b border-slate-200 flex items-center gap-2 text-xs font-black text-slate-800 uppercase">
                                 <i class="fa-solid fa-bars-staggered text-amber-600"></i>
                                 <span>IDENTITAS PAROKI</span>
                             </div>
                             <div class="divide-y divide-slate-100 text-xs">
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Keuskupan Induk</span>
                                     <span class="sm:col-span-2 font-bold text-slate-900">{{ paroki?.keuskupan ? paroki.keuskupan.nama_keuskupan : 'Keuskupan Agung Kupang' }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Dekenat / Kevikepan</span>
                                     <span class="sm:col-span-2 font-bold text-slate-900">{{ paroki?.dekenat ? paroki.dekenat.nama_kevikepan : 'Kevikepan/Dekenat Kota Kupang' }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Kode Paroki</span>
                                     <span class="sm:col-span-2 font-mono font-bold text-rose-600">{{ paroki?.kode_paroki || '012.009' }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Nama Paroki</span>
                                     <span class="sm:col-span-2 font-bold text-slate-900">{{ paroki?.nama_paroki }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Nama Pelindung / Santo</span>
                                     <span class="sm:col-span-2 font-bold text-slate-700">{{ paroki?.pelindung_paroki || '-' }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Status</span>
                                     <span class="sm:col-span-2">
                                         <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
-                                            {{ paroki?.status || 'Aktif' }}
+                                             {{ paroki?.status || 'Aktif' }}
                                         </span>
                                     </span>
                                 </div>
@@ -348,53 +433,117 @@ const saveParoki = () => {
 
                         <!-- SECTION 2: PELAYAN PASTORAL -->
                         <div>
-                            <div class="bg-slate-50/90 px-4 py-2.5 border-b border-slate-200 flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider">
-                                <i class="fa-solid fa-user-tie text-amber-600"></i>
-                                <span>PELAYAN PASTORAL</span>
+                            <div class="bg-slate-50/90 px-4 py-2.5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs font-black text-slate-800 uppercase">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fa-solid fa-user-tie text-amber-600"></i>
+                                    <span class="truncate">PELAYAN PASTORAL</span>
+                                </div>
+                                <Link
+                                    href="/admin/master-referensi/pastor"
+                                    class="text-[11px] font-bold text-amber-700 hover:text-amber-900 flex items-center gap-1.5 normal-case shrink-0"
+                                >
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                    <span>Buka Master Pastor</span>
+                                </Link>
                             </div>
-                            <div class="divide-y divide-slate-100 text-xs">
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5 items-center">
-                                    <span class="text-slate-500 font-semibold">Pastor Paroki</span>
-                                    <div class="sm:col-span-2 flex items-center gap-2">
-                                        <span class="font-bold text-slate-900">{{ paroki?.nama_pastor_paroki_aktif || '-' }}</span>
-                                        <i v-if="paroki?.nama_pastor_paroki_aktif" class="fa-solid fa-circle-user text-blue-600 text-sm"></i>
+                            
+                            <!-- If pastorsBertugas exists in database -->
+                            <div v-if="pastorsBertugas && pastorsBertugas.length" class="divide-y divide-slate-100 text-xs">
+                                <div
+                                    v-for="p in pastorsBertugas"
+                                    :key="p.id"
+                                    class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-slate-50/70 transition"
+                                >
+                                    <div class="flex items-center gap-3.5 min-w-0">
+                                        <div class="w-11 h-11 rounded-xl bg-amber-50 border border-amber-200 overflow-hidden flex items-center justify-center shrink-0">
+                                            <img
+                                                v-if="p.foto"
+                                                :src="p.foto.startsWith('http') || p.foto.startsWith('/') ? p.foto : '/' + p.foto"
+                                                :alt="p.nama_formatted || p.nama_pastor"
+                                                class="w-full h-full object-cover"
+                                            />
+                                            <i v-else class="fa-solid fa-user-tie text-amber-600 text-lg"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <h4 class="font-black text-slate-900 text-[13px]">{{ p.nama_formatted || p.nama_pastor }}</h4>
+                                                <span
+                                                    :class="[
+                                                        'px-2 py-0.5 rounded-md text-[10px] font-bold',
+                                                        (p.jabatan && p.jabatan.includes('Paroki') && !p.jabatan.includes('Rekan'))
+                                                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                                            : 'bg-blue-100 text-blue-800 border border-blue-200'
+                                                    ]"
+                                                >
+                                                    {{ p.jabatan || 'Pastor' }}
+                                                </span>
+                                                <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                                                    {{ p.status || 'Aktif' }}
+                                                </span>
+                                            </div>
+                                            <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                                                <span>Bertugas di: <b>{{ p.paroki_tugas || paroki?.nama_paroki }}</b></span>
+                                                <span v-if="p.ordo" class="ml-2">• Tarekat/Ordo: <b>{{ p.ordo }}</b></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-2 shrink-0 md:self-center">
+                                        <Link
+                                            :href="`/admin/master-referensi/pastor/edit/${p.id}`"
+                                            class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-500 hover:text-white text-slate-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                                            title="Edit data pastor ini di master pastor"
+                                        >
+                                            <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                                            <span>Edit Data</span>
+                                        </Link>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
-                                    <span class="text-slate-500 font-semibold">Pastor Rekan</span>
-                                    <span class="sm:col-span-2 font-bold text-slate-700">{{ paroki?.nama_pastor_rekan || '-' }}</span>
+                            </div>
+
+                            <!-- Fallback standard fields if no records -->
+                            <div v-else class="divide-y divide-slate-100 text-xs">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5 items-center">
+                                    <span class="text-slate-500 font-semibold">Pastor Paroki</span>
+                                    <div class="sm:col-span-2 flex items-center gap-2">
+                                        <span class="font-bold text-slate-900">{{ paroki?.nama_pastor_paroki_aktif || 'RD. Herman Hilers Penga' }}</span>
+                                        <span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold">Pastor Paroki</span>
+                                    </div>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
-                                    <span class="text-slate-500 font-semibold">Frater / Suster</span>
-                                    <span class="sm:col-span-2 text-slate-400">-</span>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5 items-center">
+                                    <span class="text-slate-500 font-semibold">Pastor Rekan</span>
+                                    <div class="sm:col-span-2 flex items-center gap-2">
+                                        <span class="font-bold text-slate-700">{{ paroki?.nama_pastor_rekan || 'RD. Patrisius Tampani' }}</span>
+                                        <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">Pastor Rekan</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- SECTION 3: LOKASI & WILAYAH ADMINISTRATIF -->
                         <div>
-                            <div class="bg-slate-50/90 px-4 py-2.5 border-b border-slate-200 flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider">
+                            <div class="bg-slate-50/90 px-4 py-2.5 border-b border-slate-200 flex items-center gap-2 text-xs font-black text-slate-800 uppercase">
                                 <i class="fa-solid fa-location-dot text-amber-600"></i>
                                 <span>LOKASI & WILAYAH ADMINISTRATIF</span>
                             </div>
                             <div class="divide-y divide-slate-100 text-xs">
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Alamat Lengkap</span>
                                     <span class="sm:col-span-2 font-medium text-slate-800">{{ paroki?.alamat || '-' }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Kelurahan / Desa</span>
                                     <span class="sm:col-span-2 font-bold text-slate-800">{{ paroki?.desa ? paroki.desa.nama_desa : '-' }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Kecamatan</span>
                                     <span class="sm:col-span-2 font-bold text-slate-800">{{ paroki?.kecamatan ? paroki.kecamatan.nama_kecamatan : '-' }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Kabupaten / Kota</span>
                                     <span class="sm:col-span-2 font-bold text-slate-800">{{ paroki?.kabupaten ? paroki.kabupaten.nama_kabupaten : '-' }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Provinsi</span>
                                     <span class="sm:col-span-2 font-bold text-slate-800">{{ paroki?.provinsi ? paroki.provinsi.nama_provinsi : '-' }}</span>
                                 </div>
@@ -403,20 +552,20 @@ const saveParoki = () => {
 
                         <!-- SECTION 4: KONTAK & INFORMASI -->
                         <div>
-                            <div class="bg-slate-50/90 px-4 py-2.5 border-b border-slate-200 flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider">
+                            <div class="bg-slate-50/90 px-4 py-2.5 border-b border-slate-200 flex items-center gap-2 text-xs font-black text-slate-800 uppercase">
                                 <i class="fa-solid fa-phone text-amber-600"></i>
                                 <span>KONTAK & INFORMASI</span>
                             </div>
                             <div class="divide-y divide-slate-100 text-xs">
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">No. Telepon / HP</span>
                                     <span class="sm:col-span-2 font-bold text-slate-800">{{ paroki?.telepon || paroki?.whatsapp || '-' }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Email Resmi</span>
                                     <span class="sm:col-span-2 font-bold text-slate-800">{{ paroki?.email || '-' }}</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 px-4 py-2.5">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-3 px-4 py-2.5">
                                     <span class="text-slate-500 font-semibold">Website</span>
                                     <span class="sm:col-span-2 font-bold text-blue-600">{{ paroki?.website || '-' }}</span>
                                 </div>
@@ -425,7 +574,7 @@ const saveParoki = () => {
 
                         <!-- SECTION 5: GOOGLE MAPS & PETA LOKASI -->
                         <div v-if="paroki?.maps_embed || paroki?.maps_url">
-                            <div class="bg-slate-50/90 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between text-xs font-black text-slate-800 uppercase tracking-wider">
+                            <div class="bg-slate-50/90 px-4 py-2.5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs font-black text-slate-800 uppercase">
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-map-location-dot text-amber-600"></i>
                                     <span>PETA & LOKASI GOOGLE MAPS</span>
@@ -434,7 +583,7 @@ const saveParoki = () => {
                                     v-if="paroki?.maps_url"
                                     :href="paroki.maps_url"
                                     target="_blank"
-                                    class="text-[11px] font-bold text-blue-600 hover:text-blue-800 lowercase flex items-center gap-1"
+                                    class="text-[11px] font-bold text-blue-600 hover:text-blue-800 normal-case flex items-center gap-1 shrink-0"
                                 >
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
                                     <span>Buka di Google Maps</span>
@@ -443,7 +592,7 @@ const saveParoki = () => {
                             <div class="p-4 space-y-3">
                                 <div
                                     v-if="paroki?.maps_embed"
-                                    class="w-full h-64 rounded-2xl overflow-hidden border border-slate-200 shadow-2xs"
+                                    class="w-full h-64 rounded-xl overflow-hidden border border-slate-200 shadow-2xs"
                                     v-html="paroki.maps_embed"
                                 ></div>
                                 <div v-if="paroki?.latitude && paroki?.longitude" class="text-xs text-slate-500 flex items-center gap-4">
@@ -456,10 +605,10 @@ const saveParoki = () => {
                 </div>
 
                 <!-- RIGHT COLUMN: PAROKI UTAMA (DEFAULT) WIDGETS (4/12 = ~33%) -->
-                <div class="lg:col-span-4 space-y-4">
+                <div class="xl:col-span-4 space-y-4 xl:sticky xl:top-4 min-w-0">
                     
                     <!-- WIDGET 1: PAROKI UTAMA (DEFAULT) SELECTOR -->
-                    <div class="rounded-2xl bg-white border border-slate-200/90 p-5 shadow-2xs space-y-4">
+                    <div class="rounded-xl bg-white border border-slate-200/90 p-4 shadow-2xs space-y-4">
                         <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
                             <i class="fa-solid fa-gear text-amber-500 text-sm"></i>
                             <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Paroki Utama (Default)</h3>
@@ -472,7 +621,7 @@ const saveParoki = () => {
                                 <button
                                     type="button"
                                     @click="isDropdownOpen = !isDropdownOpen"
-                                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 flex items-center justify-between gap-2 cursor-pointer shadow-2xs text-left transition"
+                                    class="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 hover:bg-white border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 flex items-center justify-between gap-2 cursor-pointer shadow-2xs text-left transition"
                                 >
                                     <span class="truncate">{{ selectedParokiName }}</span>
                                     <i :class="['fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 shrink-0', isDropdownOpen ? 'rotate-180 text-amber-600' : '']"></i>
@@ -481,7 +630,7 @@ const saveParoki = () => {
                                 <!-- Searchable Popover Menu -->
                                 <div
                                     v-if="isDropdownOpen"
-                                    class="absolute left-0 right-0 top-full mt-1.5 z-40 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden space-y-2 p-2"
+                                    class="absolute left-0 right-0 top-full mt-1.5 z-40 bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden space-y-2 p-2"
                                 >
                                     <div class="relative">
                                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
@@ -489,7 +638,7 @@ const saveParoki = () => {
                                             v-model="parokiSearchQuery"
                                             type="text"
                                             placeholder="Ketik nama paroki / keuskupan..."
-                                            class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-amber-500"
+                                            class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-amber-500"
                                             @click.stop
                                         />
                                     </div>
@@ -501,7 +650,7 @@ const saveParoki = () => {
                                             type="button"
                                             @click="selectParokiItem(p)"
                                             :class="[
-                                                'w-full text-left px-3 py-2 rounded-xl text-xs transition flex flex-col cursor-pointer',
+                                                'w-full text-left px-3 py-2 rounded-lg text-xs transition flex flex-col cursor-pointer',
                                                 String(p.id_paroki) === String(selectedParokiId)
                                                     ? 'bg-amber-50 text-amber-900 font-bold'
                                                     : 'hover:bg-slate-50 text-slate-700'
@@ -522,7 +671,7 @@ const saveParoki = () => {
                             <button
                                 type="button"
                                 @click="applyAndSync"
-                                class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                                class="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition cursor-pointer"
                             >
                                 <i class="fa-solid fa-rotate text-xs"></i>
                                 <span>Terapkan & Sinkronkan</span>
@@ -531,7 +680,7 @@ const saveParoki = () => {
                     </div>
 
                     <!-- WIDGET 2: AUTO-SINKRONISASI AKTIF (GREEN BOX) -->
-                    <div class="rounded-2xl bg-emerald-50/70 border border-emerald-200/90 p-4 space-y-2 text-xs text-emerald-950 shadow-2xs">
+                    <div class="rounded-xl bg-emerald-50/70 border border-emerald-200/90 p-4 space-y-2 text-xs text-emerald-950 shadow-2xs">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
                             <h4 class="font-bold text-emerald-900 text-xs">Auto-Sinkronisasi Aktif:</h4>
@@ -549,7 +698,7 @@ const saveParoki = () => {
                     </div>
 
                     <!-- WIDGET 3: PAROKI BADGE SUMMARY CARD (BLUE/GRAY) -->
-                    <div class="rounded-2xl bg-slate-50 border border-slate-200/90 p-4 space-y-3 shadow-2xs text-xs">
+                    <div class="rounded-xl bg-slate-50 border border-slate-200/90 p-4 space-y-3 shadow-2xs text-xs">
                         <h4 class="font-black text-slate-900 text-sm leading-tight">{{ paroki?.nama_paroki }}</h4>
                         <div class="space-y-1 text-[11.5px] text-slate-600">
                             <p class="flex items-center gap-2">

@@ -50,14 +50,10 @@
                         Suksesi Gembala Paroki
                     </span>
                     <h3 style="font-size: 1.3rem; font-weight: 800; color: #0f172a; margin: 2px 0 0;">
-                        Gembala Umat dari Masa ke Masa
+                        Pastor Paroki dari Masa ke Masa
                     </h3>
                 </div>
             </div>
-            
-            <span style="display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; color: #475569; font-size: 0.82rem; font-weight: 700; padding: 7px 16px; border-radius: 20px; border: 1px solid #cbd5e1;">
-                <i class="fa-solid fa-user-tie text-teal-600"></i> Total: {{ count($riwayat ?? []) }} Gembala Terdaftar
-            </span>
         </div>
 
         <!-- Pastor Timeline Cards -->
@@ -122,15 +118,28 @@
                         </div>
                     </div>
 
-                    <!-- Right: Periode & Status Badge -->
-                    <div style="text-align: right; min-width: 170px;">
+                    <!-- Right: Periode & Status Badge & Action -->
+                    <div style="text-align: right; min-width: 180px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
                         <span style="display: inline-block; background: var(--primary-orange, #ff9800); color: #ffffff; padding: 6px 18px; border-radius: 20px; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.3px; box-shadow: 0 2px 8px rgba(255,152,0,0.25);">
                             <i class="fa-regular fa-calendar-check me-1"></i> {{ $periodeStr }}
                         </span>
                         
-                        <div style="margin-top: 8px; font-size: 0.78rem; font-weight: 700; color: {{ $isAktif ? '#10b981' : '#64748b' }}; display: flex; align-items: center; justify-content: flex-end; gap: 5px;">
+                        <div style="font-size: 0.78rem; font-weight: 700; color: {{ $isAktif ? '#10b981' : '#64748b' }}; display: flex; align-items: center; justify-content: flex-end; gap: 5px;">
                             <i class="fa-solid fa-circle" style="font-size: 7px;"></i>
                             <span>{{ $isAktif ? 'Sedang Bertugas' : 'Mantan Pastor Paroki' }}</span>
+                        </div>
+
+                        <div style="margin-top: 4px;">
+                            <button 
+                                type="button" 
+                                onclick="openPastorDetailModal({{ json_encode($r) }})"
+                                style="display: inline-flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; font-size: 0.78rem; font-weight: 700; padding: 6px 14px; border-radius: 12px; transition: all 0.2s; cursor: pointer;"
+                                onmouseover="this.style.background='var(--primary-teal, #00897b)'; this.style.color='#ffffff'; this.style.borderColor='var(--primary-teal, #00897b)';"
+                                onmouseout="this.style.background='#f8fafc'; this.style.color='#334155'; this.style.borderColor='#cbd5e1';"
+                            >
+                                <i class="fa-solid fa-circle-info text-xs"></i>
+                                <span>Selengkapnya</span>
+                            </button>
                         </div>
                     </div>
 
@@ -155,4 +164,7 @@
 
     </div>
 </section>
+
+@include('partials.pastor-detail-modal')
+
 @endsection

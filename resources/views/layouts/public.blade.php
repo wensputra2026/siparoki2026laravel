@@ -57,11 +57,11 @@
         <link rel="apple-touch-icon" href="/assets/uploads/profil/logo_paroki_1787370466.jpeg">
     @endif
 
-    <!-- Konoha Theme: Bootstrap 5 + Icons + Fonts + Theme CSS -->
+    <!-- SIPAROKI Theme: Bootstrap 5 + Icons + Fonts + Theme CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/css/konoha-theme.css') }}?v={{ @filemtime(public_path('assets/css/konoha-theme.css')) ?: time() }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/siparoki-theme.css') }}?v={{ @filemtime(public_path('assets/css/siparoki-theme.css')) ?: time() }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/css/lightbox.min.css">
 
     <!-- Local Vendor Icons -->
@@ -83,7 +83,6 @@
     @endif
     <link rel="stylesheet" href="/css/portal-shell.css?v={{ @filemtime(public_path('css/portal-shell.css')) ?: time() }}">
     <link rel="stylesheet" href="/css/siparoki-tailwind-public.css?v={{ @filemtime(public_path('css/siparoki-tailwind-public.css')) ?: time() }}">
-    <link rel="stylesheet" href="/konoha/styles.css?v={{ @filemtime(base_path('konoha/styles.css')) ?: time() }}">
     @php
         $rawBanner = $globalBanner 
             ?? $globalProfil->banner 
@@ -165,13 +164,13 @@
         <!-- Navbar -->
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container">
-                <a class="navbar-brand" href="/">
+                <a class="navbar-brand d-inline-flex align-items-center gap-2" href="/" style="text-decoration: none;">
                     @if(!empty($globalLogo))
-                        <img src="{{ $globalLogo }}" alt="Logo {{ $globalNamaParoki ?? 'Paroki' }}" style="width: 40px; height: 40px; object-fit: contain; border-radius: 50%; background: #fff; padding: 2px;">
+                        <img src="{{ $globalLogo }}" alt="Logo {{ $globalNamaParoki ?? 'Paroki' }}" style="width: 42px; height: 42px; object-fit: contain; border-radius: 50%; background: #fff; padding: 2px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); flex-shrink: 0; display: inline-block;">
                     @else
-                        <i class="bi bi-church" style="font-size: 1.8rem; color: #fff;"></i>
+                        <i class="bi bi-church" style="font-size: 1.8rem; color: var(--primary-teal, #00897b); flex-shrink: 0;"></i>
                     @endif
-                    <span>{{ $globalNamaParoki ?? 'SIPAROKI' }}</span>
+                    <span style="font-weight: 800; font-size: 1.15rem; color: var(--primary-orange, #ff9800); white-space: nowrap; line-height: 1; letter-spacing: -0.01em;">{{ $globalNamaParoki ?? 'SIPAROKI' }}</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -208,15 +207,10 @@
                                 <li><a class="dropdown-item" href="/agenda">Agenda Kegiatan</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{ request()->is('berita*') || request()->is('artikel*') || request()->is('pengumuman*') || request()->is('renungan*') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown">
-                                Berita
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('warta*') || request()->is('berita*') || request()->is('artikel*') || request()->is('pengumuman*') || request()->is('renungan*') || request()->is('kategori*') ? 'active' : '' }}" href="/warta">
+                                Warta Paroki
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/berita">Berita Paroki</a></li>
-                                <li><a class="dropdown-item" href="/artikel">Artikel &amp; Renungan</a></li>
-                                <li><a class="dropdown-item" href="/pengumuman">Pengumuman</a></li>
-                            </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {{ request()->is('galeri*') || request()->is('video*') ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown">
@@ -337,7 +331,7 @@
                     <ul>
                         <li><a href="/">Beranda</a></li>
                         <li><a href="/profil">Tentang</a></li>
-                        <li><a href="/berita">Berita</a></li>
+                        <li><a href="/warta">Warta Paroki</a></li>
                         <li><a href="/jadwal-misa">Jadwal Misa</a></li>
                         <li><a href="/kontak">Kontak</a></li>
                     </ul>

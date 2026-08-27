@@ -11,9 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(prepend: [
-            \App\Http\Middleware\CheckInstalled::class,
-        ], append: [
+        $middleware->web(append: [
             \App\Http\Middleware\EnsureParokiConfigured::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);

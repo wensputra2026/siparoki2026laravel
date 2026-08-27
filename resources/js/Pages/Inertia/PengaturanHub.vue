@@ -393,34 +393,31 @@ const getYoutubeEmbed = (url) => {
     <AppLayout>
         <Head title="Pengaturan Web & Integrasi - SIPAROKI" />
 
-        <div class="w-full space-y-6 pb-12">
+        <div class="w-full space-y-5 pb-24">
 
             <!-- 1. EXECUTIVE HEADER BANNER -->
-            <div class="bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-teal-900/15 relative overflow-hidden">
-                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-                <div class="absolute right-20 top-0 w-32 h-32 bg-teal-300/20 rounded-full blur-xl pointer-events-none"></div>
-
-                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div class="space-y-2">
-                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-teal-100 text-xs font-semibold border border-white/20">
+            <div class="bg-gradient-to-r from-teal-800 via-teal-700 to-slate-900 rounded-xl p-5 sm:p-6 text-white shadow-lg shadow-teal-900/10 relative overflow-hidden">
+                <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div class="space-y-2 min-w-0">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/15 backdrop-blur-md text-teal-100 text-xs font-semibold border border-white/20">
                             <i class="fa-solid fa-sliders"></i>
                             <span>Sistem Pengaturan Web &amp; Integrasi Terpadu Paroki</span>
                         </div>
-                        <h1 class="text-2xl sm:text-3xl font-black tracking-tight">
+                        <h1 class="text-xl sm:text-2xl font-black tracking-tight">
                             Pengaturan Web &amp; Sistem
                         </h1>
-                        <p class="text-teal-100 text-xs sm:text-sm max-w-2xl leading-relaxed">
+                        <p class="text-teal-100 text-xs sm:text-sm max-w-3xl leading-relaxed">
                             Kelola metode pembayaran rekening &amp; QRIS, WhatsApp Gateway OTP, video header beranda, banner slider, SEO Google, widget medsos, dan mode pemeliharaan secara real-time.
                         </p>
                     </div>
 
-                    <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 lg:flex lg:items-center gap-2 shrink-0">
                         <!-- Reload Data (Database Reload) -->
                         <button
                             type="button"
                             :disabled="isReloading"
                             @click="reloadSettings"
-                            class="px-4 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                            class="px-4 py-2.5 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                             title="Reload data pengaturan dari database"
                         >
                             <i :class="['fa-solid fa-arrows-rotate', isReloading ? 'fa-spin' : '']"></i>
@@ -430,7 +427,7 @@ const getYoutubeEmbed = (url) => {
                         <a
                             href="/"
                             target="_blank"
-                            class="px-4 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2 cursor-pointer"
+                            class="px-4 py-2.5 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
                         >
                             <i class="fa-solid fa-earth-americas"></i>
                             <span>Situs Publik</span>
@@ -438,7 +435,7 @@ const getYoutubeEmbed = (url) => {
 
                         <Link
                             :href="`/${prefix}/security-settings`"
-                            class="px-4 py-2.5 rounded-2xl bg-white hover:bg-teal-50 text-teal-950 text-xs font-black shadow-lg shadow-black/5 transition flex items-center gap-2"
+                            class="px-4 py-2.5 rounded-lg bg-white hover:bg-teal-50 text-teal-950 text-xs font-black shadow-lg shadow-black/5 transition flex items-center justify-center gap-2"
                         >
                             <i class="fa-solid fa-shield-halved text-teal-600"></i>
                             <span>Security Center</span>
@@ -448,11 +445,12 @@ const getYoutubeEmbed = (url) => {
             </div>
 
             <!-- 2. TAB NAVIGATION (Consistent with Statistik & GenericModule) -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200/80">
+            <div class="rounded-xl bg-white border border-slate-200/80 p-2 shadow-2xs overflow-x-auto">
+                <div class="flex items-center gap-2 min-w-max">
                 <button
                     @click="activeTab = 'midtrans'"
                     :class="[
-                        'px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
+                        'px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
                         activeTab === 'midtrans'
                             ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
                             : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
@@ -466,7 +464,7 @@ const getYoutubeEmbed = (url) => {
                 <button
                     @click="activeTab = 'pembayaran'"
                     :class="[
-                        'px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
+                        'px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
                         activeTab === 'pembayaran'
                             ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
                             : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
@@ -479,7 +477,7 @@ const getYoutubeEmbed = (url) => {
                 <button
                     @click="activeTab = 'otp'"
                     :class="[
-                        'px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
+                        'px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
                         activeTab === 'otp'
                             ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
                             : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
@@ -492,7 +490,7 @@ const getYoutubeEmbed = (url) => {
                 <button
                     @click="activeTab = 'video'"
                     :class="[
-                        'px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
+                        'px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
                         activeTab === 'video'
                             ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
                             : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
@@ -505,7 +503,7 @@ const getYoutubeEmbed = (url) => {
                 <button
                     @click="activeTab = 'slider'"
                     :class="[
-                        'px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
+                        'px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
                         activeTab === 'slider'
                             ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
                             : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
@@ -518,7 +516,7 @@ const getYoutubeEmbed = (url) => {
                 <button
                     @click="activeTab = 'seo'"
                     :class="[
-                        'px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
+                        'px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
                         activeTab === 'seo'
                             ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
                             : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
@@ -531,7 +529,7 @@ const getYoutubeEmbed = (url) => {
                 <button
                     @click="activeTab = 'widget'"
                     :class="[
-                        'px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
+                        'px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
                         activeTab === 'widget'
                             ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
                             : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
@@ -544,7 +542,7 @@ const getYoutubeEmbed = (url) => {
                 <button
                     @click="activeTab = 'maintenance'"
                     :class="[
-                        'px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
+                        'px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
                         activeTab === 'maintenance'
                             ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
                             : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
@@ -557,12 +555,13 @@ const getYoutubeEmbed = (url) => {
 
                 <Link
                     href="/setup-paroki"
-                    class="px-5 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20"
+                    class="px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20"
                     title="Buka Wizard Setup & Inisialisasi Paroki Default"
                 >
                     <i class="fa-solid fa-sliders text-amber-300"></i>
                     <span>Setup Paroki Wizard</span>
                 </Link>
+                </div>
             </div>
 
             <!-- Tab Midtrans: Midtrans Snap Payment Gateway -->
@@ -890,7 +889,7 @@ const getYoutubeEmbed = (url) => {
             </div>
 
             <!-- Tab 1: Pembayaran & QRIS -->
-            <div v-show="activeTab === 'pembayaran'" class="space-y-6">
+            <div v-show="activeTab === 'pembayaran'" class="space-y-4">
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                     <div>
                         <h3 class="font-extrabold text-slate-900 dark:text-white text-base">
@@ -902,18 +901,18 @@ const getYoutubeEmbed = (url) => {
                     </div>
                     <button
                         @click="openPaymentModal()"
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow transition"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow transition"
                     >
                         <i class="fa-solid fa-plus"></i>
                         <span>Tambah Metode Pembayaran</span>
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     <div
                         v-for="item in metodePembayaran"
                         :key="item.id"
-                        class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex flex-col justify-between relative overflow-hidden"
+                        class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex flex-col justify-between relative overflow-hidden"
                     >
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
@@ -925,12 +924,12 @@ const getYoutubeEmbed = (url) => {
                                 </span>
                             </div>
 
-                            <div v-if="item.gambar_qris" class="w-full h-40 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-200/80 dark:border-slate-700/80 p-2">
+                            <div v-if="item.gambar_qris" class="w-full h-36 bg-slate-50 dark:bg-slate-900 rounded-lg flex items-center justify-center overflow-hidden border border-slate-200/80 dark:border-slate-700/80 p-2">
                                 <img :src="'/' + item.gambar_qris.replace(/^\//, '')" alt="QRIS" class="h-full object-contain" />
                             </div>
 
                             <div>
-                                <h4 class="font-extrabold text-slate-900 dark:text-white text-base">
+                                <h4 class="font-extrabold text-slate-900 dark:text-white text-sm leading-snug">
                                     {{ item.nama_bank }}
                                 </h4>
                                 <p v-if="item.nomor_rekening" class="font-mono font-bold text-teal-600 dark:text-teal-400 text-sm mt-0.5">
@@ -948,13 +947,13 @@ const getYoutubeEmbed = (url) => {
                         <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-2">
                             <button
                                 @click="openPaymentModal(item)"
-                                class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
+                                class="px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
                             >
                                 <i class="fa-solid fa-pen-to-square text-amber-500 me-1"></i> Edit
                             </button>
                             <button
                                 @click="deletePayment(item)"
-                                class="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950 dark:hover:bg-rose-900 text-xs font-bold transition cursor-pointer"
+                                class="px-3.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950 dark:hover:bg-rose-900 text-xs font-bold transition cursor-pointer"
                             >
                                 <i class="fa-solid fa-trash me-1"></i> Hapus
                             </button>

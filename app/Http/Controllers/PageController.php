@@ -118,29 +118,24 @@ class PageController extends Controller
                     if ($hasParokiCol && !empty($activeParokiId)) {
                         $pastorParokiObj = (clone $pastorParokiQuery)
                             ->where('paroki_id', $activeParokiId)
-                            ->orderByRaw("CASE WHEN nama_pastor LIKE '%Herman%' THEN 0 ELSE 1 END")
                             ->orderBy('urutan')
                             ->orderByDesc('id')
                             ->first();
                     }
 
-                    if (!$pastorParokiObj) {
-                        $pastorParokiObj = $pastorParokiQuery
-                            ->orderByRaw("CASE WHEN nama_pastor LIKE '%Herman%' THEN 0 ELSE 1 END")
-                            ->orderBy('urutan')
-                            ->orderByDesc('id')
-                            ->first();
-                    }
-
-                    if (!$pastorParokiObj) {
-                        $pastorParokiObj = DB::table('master_pastor')
-                            ->where(function($q) {
-                                $q->where('nama_pastor', 'like', '%Herman%')
-                                  ->orWhere('jabatan', 'like', '%Pastor Paroki%')
-                                  ->orWhere('jabatan', 'Pastor Paroki');
+                    if (!$pastorParokiObj && !empty($namaParoki)) {
+                        $pastorParokiObj = (clone $pastorParokiQuery)
+                            ->where(function($q) use ($namaParoki) {
+                                $q->where('paroki_tugas', 'like', '%' . $namaParoki . '%');
                             })
-                            ->orderByRaw("CASE WHEN nama_pastor LIKE '%Herman%' THEN 0 ELSE 1 END")
                             ->orderBy('urutan')
+                            ->first();
+                    }
+
+                    if (!$pastorParokiObj && !empty($activeParoki->nama_pastor_paroki_aktif)) {
+                        $cleanName = trim(preg_replace('/^(RD\.|RP\.|P\.|Fr\.|Mgr\.)\s*/i', '', $activeParoki->nama_pastor_paroki_aktif));
+                        $pastorParokiObj = DB::table('master_pastor')
+                            ->where('nama_pastor', 'like', '%' . $cleanName . '%')
                             ->first();
                     }
 
@@ -163,10 +158,24 @@ class PageController extends Controller
                             ->first();
                     }
 
-                    if (!$pastorRekanObj) {
-                        $pastorRekanObj = $pastorRekanQuery
+                    if (!$pastorRekanObj && !empty($namaParoki)) {
+                        $pastorRekanObj = (clone $pastorRekanQuery)
+                            ->where(function($q) use ($namaParoki) {
+                                $q->where('paroki_tugas', 'like', '%' . $namaParoki . '%');
+                            })
                             ->orderBy('urutan')
                             ->first();
+                    }
+
+                    if (!$pastorRekanObj && !empty($activeParoki->nama_pastor_rekan)) {
+                        $rekanNames = array_map('trim', explode(',', $activeParoki->nama_pastor_rekan));
+                        $firstName = $rekanNames[0] ?? '';
+                        if (!empty($firstName)) {
+                            $cleanName = trim(preg_replace('/^(RD\.|RP\.|P\.|Fr\.|Mgr\.)\s*/i', '', $firstName));
+                            $pastorRekanObj = DB::table('master_pastor')
+                                ->where('nama_pastor', 'like', '%' . $cleanName . '%')
+                                ->first();
+                        }
                     }
 
                     // 3. Resolve Frater
@@ -183,9 +192,30 @@ class PageController extends Controller
                             ->first();
                     }
 
-                    if (!$fraterObj) {
-                        $fraterObj = $fraterQuery
+                    if (!$fraterObj && !empty($namaParoki)) {
+                        $fraterObj = (clone $fraterQuery)
+                            ->where(function($q) use ($namaParoki) {
+                                $q->where('paroki_tugas', 'like', '%' . $namaParoki . '%');
+                            })
                             ->orderBy('urutan')
+                            ->first();
+                    }
+
+                    if (!$fraterObj && Schema::hasTable('master_frater')) {
+                        $fraterObj = DB::table('master_frater')
+                            ->where(function($q) {
+                                $q->where('status', '1')
+                                  ->orWhere('status', 'like', '%aktif%')
+                                  ->orWhere('status', 1);
+                            })
+                            ->where(function($q) use ($namaParoki, $activeParokiId) {
+                                if (Schema::hasColumn('master_frater', 'paroki_id')) {
+                                    $q->where('paroki_id', $activeParokiId);
+                                }
+                                if (Schema::hasColumn('master_frater', 'paroki_tugas')) {
+                                    $q->orWhere('paroki_tugas', 'like', '%' . $namaParoki . '%');
+                                }
+                            })
                             ->first();
                     }
                 } catch (\Throwable $e) {}
@@ -197,18 +227,18 @@ class PageController extends Controller
                     $rawPastorFoto = $pastorParokiObj->foto;
                 }
             } else {
-                $pastorParoki = $activeParoki->nama_pastor_paroki_aktif
-                    ?? $profil->pastor_paroki
-                    ?? 'RD. Herman Hilers Penga';
+                $pastorParoki = $activeParoki?->nama_pastor_paroki_aktif
+                    ?? $profil?->pastor_paroki
+                    ?? null;
             }
 
             $pastorRekan = $pastorRekanObj
                 ? \App\Models\MasterPastor::formatNama($pastorRekanObj)
-                : ($activeParoki->nama_pastor_rekan ?? $profil->pastor_rekan ?? 'Pastor Rekan Paroki');
+                : ($activeParoki?->nama_pastor_rekan ?? $profil?->pastor_rekan ?? null);
 
             $frater = $fraterObj
-                ? \App\Models\MasterPastor::formatNama($fraterObj)
-                : ($profil->frater ?? 'Frater Pastoral / Katekis');
+                ? (isset($fraterObj->nama_pastor) ? \App\Models\MasterPastor::formatNama($fraterObj) : ($fraterObj->nama_frater ?? $fraterObj->nama_lengkap ?? null))
+                : (!empty($profil?->frater) ? $profil->frater : null);
 
             // Resolve dynamic pastor photo (priority: Master Pastor DB > Admin uploaded photo > Riwayat Pastor Aktif > default fallback)
             if (empty($rawPastorFoto)) {
@@ -309,6 +339,21 @@ class PageController extends Controller
                 'total_kub' => $statsKub,
             ];
 
+            $wartaKategoriList = [];
+            if (Schema::hasTable('kategori_konten')) {
+                try {
+                    $wartaKategoriList = DB::table('kategori_konten')
+                        ->where(function($q) {
+                            $q->where('status', 1)->orWhere('status', '1')->orWhereNull('status');
+                        })
+                        ->where(function($q) {
+                            $q->where('is_deleted', 0)->orWhereNull('is_deleted');
+                        })
+                        ->orderBy('nama_kategori')
+                        ->get();
+                } catch (\Throwable $e) {}
+            }
+
             return [
                 'profil' => $profil,
                 'activeParoki' => $activeParoki,
@@ -337,6 +382,7 @@ class PageController extends Controller
                 'totalKK' => $statsKk,
                 'totalKapela' => $statsKapela,
                 'totalKUB' => $statsKub,
+                'wartaKategoriList' => $wartaKategoriList,
             ];
         });
     }
@@ -359,7 +405,7 @@ class PageController extends Controller
 
                     $profil = Schema::hasTable('profil_paroki') ? DB::table('profil_paroki')->first() : null;
                     $activeParoki = Schema::hasTable('paroki') ? DB::table('paroki')->first() : null;
-                    $namaParoki = $activeParoki->nama_paroki ?? $profil->nama_paroki ?? $pengaturan->nama_paroki ?? 'Paroki St. Vinsensius a Paulo Benlutu';
+                    $namaParoki = $activeParoki?->nama_paroki ?? $profil?->nama_paroki ?? $pengaturan?->nama_paroki ?? 'Paroki';
                     $logo = $activeParoki->logo ?? $profil->logo ?? null;
 
                     return response()->view('errors.maintenance', [
@@ -492,7 +538,24 @@ class PageController extends Controller
                     $query->orderBy('id');
                 }
             }
-            $riwayat = $query->get();
+            $riwayat = $query->get()->map(function($r) {
+                $mp = null;
+                if (!empty($r->pastor_id) && Schema::hasTable('master_pastor')) {
+                    $mp = DB::table('master_pastor')->where('id', $r->pastor_id)->first();
+                }
+                if (!$mp && !empty($r->nama_pastor) && Schema::hasTable('master_pastor')) {
+                    $cleanName = preg_replace('/^(RD\.|RP\.|Mgr\.|P\.|Fr\.|Pater|Romo)\s*/i', '', $r->nama_pastor);
+                    $cleanName = trim(explode(',', $cleanName)[0]);
+                    $mp = DB::table('master_pastor')->where('nama_pastor', 'like', '%' . $cleanName . '%')->first();
+                }
+                $r->master_pastor = $mp;
+                if ($mp) {
+                    $r->nama_formatted = \App\Models\MasterPastor::formatNama($mp);
+                } else {
+                    $r->nama_formatted = $r->nama_lengkap_gelar ?? $r->nama_pastor;
+                }
+                return $r;
+            });
         } catch (\Throwable $e) {
             $riwayat = collect();
         }
@@ -553,19 +616,37 @@ class PageController extends Controller
     public function pelayanPastoral()
     {
         $common = $this->getCommonData();
-        try {
-            $query = \App\Models\MasterPastor::query();
-            if (Schema::hasTable('master_pastor')) {
-                $cols = Schema::getColumnListing('master_pastor');
-                if (in_array('id', $cols, true)) {
-                    $query->orderBy('id');
-                } elseif (in_array('nama_pastor', $cols, true)) {
-                    $query->orderBy('nama_pastor');
-                }
+        $namaParoki = $common['nama_paroki'] ?? null;
+        $activeParokiId = $common['active_paroki_id'] ?? 380;
+
+        $pastorBertugas = collect();
+        if (Schema::hasTable('master_pastor')) {
+            try {
+                $pastorBertugas = DB::table('master_pastor')
+                    ->where(function($q) use ($namaParoki, $activeParokiId) {
+                        $q->where('paroki_tugas', 'like', '%Benlutu%');
+                        if (!empty($namaParoki)) {
+                            $q->orWhere('paroki_tugas', 'like', '%' . $namaParoki . '%');
+                        }
+                        if (Schema::hasColumn('master_pastor', 'paroki_id') && !empty($activeParokiId)) {
+                            $q->orWhere('paroki_id', $activeParokiId);
+                        }
+                    })
+                    ->where(function($q) {
+                        $q->where('status', '1')
+                          ->orWhere('status', 'like', '%aktif%')
+                          ->orWhere('status', 1);
+                    })
+                    ->orderBy('urutan')
+                    ->orderBy('id')
+                    ->get()
+                    ->map(function($p) {
+                        $p->nama_formatted = \App\Models\MasterPastor::formatNama($p);
+                        return $p;
+                    });
+            } catch (\Throwable $e) {
+                $pastorBertugas = collect();
             }
-            $pastorList = $query->limit(24)->get();
-        } catch (\Throwable $e) {
-            $pastorList = collect();
         }
 
         try {
@@ -583,13 +664,40 @@ class PageController extends Controller
             $riwayatPastor = collect();
         }
 
-        return view('pages.pelayan-pastoral', array_merge($common, compact('pastorList', 'riwayatPastor')));
+        return view('pages.pelayan-pastoral', array_merge($common, compact('pastorBertugas', 'riwayatPastor')));
     }
 
     public function sambutan()
     {
         $common = $this->getCommonData();
-        return view('pages.sambutan', $common);
+        $sambutan = null;
+
+        if (Schema::hasTable('sambutan_pastor')) {
+            try {
+                $sambutan = \App\Models\SambutanPastor::where(function($q) {
+                    $q->where('status_publish', 'Publish')
+                      ->orWhere('status', '1')
+                      ->orWhere('status', 'Aktif')
+                      ->orWhereNull('status_publish');
+                })
+                ->where(function($q) {
+                    $q->where('is_deleted', 0)
+                      ->orWhereNull('is_deleted');
+                })
+                ->orderBy('urutan')
+                ->latest('updated_at')
+                ->first();
+
+                if (!$sambutan) {
+                    $sambutan = \App\Models\SambutanPastor::where(function($q) {
+                        $q->where('is_deleted', 0)
+                          ->orWhereNull('is_deleted');
+                    })->first();
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        return view('pages.sambutan', array_merge($common, compact('sambutan')));
     }
 
     public function jadwalMisa(Request $request)
@@ -776,7 +884,11 @@ class PageController extends Controller
         }
 
         if ($activeCategory !== '') {
-            $beritaQuery->where('kategori', $activeCategory);
+            $beritaQuery->where(function($q) use ($activeCategory) {
+                $q->where('kategori', $activeCategory)
+                  ->orWhere('tipe', $activeCategory)
+                  ->orWhere('kategori', 'like', "%{$activeCategory}%");
+            });
         }
 
         if ($activeMonth !== '') {
@@ -796,13 +908,44 @@ class PageController extends Controller
             ->latest('created_at')
             ->paginate(9);
 
-        $categories = (clone $baseQuery)
-            ->select('kategori', DB::raw('COUNT(*) as total'))
-            ->whereNotNull('kategori')
-            ->where('kategori', '!=', '')
-            ->groupBy('kategori')
-            ->orderBy('kategori')
-            ->get();
+        $categories = collect();
+        if (Schema::hasTable('kategori_konten')) {
+            try {
+                $rawCats = DB::table('kategori_konten')
+                    ->where(function($q) {
+                        $q->where('status', 1)->orWhere('status', '1')->orWhereNull('status');
+                    })
+                    ->where(function($q) {
+                        $q->where('is_deleted', 0)->orWhereNull('is_deleted');
+                    })
+                    ->orderBy('nama_kategori')
+                    ->get();
+
+                $kontenCounts = (clone $baseQuery)
+                    ->select('kategori', DB::raw('COUNT(*) as total'))
+                    ->whereNotNull('kategori')
+                    ->where('kategori', '!=', '')
+                    ->groupBy('kategori')
+                    ->pluck('total', 'kategori');
+
+                $categories = $rawCats->map(function($c) use ($kontenCounts) {
+                    $name = $c->nama_kategori ?? $c->nama ?? '';
+                    $c->kategori = $name;
+                    $c->total = $kontenCounts->get($name, 0);
+                    return $c;
+                });
+            } catch (\Throwable $e) {}
+        }
+
+        if ($categories->isEmpty()) {
+            $categories = (clone $baseQuery)
+                ->select('kategori', DB::raw('COUNT(*) as total'))
+                ->whereNotNull('kategori')
+                ->where('kategori', '!=', '')
+                ->groupBy('kategori')
+                ->orderBy('kategori')
+                ->get();
+        }
 
         $recentNews = (clone $baseQuery)
             ->latest('tanggal_publish')
@@ -811,11 +954,18 @@ class PageController extends Controller
             ->get();
 
         $archive = (clone $baseQuery)
-            ->selectRaw("DATE_FORMAT(COALESCE(tanggal_publish, created_at), '%Y-%m') as month_key, DATE_FORMAT(COALESCE(tanggal_publish, created_at), '%M %Y') as label, COUNT(*) as total")
-            ->groupBy('month_key', 'label')
+            ->selectRaw("DATE_FORMAT(COALESCE(tanggal_publish, created_at), '%Y-%m') as month_key, COUNT(*) as total")
+            ->where(function ($q) {
+                $q->whereNotNull('tanggal_publish')->orWhereNotNull('created_at');
+            })
+            ->groupBy('month_key')
             ->orderByDesc('month_key')
             ->limit(8)
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->label = format_bulan_indonesia($item->month_key);
+                return $item;
+            });
 
         $tags = (clone $baseQuery)
             ->whereNotNull('tags')
@@ -840,6 +990,24 @@ class PageController extends Controller
             'activeMonth',
             'activeTag'
         )));
+    }
+
+    public function warta(Request $request)
+    {
+        return $this->berita($request);
+    }
+
+    public function wartaKategori($slug, Request $request)
+    {
+        $categoryName = $slug;
+        if (Schema::hasTable('kategori_konten')) {
+            $kat = DB::table('kategori_konten')->where('slug', $slug)->first();
+            if ($kat && !empty($kat->nama_kategori)) {
+                $categoryName = $kat->nama_kategori;
+            }
+        }
+        $request->merge(['category' => $categoryName]);
+        return $this->berita($request);
     }
 
     public function artikel()
@@ -915,11 +1083,18 @@ class PageController extends Controller
 
         $archive = DB::table('konten')
             ->where('status_publish', 'Publish')
-            ->selectRaw("DATE_FORMAT(COALESCE(tanggal_publish, created_at), '%Y-%m') as month_key, DATE_FORMAT(COALESCE(tanggal_publish, created_at), '%M %Y') as label, COUNT(*) as total")
-            ->groupBy('month_key', 'label')
+            ->where(function ($q) {
+                $q->whereNotNull('tanggal_publish')->orWhereNotNull('created_at');
+            })
+            ->selectRaw("DATE_FORMAT(COALESCE(tanggal_publish, created_at), '%Y-%m') as month_key, COUNT(*) as total")
+            ->groupBy('month_key')
             ->orderByDesc('month_key')
             ->limit(6)
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->label = format_bulan_indonesia($item->month_key);
+                return $item;
+            });
 
         $tags = DB::table('konten')
             ->where('status_publish', 'Publish')
@@ -1063,11 +1238,62 @@ class PageController extends Controller
         return view('pages.pengumuman-detail', array_merge($common, compact('item')));
     }
 
-    public function renungan()
+    public function renungan(Request $request)
     {
         $common = $this->getCommonData();
-        $renungan = DB::table('renungan_harian')->latest('tanggal')->paginate(9);
-        return view('pages.renungan', array_merge($common, compact('renungan')));
+        $search = $request->input('search');
+
+        $query = DB::table('renungan_harian');
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%")
+                  ->orWhere('bacaan', 'like', "%{$search}%")
+                  ->orWhere('isi_renungan', 'like', "%{$search}%")
+                  ->orWhere('doa_penutup', 'like', "%{$search}%");
+            });
+        }
+
+        $renungan = $query->orderByDesc('tanggal')->orderByDesc('id')->paginate(9)->withQueryString();
+        
+        $featured = null;
+        if ($renungan->currentPage() === 1 && empty($search)) {
+            $featured = $renungan->first();
+        }
+
+        $recentRenungan = DB::table('renungan_harian')
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get();
+
+        return view('pages.renungan', array_merge($common, compact('renungan', 'featured', 'recentRenungan', 'search')));
+    }
+
+    public function renunganDetail($slug)
+    {
+        $common = $this->getCommonData();
+        $item = DB::table('renungan_harian')
+            ->where('slug', $slug)
+            ->orWhere('id', $slug)
+            ->first();
+
+        if (!$item) {
+            abort(404);
+        }
+
+        // Increment views
+        try {
+            DB::table('renungan_harian')->where('id', $item->id)->increment('views');
+        } catch (\Throwable $e) {}
+
+        $terkait = DB::table('renungan_harian')
+            ->where('id', '!=', $item->id)
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get();
+
+        return view('pages.renungan-detail', array_merge($common, compact('item', 'terkait')));
     }
 
     public function galeri()
@@ -1080,7 +1306,43 @@ class PageController extends Controller
     public function video()
     {
         $common = $this->getCommonData();
-        $videos = DB::table('galeri')->whereNotNull('youtube_url')->paginate(12);
+        $videos = collect();
+
+        if (Schema::hasTable('galeri')) {
+            $query = DB::table('galeri')
+                ->whereNotNull('youtube_url')
+                ->whereRaw("TRIM(COALESCE(youtube_url, '')) <> ''")
+                ->where(function ($q) {
+                    $q->where('youtube_url', 'like', '%youtube.com%')
+                      ->orWhere('youtube_url', 'like', '%youtu.be%');
+                });
+
+            if (Schema::hasColumn('galeri', 'status')) {
+                $query->where(function ($q) {
+                    $q->where('status', 1)
+                      ->orWhere('status', 'Aktif')
+                      ->orWhere('status', 'Publish');
+                });
+            }
+
+            if (Schema::hasColumn('galeri', 'status_publish')) {
+                $query->where(function ($q) {
+                    $q->whereNull('status_publish')
+                      ->orWhere('status_publish', 'Publish');
+                });
+            }
+
+            if (Schema::hasColumn('galeri', 'tanggal')) {
+                $query->orderByDesc('tanggal');
+            }
+
+            if (Schema::hasColumn('galeri', 'created_at')) {
+                $query->orderByDesc('created_at');
+            }
+
+            $videos = $query->paginate(12);
+        }
+
         return view('pages.video', array_merge($common, compact('videos')));
     }
 

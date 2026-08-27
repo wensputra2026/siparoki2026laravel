@@ -13,6 +13,7 @@ const props = defineProps({
     keuskupanList: { type: Array, default: () => [] },
     parokiList: { type: Array, default: () => [] },
     ordoList: { type: Array, default: () => [] },
+    jabatanList: { type: Array, default: () => [] },
 });
 
 // Calculate age helper
@@ -95,7 +96,7 @@ const form = useForm({
     email: props.pastorItem?.email || '',
     pendidikan_terakhir: props.pastorItem?.pendidikan_terakhir || props.pastorItem?.pendidikan || '',
     seminari_tinggi: props.pastorItem?.seminari_tinggi || '',
-    status: props.pastorItem?.status || 'Aktif Melayani',
+    status: props.pastorItem?.status || 'Aktif',
     foto: props.pastorItem?.foto || '',
     foto_file: null,
     riwayat_tambahan: [],
@@ -215,18 +216,21 @@ const ordoOptions = computed(() => {
     ];
 });
 
-const jabatanOptions = [
-    { id: 'Pastor Paroki', name: 'Pastor Paroki' },
-    { id: 'Pastor Rekan', name: 'Pastor Rekan / Vikaris Parokial' },
-    { id: 'Pastor Administrator', name: 'Pastor Administrator Paroki / Kuasi Paroki' },
-    { id: 'Vikaris Jenderal (Vikjen)', name: 'Vikaris Jenderal (Vikjen) Keuskupan' },
-    { id: 'Vikaris Episkopal (Vikep)', name: 'Vikaris Episkopal (Vikep) Kevikepan / Dekenat' },
-    { id: 'Pastor Pembina / Formator', name: 'Pastor Pembina / Formator Seminari' },
-    { id: 'Direktur Komisi Pastoral', name: 'Ketua / Direktur Komisi Pastoral Keuskupan' },
-    { id: 'Pastor Rekan Stasi', name: 'Pastor Rekan Pelayanan Stasi / Kapela' },
-    { id: 'Rektor Komunitas / Superior', name: 'Rektor Komunitas Biara / Superior Ordo' },
-    { id: 'Pastor Emeritus (Pensiun)', name: 'Pastor Emeritus (Purnabakti / Pensiun)' },
-];
+const jabatanOptions = computed(() => {
+    if (props.jabatanList && props.jabatanList.length) {
+        return props.jabatanList;
+    }
+    return [
+        { id: 'Pastor Paroki', name: 'Pastor Paroki' },
+        { id: 'Pastor Rekan', name: 'Pastor Rekan' },
+        { id: 'Pastor Administrator', name: 'Pastor Administrator' },
+        { id: 'Vikaris Jenderal', name: 'Vikaris Jenderal' },
+        { id: 'Vikaris Episkopal', name: 'Vikaris Episkopal' },
+        { id: 'Pastor Kapelan', name: 'Pastor Kapelan' },
+        { id: 'Formator/Pembina Seminari', name: 'Formator/Pembina Seminari' },
+        { id: 'Pastor Emeritus (Pensiun)', name: 'Pastor Emeritus (Pensiun)' },
+    ];
+});
 
 const statusRiwayatOptions = [
     { id: 'Mantan', name: 'Mantan' },
@@ -236,7 +240,7 @@ const statusRiwayatOptions = [
 ];
 
 const statusOptions = [
-    { id: 'Aktif Melayani', name: 'Aktif Melayani (Paroki / Lembaga)' },
+    { id: 'Aktif', name: 'Aktif' },
     { id: 'Tugas Belajar', name: 'Tugas Belajar (Studi Lanjut S2/S3)' },
     { id: 'Tugas Luar Dioses / Misi', name: 'Tugas Luar Dioses / Misi Luar Negeri' },
     { id: 'Pastor Emeritus (Pensiun)', name: 'Pastor Emeritus (Pensiun)' },
@@ -263,15 +267,38 @@ const parokiOptions = computed(() => {
     }));
 });
 
-// Auto adjust prefix if user changes jenis imam
+// Compute whether Ordo is disabled based on jenis_imam
+const isOrdoDisabled = computed(() => {
+    return form.jenis_imam === 'Diosesan / Projo' || form.jenis_imam === 'Uskup / Episkopal';
+});
+
+// Auto adjust prefix and clear ordo if user changes jenis imam
 const onJenisImamChange = (val) => {
     if (val === 'Religius / Kongregasi') {
         form.gelar_depan = 'RP.';
     } else if (val === 'Uskup / Episkopal') {
         form.gelar_depan = 'Mgr.';
+        form.ordo = '';
     } else {
         form.gelar_depan = 'RD.';
         form.ordo = '';
+    }
+};
+
+// Auto sync jenis_imam and gelar_depan if user selects or clears ordo
+const onOrdoChange = (val) => {
+    if (val && String(val).trim() !== '') {
+        form.jenis_imam = 'Religius / Kongregasi';
+        if (form.gelar_depan === 'RD.') {
+            form.gelar_depan = 'RP.';
+        }
+    } else {
+        if (form.jenis_imam === 'Religius / Kongregasi') {
+            form.jenis_imam = 'Diosesan / Projo';
+            if (form.gelar_depan === 'RP.') {
+                form.gelar_depan = 'RD.';
+            }
+        }
     }
 };
 
@@ -436,18 +463,28 @@ const submit = () => {
 
                                 <!-- Ordo / Kongregasi (dari Master Ordo) -->
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                        Ordo / Kongregasi
-                                    </label>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <label class="block text-xs font-bold text-slate-700">
+                                            Ordo / Kongregasi
+                                        </label>
+                                        <span v-if="isOrdoDisabled" class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                                            Nonaktif (Imam Projo)
+                                        </span>
+                                        <span v-else class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+                                            Khusus Religius
+                                        </span>
+                                    </div>
                                     <SearchableSelect
                                         v-model="form.ordo"
                                         :options="ordoOptions"
                                         valueKey="id"
                                         labelKey="name"
-                                        placeholder="Pilih ordo..."
+                                        :disabled="isOrdoDisabled"
+                                        :placeholder="isOrdoDisabled ? 'Nonaktif untuk Imam Diosesan (Projo)' : 'Pilih ordo / tarekat...'"
                                         searchPlaceholder="Cari ordo dari master ordo..."
                                         icon="fa-shield-halved"
                                         iconColor="text-indigo-600"
+                                        @update:modelValue="onOrdoChange"
                                     />
                                 </div>
 

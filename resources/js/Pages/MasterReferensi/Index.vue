@@ -60,6 +60,29 @@ const saveItem = () => {
     });
 };
 
+// Modal state for deleting item
+const showDeleteModal = ref(false);
+const itemToDelete = ref(null);
+const isDeleting = ref(false);
+
+const deleteItem = (item) => {
+    itemToDelete.value = item;
+    showDeleteModal.value = true;
+};
+
+const confirmDelete = () => {
+    if (!itemToDelete.value?.id) return;
+    isDeleting.value = true;
+    router.delete(`/admin/master-referensi/master_referensi_item/${itemToDelete.value.id}`, {
+        preserveScroll: true,
+        onFinish: () => {
+            isDeleting.value = false;
+            showDeleteModal.value = false;
+            itemToDelete.value = null;
+        },
+    });
+};
+
 const isReloading = ref(false);
 const reloadMaster = () => {
     isReloading.value = true;
@@ -77,17 +100,17 @@ const reloadMaster = () => {
     <AppLayout title="Master Referensi">
         <Head title="Master Referensi - SIPAROKI" />
 
-        <div class="w-full space-y-6 pb-12 overflow-y-auto">
+        <div class="w-full space-y-5 pb-24 overflow-y-auto">
             <!-- Header Card -->
-            <div class="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="flex items-center gap-3.5">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-white shadow-md shadow-amber-500/25 shrink-0">
+            <div class="rounded-xl bg-white border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-start gap-3.5 min-w-0">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-white shadow-md shadow-amber-500/25 shrink-0">
                         <i class="fa-solid fa-tags text-xl"></i>
                     </div>
-                    <div>
-                        <div class="flex items-center gap-2">
+                    <div class="min-w-0">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
                             <h1 class="text-xl font-black text-slate-900 tracking-tight">Master Referensi</h1>
-                            <span class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200">
+                            <span class="w-fit px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200">
                                 Pusat Parameter Sistem
                             </span>
                         </div>
@@ -95,12 +118,12 @@ const reloadMaster = () => {
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="grid grid-cols-2 sm:flex sm:items-center gap-2">
                     <button
                         type="button"
                         :disabled="isReloading"
                         @click="reloadMaster"
-                        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-60"
+                        class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-60"
                         title="Reload data referensi langsung dari database"
                     >
                         <i :class="['fa-solid fa-arrows-rotate text-amber-600', isReloading ? 'fa-spin' : '']"></i>
@@ -109,7 +132,7 @@ const reloadMaster = () => {
 
                     <Link
                         href="/admin/master-referensi/master_referensi"
-                        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition"
+                        class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition"
                     >
                         <i class="fa-solid fa-folder-plus text-xs"></i>
                         <span>Kelola Grup Referensi</span>
@@ -117,8 +140,48 @@ const reloadMaster = () => {
                 </div>
             </div>
 
+            <div class="rounded-xl bg-white border border-slate-200/80 p-2 shadow-2xs overflow-x-auto">
+                <div class="flex items-center gap-2 min-w-max">
+                    <button
+                        type="button"
+                        @click="activeTab = 'all'"
+                        :class="['px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5', activeTab === 'all' ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/20' : 'text-slate-600 hover:bg-slate-50']"
+                    >
+                        <i class="fa-solid fa-layer-group"></i>
+                        Semua
+                    </button>
+                    <button
+                        type="button"
+                        @click="activeTab = 'special'"
+                        :class="['px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5', activeTab === 'special' ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/20' : 'text-slate-600 hover:bg-slate-50']"
+                    >
+                        <i class="fa-solid fa-church"></i>
+                        Modul Khusus
+                        <span class="px-1.5 py-0.5 rounded bg-white/20">{{ specialModules.length }}</span>
+                    </button>
+                    <button
+                        type="button"
+                        @click="activeTab = 'items'"
+                        :class="['px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5', activeTab === 'items' ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/20' : 'text-slate-600 hover:bg-slate-50']"
+                    >
+                        <i class="fa-solid fa-list-check"></i>
+                        Item Referensi
+                        <span class="px-1.5 py-0.5 rounded bg-white/20">{{ totalItem }}</span>
+                    </button>
+                    <button
+                        type="button"
+                        @click="activeTab = 'groups'"
+                        :class="['px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5', activeTab === 'groups' ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/20' : 'text-slate-600 hover:bg-slate-50']"
+                    >
+                        <i class="fa-solid fa-folder-tree"></i>
+                        Grup
+                        <span class="px-1.5 py-0.5 rounded bg-white/20">{{ grups.length }}</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- SECTION 1: MODUL REFERENSI KHUSUS -->
-            <div class="rounded-2xl bg-white border border-slate-200/80 shadow-2xs overflow-hidden">
+            <div v-if="activeTab === 'all' || activeTab === 'special'" class="rounded-xl bg-white border border-slate-200/80 shadow-2xs overflow-hidden">
                 <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
                         <i class="fa-solid fa-church text-amber-600 text-sm"></i>
@@ -152,7 +215,7 @@ const reloadMaster = () => {
                                 <td class="px-5 py-3 text-right">
                                     <Link
                                         :href="m.url"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200/80 transition"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200/80 transition"
                                     >
                                         <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                                         <span>Kelola</span>
@@ -165,7 +228,7 @@ const reloadMaster = () => {
             </div>
 
             <!-- SECTION 2: DAFTAR ITEM REFERENSI (GROUPED) -->
-            <div class="rounded-2xl bg-white border border-slate-200/80 shadow-2xs overflow-hidden space-y-4 p-5">
+            <div v-if="activeTab === 'all' || activeTab === 'items'" class="rounded-xl bg-white border border-slate-200/80 shadow-2xs overflow-hidden space-y-4 p-4 sm:p-5">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100">
                     <div>
                         <div class="flex items-center gap-2">
@@ -185,13 +248,13 @@ const reloadMaster = () => {
                             v-model="searchQuery"
                             type="text"
                             placeholder="Cari item referensi..."
-                            class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition shadow-2xs"
+                            class="w-full pl-8 pr-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition shadow-2xs"
                         />
                     </div>
                 </div>
 
                 <!-- Grouped Items Loop -->
-                <div class="space-y-6">
+                <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
                     <div
                         v-for="(gItems, gName) in groupedItems"
                         :key="gName"
@@ -277,7 +340,7 @@ const reloadMaster = () => {
             </div>
 
             <!-- SECTION 3: TABEL GRUP REFERENSI -->
-            <div class="rounded-2xl bg-white border border-slate-200/80 shadow-2xs overflow-hidden">
+            <div v-if="activeTab === 'all' || activeTab === 'groups'" class="rounded-xl bg-white border border-slate-200/80 shadow-2xs overflow-hidden">
                 <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
                         <i class="fa-solid fa-folder-tree text-amber-600 text-sm"></i>
@@ -320,7 +383,7 @@ const reloadMaster = () => {
                                 <td class="px-5 py-3 text-right">
                                     <Link
                                         :href="`/admin/master-referensi/master_referensi_item?grup=${g.id}`"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 transition"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 transition"
                                     >
                                         <i class="fa-solid fa-list text-xs"></i>
                                         <span>Kelola Item</span>
@@ -407,6 +470,42 @@ const reloadMaster = () => {
                         class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition"
                     >
                         Simpan Perubahan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DELETE CONFIRMATION MODAL -->
+        <div
+            v-if="showDeleteModal && itemToDelete"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs"
+        >
+            <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95">
+                <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 mx-auto flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">Konfirmasi Hapus Item</h3>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Apakah Anda yakin ingin menghapus item referensi <b>"{{ itemToDelete.nilai }}"</b> (Grup: {{ itemToDelete.nama_grup }})?
+                    </p>
+                </div>
+                <div class="flex items-center justify-center gap-2.5 pt-2">
+                    <button
+                        type="button"
+                        @click="showDeleteModal = false"
+                        class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        :disabled="isDeleting"
+                        @click="confirmDelete"
+                        class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm shadow-rose-600/30 transition cursor-pointer flex items-center gap-1.5"
+                    >
+                        <i v-if="isDeleting" class="fa-solid fa-circle-notch fa-spin text-xs"></i>
+                        <span>{{ isDeleting ? 'Menghapus...' : 'Ya, Hapus Item' }}</span>
                     </button>
                 </div>
             </div>

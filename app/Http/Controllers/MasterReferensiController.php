@@ -510,20 +510,36 @@ class MasterReferensiController extends Controller
                 }
 
                 if ($col === 'jabatan') {
+                    $dbJabatan = DB::table('master_referensi_item')
+                        ->where('referensi_id', 10)
+                        ->where('status', 1)
+                        ->orderBy('urutan')
+                        ->orderBy('id')
+                        ->get();
+
+                    $options = [];
+                    foreach ($dbJabatan as $dj) {
+                        $options[] = ['value' => $dj->nilai, 'label' => $dj->nilai];
+                    }
+
+                    if (empty($options)) {
+                        $options = [
+                            ['value' => 'Pastor Paroki', 'label' => 'Pastor Paroki'],
+                            ['value' => 'Pastor Rekan', 'label' => 'Pastor Rekan'],
+                            ['value' => 'Pastor Administrator', 'label' => 'Pastor Administrator'],
+                            ['value' => 'Vikaris Jenderal', 'label' => 'Vikaris Jenderal'],
+                            ['value' => 'Vikaris Episkopal', 'label' => 'Vikaris Episkopal'],
+                            ['value' => 'Pastor Kapelan', 'label' => 'Pastor Kapelan'],
+                            ['value' => 'Formator/Pembina Seminari', 'label' => 'Formator/Pembina Seminari'],
+                            ['value' => 'Pastor Emeritus', 'label' => 'Pastor Emeritus'],
+                        ];
+                    }
+
                     $fields[] = [
                         'name' => $col,
-                        'label' => 'Jabatan',
+                        'label' => 'Jabatan Gerejani',
                         'type' => 'select',
-                        'options' => [
-                            ['value' => 'Pastor Paroki', 'label' => 'Pastor Paroki'],
-                            ['value' => 'Pastor Rekan', 'label' => 'Pastor Rekan / Vikaris'],
-                            ['value' => 'Pastor Pembantu', 'label' => 'Pastor Pembantu'],
-                            ['value' => 'Pastor Mahasiswa', 'label' => 'Pastor Mahasiswa / Kategorial'],
-                            ['value' => 'Rektor Seminari', 'label' => 'Rektor Seminari'],
-                            ['value' => 'Dosen / Pengajar', 'label' => 'Dosen / Pengajar'],
-                            ['value' => 'Ketua Komisi Keuskupan', 'label' => 'Ketua Komisi Keuskupan'],
-                            ['value' => 'Pastor Emeritus', 'label' => 'Pastor Emeritus / Purna Tugas'],
-                        ],
+                        'options' => $options,
                     ];
                     continue;
                 }

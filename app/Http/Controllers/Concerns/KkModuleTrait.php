@@ -503,6 +503,26 @@ trait KkModuleTrait
         }
 
         if (!empty($keepIds)) {
+            $leavingMembers = \App\Models\Umat::where('kk_id', $kk->id)->whereNotIn('id', $keepIds)->get();
+            foreach ($leavingMembers as $lm) {
+                if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_mutasi_umat')) {
+                    \Illuminate\Support\Facades\DB::table('riwayat_mutasi_umat')->insert([
+                        'umat_id' => $lm->id,
+                        'kk_id' => $kk->id,
+                        'jenis_mutasi' => 'Pecah KK / Keluar dari KK',
+                        'status_sebelum' => 'Anggota Keluarga',
+                        'status_sesudah' => 'Pecah KK / Menikah',
+                        'kub_asal_id' => $kk->kub_id,
+                        'wilayah_asal_id' => $kk->wilayah_id,
+                        'tgl_mutasi' => now()->toDateString(),
+                        'alasan' => 'Pecah KK / Menikah membentuk keluarga baru',
+                        'created_by' => auth()->id(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
             \App\Models\Umat::where('kk_id', $kk->id)->whereNotIn('id', $keepIds)->update([
                 'kk_id' => null,
                 'tanggal_keluar_dari_kk' => now(),

@@ -67,12 +67,6 @@
                 <source src="{{ asset('uploads/' . $cleanVideoPath) }}" type="video/mp4">
                 <source src="{{ asset($heroVideoFile) }}" type="video/mp4">
             </video>
-        @else
-            <video class="hero-video-element" autoplay loop muted playsinline poster="">
-                <source src="{{ asset('assets/uploads/video/katedral_bg.mp4') }}" type="video/mp4">
-                <source src="{{ asset('assets/uploads/hero_video.mp4') }}" type="video/mp4">
-                <source src="{{ asset('uploads/hero_video.mp4') }}" type="video/mp4">
-            </video>
         @endif
         <div class="hero-video-overlay" style="opacity: {{ $overlayOpacity }};"></div>
     </div>
@@ -150,6 +144,7 @@
 
 <!-- ===== SAMBUTAN PASTOR PAROKI SECTION ===== -->
 @php
+    $pastorNameDisplay = $pastor_paroki ?? 'Data Pastor Paroki Belum Tersedia';
     $imamImage = file_exists(public_path('assets/frontend/siparoki/images/default-pastor.jpg'))
         ? asset('assets/frontend/siparoki/images/default-pastor.jpg')
         : (file_exists(public_path('assets/frontend/siparoki/images/default-principal.jpg'))
@@ -163,7 +158,7 @@
             <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" alt="Pastor Paroki {{ $globalNamaParoki ?? 'SIPAROKI' }}">
         </div>
         <div class="sambutan-pastor-body">
-            <h3>{{ $pastor_paroki ?? 'RD. Herman Hilers Penga' }}</h3>
+            <h3>{{ $pastorNameDisplay }}</h3>
             <span class="sambutan-pastor-role">Pastor Paroki {{ $globalNamaParoki ?? 'SIPAROKI' }}</span>
             <p>Salve, Salam Sehat dan Berkah Dalem. Selamat Datang di Website Resmi {{ $globalNamaParoki ?? 'SIPAROKI' }}.</p>
             <div>
@@ -189,126 +184,90 @@
         <div class="pelayan-pastoral-grid">
             
             {{-- Card 1: Pastor Paroki --}}
+            @if(!empty($pastor_paroki) || !empty($pastor_paroki_obj))
             <div class="pelayan-card pastor-paroki">
-                <div>
-                    <div class="pelayan-avatar-wrap">
-                        <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" 
-                             alt="Pastor Paroki" 
-                             class="pelayan-avatar-img">
-                        <span class="pelayan-tag">
-                            <i class="fa-solid fa-cross text-[9px] me-0.5"></i> Paroki
-                        </span>
-                    </div>
-
-                    <span class="pelayan-role-badge">Pastor Paroki</span>
-                    <h4>{{ $pastor_paroki ?? 'RD. Herman Hilers Penga' }}</h4>
-                    <div class="pelayan-subrole">{{ $pastor_paroki_obj->catatan_pelayanan ?? $pastor_paroki_obj->jabatan ?? 'Ketua Dewan Pastoral Paroki' }}</div>
-
-                    <div class="pelayan-divider"></div>
-
-                    <ul class="pelayan-duties">
-                        <li>
-                            <i class="fa-solid fa-check-circle"></i>
-                            <span>Penggembalaan &amp; Reksa Pastoral Paroki</span>
-                        </li>
-                        <li>
-                            <i class="fa-solid fa-check-circle"></i>
-                            <span>Melayani Perayaan Ekaristi &amp; Sakramen</span>
-                        </li>
-                    </ul>
+                <div class="pelayan-avatar-wrap">
+                    <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" 
+                         alt="Pastor Paroki" 
+                         class="pelayan-avatar-img">
                 </div>
 
-                <div class="pelayan-card-footer">
-                    <span class="pelayan-status-label">Status</span>
-                    <span class="pelayan-status-val">
-                        <span class="pelayan-status-dot"></span> {{ $pastor_paroki_obj->status ?? 'Aktif Bertugas' }}
-                    </span>
+                <span class="pelayan-role-badge">Pastor Paroki</span>
+                <h4>{{ $pastor_paroki ?? $pastorNameDisplay }}</h4>
+                <div class="pelayan-subrole">{{ $pastor_paroki_obj->catatan_pelayanan ?? $pastor_paroki_obj->jabatan ?? 'Pastor Paroki' }}</div>
+
+                <div style="margin-top: 18px; width: 100%;">
+                    <button 
+                        type="button" 
+                        onclick="openPastorDetailModal({{ json_encode($pastor_paroki_obj ?? ['nama_pastor' => $pastor_paroki ?? $pastorNameDisplay, 'jabatan' => 'Pastor Paroki', 'foto' => $pastor_foto ?? null]) }})"
+                        class="btn-pelayan-detail"
+                    >
+                        <i class="fa-solid fa-circle-info text-xs"></i>
+                        <span>Selengkapnya</span>
+                    </button>
                 </div>
             </div>
+            @endif
 
             {{-- Card 2: Pastor Rekan --}}
+            @if(!empty($pastor_rekan) || !empty($pastor_rekan_obj))
+            @php
+                $rekanFotoImg = !empty($pastor_rekan_obj?->foto) 
+                    ? (str_starts_with($pastor_rekan_obj->foto, 'http') || str_starts_with($pastor_rekan_obj->foto, '/') ? $pastor_rekan_obj->foto : '/' . $pastor_rekan_obj->foto) 
+                    : $imamImage;
+            @endphp
             <div class="pelayan-card pastor-rekan">
-                <div>
-                    <div class="pelayan-avatar-wrap">
-                        @if(!empty($pastor_rekan_obj?->foto))
-                            <img src="{{ asset($pastor_rekan_obj->foto) }}" alt="Pastor Rekan" class="pelayan-avatar-img">
-                        @else
-                            <div class="pelayan-avatar-icon rekan">
-                                <i class="fa-solid fa-hands-praying"></i>
-                            </div>
-                        @endif
-                        <span class="pelayan-tag vikaris">
-                            <i class="fa-solid fa-church text-[9px] me-0.5"></i> Vikaris
-                        </span>
-                    </div>
-
-                    <span class="pelayan-role-badge rekan">Pastor Rekan</span>
-                    <h4>{{ $pastor_rekan ?? 'Pastor Rekan Paroki' }}</h4>
-                    <div class="pelayan-subrole">{{ $pastor_rekan_obj->jabatan ?? 'Vikaris Paroki' }}</div>
-
-                    <div class="pelayan-divider"></div>
-
-                    <ul class="pelayan-duties">
-                        <li>
-                            <i class="fa-solid fa-check-circle"></i>
-                            <span>Pelayanan Sakramen &amp; Pastoral KUB</span>
-                        </li>
-                        <li>
-                            <i class="fa-solid fa-check-circle"></i>
-                            <span>Kunjungan Pastoral Stasi &amp; Lingkungan</span>
-                        </li>
-                    </ul>
+                <div class="pelayan-avatar-wrap">
+                    <img src="{{ $rekanFotoImg }}" alt="Pastor Rekan" class="pelayan-avatar-img rekan">
                 </div>
 
-                <div class="pelayan-card-footer">
-                    <span class="pelayan-status-label">Status</span>
-                    <span class="pelayan-status-val">
-                        <span class="pelayan-status-dot"></span> {{ $pastor_rekan_obj->status ?? 'Aktif Bertugas' }}
-                    </span>
+                <span class="pelayan-role-badge rekan">Pastor Rekan</span>
+                <h4>{{ $pastor_rekan }}</h4>
+                <div class="pelayan-subrole">{{ $pastor_rekan_obj->jabatan ?? 'Pastor Rekan' }}</div>
+
+                <div style="margin-top: 18px; width: 100%;">
+                    <button 
+                        type="button" 
+                        onclick="openPastorDetailModal({{ json_encode($pastor_rekan_obj ?? ['nama_pastor' => $pastor_rekan, 'jabatan' => 'Pastor Rekan', 'foto' => $rekanFotoImg]) }})"
+                        class="btn-pelayan-detail"
+                    >
+                        <i class="fa-solid fa-circle-info text-xs"></i>
+                        <span>Selengkapnya</span>
+                    </button>
                 </div>
             </div>
+            @endif
 
-            {{-- Card 3: Frater / Katekis --}}
+            {{-- Card 3: Frater / Katekis (Hanya tampil jika ada di database) --}}
+            @if(!empty($frater) || !empty($frater_obj))
+            @php
+                $fraterFotoImg = !empty($frater_obj?->foto) 
+                    ? (str_starts_with($frater_obj->foto, 'http') || str_starts_with($frater_obj->foto, '/') ? $frater_obj->foto : '/' . $frater_obj->foto) 
+                    : $imamImage;
+            @endphp
             <div class="pelayan-card frater-katekis">
-                <div>
-                    <div class="pelayan-avatar-wrap">
-                        @if(!empty($frater_obj?->foto))
-                            <img src="{{ asset($frater_obj->foto) }}" alt="Frater" class="pelayan-avatar-img">
-                        @else
-                            <div class="pelayan-avatar-icon frater">
-                                <i class="fa-solid fa-book-bible"></i>
-                            </div>
-                        @endif
-                        <span class="pelayan-tag pastoral">
-                            <i class="fa-solid fa-book-open text-[9px] me-0.5"></i> Pastoral
-                        </span>
-                    </div>
-
-                    <span class="pelayan-role-badge frater">Frater / Katekis</span>
-                    <h4>{{ $frater ?? 'Frater Pastoral / Katekis' }}</h4>
-                    <div class="pelayan-subrole">{{ $frater_obj->jabatan ?? 'Pendamping Pastoral' }}</div>
-
-                    <div class="pelayan-divider"></div>
-
-                    <ul class="pelayan-duties">
-                        <li>
-                            <i class="fa-solid fa-check-circle"></i>
-                            <span>Katekese Sakramen &amp; Bina Iman Remaja</span>
-                        </li>
-                        <li>
-                            <i class="fa-solid fa-check-circle"></i>
-                            <span>Pendampingan OMK &amp; Putera-Puteri Altar</span>
-                        </li>
-                    </ul>
+                <div class="pelayan-avatar-wrap">
+                    <img src="{{ $fraterFotoImg }}" alt="Frater / Katekis" class="pelayan-avatar-img frater">
                 </div>
 
-                <div class="pelayan-card-footer">
-                    <span class="pelayan-status-label">Status</span>
-                    <span class="pelayan-status-val">
-                        <span class="pelayan-status-dot"></span> {{ $frater_obj->status ?? 'Aktif Bertugas' }}
-                    </span>
+                <span class="pelayan-role-badge frater">{{ $frater_obj->jabatan ?? 'Frater / Katekis' }}</span>
+                <h4>{{ $frater }}</h4>
+                <div class="pelayan-subrole">{{ $frater_obj->catatan_pelayanan ?? $frater_obj->jabatan ?? 'Pendamping Pastoral' }}</div>
+
+                @if(!empty($frater_obj))
+                <div style="margin-top: 18px; width: 100%;">
+                    <button 
+                        type="button" 
+                        onclick="openPastorDetailModal({{ json_encode($frater_obj) }})"
+                        class="btn-pelayan-detail"
+                    >
+                        <i class="fa-solid fa-circle-info text-xs"></i>
+                        <span>Selengkapnya</span>
+                    </button>
                 </div>
+                @endif
             </div>
+            @endif
 
         </div>
 
@@ -530,7 +489,7 @@
                         </a>
                         <div class="card-body d-flex flex-column p-4">
                             <span class="news-date mb-2" style="display: inline-block; padding: 4px 10px; border-radius: 6px; background: var(--primary-orange); color: white; font-size: 12px; font-weight: 600; width: fit-content;">
-                                <i class="far fa-calendar me-1"></i> {{ \Carbon\Carbon::parse($publishedAt)->translatedFormat('j F Y') }}
+                                <i class="far fa-calendar me-1"></i> {{ format_tanggal_indonesia($publishedAt) }}
                             </span>
                             <h5 class="card-title fw-bold mb-2" style="font-size: 1.05rem; line-height: 1.4; color: #1e293b; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                 <a href="/artikel/{{ $item->slug }}" style="text-decoration: none; color: inherit; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-teal)'" onmouseout="this.style.color='#1e293b'">
@@ -555,8 +514,8 @@
         </div>
 
         <div class="text-center mt-5">
-            <a href="/berita" class="btn btn-outline-teal px-4 py-2" style="border: 2px solid var(--primary-teal); color: var(--primary-teal); border-radius: 30px; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;">
-                Lihat Semua Berita &amp; Artikel <i class="fas fa-arrow-right ms-2 text-xs"></i>
+            <a href="/warta" class="btn btn-outline-teal px-4 py-2" style="border: 2px solid var(--primary-teal); color: var(--primary-teal); border-radius: 30px; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;">
+                Lihat Semua Warta Paroki <i class="fas fa-arrow-right ms-2 text-xs"></i>
             </a>
         </div>
     </div>
@@ -564,11 +523,17 @@
 
 <!-- Section Galeri Dokumentasi -->
 <section id="gallery" class="py-16 bg-white dark:bg-[#07111f]">
-    <div class="max-w-6xl mx-auto px-4">
-        <div class="section-title">
-            <span class="st-badge">Galeri Foto</span>
-            <h2>Galeri &amp; <span class="text-gradient">Dokumentasi</span></h2>
-            <p>Foto perayaan liturgi, penerimaan sakramen, dan momen kegiatan umat paroki.</p>
+    <div class="container">
+        <div class="section-title text-center mb-5">
+            <span class="badge mb-2 px-3 py-2" style="background: rgba(0, 137, 123, 0.1); color: var(--primary-teal, #00897b); font-weight: 700; border-radius: 20px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                <i class="fas fa-camera-retro me-1"></i> Galeri Foto
+            </span>
+            <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b;" class="dark:text-white">
+                Galeri &amp; <span style="color: var(--primary-orange, #ff9800);">Dokumentasi</span>
+            </h2>
+            <p style="color: #64748b; font-size: 0.95rem; max-width: 680px; margin: 8px auto 0;">
+                Foto perayaan liturgi, penerimaan sakramen, dan momen kegiatan umat paroki.
+            </p>
         </div>
 
         @php
@@ -586,46 +551,53 @@
             };
         @endphp
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="row g-3 g-md-4">
             @forelse($galeri ?? [] as $item)
-            @php $imgUrl = $galleryImage($item); @endphp
-            @if($imgUrl)
-                <a href="{{ $imgUrl }}" class="group relative rounded-2xl overflow-hidden aspect-square bg-slate-200 dark:bg-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 block" data-lightbox="galeri-beranda" data-title="{{ $item->judul ?? 'Dokumentasi Paroki' }}">
-                    <img src="{{ $imgUrl }}" alt="{{ $item->judul ?? 'Galeri Foto' }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy">
-                    <div class="absolute inset-0 bg-gradient-to-t from-teal-950/80 via-teal-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-end p-3 text-white text-center">
-                        <div class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
-                            <i class="fas fa-search-plus text-base text-white"></i>
-                        </div>
-                        @if(!empty($item->judul))
-                            <p class="text-xs font-semibold line-clamp-1 text-white/95">{{ $item->judul }}</p>
-                        @endif
+                @php $imgUrl = $galleryImage($item); @endphp
+                @if($imgUrl)
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <a href="{{ $imgUrl }}" 
+                           class="home-gallery-card" 
+                           data-lightbox="galeri-beranda" 
+                           data-title="{{ $item->judul ?? 'Dokumentasi Paroki' }}">
+                            <img src="{{ $imgUrl }}" 
+                                 alt="{{ $item->judul ?? 'Galeri Foto' }}" 
+                                 loading="lazy">
+                            <div class="home-gallery-overlay">
+                                <span class="home-gallery-badge">
+                                    <i class="fas fa-search-plus me-1"></i> Perbesar
+                                </span>
+                                @if(!empty($item->judul))
+                                    <p class="home-gallery-title" title="{{ $item->judul }}">
+                                        {{ $item->judul }}
+                                    </p>
+                                @endif
+                            </div>
+                        </a>
                     </div>
-                </a>
-            @else
-                <div class="rounded-2xl overflow-hidden aspect-square bg-slate-200 dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-400">
-                    <i class="far fa-image text-2xl"></i>
-                </div>
-            @endif
+                @endif
             @empty
-            <div class="col-span-4 text-center py-8 text-slate-400">
-                <p>Dokumentasi galeri belum tersedia.</p>
-            </div>
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="far fa-images fa-3x mb-3 text-secondary"></i>
+                    <p class="mb-0">Dokumentasi galeri belum tersedia.</p>
+                </div>
             @endforelse
         </div>
 
-        <div class="text-center mt-8">
-            <a href="/galeri" class="inline-flex items-center gap-2 border border-slate-300 dark:border-slate-700 hover:border-sky-600 text-slate-700 dark:text-slate-200 px-6 py-2.5 rounded-full text-sm font-semibold transition">
-                Lihat Semua Galeri <i class="fas fa-arrow-right text-xs"></i>
+        <div class="text-center mt-5">
+            <a href="/galeri" class="btn-konoha-teal px-5 py-2.5 d-inline-flex align-items-center gap-2" style="border-radius: 50px; font-weight: 700; text-decoration: none;">
+                <span>Lihat Semua Galeri</span> <i class="fas fa-arrow-right text-xs"></i>
             </a>
         </div>
     </div>
 </section>
 
+@include('partials.pastor-detail-modal')
+
 @push('scripts')
     <script src="/js/pages/beranda.js?v={{ @filemtime(public_path('js/pages/beranda.js')) ?: time() }}" defer></script>
 @endpush
 @endsection
-
 
 
 

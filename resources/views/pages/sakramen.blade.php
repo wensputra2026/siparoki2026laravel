@@ -1,17 +1,37 @@
-@extends('layouts.app')
+@extends('layouts.public')
 
-@section('title', 'Pengajuan Sakramen - SIPAROKI')
-@section('description', 'Formulir pendaftaran dan pengajuan sakramen online Paroki')
+@section('title', 'Pengajuan Sakramen - ' . ($globalNamaParoki ?? 'SIPAROKI'))
+@section('description', 'Formulir pendaftaran dan pengajuan sakramen online ' . ($globalNamaParoki ?? 'SIPAROKI') . '.')
 
 @section('content')
-<div class="page-hero py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold text-white">Pengajuan Sakramen</h1>
-        <p class="text-sky-100 mt-2">Ajukan permohonan sakramen secara online</p>
+<section class="page-header">
+    <div class="container">
+        <span class="st-badge"><i class="fas fa-hands-praying me-1"></i> Layanan Umat</span>
+        <h1>Pengajuan Sakramen</h1>
+        <p>Ajukan permohonan sakramen secara online untuk ditindaklanjuti oleh sekretariat paroki.</p>
     </div>
-</div>
+</section>
 
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    @livewire('form-sakramen')
-</div>
+<section class="content-section sacrament-page">
+    <div class="container">
+        <div class="sacrament-layout">
+            <aside class="sacrament-info">
+                <div class="sacrament-info-icon">
+                    <i class="fas fa-church"></i>
+                </div>
+                <h2>Formulir Permohonan</h2>
+                <p>Lengkapi data dengan teliti agar petugas dapat memverifikasi permohonan dan menghubungi Anda melalui kontak yang tersedia.</p>
+                <div class="sacrament-info-list">
+                    <span><i class="fas fa-circle-check"></i> Data pemohon</span>
+                    <span><i class="fas fa-circle-check"></i> Jenis sakramen</span>
+                    <span><i class="fas fa-circle-check"></i> Kontak aktif</span>
+                </div>
+            </aside>
+
+            <div class="sacrament-form-card">
+                @livewire('form-sakramen')
+            </div>
+        </div>
+    </div>
+</section>
 @endsection

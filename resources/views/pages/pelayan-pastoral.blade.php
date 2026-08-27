@@ -62,94 +62,132 @@
             </div>
 
             <div class="row g-4">
-                {{-- Pastor Paroki --}}
-                <div class="col-lg-4 col-md-6">
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #ff9800; border-radius: 16px; padding: 25px 20px; text-align: center; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between;">
-                        <div>
-                            <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 16px;">
-                                <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" alt="Pastor Paroki" style="width: 90px; height: 90px; border-radius: 16px; object-fit: cover; border: 2px solid #ff9800; padding: 2px;">
-                                <span style="position: absolute; bottom: -6px; right: -6px; background: #ff9800; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px;">Paroki</span>
-                            </div>
-                            <span style="display: inline-block; background: rgba(255,152,0,0.12); color: #d97706; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 3px 12px; border-radius: 12px; margin-bottom: 8px;">
-                                Pastor Paroki
-                            </span>
-                            <h4 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
-                                {{ $pastor_paroki ?? 'RD. Herman Hillers Penga' }}
-                            </h4>
-                            <p style="font-size: 0.8rem; font-weight: 600; color: #059669; margin-bottom: 12px;">
-                                Ketua Dewan Pastoral Paroki (DPP)
-                            </p>
-                            <p style="font-size: 0.78rem; color: #64748b; line-height: 1.5; margin: 0;">
-                                Penanggung jawab umum reksa pastoral, perayaan sakramen, dan penggembalaan umat paroki.
-                            </p>
-                        </div>
-                        <div style="margin-top: 18px; padding-top: 12px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
-                            <span style="color: #94a3b8;">Status</span>
-                            <span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle" style="font-size: 7px;"></i> Aktif Melayani</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Pastor Rekan --}}
-                <div class="col-lg-4 col-md-6">
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #0284c7; border-radius: 16px; padding: 25px 20px; text-align: center; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between;">
-                        <div>
-                            <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 16px;">
-                                <img src="{{ !empty($pastor_rekan_foto) ? $pastor_rekan_foto : $imamImage }}" alt="Pastor Rekan" style="width: 90px; height: 90px; border-radius: 16px; object-fit: cover; border: 2px solid #0284c7; padding: 2px;">
-                                <span style="position: absolute; bottom: -6px; right: -6px; background: #0284c7; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px;">Vikaris</span>
-                            </div>
-                            <span style="display: inline-block; background: rgba(2,132,199,0.12); color: #0369a1; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 3px 12px; border-radius: 12px; margin-bottom: 8px;">
-                                Pastor Rekan
-                            </span>
-                            <h4 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
-                                {{ (!empty($pastor_rekan) && $pastor_rekan !== 'Pastor Rekan') ? $pastor_rekan : 'Pastor Rekan Paroki' }}
-                            </h4>
-                            <p style="font-size: 0.8rem; font-weight: 600; color: #0284c7; margin-bottom: 12px;">
-                                Vikaris Paroki
-                            </p>
-                            <p style="font-size: 0.78rem; color: #64748b; line-height: 1.5; margin: 0;">
-                                Membantu pelayanan sakramen, reksa pastoral teritorial stasi kapela, lingkungan, dan KUB.
-                            </p>
-                        </div>
-                        <div style="margin-top: 18px; padding-top: 12px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
-                            <span style="color: #94a3b8;">Status</span>
-                            <span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle" style="font-size: 7px;"></i> Aktif Melayani</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Frater / Katekis --}}
-                <div class="col-lg-4 col-md-6">
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #0d9488; border-radius: 16px; padding: 25px 20px; text-align: center; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between;">
-                        <div>
-                            <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 16px;">
-                                <div style="width: 90px; height: 90px; border-radius: 16px; background: #ccfbf1; color: #0d9488; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; border: 2px solid #0d9488;">
-                                    <i class="fa-solid fa-book-bible"></i>
+                @if(isset($pastorBertugas) && count($pastorBertugas) > 0)
+                    @foreach($pastorBertugas as $p)
+                        @php
+                            $isKepala = stripos($p->jabatan ?? '', 'Paroki') !== false && stripos($p->jabatan ?? '', 'Rekan') === false;
+                            $borderCol = $isKepala ? '#ff9800' : '#0284c7';
+                            $badgeBg = $isKepala ? 'rgba(255,152,0,0.12)' : 'rgba(2,132,199,0.12)';
+                            $badgeText = $isKepala ? '#d97706' : '#0369a1';
+                            $pFoto = !empty($p->foto) ? (str_starts_with($p->foto, 'http') || str_starts_with($p->foto, '/') ? $p->foto : '/' . $p->foto) : $imamImage;
+                        @endphp
+                        <div class="col-lg-4 col-md-6">
+                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid {{ $borderCol }}; border-radius: 20px; padding: 28px 22px; text-align: center; height: 100%; box-shadow: 0 4px 14px rgba(0,0,0,0.04); display: flex; flex-direction: column; align-items: center; justify-content: space-between;">
+                                <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 96px; height: 96px; margin: 0 auto 16px; border-radius: 20px; overflow: hidden; border: 2.5px solid {{ $borderCol }}; padding: 2px; background: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.06);">
+                                        <img src="{{ $pFoto }}" alt="{{ $p->nama_formatted }}" style="width: 100%; height: 100%; border-radius: 16px; object-fit: cover;">
+                                    </div>
+                                    <span style="display: inline-block; background: {{ $badgeBg }}; color: {{ $badgeText }}; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 3px 12px; border-radius: 12px; margin-bottom: 8px;">
+                                        {{ $p->jabatan ?? 'Pastor' }}
+                                    </span>
+                                    <h4 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
+                                        {{ $p->nama_formatted }}
+                                    </h4>
+                                    <p style="font-size: 0.84rem; font-weight: 600; color: {{ $isKepala ? '#059669' : '#0284c7' }}; margin: 0;">
+                                        {{ $p->jabatan }}
+                                    </p>
                                 </div>
-                                <span style="position: absolute; bottom: -6px; right: -6px; background: #0d9488; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px;">Pastoral</span>
+
+                                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e2e8f0; width: 100%;">
+                                    <button 
+                                        type="button" 
+                                        onclick="openPastorDetailModal({{ json_encode($p) }})"
+                                        style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; font-size: 0.82rem; font-weight: 700; padding: 9px 16px; border-radius: 14px; transition: all 0.2s; cursor: pointer;"
+                                        onmouseover="this.style.background='{{ $borderCol }}'; this.style.color='#ffffff'; this.style.borderColor='{{ $borderCol }}';"
+                                        onmouseout="this.style.background='#f8fafc'; this.style.color='#334155'; this.style.borderColor='#cbd5e1';"
+                                    >
+                                        <i class="fa-solid fa-circle-info text-xs"></i>
+                                        <span>Selengkapnya</span>
+                                    </button>
+                                </div>
                             </div>
-                            <span style="display: inline-block; background: rgba(13,148,136,0.12); color: #0f766e; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 3px 12px; border-radius: 12px; margin-bottom: 8px;">
-                                Frater TOP / Katekis
-                            </span>
-                            <h4 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
-                                {{ (!empty($frater) && $frater !== 'Frater TOP') ? $frater : 'Frater Pastoral / Katekis' }}
-                            </h4>
-                            <p style="font-size: 0.8rem; font-weight: 600; color: #0d9488; margin-bottom: 12px;">
-                                Pendamping Pastoral &amp; Katekese
-                            </p>
-                            <p style="font-size: 0.78rem; color: #64748b; line-height: 1.5; margin: 0;">
-                                Pendampingan katekese, bina iman anak &amp; remaja, OMK, misdinar, dan kegiatan liturgi paroki.
-                            </p>
                         </div>
-                        <div style="margin-top: 18px; padding-top: 12px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
-                            <span style="color: #94a3b8;">Status</span>
-                            <span style="color: #10b981; font-weight: 700;"><i class="fa-solid fa-circle" style="font-size: 7px;"></i> Aktif Melayani</span>
+                    @endforeach
+
+                    {{-- Frater / Katekis Card (Dinamis dari Database jika ada) --}}
+                    @if(!empty($frater) || !empty($frater_obj))
+                        @php
+                            $fraterName = $frater ?? (isset($frater_obj->nama_pastor) ? \App\Models\MasterPastor::formatNama($frater_obj) : ($frater_obj->nama_frater ?? $frater_obj->nama_lengkap ?? 'Frater'));
+                            $fraterJabatan = $frater_obj->jabatan ?? 'Frater / Katekis';
+                            $fraterFoto = !empty($frater_obj?->foto) ? (str_starts_with($frater_obj->foto, 'http') || str_starts_with($frater_obj->foto, '/') ? $frater_obj->foto : '/' . $frater_obj->foto) : null;
+                        @endphp
+                        <div class="col-lg-4 col-md-6">
+                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #0d9488; border-radius: 20px; padding: 28px 22px; text-align: center; height: 100%; box-shadow: 0 4px 14px rgba(0,0,0,0.04); display: flex; flex-direction: column; align-items: center; justify-content: space-between;">
+                                <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 96px; height: 96px; margin: 0 auto 16px; border-radius: 20px; overflow: hidden; border: 2.5px solid #0d9488; padding: 2px; background: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center;">
+                                        @if($fraterFoto)
+                                            <img src="{{ $fraterFoto }}" alt="{{ $fraterName }}" style="width: 100%; height: 100%; border-radius: 16px; object-fit: cover;">
+                                        @else
+                                            <div style="width: 100%; height: 100%; border-radius: 16px; background: #ccfbf1; color: #0d9488; display: flex; align-items: center; justify-content: center; font-size: 2.2rem;">
+                                                <i class="fa-solid fa-book-bible"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <span style="display: inline-block; background: rgba(13,148,136,0.12); color: #0f766e; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 3px 12px; border-radius: 12px; margin-bottom: 8px;">
+                                        {{ $fraterJabatan }}
+                                    </span>
+                                    <h4 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
+                                        {{ $fraterName }}
+                                    </h4>
+                                    <p style="font-size: 0.84rem; font-weight: 600; color: #0d9488; margin: 0;">
+                                        {{ $frater_obj->catatan_pelayanan ?? $fraterJabatan }}
+                                    </p>
+                                </div>
+
+                                @if(!empty($frater_obj))
+                                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e2e8f0; width: 100%;">
+                                    <button 
+                                        type="button" 
+                                        onclick="openPastorDetailModal({{ json_encode($frater_obj) }})"
+                                        style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; font-size: 0.82rem; font-weight: 700; padding: 9px 16px; border-radius: 14px; transition: all 0.2s; cursor: pointer;"
+                                        onmouseover="this.style.background='#0d9488'; this.style.color='#ffffff'; this.style.borderColor='#0d9488';"
+                                        onmouseout="this.style.background='#f8fafc'; this.style.color='#334155'; this.style.borderColor='#cbd5e1';"
+                                    >
+                                        <i class="fa-solid fa-circle-info text-xs"></i>
+                                        <span>Selengkapnya</span>
+                                    </button>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                @else
+                    {{-- Fallback Cards --}}
+                    <div class="col-lg-4 col-md-6">
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #ff9800; border-radius: 20px; padding: 28px 22px; text-align: center; height: 100%; box-shadow: 0 4px 14px rgba(0,0,0,0.04); display: flex; flex-direction: column; align-items: center; justify-content: space-between;">
+                            <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                                <div style="width: 96px; height: 96px; margin: 0 auto 16px; border-radius: 20px; overflow: hidden; border: 2.5px solid #ff9800; padding: 2px; background: #ffffff;">
+                                    <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" alt="Pastor Paroki" style="width: 100%; height: 100%; border-radius: 16px; object-fit: cover;">
+                                </div>
+                                <span style="display: inline-block; background: rgba(255,152,0,0.12); color: #d97706; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 3px 12px; border-radius: 12px; margin-bottom: 8px;">
+                                    Pastor Paroki
+                                </span>
+                                <h4 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
+                                    {{ $pastor_paroki ?? 'Data Pastor Paroki Belum Tersedia' }}
+                                </h4>
+                                <p style="font-size: 0.84rem; font-weight: 600; color: #059669; margin: 0;">
+                                    Pastor Paroki
+                                </p>
+                            </div>
+                            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e2e8f0; width: 100%;">
+                                <button 
+                                    type="button" 
+                                    onclick="openPastorDetailModal({{ json_encode($pastor_paroki_obj ?? ['nama_pastor' => $pastor_paroki ?? 'Data Pastor Paroki Belum Tersedia', 'jabatan' => 'Pastor Paroki']) }})"
+                                    style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; font-size: 0.82rem; font-weight: 700; padding: 9px 16px; border-radius: 14px; transition: all 0.2s; cursor: pointer;"
+                                >
+                                    <i class="fa-solid fa-circle-info text-xs"></i>
+                                    <span>Selengkapnya</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
 
     </div>
 </section>
+
+@include('partials.pastor-detail-modal')
+
 @endsection

@@ -82,6 +82,21 @@ trait PastorModuleTrait
             ];
         }
 
+        $jabatanList = [];
+        if (\Illuminate\Support\Facades\Schema::hasTable('master_referensi_item')) {
+            $jabatanList = \Illuminate\Support\Facades\DB::table('master_referensi_item')
+                ->where('referensi_id', 10)
+                ->where('status', 1)
+                ->orderBy('urutan')
+                ->orderBy('id')
+                ->get()
+                ->map(fn($it) => [
+                    'id' => $it->nilai,
+                    'name' => $it->nilai,
+                ])
+                ->toArray();
+        }
+
         return Inertia::render('Inertia/PastorForm', [
             'role' => $resolvedRole,
             'prefix' => $firstSegment,
@@ -90,6 +105,7 @@ trait PastorModuleTrait
             'keuskupanList' => \App\Models\Keuskupan::orderBy('nama_keuskupan')->get(['id_keuskupan', 'nama_keuskupan']),
             'parokiList' => \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'nama_paroki', 'kode_paroki']),
             'ordoList' => $ordoList,
+            'jabatanList' => $jabatanList,
         ]);
     }
 
@@ -154,6 +170,21 @@ trait PastorModuleTrait
             ];
         }
 
+        $jabatanList = [];
+        if (\Illuminate\Support\Facades\Schema::hasTable('master_referensi_item')) {
+            $jabatanList = \Illuminate\Support\Facades\DB::table('master_referensi_item')
+                ->where('referensi_id', 10)
+                ->where('status', 1)
+                ->orderBy('urutan')
+                ->orderBy('id')
+                ->get()
+                ->map(fn($it) => [
+                    'id' => $it->nilai,
+                    'name' => $it->nilai,
+                ])
+                ->toArray();
+        }
+
         return Inertia::render('Inertia/PastorForm', [
             'role' => $resolvedRole,
             'prefix' => $firstSegment,
@@ -162,6 +193,7 @@ trait PastorModuleTrait
             'keuskupanList' => \App\Models\Keuskupan::orderBy('nama_keuskupan')->get(['id_keuskupan', 'nama_keuskupan']),
             'parokiList' => \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'nama_paroki', 'kode_paroki']),
             'ordoList' => $ordoList,
+            'jabatanList' => $jabatanList,
         ]);
     }
 

@@ -39,13 +39,6 @@ if (!function_exists('siparoki_resolve_safe_file')) {
     }
 }
 
-// ==========================================
-// SIPAROKI MODERN WEB INSTALLER WIZARD
-// ==========================================
-Route::get('/installer', [\App\Http\Controllers\InstallController::class, 'index'])->name('installer.index');
-Route::post('/installer/test-db', [\App\Http\Controllers\InstallController::class, 'testDatabase'])->name('installer.test-db');
-Route::get('/installer/paroki-data', [\App\Http\Controllers\InstallController::class, 'getParokiByKeuskupan'])->name('installer.paroki-data');
-Route::post('/installer/process', [\App\Http\Controllers\InstallController::class, 'install'])->name('installer.process');
 
 // Inisialisasi & Setup Paroki Wizard (Untuk Instalasi Baru GitHub / Ganti Paroki)
 Route::get('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'index'])->name('setup.paroki');
@@ -77,7 +70,11 @@ Route::get('/jadwal-misa', [PageController::class, 'jadwalMisa'])->name('jadwal-
 Route::get('/agenda', [PageController::class, 'agenda'])->name('agenda');
 Route::get('/kegiatan', [PageController::class, 'agenda'])->name('kegiatan');
 
-// Berita & Warta Dropdown
+// Warta Paroki (Berita, Artikel, Pengumuman, Renungan, Kategori)
+Route::get('/warta', [PageController::class, 'warta'])->name('warta');
+Route::get('/warta-paroki', [PageController::class, 'warta'])->name('warta.paroki');
+Route::get('/warta/kategori/{slug}', [PageController::class, 'wartaKategori'])->name('warta.kategori');
+Route::get('/kategori/{slug}', [PageController::class, 'wartaKategori'])->name('kategori.konten');
 Route::get('/berita', [PageController::class, 'berita'])->name('berita');
 Route::get('/berita/{slug}', [PageController::class, 'beritaDetail'])->name('berita.detail');
 Route::post('/berita/{slug}/komentar', [PageController::class, 'kirimKomentarArtikel'])->name('berita.komentar.kirim')->middleware('throttle:20,1');
@@ -85,8 +82,8 @@ Route::get('/artikel', [PageController::class, 'artikel'])->name('artikel');
 Route::get('/artikel/{slug}', [PageController::class, 'artikelDetail'])->name('artikel.detail');
 Route::post('/artikel/{slug}/komentar', [PageController::class, 'kirimKomentarArtikel'])->name('artikel.komentar.kirim')->middleware('throttle:20,1');
 Route::get('/pengumuman', [PageController::class, 'pengumuman'])->name('pengumuman');
-Route::get('/pengumuman/{id}', [PageController::class, 'pengumumanDetail'])->name('pengumuman.detail');
 Route::get('/renungan', [PageController::class, 'renungan'])->name('renungan');
+Route::get('/renungan/{slug}', [PageController::class, 'renunganDetail'])->name('renungan.detail');
 
 // Galeri & Media Dropdown
 Route::get('/galeri', [PageController::class, 'galeri'])->name('galeri');
@@ -190,17 +187,7 @@ Route::get('/storage/{path}', function($path) {
     abort(404);
 })->where('path', '.*');
 
-// Serve Konoha styles and assets directly from workspace konoha folder
-Route::get('/konoha/{file}', function($file) {
-    $path = base_path('konoha/' . $file);
-    $safe = siparoki_resolve_safe_file([$path], [base_path('konoha')]);
-    if ($safe) {
-        $ext = pathinfo($safe, PATHINFO_EXTENSION);
-        $mime = $ext === 'css' ? 'text/css' : ($ext === 'js' ? 'application/javascript' : mime_content_type($safe));
-        return response()->file($safe, ['Content-Type' => $mime]);
-    }
-    abort(404);
-})->where('file', '.*');
+
 
 // Proxy route: serve CI3 pastor/umat photos by filename
 Route::get('/foto-pastor/{filename}', function(string $filename) {
@@ -293,6 +280,13 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::get('/data-umat/{id}/edit', [\App\Http\Controllers\InertiaPanelController::class, 'editUmat'])->name("panel.{$prefix}.data-umat.edit");
         Route::post('/umat/store', [\App\Http\Controllers\InertiaPanelController::class, 'storeUmat'])->name("panel.{$prefix}.umat.store");
         Route::post('/umat/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updateUmat'])->name("panel.{$prefix}.umat.update");
+        Route::get('/umat/{id}/mutasi', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'showMutasi'])->name("panel.{$prefix}.umat.mutasi");
+        Route::post('/umat/{id}/mutasi', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'prosesMutasi'])->name("panel.{$prefix}.umat.mutasi.store");
+        Route::get('/umat/{id}/pisah-kk', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'showPisah'])->name("panel.{$prefix}.umat.pisah");
+        Route::post('/umat/{id}/pisah-kk', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'prosesPisah'])->name("panel.{$prefix}.umat.pisah.store");
+        Route::get('/umat/{id}/riwayat', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'showRiwayat'])->name("panel.{$prefix}.umat.riwayat");
+        Route::get('/riwayat-mutasi/tambah', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'showTambah'])->name("panel.{$prefix}.riwayat-mutasi.create");
+        Route::post('/riwayat-mutasi/tambah', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'storeTambah'])->name("panel.{$prefix}.riwayat-mutasi.store");
         Route::get('/master-pastor/create', [\App\Http\Controllers\InertiaPanelController::class, 'createPastor'])->name("panel.{$prefix}.master-pastor.create");
         Route::get('/pastor/create', [\App\Http\Controllers\InertiaPanelController::class, 'createPastor'])->name("panel.{$prefix}.pastor.create");
         Route::get('/master-referensi/pastor/create', [\App\Http\Controllers\InertiaPanelController::class, 'createPastor'])->name("panel.{$prefix}.master-referensi.pastor.create");
@@ -422,7 +416,8 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::get('/{slug}', [\App\Http\Controllers\InertiaPanelController::class, 'module'])->name("panel.{$prefix}.module");
         Route::post('/{slug}', [\App\Http\Controllers\InertiaPanelController::class, 'storeModule'])->name("panel.{$prefix}.module.store");
         Route::put('/{slug}/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updateModule'])->name("panel.{$prefix}.module.update");
-        Route::post('/{slug}/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updateModule'])->name("panel.{$prefix}.module.update.post");
+        Route::post('/{slug}/bulk-delete', [\App\Http\Controllers\InertiaPanelController::class, 'bulkDestroyModule'])->name("panel.{$prefix}.module.bulk_destroy");
+        Route::delete('/{slug}/bulk-delete', [\App\Http\Controllers\InertiaPanelController::class, 'bulkDestroyModule']);
         Route::delete('/{slug}/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'destroyModule'])->name("panel.{$prefix}.module.destroy");
     });
 }
@@ -536,7 +531,8 @@ Route::middleware([\App\Http\Middleware\PanelAccess::class])->prefix('admin')->g
     Route::get('/{slug}', [\App\Http\Controllers\InertiaPanelController::class, 'module'])->name('admin.module');
     Route::post('/{slug}', [\App\Http\Controllers\InertiaPanelController::class, 'storeModule'])->name('admin.module.store');
     Route::put('/{slug}/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updateModule'])->name('admin.module.update');
-    Route::post('/{slug}/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updateModule'])->name('admin.module.update.post');
+    Route::post('/{slug}/bulk-delete', [\App\Http\Controllers\InertiaPanelController::class, 'bulkDestroyModule'])->name('admin.module.bulk_destroy');
+    Route::delete('/{slug}/bulk-delete', [\App\Http\Controllers\InertiaPanelController::class, 'bulkDestroyModule']);
     Route::delete('/{slug}/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'destroyModule'])->name('admin.module.destroy');
 });
 

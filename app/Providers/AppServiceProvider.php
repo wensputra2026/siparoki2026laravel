@@ -93,6 +93,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Set Indonesian Locale & Carbon translations
+        \Carbon\Carbon::setLocale('id');
+        setlocale(LC_TIME, 'id_ID.utf8', 'id_ID', 'id', 'ind', 'Indonesian');
+        config(['app.locale' => 'id']);
+
         // Auto cleanup stale Vite hot file if dev server is not running
         if (file_exists(public_path('hot'))) {
             $fp = @fsockopen('127.0.0.1', 5173, $errno, $errstr, 0.05);

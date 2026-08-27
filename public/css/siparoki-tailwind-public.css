@@ -1058,6 +1058,230 @@ body.public-portal main td {
     border-bottom: 1px solid var(--sp-line) !important;
 }
 
+/* Public chapel, video, and sacrament pages */
+body.public-portal .chapel-page,
+body.public-portal .public-video-page,
+body.public-portal .sacrament-page {
+    background: var(--sp-bg) !important;
+}
+
+body.public-portal .chapel-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
+    padding: 18px 22px !important;
+    border: 1px solid var(--sp-line) !important;
+    border-radius: var(--sp-radius) !important;
+    background: var(--sp-surface) !important;
+    box-shadow: var(--sp-shadow-soft) !important;
+}
+
+body.public-portal .chapel-kicker {
+    display: block !important;
+    margin-bottom: 4px !important;
+    color: var(--sp-muted) !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+body.public-portal .chapel-toolbar strong {
+    display: block !important;
+    color: var(--sp-ink) !important;
+    font-size: 1.1rem !important;
+}
+
+body.public-portal .chapel-map-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 9px !important;
+    min-height: 44px !important;
+    padding: 10px 16px !important;
+    border-radius: 999px !important;
+    background: var(--sp-primary) !important;
+    color: #ffffff !important;
+    font-size: 0.9rem !important;
+    font-weight: 800 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+}
+
+body.public-portal .chapel-grid,
+body.public-portal .public-video-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 18px !important;
+}
+
+body.public-portal .chapel-card,
+body.public-portal .public-video-card,
+body.public-portal .sacrament-info,
+body.public-portal .sacrament-form-card {
+    min-width: 0 !important;
+    border: 1px solid var(--sp-line) !important;
+    border-radius: var(--sp-radius) !important;
+    background: var(--sp-surface) !important;
+    box-shadow: var(--sp-shadow-soft) !important;
+}
+
+body.public-portal .chapel-card {
+    display: flex !important;
+    gap: 16px !important;
+    padding: 22px !important;
+    border-top: 4px solid var(--sp-teal) !important;
+}
+
+body.public-portal .chapel-card-featured {
+    grid-column: 1 / -1 !important;
+}
+
+body.public-portal .chapel-icon,
+body.public-portal .sacrament-info-icon {
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 16px !important;
+    background: rgba(15, 159, 148, 0.12) !important;
+    color: var(--sp-teal-dark) !important;
+    font-size: 1.35rem !important;
+}
+
+body.public-portal .chapel-card-body {
+    min-width: 0 !important;
+}
+
+body.public-portal .chapel-card-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    margin-bottom: 8px !important;
+}
+
+body.public-portal .chapel-card-head span,
+body.public-portal .chapel-card-head em {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 26px !important;
+    padding: 4px 10px !important;
+    border-radius: 999px !important;
+    background: var(--sp-bg-soft) !important;
+    color: var(--sp-teal-dark) !important;
+    font-size: 0.74rem !important;
+    font-style: normal !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+}
+
+body.public-portal .chapel-card h2,
+body.public-portal .public-video-card h3,
+body.public-portal .sacrament-info h2 {
+    margin: 0 0 10px !important;
+    color: var(--sp-ink) !important;
+    font-size: 1.05rem !important;
+    font-weight: 850 !important;
+    line-height: 1.35 !important;
+}
+
+body.public-portal .chapel-card p,
+body.public-portal .public-video-card p,
+body.public-portal .sacrament-info p {
+    margin: 0 !important;
+    color: var(--sp-muted) !important;
+    font-size: 0.9rem !important;
+    line-height: 1.65 !important;
+}
+
+body.public-portal .chapel-card p i {
+    margin-right: 7px !important;
+    color: var(--sp-gold) !important;
+}
+
+body.public-portal .public-video-card {
+    overflow: hidden !important;
+}
+
+body.public-portal .public-video-frame {
+    aspect-ratio: 16 / 9 !important;
+    background: var(--sp-primary) !important;
+}
+
+body.public-portal .public-video-frame iframe,
+body.public-portal .public-video-placeholder {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+body.public-portal .public-video-placeholder {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 2rem !important;
+}
+
+body.public-portal .public-video-body {
+    padding: 18px 20px 20px !important;
+}
+
+body.public-portal .public-pagination {
+    margin-top: 28px !important;
+}
+
+body.public-portal .sacrament-layout {
+    display: grid !important;
+    grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.25fr) !important;
+    gap: 24px !important;
+    align-items: start !important;
+}
+
+body.public-portal .sacrament-info {
+    position: sticky !important;
+    top: 96px !important;
+    padding: 26px !important;
+}
+
+body.public-portal .sacrament-info-icon {
+    margin-bottom: 18px !important;
+    background: var(--sp-gold-soft) !important;
+    color: #9a6708 !important;
+}
+
+body.public-portal .sacrament-info-list {
+    display: grid !important;
+    gap: 10px !important;
+    margin-top: 22px !important;
+}
+
+body.public-portal .sacrament-info-list span {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    min-height: 40px !important;
+    padding: 10px 12px !important;
+    border-radius: var(--sp-radius-sm) !important;
+    background: var(--sp-bg-soft) !important;
+    color: var(--sp-ink) !important;
+    font-size: 0.88rem !important;
+    font-weight: 750 !important;
+}
+
+body.public-portal .sacrament-info-list i {
+    color: var(--sp-teal-dark) !important;
+}
+
+body.public-portal .sacrament-form-card {
+    padding: 24px !important;
+    overflow: hidden !important;
+}
+
 /* Footer */
 body.public-portal .footer {
     position: relative !important;
@@ -1155,6 +1379,19 @@ body.public-portal .footer-bottom p {
 
     body.public-portal .contact-layout {
         grid-template-columns: 1fr !important;
+    }
+
+    body.public-portal .chapel-grid,
+    body.public-portal .public-video-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    body.public-portal .sacrament-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    body.public-portal .sacrament-info {
+        position: static !important;
     }
 }
 
@@ -1394,8 +1631,27 @@ body.public-portal .footer-bottom p {
     }
 
     body.public-portal .news-grid,
-    body.public-portal .gallery-grid {
+    body.public-portal .gallery-grid,
+    body.public-portal .chapel-grid,
+    body.public-portal .public-video-grid {
         grid-template-columns: 1fr !important;
+    }
+
+    body.public-portal .chapel-toolbar {
+        align-items: stretch !important;
+        flex-direction: column !important;
+    }
+
+    body.public-portal .chapel-map-link {
+        width: 100% !important;
+    }
+
+    body.public-portal .chapel-card {
+        padding: 18px !important;
+    }
+
+    body.public-portal .sacrament-form-card {
+        padding: 18px !important;
     }
 
     body.public-portal .download-card {

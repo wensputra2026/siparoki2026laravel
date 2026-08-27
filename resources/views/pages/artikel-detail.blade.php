@@ -30,8 +30,8 @@
     }
 
     $publishedAt = $item->tanggal_publish ?? $item->created_at ?? now();
-    $backRoute = $detailType === 'berita' ? route('berita') : route('artikel');
-    $backLabel = $detailType === 'berita' ? 'Kembali ke Berita' : 'Kembali ke Artikel';
+    $backRoute = route('warta');
+    $backLabel = 'Kembali ke Warta Paroki';
     $relatedRouteName = $detailType === 'berita' ? 'berita.detail' : 'artikel.detail';
     $categoryClass = Str::contains(strtolower($item->kategori ?? ''), 'pengumuman') ? 'category-announcement' : 'category-news';
 @endphp
@@ -87,7 +87,7 @@
                     <a href="/" style="color: white; text-decoration: none; font-weight: 500;">Beranda</a>
                 </li>
                 <li class="breadcrumb-item" style="background: rgba(255,255,255,0.22); padding: 6px 18px; border-radius: 25px; font-size: 0.85rem;">
-                    <a href="{{ $backRoute }}" style="color: white; text-decoration: none; font-weight: 500;">{{ $detailType === 'berita' ? 'Berita' : 'Artikel' }}</a>
+                    <a href="{{ $backRoute }}" style="color: white; text-decoration: none; font-weight: 500;">Warta Paroki</a>
                 </li>
                 <li class="breadcrumb-item active" style="background: var(--primary-orange, #ff9800); color: white; padding: 6px 20px; border-radius: 25px; font-size: 0.85rem; font-weight: 700;">
                     {{ $item->judul }}
@@ -125,7 +125,7 @@
                     <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #eef2f6; font-size: 0.9rem; color: #64748b;">
                         <span style="display: inline-flex; align-items: center; gap: 7px;">
                             <i class="far fa-calendar-alt" style="color: #ff9800; font-size: 1rem;"></i> 
-                            {{ \Carbon\Carbon::parse($publishedAt)->translatedFormat('d M Y') }}
+                            {{ format_tanggal_indonesia($publishedAt) }}
                         </span>
                         <span style="display: inline-flex; align-items: center; gap: 7px;">
                             <i class="far fa-user" style="color: #ff9800; font-size: 1rem;"></i> 
@@ -555,14 +555,44 @@
             <!-- Right: Sidebar Column (Complete Paroki Widgets) -->
             <div style="display: flex; flex-direction: column; gap: 24px;">
 
-                <!-- 1. WIDGET PENCARIAN -->
+                <!-- 1. WIDGET KATA SAMBUTAN PASTOR PAROKI (PALING ATAS) -->
+                @php
+                    $imamWidgetImage = file_exists(public_path('assets/frontend/siparoki/images/default-pastor.jpg'))
+                        ? asset('assets/frontend/siparoki/images/default-pastor.jpg')
+                        : (file_exists(public_path('assets/frontend/siparoki/images/default-principal.jpg'))
+                            ? asset('assets/frontend/siparoki/images/default-principal.jpg')
+                            : asset('images/pastor-avatar.svg'));
+                    $pastorNameDisplay = !empty($pastor_paroki) ? $pastor_paroki : 'Pastor Paroki';
+                @endphp
+                <div style="background: #ffffff; border-radius: 18px; box-shadow: 0 8px 25px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #e2e8f0; border-top: 4px solid var(--primary-teal, #00897b);">
+                    <div style="background: linear-gradient(135deg, var(--primary-teal, #00897b), #004d40); padding: 24px 20px 10px; text-align: center; position: relative;">
+                        <span style="position: absolute; top: 12px; left: 12px; background: var(--primary-orange, #ff9800); color: #ffffff; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                            <i class="fa-solid fa-quote-left me-1"></i> SAMBUTAN
+                        </span>
+                        <div style="width: 130px; height: 130px; margin: 15px auto 0; border-radius: 50%; overflow: hidden; border: 4px solid #ffffff; box-shadow: 0 6px 18px rgba(0,0,0,0.2); background: #ffffff;">
+                            <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamWidgetImage }}" alt="{{ $pastorNameDisplay }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                    </div>
+                    <div style="padding: 20px 22px; text-align: center;">
+                        <h5 style="font-weight: 800; color: #0f172a; font-size: 1.05rem; margin-bottom: 3px;">{{ $pastorNameDisplay }}</h5>
+                        <p style="font-size: 0.8rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 12px;">Pastor Paroki {{ $globalNamaParoki ?? $nama_paroki ?? 'SIPAROKI' }}</p>
+                        <p style="font-size: 0.84rem; color: #64748b; line-height: 1.6; font-style: italic; margin-bottom: 18px; background: #f8fafc; padding: 12px 14px; border-radius: 12px; border-left: 3px solid var(--primary-orange, #ff9800);">
+                            "Salve, Salam Sehat dan Berkah Dalem. Selamat Datang di Website Resmi {{ $globalNamaParoki ?? $nama_paroki ?? 'SIPAROKI' }}."
+                        </p>
+                        <a href="/sambutan" style="display: inline-flex; align-items: center; gap: 6px; background: var(--primary-teal, #00897b); color: #ffffff; padding: 9px 24px; border-radius: 25px; font-weight: 700; font-size: 0.82rem; text-decoration: none; box-shadow: 0 4px 14px rgba(0,137,123,0.3); transition: all 0.2s;" onmouseover="this.style.background='var(--primary-orange, #ff9800)'" onmouseout="this.style.background='var(--primary-teal, #00897b)'">
+                            Baca Selengkapnya <i class="fas fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 2. WIDGET PENCARIAN -->
                 <div style="background: #ffffff; padding: 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border-top: 4px solid var(--primary-orange, #ff9800);">
                     <h4 style="color: var(--primary-teal, #00897b); font-weight: 700; font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-search" style="color: var(--primary-orange, #ff9800);"></i> Pencarian
                     </h4>
-                    <form action="/berita" method="GET">
+                    <form action="/warta" method="GET">
                         <div style="position: relative;">
-                            <input type="text" name="search" placeholder="Cari berita atau artikel..." style="width: 100%; padding: 11px 44px 11px 16px; border-radius: 25px; border: 1px solid #cbd5e1; font-size: 0.88rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-teal, #00897b)'" onblur="this.style.borderColor='#cbd5e1'">
+                            <input type="text" name="search" placeholder="Cari warta paroki..." style="width: 100%; padding: 11px 44px 11px 16px; border-radius: 25px; border: 1px solid #cbd5e1; font-size: 0.88rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-teal, #00897b)'" onblur="this.style.borderColor='#cbd5e1'">
                             <button type="submit" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; background: var(--primary-teal, #00897b); color: #ffffff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; transition: background 0.2s;" onmouseover="this.style.background='var(--primary-orange, #ff9800)'" onmouseout="this.style.background='var(--primary-teal, #00897b)'">
                                 <i class="fas fa-search"></i>
                             </button>
@@ -570,23 +600,29 @@
                     </form>
                 </div>
 
-                <!-- 2. WIDGET KATEGORI -->
+                <!-- 3. WIDGET KATEGORI -->
                 <div style="background: #ffffff; padding: 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border-left: 4px solid var(--primary-teal, #00897b);">
                     <h4 style="color: var(--primary-teal, #00897b); font-weight: 700; font-size: 1.1rem; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-folder-open" style="color: var(--primary-orange, #ff9800);"></i> Kategori
+                        <i class="fas fa-folder-open" style="color: var(--primary-orange, #ff9800);"></i> Kategori Warta
                     </h4>
                     @if(isset($categories) && $categories->isNotEmpty())
                         <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
                             @foreach($categories as $cat)
+                                @php
+                                    $cName = is_object($cat) ? ($cat->kategori ?? $cat->nama_kategori ?? '') : (string)$cat;
+                                    $cTotal = is_object($cat) ? ($cat->total ?? 0) : 0;
+                                @endphp
                                 <li>
-                                    <a href="/berita?category={{ urlencode($cat->kategori) }}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: #334155; font-size: 0.88rem; font-weight: 500; background: #f8fafc; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,137,123,0.08)'; this.style.color='var(--primary-teal, #00897b)';" onmouseout="this.style.background='#f8fafc'; this.style.color='#334155';">
+                                    <a href="/warta?category={{ urlencode($cName) }}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: #334155; font-size: 0.88rem; font-weight: 500; background: #f8fafc; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,137,123,0.08)'; this.style.color='var(--primary-teal, #00897b)';" onmouseout="this.style.background='#f8fafc'; this.style.color='#334155';">
                                         <span style="display: flex; align-items: center; gap: 8px;">
                                             <i class="fas fa-angle-right" style="color: var(--primary-orange, #ff9800); font-size: 0.8rem;"></i>
-                                            {{ $cat->kategori }}
+                                            {{ ucwords(strtolower($cName)) }}
                                         </span>
-                                        <span style="background: rgba(0,137,123,0.12); color: var(--primary-teal, #00897b); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">
-                                            {{ $cat->total }}
-                                        </span>
+                                        @if($cTotal > 0)
+                                            <span style="background: rgba(0,137,123,0.12); color: var(--primary-teal, #00897b); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">
+                                                {{ $cTotal }}
+                                            </span>
+                                        @endif
                                     </a>
                                 </li>
                             @endforeach
@@ -596,10 +632,10 @@
                     @endif
                 </div>
 
-                <!-- 3. WIDGET BERITA TERBARU -->
+                <!-- 4. WIDGET BERITA TERBARU -->
                 <div style="background: #ffffff; padding: 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border-left: 4px solid var(--primary-orange, #ff9800);">
                     <h4 style="color: var(--primary-teal, #00897b); font-weight: 700; font-size: 1.1rem; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                        <i class="far fa-newspaper" style="color: var(--primary-orange, #ff9800);"></i> Berita Terbaru
+                        <i class="far fa-newspaper" style="color: var(--primary-orange, #ff9800);"></i> Warta Terbaru
                     </h4>
                     @if(isset($recentNews) && $recentNews->isNotEmpty())
                         <div style="display: flex; flex-direction: column; gap: 14px;">
@@ -616,7 +652,7 @@
                                     </a>
                                     <div style="font-size: 0.78rem; color: #94a3b8; display: flex; align-items: center; gap: 5px;">
                                         <i class="far fa-calendar-alt" style="color: var(--primary-orange, #ff9800);"></i> 
-                                        {{ \Carbon\Carbon::parse($rnDate)->translatedFormat('d M Y') }}
+                                        {{ format_tanggal_indonesia($rnDate) }}
                                     </div>
                                 </div>
                             @endforeach
@@ -626,19 +662,19 @@
                     @endif
                 </div>
 
-                <!-- 4. WIDGET ARSIP BERITA -->
+                <!-- 5. WIDGET ARSIP BERITA -->
                 <div style="background: #ffffff; padding: 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border-left: 4px solid var(--primary-teal, #00897b);">
                     <h4 style="color: var(--primary-teal, #00897b); font-weight: 700; font-size: 1.1rem; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
-                        <i class="far fa-calendar-check" style="color: var(--primary-orange, #ff9800);"></i> Arsip Berita
+                        <i class="far fa-calendar-check" style="color: var(--primary-orange, #ff9800);"></i> Arsip Warta
                     </h4>
                     @if(isset($archive) && $archive->isNotEmpty())
                         <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
                             @foreach($archive as $arc)
                                 <li>
-                                    <a href="/berita?month={{ $arc->month_key }}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: #334155; font-size: 0.88rem; font-weight: 500; background: #f8fafc; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,137,123,0.08)'; this.style.color='var(--primary-teal, #00897b)';" onmouseout="this.style.background='#f8fafc'; this.style.color='#334155';">
+                                    <a href="/warta?month={{ $arc->month_key }}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: #334155; font-size: 0.88rem; font-weight: 500; background: #f8fafc; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,137,123,0.08)'; this.style.color='var(--primary-teal, #00897b)';" onmouseout="this.style.background='#f8fafc'; this.style.color='#334155';">
                                         <span style="display: flex; align-items: center; gap: 8px;">
                                             <i class="far fa-calendar-alt" style="color: var(--primary-orange, #ff9800); font-size: 0.8rem;"></i>
-                                            {{ $arc->label }}
+                                            {{ !empty($arc->month_key) ? format_bulan_indonesia($arc->month_key) : ($arc->label ?? '') }}
                                         </span>
                                         <span style="background: rgba(245,158,11,0.15); color: #d97706; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">
                                             {{ $arc->total }}
@@ -652,25 +688,25 @@
                     @endif
                 </div>
 
-                <!-- 5. WIDGET TAGS -->
+                <!-- 6. WIDGET TAGS -->
                 <div style="background: #ffffff; padding: 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border-left: 4px solid var(--primary-orange, #ff9800);">
                     <h4 style="color: var(--primary-teal, #00897b); font-weight: 700; font-size: 1.1rem; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-tags" style="color: var(--primary-orange, #ff9800);"></i> Tags
                     </h4>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                         @php
-                            $defaultTags = ['kegiatan', 'misa', 'paroki', 'pengumuman', 'sakramen', 'orangtua'];
+                            $defaultTags = ['kegiatan', 'misa', 'paroki', 'pengumuman', 'sakramen', 'pelayanan', 'omk'];
                             $displayTags = !empty($tags) && count($tags) > 0 ? $tags : $defaultTags;
                         @endphp
                         @foreach($displayTags as $tag)
-                            <a href="/berita?tag={{ urlencode(trim($tag)) }}" style="background: #f1f5f9; color: #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-decoration: none; border: 1px solid #e2e8f0; transition: all 0.2s;" onmouseover="this.style.background='var(--primary-teal, #00897b)'; this.style.color='#ffffff'; this.style.borderColor='var(--primary-teal, #00897b)';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#334155'; this.style.borderColor='#e2e8f0';">
+                            <a href="/warta?tag={{ urlencode(trim($tag)) }}" style="background: #f1f5f9; color: #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-decoration: none; border: 1px solid #e2e8f0; transition: all 0.2s;" onmouseover="this.style.background='var(--primary-teal, #00897b)'; this.style.color='#ffffff'; this.style.borderColor='var(--primary-teal, #00897b)';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#334155'; this.style.borderColor='#e2e8f0';">
                                 #{{ trim($tag) }}
                             </a>
                         @endforeach
                     </div>
                 </div>
 
-                <!-- 6. WIDGET IKUTI KAMI -->
+                <!-- 7. WIDGET IKUTI KAMI -->
                 <div style="background: #ffffff; padding: 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border-top: 4px solid var(--primary-teal, #00897b);">
                     <h4 style="color: var(--primary-teal, #00897b); font-weight: 700; font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-share-nodes" style="color: var(--primary-orange, #ff9800);"></i> Ikuti Kami
@@ -690,31 +726,6 @@
                         </a>
                         <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $whatsapp ?? $telepon ?? '6281234567890') }}" target="_blank" rel="noopener" style="width: 38px; height: 38px; border-radius: 50%; background: #25d366; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; text-decoration: none; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="WhatsApp">
                             <i class="fab fa-whatsapp"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- 7. WIDGET KATA SAMBUTAN PASTOR PAROKI -->
-                @php
-                    $imamWidgetImage = file_exists(public_path('assets/frontend/siparoki/images/default-pastor.jpg'))
-                        ? asset('assets/frontend/siparoki/images/default-pastor.jpg')
-                        : (file_exists(public_path('assets/frontend/siparoki/images/default-principal.jpg'))
-                            ? asset('assets/frontend/siparoki/images/default-principal.jpg')
-                            : asset('images/pastor-avatar.svg'));
-                @endphp
-                <div style="background: #ffffff; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #eef2f6;">
-                    <div style="background: #ff7a00; padding: 24px 20px 0; text-align: center; position: relative;">
-                        <span style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.25); color: #ffffff; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px;">KATA SAMBUTAN</span>
-                        <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamWidgetImage }}" alt="Pastor Paroki" style="width: 140px; height: 140px; object-fit: cover; display: block; margin: 10px auto 0;">
-                    </div>
-                    <div style="padding: 22px 20px; text-align: center;">
-                        <h5 style="font-weight: 800; color: #0c4a6e; font-size: 1.05rem; margin-bottom: 4px;">Pastor Paroki</h5>
-                        <p style="font-size: 0.82rem; font-weight: 700; color: var(--primary-teal, #00897b); margin-bottom: 12px;">Pastor Paroki {{ $globalNamaParoki ?? 'SIPAROKI' }}</p>
-                        <p style="font-size: 0.84rem; color: #64748b; line-height: 1.55; font-style: italic; margin-bottom: 18px;">
-                            "Salve, Salam Sehat dan Berkah Dalem. Selamat Datang di Website Resmi {{ $globalNamaParoki ?? 'SIPAROKI' }}."
-                        </p>
-                        <a href="/sambutan" style="display: inline-flex; align-items: center; gap: 6px; background: #0c4a6e; color: #ffffff; padding: 8px 22px; border-radius: 20px; font-weight: 700; font-size: 0.82rem; text-decoration: none; box-shadow: 0 4px 12px rgba(12,74,110,0.2); transition: all 0.2s;" onmouseover="this.style.background='#075985'" onmouseout="this.style.background='#0c4a6e'">
-                            Baca Selengkapnya <i class="fas fa-arrow-right text-xs"></i>
                         </a>
                     </div>
                 </div>
