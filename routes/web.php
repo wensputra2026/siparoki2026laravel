@@ -371,21 +371,21 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::get('/pengaturan/maintenance', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'maintenance'))->name("panel.{$prefix}.pengaturan.maintenance");
         Route::get('/maintenance', fn (\Illuminate\Http\Request $req) => app(\App\Http\Controllers\InertiaPanelController::class)->pengaturanHub($req, 'maintenance'))->name("panel.{$prefix}.maintenance");
 
-        // Settings Hub POST Actions
-        Route::post('/pengaturan/midtrans/save', [\App\Http\Controllers\InertiaPanelController::class, 'savePengaturanMidtrans'])->name("panel.{$prefix}.pengaturan.midtrans.save");
+        // Settings Hub Actions (GET redirects back to settings tab, POST saves)
+        Route::match(['GET', 'POST'], '/pengaturan/midtrans/save', fn (\Illuminate\Http\Request $r) => $r->isMethod('post') ? app(\App\Http\Controllers\InertiaPanelController::class)->savePengaturanMidtrans($r) : redirect("/{$prefix}/metode-pembayaran"))->name("panel.{$prefix}.pengaturan.midtrans.save");
         Route::post('/pengaturan/midtrans/test', [\App\Http\Controllers\InertiaPanelController::class, 'testMidtransConnection'])->name("panel.{$prefix}.pengaturan.midtrans.test");
-        Route::post('/pengaturan/pembayaran/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveMetodePembayaran'])->name("panel.{$prefix}.pengaturan.pembayaran.save");
+        Route::match(['GET', 'POST'], '/pengaturan/pembayaran/save', fn (\Illuminate\Http\Request $r) => $r->isMethod('post') ? app(\App\Http\Controllers\InertiaPanelController::class)->saveMetodePembayaran($r) : redirect("/{$prefix}/metode-pembayaran"))->name("panel.{$prefix}.pengaturan.pembayaran.save");
         Route::delete('/pengaturan/pembayaran/{id}/delete', [\App\Http\Controllers\InertiaPanelController::class, 'deleteMetodePembayaran'])->name("panel.{$prefix}.pengaturan.pembayaran.delete");
         Route::post('/pengaturan/pembayaran/{id}/delete', [\App\Http\Controllers\InertiaPanelController::class, 'deleteMetodePembayaran'])->name("panel.{$prefix}.pengaturan.pembayaran.delete.post");
-        Route::post('/pengaturan/otp/save', [\App\Http\Controllers\InertiaPanelController::class, 'savePengaturanOtp'])->name("panel.{$prefix}.pengaturan.otp.save");
+        Route::match(['GET', 'POST'], '/pengaturan/otp/save', fn (\Illuminate\Http\Request $r) => $r->isMethod('post') ? app(\App\Http\Controllers\InertiaPanelController::class)->savePengaturanOtp($r) : redirect("/{$prefix}/pengaturan-otp"))->name("panel.{$prefix}.pengaturan.otp.save");
         Route::post('/pengaturan/otp/test', [\App\Http\Controllers\InertiaPanelController::class, 'testKirimWhatsapp'])->name("panel.{$prefix}.pengaturan.otp.test");
-        Route::post('/pengaturan/video/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveVideoHeader'])->name("panel.{$prefix}.pengaturan.video.save");
-        Route::post('/pengaturan/slider/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveSlider'])->name("panel.{$prefix}.pengaturan.slider.save");
+        Route::match(['GET', 'POST'], '/pengaturan/video/save', fn (\Illuminate\Http\Request $r) => $r->isMethod('post') ? app(\App\Http\Controllers\InertiaPanelController::class)->saveVideoHeader($r) : redirect("/{$prefix}/video-header"))->name("panel.{$prefix}.pengaturan.video.save");
+        Route::match(['GET', 'POST'], '/pengaturan/slider/save', fn (\Illuminate\Http\Request $r) => $r->isMethod('post') ? app(\App\Http\Controllers\InertiaPanelController::class)->saveSlider($r) : redirect("/{$prefix}/slider"))->name("panel.{$prefix}.pengaturan.slider.save");
         Route::delete('/pengaturan/slider/{id}/delete', [\App\Http\Controllers\InertiaPanelController::class, 'deleteSlider'])->name("panel.{$prefix}.pengaturan.slider.delete");
         Route::post('/pengaturan/slider/{id}/delete', [\App\Http\Controllers\InertiaPanelController::class, 'deleteSlider'])->name("panel.{$prefix}.pengaturan.slider.delete.post");
-        Route::post('/pengaturan/seo/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveSeoMeta'])->name("panel.{$prefix}.pengaturan.seo.save");
-        Route::post('/pengaturan/widget/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveWidgetSettings'])->name("panel.{$prefix}.pengaturan.widget.save");
-        Route::post('/pengaturan/maintenance/save', [\App\Http\Controllers\InertiaPanelController::class, 'saveMaintenanceSettings'])->name("panel.{$prefix}.pengaturan.maintenance.save");
+        Route::match(['GET', 'POST'], '/pengaturan/seo/save', fn (\Illuminate\Http\Request $r) => $r->isMethod('post') ? app(\App\Http\Controllers\InertiaPanelController::class)->saveSeoMeta($r) : redirect("/{$prefix}/seo"))->name("panel.{$prefix}.pengaturan.seo.save");
+        Route::match(['GET', 'POST'], '/pengaturan/widget/save', fn (\Illuminate\Http\Request $r) => $r->isMethod('post') ? app(\App\Http\Controllers\InertiaPanelController::class)->saveWidgetSettings($r) : redirect("/{$prefix}/widget"))->name("panel.{$prefix}.pengaturan.widget.save");
+        Route::match(['GET', 'POST'], '/pengaturan/maintenance/save', fn (\Illuminate\Http\Request $r) => $r->isMethod('post') ? app(\App\Http\Controllers\InertiaPanelController::class)->saveMaintenanceSettings($r) : redirect("/{$prefix}/maintenance"))->name("panel.{$prefix}.pengaturan.maintenance.save");
 
         // Pembersih Sistem
         Route::get('/pembersih-sistem', [\App\Http\Controllers\InertiaPanelController::class, 'pembersihSistem'])->name("panel.{$prefix}.pembersih-sistem");
