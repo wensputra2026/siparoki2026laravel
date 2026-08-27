@@ -37,10 +37,10 @@ jobs:
       - name: Deploy via FTP to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_SERVER || 'ppbgmadrossoe.com' }}
-          username: ${{ secrets.FTP_USERNAME || 'ppbz7941' }}
-          password: ${{ secrets.FTP_PASSWORD || '*OqGcpuK^8#230HK' }}
-          server-dir: ${{ secrets.FTP_SERVER_DIR || 'public_html/siparoki.ppbgmadrossoe.com/' }}
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
           local-dir: ./
           dangerous-clean-slate: false
           exclude: |
