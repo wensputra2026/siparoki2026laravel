@@ -39,8 +39,48 @@
 [data-theme="dark"] .sambutan-pastor-body p { color: #cbd5e1; }
 .btn-sambutan { background: #0c4a6e; color: #ffffff !important; border-radius: 30px; padding: 11px 28px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 10px; width: fit-content; text-decoration: none; box-shadow: 0 4px 15px rgba(12, 74, 110, 0.25); transition: all 0.3s; border: none; }
 .btn-sambutan:hover { background: #075985; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(12, 74, 110, 0.35); color: #ffffff !important; }
-@media (max-width: 900px) { .counter-grid { grid-template-columns: repeat(2, 1fr); } .sambutan-pastor-card { grid-template-columns: 1fr; } .hero { min-height: 72vh; } }
-@media (max-width: 560px) { .counter-grid { grid-template-columns: 1fr; padding: 16px; } .sambutan-pastor-body { padding: 30px 24px; } .hero-quote-badge { padding: 10px 14px; } .hero-quote-track { animation-duration: 24s; } }
+
+/* Responsive Adjustments for Tablet & Mobile */
+@media (max-width: 900px) { 
+    .counter-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 20px; } 
+    .sambutan-pastor-card { grid-template-columns: 1fr; } 
+    .hero { min-height: 60vh; padding: 50px 14px 60px; } 
+}
+
+@media (max-width: 640px) { 
+    .hero { min-height: 460px; padding: 35px 12px 55px; }
+    .hero-video-text { width: 100%; }
+    .hero-video-text h1 { font-size: clamp(1.35rem, 5.2vw, 1.85rem) !important; line-height: 1.25; margin-bottom: 10px; }
+    .hero-subtitle-readable { font-size: 0.82rem !important; padding: 7px 14px !important; line-height: 1.45; }
+    .hero-quote-badge { padding: 8px 12px; font-size: 0.72rem; }
+    .hero-quote-item { font-size: 0.78rem; }
+    .hero-quote-track { animation-duration: 22s; padding: 9px 0; }
+    
+    .counter-section { padding: 20px 12px 10px; }
+    .counter-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 14px 12px; border-radius: 16px; } 
+    .counter-card { padding: 6px 4px; gap: 10px; }
+    .cc-icon { width: 42px; height: 42px; font-size: 1.15rem; border-radius: 10px; }
+    .cc-content h3 { font-size: 1.28rem; }
+    .cc-content p { font-size: 0.76rem; }
+
+    .sambutan-pastor-section { padding: 10px 12px 40px; }
+    .sambutan-pastor-card { border-radius: 18px; }
+    .sambutan-pastor-photo { min-height: 200px; max-height: 230px; }
+    .sambutan-pastor-body { padding: 24px 18px; text-align: center; align-items: center; }
+    .sambutan-pastor-body h3 { font-size: 1.35rem; }
+    .sambutan-pastor-role { font-size: 0.84rem; margin-bottom: 12px; }
+    .sambutan-pastor-body p { font-size: 0.88rem; line-height: 1.6; margin-bottom: 18px; }
+    .btn-sambutan { padding: 9px 22px; font-size: 0.82rem; }
+
+    .pelayan-pastoral-section { padding: 25px 12px 50px; }
+    .pelayan-pastoral-header { margin-bottom: 24px; }
+    .pelayan-pastoral-header h2 { font-size: 1.5rem; }
+    .pelayan-pastoral-header p { font-size: 0.84rem; }
+    .pelayan-pastoral-grid { gap: 16px; }
+    .pelayan-card { width: 100%; max-width: 100%; min-width: 0; padding: 24px 16px 20px; border-radius: 16px; }
+    .pelayan-btn-group { flex-direction: column; width: 100%; gap: 10px; margin-top: 24px; padding: 0 10px; }
+    .pelayan-btn-group a { width: 100%; justify-content: center; text-align: center; }
+}
 
 /* Keep the homepage video close to its original color; only add a soft readability veil. */
 .hero {

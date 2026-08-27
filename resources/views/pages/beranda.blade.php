@@ -61,7 +61,7 @@
                     }
                 }
             @endphp
-            <video class="hero-video-element" autoplay loop muted playsinline poster="{{ $posterUrl }}">
+            <video class="hero-video-element" autoplay loop muted playsinline @if(!empty($posterUrl)) poster="{{ $posterUrl }}" @endif>
                 <source src="{{ asset('assets/uploads/video/' . basename($cleanVideoPath)) }}" type="video/mp4">
                 <source src="{{ asset('assets/uploads/' . $cleanVideoPath) }}" type="video/mp4">
                 <source src="{{ asset('uploads/' . $cleanVideoPath) }}" type="video/mp4">
