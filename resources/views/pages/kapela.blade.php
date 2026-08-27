@@ -32,27 +32,24 @@
             </div>
 
             <!-- Center: Modern Search Form -->
-            <form action="/profil-kapela" method="GET" class="d-flex align-items-center my-1" style="flex: 1; max-width: 440px; min-width: 260px;">
-                <div class="position-relative w-100 d-flex align-items-center">
-                    <span class="position-absolute ps-3" style="left: 0; pointer-events: none; color: #94a3b8;">
-                        <i class="fas fa-search"></i>
-                    </span>
+            <form action="/profil-kapela" method="GET" class="my-1" style="flex: 1; max-width: 440px; min-width: 260px;">
+                <div class="d-flex align-items-center" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 30px; padding: 4px 6px 4px 14px; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='#94a3b8';" onfocusin="this.style.borderColor='#00897b'; this.style.boxShadow='0 0 0 3px rgba(0,137,123,0.15)'; this.style.background='#ffffff';" onfocusout="this.style.borderColor='#cbd5e1'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.02)'; this.style.background='#f8fafc';">
+                    <i class="fas fa-search me-2" style="color: #94a3b8; font-size: 0.88rem; flex-shrink: 0;"></i>
                     <input 
                         type="text" 
                         name="q" 
                         value="{{ $search ?? '' }}" 
-                        class="form-control rounded-pill shadow-none" 
-                        style="padding-left: 38px; padding-right: 78px; height: 42px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: #f8fafc; color: #0f172a;" 
+                        style="border: none; outline: none; background: transparent; width: 100%; font-size: 0.86rem; color: #0f172a; font-weight: 500; padding: 4px 0;" 
                         placeholder="Cari nama stasi, pelindung, lokasi..." 
                         aria-label="Cari stasi atau kapela"
                     >
                     @if(!empty($search))
-                        <a href="/profil-kapela" class="position-absolute d-flex align-items-center justify-content-center" style="right: 70px; width: 24px; height: 24px; text-decoration: none; color: #94a3b8;" title="Reset pencarian">
+                        <a href="/profil-kapela" style="color: #94a3b8; text-decoration: none; padding: 0 8px; font-size: 0.95rem; display: flex; align-items: center;" onmouseover="this.style.color='#ef4444';" onmouseout="this.style.color='#94a3b8';" title="Reset pencarian">
                             <i class="fas fa-circle-xmark"></i>
                         </a>
                     @endif
-                    <button type="submit" class="btn text-white position-absolute rounded-pill px-3 fw-bold d-flex align-items-center justify-content-center" style="right: 4px; height: 34px; background: #00897b; border: none; font-size: 0.8rem;">
-                        Cari
+                    <button type="submit" class="btn text-white rounded-pill fw-bold d-inline-flex align-items-center justify-content-center flex-shrink-0" style="background: linear-gradient(135deg, #00897b, #004d40); border: none; padding: 6px 16px; font-size: 0.8rem; height: 32px; box-shadow: 0 2px 8px rgba(0,137,123,0.25);">
+                        <span>Cari</span>
                     </button>
                 </div>
             </form>
@@ -63,6 +60,15 @@
                 <span>Lihat Peta Interaktif</span>
             </a>
         </div>
+
+        @if(!empty($search))
+            <div class="alert alert-info d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2" style="border-radius: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;">
+                <div>
+                    <i class="fas fa-search me-2" style="color: #00897b;"></i> Menampilkan hasil pencarian untuk: <strong>"{{ $search }}"</strong> ({{ method_exists($kapela, 'total') ? $kapela->total() : count($kapelaItems) }} ditemukan)
+                </div>
+                <a href="/profil-kapela" class="btn btn-sm btn-outline-success rounded-pill fw-bold" style="font-size: 0.8rem;">Reset Filter</a>
+            </div>
+        @endif
 
         <div class="chapel-grid">
             @forelse($kapelaItems as $k)

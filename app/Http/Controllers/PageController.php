@@ -580,7 +580,7 @@ class PageController extends Controller
     {
         $common = $this->getCommonData();
         $kapela = collect();
-        $search = trim($request->get('q', ''));
+        $search = trim($request->get('q', $request->get('search', '')));
 
         if (Schema::hasTable('stasi_kapela')) {
             try {
