@@ -99,7 +99,7 @@
             }
         })();
 
-// Konoha Sticky Navbar on Scroll
+// SIPAROKI Sticky Navbar on Scroll
 (function() {
     function initStickyNav() {
         var navbar = document.querySelector('.navbar');
@@ -134,4 +134,22 @@
     } else {
         initStickyNav();
     }
+})();
+
+// Auto-move all modals to document.body to guarantee they are never trapped in stacking context
+(function() {
+    function relocateModals() {
+        document.querySelectorAll('.modal').forEach(function(modal) {
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', relocateModals);
+    } else {
+        relocateModals();
+    }
+    document.addEventListener('livewire:navigated', relocateModals);
 })();

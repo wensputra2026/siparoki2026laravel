@@ -137,8 +137,8 @@
         $topWaClean = preg_replace('/[^0-9]/', '', $topWa);
     @endphp
 
-    <!-- Top Bar Konoha Style -->
-    <div class="top-bar">
+    <!-- Top Bar Konoha Style (Hanya Tampil di Desktop/Laptop agar di Tablet & HP Header Bersih) -->
+    <div class="top-bar d-none d-lg-block">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6 col-12">
@@ -421,6 +421,7 @@
         <i class="fas fa-chevron-up"></i>
     </button>
 
+    @stack('modals')
     @stack('scripts')
     @if(request()->is('sakramen*'))
         @livewireScripts

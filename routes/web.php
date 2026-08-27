@@ -58,6 +58,8 @@ Route::get('/kronik', [PageController::class, 'kronik'])->name('kronik');
 Route::get('/struktur', [PageController::class, 'struktur'])->name('struktur');
 Route::get('/kapela', [PageController::class, 'kapela'])->name('kapela');
 Route::get('/profil-kapela', [PageController::class, 'kapela'])->name('profil-kapela');
+Route::get('/profil-kapela/{id}', [PageController::class, 'kapelaDetail'])->name('profil-kapela.detail');
+Route::get('/kapela/{id}', [PageController::class, 'kapelaDetail'])->name('kapela.detail');
 Route::get('/peta-kapela', [PageController::class, 'petaKapela'])->name('peta-kapela');
 Route::get('/direktori-dpp', [PageController::class, 'direktoriDpp'])->name('direktori-dpp');
 Route::get('/direktori-katekis', [PageController::class, 'direktoriKatekis'])->name('direktori-katekis');

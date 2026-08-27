@@ -129,10 +129,10 @@ main {
 }
 
 .navbar.is-sticky {
-    animation: konohaSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: siparokiSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes konohaSlideDown {
+@keyframes siparokiSlideDown {
     from {
         transform: translateY(-100%);
     }
@@ -230,11 +230,11 @@ main {
 @media (min-width: 992px) {
     .navbar-nav .nav-item.dropdown:hover > .dropdown-menu {
         display: block;
-        animation: konohaNavFade 0.2s ease forwards;
+        animation: siparokiNavFade 0.2s ease forwards;
     }
 }
 
-@keyframes konohaNavFade {
+@keyframes siparokiNavFade {
     from {
         opacity: 0;
         transform: translateY(6px);
@@ -446,17 +446,15 @@ main {
     font-size: 0.8rem;
 }
 
+@media (max-width: 991.98px) {
+    .top-bar {
+        display: none !important;
+    }
+}
+
 @media (max-width: 768px) {
     .section-title {
         font-size: 1.8rem;
-    }
-
-    .top-bar {
-        text-align: center;
-    }
-
-    .top-bar .col-md-4 {
-        margin-bottom: 10px;
     }
 }
 
@@ -1203,47 +1201,94 @@ main {
 }
 
 .breadcrumb {
-    background: transparent;
-    justify-content: center;
-    margin-bottom: 0;
-    gap: 20px;
-    padding: 0;
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    margin-bottom: 0 !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    list-style: none !important;
 }
 
 .breadcrumb-item {
-    background: rgba(255,255,255,0.2);
-    padding: 8px 16px;
-    border-radius: 25px;
-    font-size: 0.85rem;
-    position: relative;
-    margin: 0;
+    display: inline-flex !important;
+    align-items: center !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    padding: 6px 18px !important;
+    border-radius: 25px !important;
+    font-size: 0.85rem !important;
+    color: white !important;
+    margin: 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.25s ease !important;
+    position: relative !important;
 }
 
 .breadcrumb-item a {
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
+    color: white !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
 }
 
 .breadcrumb-item a:hover {
-    opacity: 0.8;
-    color: white;
+    color: white !important;
+    opacity: 0.9 !important;
+    transform: translateY(-1px) !important;
 }
 
 .breadcrumb-item.active {
-    background: var(--primary-orange);
-    color: white;
-    font-weight: 600;
+    background: var(--primary-orange, #ff9800) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.35) !important;
 }
 
+/* Hapus slash bawaan bootstrap yang merusak tampilan kapsul */
+.breadcrumb-item::before,
 .breadcrumb-item + .breadcrumb-item::before {
-    content: "›";
-    display: inline-block;
-    margin-left: -20px;
-    margin-right: -12px;
-    color: rgba(255,255,255,0.8);
-    font-weight: bold;
-    position: relative;
+    content: none !important;
+    display: none !important;
+}
+
+/* Ikon pemisah panah rapi di antara kapsul breadcrumb */
+.breadcrumb-separator {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 0.72rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 4px !important;
+    margin: 0 !important;
+    list-style: none !important;
+}
+
+/* Jika breadcrumb tidak menggunakan li.breadcrumb-separator terpisah, tampilkan panah di luar kapsul */
+.breadcrumb:not(:has(.breadcrumb-separator)) .breadcrumb-item + .breadcrumb-item {
+    margin-left: 14px !important;
+}
+.breadcrumb:not(:has(.breadcrumb-separator)) .breadcrumb-item + .breadcrumb-item::before {
+    content: "\f054" !important;
+    font-family: "Font Awesome 6 Free", "FontAwesome" !important;
+    font-weight: 900 !important;
+    font-size: 0.65rem !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+    display: inline-flex !important;
+    position: absolute !important;
+    left: -19px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
 }
 
 /* Hero Section */
@@ -3803,4 +3848,55 @@ main {
 .news-card:hover img.card-img-top,
 .news-card:hover img.news-img {
     transform: scale(1.06);
+}
+
+/* Clean, Sharp, Bright & Clear Modal Dialogs (No Blur, High Contrast) */
+.modal-backdrop {
+    background-color: #0f172a !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    z-index: 1040 !important;
+}
+
+.modal-backdrop.show {
+    opacity: 0.45 !important;
+}
+
+.modal {
+    z-index: 1050 !important;
+}
+
+.modal-dialog {
+    z-index: 1055 !important;
+}
+
+.modal-content {
+    background-color: #ffffff !important;
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
+    color: #1e293b !important;
+    overflow: hidden !important;
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-teal, #00897b) 0%, #00695c 100%) !important;
+    color: #ffffff !important;
+    border-bottom: none !important;
+    padding: 18px 24px !important;
+}
+
+.modal-body {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    padding: 24px !important;
+}
+
+.modal-footer {
+    background-color: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    padding: 14px 24px !important;
 }

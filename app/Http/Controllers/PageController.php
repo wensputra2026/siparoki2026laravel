@@ -576,14 +576,130 @@ class PageController extends Controller
         return view('pages.struktur', array_merge($common, compact('dpp')));
     }
 
-    public function kapela()
+    public function kapela(Request $request)
     {
         $common = $this->getCommonData();
-        $kapela = DB::table('stasi_kapela')->get();
-        if ($kapela->isEmpty()) {
-            $kapela = DB::table('kapela')->get();
+        $kapela = collect();
+        $search = trim($request->get('q', ''));
+
+        if (Schema::hasTable('stasi_kapela')) {
+            try {
+                $query = DB::table('stasi_kapela')
+                    ->where(function($q) {
+                        $q->where('is_deleted', 0)->orWhereNull('is_deleted');
+                    });
+
+                if (!empty($search)) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('nama_stasi_kapela', 'like', "%{$search}%")
+                          ->orWhere('nama_pelindung', 'like', "%{$search}%")
+                          ->orWhere('pelindung', 'like', "%{$search}%")
+                          ->orWhere('penanggung_jawab', 'like', "%{$search}%")
+                          ->orWhere('alamat', 'like', "%{$search}%");
+                    });
+                }
+
+                $selects = ['stasi_kapela.*'];
+
+                if (Schema::hasTable('desa_kelurahan')) {
+                    $query->leftJoin('desa_kelurahan', 'stasi_kapela.desa_id', '=', 'desa_kelurahan.id_desa');
+                    $selects[] = 'desa_kelurahan.nama_desa';
+                }
+                if (Schema::hasTable('kecamatan')) {
+                    $query->leftJoin('kecamatan', 'stasi_kapela.kecamatan_id', '=', 'kecamatan.id_kecamatan');
+                    $selects[] = 'kecamatan.nama_kecamatan';
+                }
+                if (Schema::hasTable('kabupaten')) {
+                    $query->leftJoin('kabupaten', 'stasi_kapela.kabupaten_id', '=', 'kabupaten.id_kabupaten');
+                    $selects[] = 'kabupaten.nama_kabupaten';
+                }
+                if (Schema::hasTable('provinsi')) {
+                    $query->leftJoin('provinsi', 'stasi_kapela.provinsi_id', '=', 'provinsi.id_provinsi');
+                    $selects[] = 'provinsi.nama_provinsi';
+                }
+
+                $kapela = $query->select($selects)->orderBy('nama_stasi_kapela')->paginate(6)->withQueryString();
+            } catch (\Throwable $e) {
+                $kapela = collect();
+            }
         }
-        return view('pages.kapela', array_merge($common, compact('kapela')));
+
+        if ($kapela->isEmpty() && Schema::hasTable('kapela')) {
+            try {
+                $kapela = DB::table('kapela')->paginate(6)->withQueryString();
+            } catch (\Throwable $e) {
+                $kapela = collect();
+            }
+        }
+
+        return view('pages.kapela', array_merge($common, compact('kapela', 'search')));
+    }
+
+    public function kapelaDetail($id)
+    {
+        $common = $this->getCommonData();
+        $kapela = null;
+
+        if (Schema::hasTable('stasi_kapela')) {
+            try {
+                $query = DB::table('stasi_kapela')
+                    ->where(function($q) use ($id) {
+                        if (is_numeric($id)) {
+                            $q->where('id_stasi_kapela', $id)->orWhere('id', $id);
+                        } else {
+                            $q->where('kode_stasi_kapela', $id)->orWhere('nama_stasi_kapela', 'like', "%{$id}%");
+                        }
+                    });
+
+                $selects = ['stasi_kapela.*'];
+
+                if (Schema::hasTable('desa_kelurahan')) {
+                    $query->leftJoin('desa_kelurahan', 'stasi_kapela.desa_id', '=', 'desa_kelurahan.id_desa');
+                    $selects[] = 'desa_kelurahan.nama_desa';
+                }
+                if (Schema::hasTable('kecamatan')) {
+                    $query->leftJoin('kecamatan', 'stasi_kapela.kecamatan_id', '=', 'kecamatan.id_kecamatan');
+                    $selects[] = 'kecamatan.nama_kecamatan';
+                }
+                if (Schema::hasTable('kabupaten')) {
+                    $query->leftJoin('kabupaten', 'stasi_kapela.kabupaten_id', '=', 'kabupaten.id_kabupaten');
+                    $selects[] = 'kabupaten.nama_kabupaten';
+                }
+                if (Schema::hasTable('provinsi')) {
+                    $query->leftJoin('provinsi', 'stasi_kapela.provinsi_id', '=', 'provinsi.id_provinsi');
+                    $selects[] = 'provinsi.nama_provinsi';
+                }
+
+                $kapela = $query->select($selects)->first();
+            } catch (\Throwable $e) {
+                $kapela = null;
+            }
+        }
+
+        if (!$kapela && Schema::hasTable('kapela')) {
+            try {
+                $kapela = DB::table('kapela')->where('id', $id)->first();
+            } catch (\Throwable $e) {
+                $kapela = null;
+            }
+        }
+
+        if (!$kapela) {
+            abort(404, 'Stasi / Kapela tidak ditemukan.');
+        }
+
+        $otherKapela = collect();
+        if (Schema::hasTable('stasi_kapela')) {
+            $otherKapela = DB::table('stasi_kapela')
+                ->where(function($q) {
+                    $q->where('is_deleted', 0)->orWhereNull('is_deleted');
+                })
+                ->where('id_stasi_kapela', '!=', $kapela->id_stasi_kapela ?? ($kapela->id ?? 0))
+                ->limit(5)
+                ->get();
+        }
+
+        return view('pages.kapela-detail', array_merge($common, compact('kapela', 'otherKapela')));
     }
 
     public function petaKapela()
