@@ -307,11 +307,17 @@ trait SettingsModuleTrait
             }
 
             if ($first) {
-                DB::table('pengaturan_aplikasi')->where('id', $first->id)->update($payload);
+                $pkCol = property_exists($first, 'id_pengaturan') ? 'id_pengaturan' : (property_exists($first, 'id') ? 'id' : null);
+                if ($pkCol) {
+                    DB::table('pengaturan_aplikasi')->where($pkCol, $first->$pkCol)->update($payload);
+                } else {
+                    DB::table('pengaturan_aplikasi')->update($payload);
+                }
             } else {
                 $payload['created_at'] = now();
                 DB::table('pengaturan_aplikasi')->insert($payload);
             }
+            Cache::forget('global_pengaturan_aplikasi_first');
         }
 
         return back()->with('success', 'Pengaturan Video Header berhasil disimpan.');
@@ -385,11 +391,17 @@ trait SettingsModuleTrait
                 'updated_at' => now(),
             ];
             if ($first) {
-                DB::table('pengaturan_aplikasi')->where('id', $first->id)->update($payload);
+                $pkCol = property_exists($first, 'id_pengaturan') ? 'id_pengaturan' : (property_exists($first, 'id') ? 'id' : null);
+                if ($pkCol) {
+                    DB::table('pengaturan_aplikasi')->where($pkCol, $first->$pkCol)->update($payload);
+                } else {
+                    DB::table('pengaturan_aplikasi')->update($payload);
+                }
             } else {
                 $payload['created_at'] = now();
                 DB::table('pengaturan_aplikasi')->insert($payload);
             }
+            Cache::forget('global_pengaturan_aplikasi_first');
         }
 
         return back()->with('success', 'Pengaturan SEO & Meta Tags berhasil disimpan.');
@@ -426,11 +438,17 @@ trait SettingsModuleTrait
                 'updated_at' => now(),
             ];
             if ($first) {
-                DB::table('pengaturan_aplikasi')->where('id', $first->id)->update($payload);
+                $pkCol = property_exists($first, 'id_pengaturan') ? 'id_pengaturan' : (property_exists($first, 'id') ? 'id' : null);
+                if ($pkCol) {
+                    DB::table('pengaturan_aplikasi')->where($pkCol, $first->$pkCol)->update($payload);
+                } else {
+                    DB::table('pengaturan_aplikasi')->update($payload);
+                }
             } else {
                 $payload['created_at'] = now();
                 DB::table('pengaturan_aplikasi')->insert($payload);
             }
+            Cache::forget('global_pengaturan_aplikasi_first');
         }
 
         return back()->with('success', 'Pengaturan Widget & Tampilan berhasil disimpan.');
@@ -461,11 +479,17 @@ trait SettingsModuleTrait
                 'updated_at' => now(),
             ];
             if ($first) {
-                DB::table('pengaturan_aplikasi')->where('id', $first->id)->update($payload);
+                $pkCol = property_exists($first, 'id_pengaturan') ? 'id_pengaturan' : (property_exists($first, 'id') ? 'id' : null);
+                if ($pkCol) {
+                    DB::table('pengaturan_aplikasi')->where($pkCol, $first->$pkCol)->update($payload);
+                } else {
+                    DB::table('pengaturan_aplikasi')->update($payload);
+                }
             } else {
                 $payload['created_at'] = now();
                 DB::table('pengaturan_aplikasi')->insert($payload);
             }
+            Cache::forget('global_pengaturan_aplikasi_first');
         }
 
         $modeStatus = ($validated['maintenance_mode'] ?? '0') === '1' ? 'diaktifkan' : 'dinonaktifkan';
