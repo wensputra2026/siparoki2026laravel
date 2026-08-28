@@ -11,9 +11,31 @@
         $metaKeywords = trim($__env->yieldContent('keywords', 'paroki, gereja katolik, jadwal misa, warta paroki, keuskupan'));
         $metaType = trim($__env->yieldContent('og_type', 'website'));
         $metaImage = trim($__env->yieldContent('image', $globalLogo ?? ''));
-        $metaImageUrl = $metaImage
-            ? (\Illuminate\Support\Str::startsWith($metaImage, ['http://', 'https://']) ? $metaImage : url($metaImage))
-            : null;
+        $metaImageUrl = null;
+        $metaImageMime = 'image/jpeg';
+
+        if (!empty($metaImage)) {
+            // Prioritaskan file JPG pendamping jika ada (agar kompatibel maksimal dengan bot WhatsApp / Facebook)
+            $parsedPath = parse_url($metaImage, PHP_URL_PATH);
+            $cleanRelative = ltrim($parsedPath ?? '', '/');
+            if (\Illuminate\Support\Str::endsWith($cleanRelative, '.webp')) {
+                $jpgCandidate = substr($cleanRelative, 0, -5) . '.jpg';
+                if (file_exists(public_path($jpgCandidate))) {
+                    $metaImageUrl = asset($jpgCandidate);
+                    $metaImageMime = 'image/jpeg';
+                }
+            }
+            if (!$metaImageUrl) {
+                $metaImageUrl = \Illuminate\Support\Str::startsWith($metaImage, ['http://', 'https://']) ? $metaImage : url($metaImage);
+                if (\Illuminate\Support\Str::endsWith($metaImageUrl, '.webp')) {
+                    $metaImageMime = 'image/webp';
+                } elseif (\Illuminate\Support\Str::endsWith($metaImageUrl, '.png')) {
+                    $metaImageMime = 'image/png';
+                } else {
+                    $metaImageMime = 'image/jpeg';
+                }
+            }
+        }
     @endphp
     <title>{{ $metaTitle }}</title>
     <meta name="title" content="{{ $metaTitle }}">
@@ -33,6 +55,7 @@
     @if($metaImageUrl)
         <meta property="og:image" content="{{ $metaImageUrl }}">
         <meta property="og:image:secure_url" content="{{ $metaImageUrl }}">
+        <meta property="og:image:type" content="{{ $metaImageMime }}">
         <meta property="og:image:alt" content="{{ $metaTitle }}">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">

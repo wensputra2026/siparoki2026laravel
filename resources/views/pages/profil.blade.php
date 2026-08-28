@@ -81,6 +81,9 @@
                 @endforeach
             </div>
 
+            <!-- Share Buttons -->
+            @include('partials.share-buttons', ['title' => 'Profil Paroki - ' . ($displayName ?? 'Paroki')])
+
         </div>
     </div>
 </section>

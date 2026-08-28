@@ -44,5 +44,10 @@
     </div>
 
     <div class="mt-8">{{ $kegiatan->links() }}</div>
+
+    <!-- Share Buttons -->
+    <div class="mt-8 bg-white rounded-xl shadow-md p-6">
+        @include('partials.share-buttons', ['title' => 'Kegiatan Paroki - ' . ($globalNamaParoki ?? 'SIPAROKI')])
+    </div>
 </div>
 @endsection

@@ -286,6 +286,8 @@
                         </span>
                     </div>
 
+                    <!-- Share Buttons -->
+                    @include('partials.share-buttons', ['title' => $kapela->nama_kapela ?? null])
                 </div>
 
                 <!-- Bottom Navigation Buttons -->
@@ -351,7 +353,7 @@
                         <div style="display: flex; flex-direction: column; gap: 12px;">
                             @foreach($otherKapela as $ok)
                                 @php
-                                    $okId = $ok->id_stasi_kapela ?? $ok->id ?? 1;
+                                    $okId = $ok->slug ?: ($ok->id_stasi_kapela ?? ($ok->id ?? 1));
                                     $okNama = $ok->nama_stasi_kapela ?? $ok->nama_kapela ?? 'Gereja Stasi';
                                     $okPelindung = $ok->nama_pelindung ?? $ok->pelindung ?? null;
                                 @endphp

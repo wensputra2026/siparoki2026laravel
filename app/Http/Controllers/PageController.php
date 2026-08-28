@@ -650,16 +650,18 @@ class PageController extends Controller
     {
         $common = $this->getCommonData();
         $kapela = null;
+        $decodedId = decode_id($id) ?: (is_numeric($id) ? (int) $id : null);
 
         if (Schema::hasTable('stasi_kapela')) {
             try {
                 $query = DB::table('stasi_kapela')
-                    ->where(function($q) use ($id) {
-                        if (is_numeric($id)) {
-                            $q->where('id_stasi_kapela', $id)->orWhere('id', $id);
-                        } else {
-                            $q->where('kode_stasi_kapela', $id)->orWhere('nama_stasi_kapela', 'like', "%{$id}%");
+                    ->where(function($q) use ($id, $decodedId) {
+                        $q->where('slug', $id);
+                        if ($decodedId) {
+                            $q->orWhere('id_stasi_kapela', $decodedId)->orWhere('id', $decodedId);
                         }
+                        $q->orWhere('kode_stasi_kapela', $id)
+                          ->orWhere('nama_stasi_kapela', 'like', "%{$id}%");
                     });
 
                 $selects = ['stasi_kapela.*'];
@@ -689,7 +691,14 @@ class PageController extends Controller
 
         if (!$kapela && Schema::hasTable('kapela')) {
             try {
-                $kapela = DB::table('kapela')->where('id', $id)->first();
+                $kapela = DB::table('kapela')
+                    ->where(function($q) use ($id, $decodedId) {
+                        $q->where('slug', $id);
+                        if ($decodedId) {
+                            $q->orWhere('id', $decodedId);
+                        }
+                    })
+                    ->first();
             } catch (\Throwable $e) {
                 $kapela = null;
             }
@@ -1557,8 +1566,16 @@ class PageController extends Controller
 
     public function downloadFile($download)
     {
+        $realId = decode_id($download) ?: (is_numeric($download) ? (int) $download : null);
+
         $item = DB::table('downloads')
-            ->where('id', $download)
+            ->where(function($q) use ($download, $realId) {
+                if ($realId) {
+                    $q->where('id', $realId);
+                } else {
+                    $q->where('id', $download);
+                }
+            })
             ->where(function ($query) {
                 $query->whereNull('is_active')->orWhere('is_active', 1);
             })
@@ -1599,8 +1616,16 @@ class PageController extends Controller
 
     public function downloadArsipFile($arsip)
     {
+        $realId = decode_id($arsip) ?: (is_numeric($arsip) ? (int) $arsip : null);
+
         $item = DB::table('arsip_digital')
-            ->where('id', $arsip)
+            ->where(function($q) use ($arsip, $realId) {
+                if ($realId) {
+                    $q->where('id', $realId);
+                } else {
+                    $q->where('id', $arsip);
+                }
+            })
             ->where(function ($query) {
                 $query->whereNull('is_deleted')->orWhere('is_deleted', 0);
             })

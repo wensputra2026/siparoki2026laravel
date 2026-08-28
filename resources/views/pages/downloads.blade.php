@@ -40,9 +40,9 @@
                             $filePath = $d->file_path ?? $d->file_name ?? $d->file ?? null;
                             $isManagedDownload = ($source ?? 'downloads') === 'downloads' && !empty($d->id);
                             $fileUrl = $isManagedDownload
-                                ? route('downloads.file', $d->id)
+                                ? route('downloads.file', encode_id($d->id))
                                 : ((($source ?? 'downloads') === 'arsip_digital' && !empty($d->id))
-                                    ? route('downloads.arsip.file', $d->id)
+                                    ? route('downloads.arsip.file', encode_id($d->id))
                                     : ($filePath ? (str_starts_with($filePath, 'http') ? $filePath : asset('assets/uploads/arsip/' . basename($filePath))) : '#'));
                             $size = $d->file_size ?? $d->ukuran_file ?? null;
                             $downloadCount = (int) ($d->download_count ?? 0);
@@ -85,6 +85,11 @@
                 {{ $downloads->links() }}
             </div>
         @endif
+
+        <!-- Share Buttons -->
+        <div style="margin-top: 35px;">
+            @include('partials.share-buttons', ['title' => 'Pusat Unduhan Dokumen & Formulir - ' . ($globalNamaParoki ?? 'Paroki')])
+        </div>
     </div>
 </section>
 @endsection

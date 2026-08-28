@@ -218,7 +218,7 @@
         <div class="chapel-grid">
             @forelse($kapelaItems as $k)
                 @php
-                    $id = $k->id_stasi_kapela ?? $k->id ?? $loop->iteration;
+                    $id = $k->slug ?: ($k->id_stasi_kapela ?? ($k->id ?? $loop->iteration));
                     $nama = $k->nama_stasi_kapela ?? $k->nama_kapela ?? $k->nama_stasi ?? $k->nama ?? 'Gereja Stasi / Kapela';
                     $tipe = $k->tipe ?? 'Stasi / Kapela';
                     $alamat = $k->alamat ?? $k->lokasi ?? null;
@@ -355,6 +355,11 @@
                 {{ $kapela->links('pagination::bootstrap-5') }}
             </div>
         @endif
+
+        <!-- Share Buttons -->
+        <div style="margin-top: 35px;">
+            @include('partials.share-buttons', ['title' => 'Daftar Stasi & Kapela - ' . ($globalNamaParoki ?? 'Paroki')])
+        </div>
     </div>
 </section>
 

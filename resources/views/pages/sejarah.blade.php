@@ -45,6 +45,9 @@
                     Kini, dengan dukungan stasi-stasi dan kapela yang tersebar di wilayah teritorial paroki, gerak reksa pastoral terus diperbarui seiring perkembangan zaman menuju Gereja yang mandiri, misioner, dan berakar kuat dalam iman Katolik.
                 </p>
             </div>
+
+            <!-- Share Buttons -->
+            @include('partials.share-buttons', ['title' => 'Sejarah Paroki - ' . ($globalNamaParoki ?? 'Paroki')])
         </div>
 
     </div>

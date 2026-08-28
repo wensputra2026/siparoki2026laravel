@@ -101,7 +101,11 @@ class ImageOptimizer
             $origHeight
         );
 
-        // Simpan sebagai WebP (jika didukung) atau JPEG untuk rasio kompresi terbaik
+        // Simpan versi JPEG sebagai fallback kompatibilitas OpenGraph / WhatsApp / Media Sosial
+        $fullJpgPath = $destinationPath . DIRECTORY_SEPARATOR . $filename . '.jpg';
+        imagejpeg($targetImage, $fullJpgPath, min($quality, 85));
+
+        // Simpan sebagai WebP (jika didukung) atau JPEG untuk web browser modern
         if (function_exists('imagewebp')) {
             $finalName = $filename . '.webp';
             $fullTargetPath = $destinationPath . DIRECTORY_SEPARATOR . $finalName;

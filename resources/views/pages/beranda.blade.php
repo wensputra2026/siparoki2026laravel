@@ -585,6 +585,11 @@
                 <span>Lihat Semua Galeri</span> <i class="fas fa-arrow-right text-xs"></i>
             </a>
         </div>
+
+        <!-- Share Website Buttons -->
+        <div style="margin-top: 50px; padding: 25px; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
+            @include('partials.share-buttons', ['title' => 'Portal Resmi ' . ($globalNamaParoki ?? 'Paroki')])
+        </div>
     </div>
 </section>
 

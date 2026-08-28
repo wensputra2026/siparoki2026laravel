@@ -12,6 +12,7 @@ class Kapela extends Model
         'paroki_id',
         'kode_kapela',
         'nama_kapela',
+        'slug',
         'lokasi',
         'penanggung_jawab',
         'no_hp',
@@ -19,6 +20,15 @@ class Kapela extends Model
         'status',
         'created_by',
     ];
+
+    protected static function booted()
+    {
+        static::saving(function ($model) {
+            if (empty($model->slug) && !empty($model->nama_kapela)) {
+                $model->slug = \Illuminate\Support\Str::slug($model->nama_kapela);
+            }
+        });
+    }
 
     protected function casts(): array
     {

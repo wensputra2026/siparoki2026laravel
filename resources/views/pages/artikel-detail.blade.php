@@ -151,7 +151,7 @@
 
                     <!-- 5. Tags / Labels -->
                     @if(!empty($item->tags))
-                        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eef2f6; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eef2f6; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
                             <span style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-right: 4px;">
                                 <i class="fas fa-tags" style="color: var(--primary-teal, #00897b);"></i> Label:
                             </span>
@@ -164,6 +164,9 @@
                             @endforeach
                         </div>
                     @endif
+
+                    <!-- 6. Share Buttons -->
+                    @include('partials.share-buttons', ['title' => $item->judul ?? null])
                 </div>
 
                 <!-- Komentar & Tanggapan Section Konoha Style -->

@@ -13,6 +13,11 @@
         <div class="bg-white dark:bg-[#101d31] rounded-3xl overflow-hidden border border-slate-200 dark:border-[#263a55] shadow-lg">
             <div id="full-map-kapela" class="online-map" style="height: 650px; width: 100%;"></div>
         </div>
+
+        <!-- Share Buttons -->
+        <div class="mt-6 bg-white dark:bg-[#101d31] rounded-3xl p-6 border border-slate-200 dark:border-[#263a55] shadow-md">
+            @include('partials.share-buttons', ['title' => 'Peta Wilayah Stasi & Kapela - ' . ($globalNamaParoki ?? 'SIPAROKI')])
+        </div>
     </div>
 </div>
 

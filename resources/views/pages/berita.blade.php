@@ -347,6 +347,11 @@
             </div>
         @endif
 
+        <!-- Share Buttons -->
+        <div style="margin-top: 35px;">
+            @include('partials.share-buttons', ['title' => 'Warta & Berita Paroki - ' . ($globalNamaParoki ?? 'Paroki')])
+        </div>
+
     </div>
 </section>
 @endsection

@@ -60,7 +60,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-Dt2UxqCI.css",
+    "file": "assets/app-pA11FiRX.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -154,7 +154,7 @@
     ]
   },
   "resources/js/Pages/Inertia/GenericModule.vue": {
-    "file": "assets/GenericModule-z7VhlZ40.js",
+    "file": "assets/GenericModule-BMmahb87.js",
     "name": "GenericModule",
     "src": "resources/js/Pages/Inertia/GenericModule.vue",
     "isDynamicEntry": true,
@@ -307,7 +307,7 @@
     ]
   },
   "resources/js/Pages/Inertia/SecurityCenter.vue": {
-    "file": "assets/SecurityCenter-Dt_fa_Eo.js",
+    "file": "assets/SecurityCenter-ymf0avuG.js",
     "name": "SecurityCenter",
     "src": "resources/js/Pages/Inertia/SecurityCenter.vue",
     "isDynamicEntry": true,
@@ -435,7 +435,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-LTuHDUpW.js",
+    "file": "assets/app-D_IQ76Mr.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

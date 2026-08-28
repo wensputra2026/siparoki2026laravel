@@ -162,6 +162,11 @@
             @endforelse
         </div>
 
+        <!-- Share Buttons -->
+        <div style="margin-top: 35px;">
+            @include('partials.share-buttons', ['title' => 'Riwayat Pastor Paroki - ' . ($globalNamaParoki ?? 'Paroki')])
+        </div>
+
     </div>
 </section>
 

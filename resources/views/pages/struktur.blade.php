@@ -50,6 +50,9 @@
                     </div>
                 @endforelse
             </div>
+
+            <!-- Share Buttons -->
+            @include('partials.share-buttons', ['title' => 'Struktur Organisasi DPP - ' . ($globalNamaParoki ?? 'Paroki')])
         </div>
 
     </div>

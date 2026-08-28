@@ -121,6 +121,9 @@
             <div class="article-text" style="color: #334155; font-size: 1rem; line-height: 1.85;">
                 {!! $item->isi !!}
             </div>
+
+            <!-- Share Buttons -->
+            @include('partials.share-buttons', ['title' => $item->judul ?? null])
         </div>
     </div>
 </section>

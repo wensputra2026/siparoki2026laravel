@@ -59,6 +59,24 @@ trait SecurityModuleTrait
             'force_strong_password' => ($settingsRaw['force_strong_password'] ?? '1') === '1',
             'enable_brute_force_protection' => ($settingsRaw['enable_brute_force_protection'] ?? '1') === '1',
             'block_untrusted_ip' => ($settingsRaw['block_untrusted_ip'] ?? '0') === '1',
+
+            // CAPTCHA Configuration
+            'captcha_enabled' => ($settingsRaw['captcha_enabled'] ?? '0') === '1',
+            'captcha_provider' => $settingsRaw['captcha_provider'] ?? 'Simple CAPTCHA',
+            'captcha_site_key' => $settingsRaw['captcha_site_key'] ?? '',
+            'captcha_secret_key' => $settingsRaw['captcha_secret_key'] ?? '',
+            'captcha_show_after_failed_attempts' => (int) ($settingsRaw['captcha_show_after_failed_attempts'] ?? 3),
+            'captcha_required_backend_login' => ($settingsRaw['captcha_required_backend_login'] ?? '1') === '1',
+            'captcha_required_umat_login' => ($settingsRaw['captcha_required_umat_login'] ?? '0') === '1',
+            'captcha_required_forgot_password' => ($settingsRaw['captcha_required_forgot_password'] ?? '1') === '1',
+            'captcha_required_public_forms' => ($settingsRaw['captcha_required_public_forms'] ?? '0') === '1',
+
+            // 2FA Configuration
+            'two_factor_enabled' => ($settingsRaw['two_factor_enabled'] ?? '0') === '1',
+            'two_factor_method' => $settingsRaw['two_factor_method'] ?? 'whatsapp_otp',
+            'two_factor_roles' => $settingsRaw['two_factor_roles'] ?? 'all_admins',
+            'two_factor_grace_period_days' => (int) ($settingsRaw['two_factor_grace_period_days'] ?? 0),
+            'two_factor_otp_expiry_minutes' => (int) ($settingsRaw['two_factor_otp_expiry_minutes'] ?? 5),
         ];
 
         // Blocked IPs
@@ -138,6 +156,20 @@ trait SecurityModuleTrait
                 'badge' => $settings['enable_brute_force_protection'] ? 'Maks ' . $settings['max_login_attempts'] . 'x Gagal' : 'Nonaktif',
                 'icon' => 'fa-shield-halved',
             ],
+            [
+                'title' => 'Proteksi Bot & CAPTCHA',
+                'status' => $settings['captcha_enabled'] ? 'PASS' : 'INFO',
+                'description' => $settings['captcha_enabled'] ? 'CAPTCHA aktif (' . $settings['captcha_provider'] . ') untuk menangkal serangan bot dan spam form.' : 'CAPTCHA saat ini dinonaktifkan. Aktifkan di tab CAPTCHA.',
+                'badge' => $settings['captcha_enabled'] ? $settings['captcha_provider'] : 'Nonaktif',
+                'icon' => 'fa-robot',
+            ],
+            [
+                'title' => 'Autentikasi Dua Faktor (2FA)',
+                'status' => $settings['two_factor_enabled'] ? 'PASS' : 'INFO',
+                'description' => $settings['two_factor_enabled'] ? '2FA aktif menggunakan metode ' . ($settings['two_factor_method'] === 'whatsapp_otp' ? 'WhatsApp OTP' : ($settings['two_factor_method'] === 'authenticator_app' ? 'Authenticator App (TOTP)' : 'Email OTP')) . ' untuk akun admin.' : '2FA belum diaktifkan. Anda dapat mengaktifkannya di tab 2FA.',
+                'badge' => $settings['two_factor_enabled'] ? '2FA Aktif' : 'Nonaktif',
+                'icon' => 'fa-key',
+            ],
         ];
 
         $todayFailed = 0;
@@ -171,22 +203,61 @@ trait SecurityModuleTrait
     {
         $this->ensureSecurityTables();
         $validated = $request->validate([
-            'max_login_attempts' => 'required|integer|min:1|max:50',
-            'lockout_minutes' => 'required|integer|min:1|max:1440',
-            'session_timeout_minutes' => 'required|integer|min:5|max:1440',
+            'max_login_attempts' => 'nullable|integer|min:1|max:50',
+            'lockout_minutes' => 'nullable|integer|min:1|max:1440',
+            'session_timeout_minutes' => 'nullable|integer|min:5|max:1440',
             'force_strong_password' => 'nullable|boolean',
             'enable_brute_force_protection' => 'nullable|boolean',
             'block_untrusted_ip' => 'nullable|boolean',
+
+            // CAPTCHA
+            'captcha_enabled' => 'nullable|boolean',
+            'captcha_provider' => 'nullable|string|max:100',
+            'captcha_site_key' => 'nullable|string|max:255',
+            'captcha_secret_key' => 'nullable|string|max:255',
+            'captcha_show_after_failed_attempts' => 'nullable|integer|min:0|max:10',
+            'captcha_required_backend_login' => 'nullable|boolean',
+            'captcha_required_umat_login' => 'nullable|boolean',
+            'captcha_required_forgot_password' => 'nullable|boolean',
+            'captcha_required_public_forms' => 'nullable|boolean',
+
+            // 2FA
+            'two_factor_enabled' => 'nullable|boolean',
+            'two_factor_method' => 'nullable|string|max:50',
+            'two_factor_roles' => 'nullable|string|max:50',
+            'two_factor_grace_period_days' => 'nullable|integer|min:0|max:90',
+            'two_factor_otp_expiry_minutes' => 'nullable|integer|min:1|max:60',
         ]);
 
         foreach ($validated as $key => $val) {
+            $valueStr = is_bool($val) ? ($val ? '1' : '0') : (string) $val;
             DB::table('security_settings')->updateOrInsert(
                 ['setting_key' => $key],
-                ['setting_value' => (string) ($val === true ? '1' : ($val === false ? '0' : $val)), 'updated_at' => now()]
+                ['setting_value' => $valueStr, 'updated_at' => now()]
             );
         }
 
-        return back()->with('success', 'Pengaturan kebijakan keamanan berhasil diperbarui.');
+        // Sync CAPTCHA settings to pengaturan_aplikasi if table and columns exist
+        try {
+            if (Schema::hasTable('pengaturan_aplikasi')) {
+                $appUpdate = [];
+                if (isset($validated['captcha_enabled'])) $appUpdate['captcha_enabled'] = $validated['captcha_enabled'] ? 1 : 0;
+                if (isset($validated['captcha_provider'])) $appUpdate['captcha_provider'] = $validated['captcha_provider'];
+                if (isset($validated['captcha_site_key'])) $appUpdate['captcha_site_key'] = $validated['captcha_site_key'];
+                if (isset($validated['captcha_secret_key'])) $appUpdate['captcha_secret_key'] = $validated['captcha_secret_key'];
+                if (isset($validated['captcha_show_after_failed_attempts'])) $appUpdate['captcha_show_after_failed_attempts'] = (int) $validated['captcha_show_after_failed_attempts'];
+                if (isset($validated['captcha_required_backend_login'])) $appUpdate['captcha_required_backend_login'] = $validated['captcha_required_backend_login'] ? 1 : 0;
+                if (isset($validated['captcha_required_umat_login'])) $appUpdate['captcha_required_umat_login'] = $validated['captcha_required_umat_login'] ? 1 : 0;
+                if (isset($validated['captcha_required_forgot_password'])) $appUpdate['captcha_required_forgot_password'] = $validated['captcha_required_forgot_password'] ? 1 : 0;
+                if (isset($validated['captcha_required_public_forms'])) $appUpdate['captcha_required_public_forms'] = $validated['captcha_required_public_forms'] ? 1 : 0;
+
+                if (!empty($appUpdate)) {
+                    DB::table('pengaturan_aplikasi')->where('id', 1)->update($appUpdate);
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        return back()->with('success', 'Pengaturan keamanan, CAPTCHA, dan 2FA berhasil diperbarui.');
     }
 
 

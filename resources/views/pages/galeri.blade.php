@@ -97,6 +97,11 @@
                 <p style="font-size: 1.05rem; font-weight: 600; margin: 0;">Belum ada dokumentasi foto galeri yang diunggah.</p>
             </div>
         @endif
+
+        <!-- Share Buttons -->
+        <div style="margin-top: 35px;">
+            @include('partials.share-buttons', ['title' => 'Galeri Dokumentasi & Foto - ' . ($globalNamaParoki ?? 'Paroki')])
+        </div>
     </div>
 </section>
 @endsection

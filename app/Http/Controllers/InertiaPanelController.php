@@ -1753,9 +1753,13 @@ class InertiaPanelController extends Controller
                 'has_export' => true,
                 'has_pdf' => true,
                 'columns' => [
+                    ['key' => 'gambar', 'altKey' => 'foto', 'label' => 'Gambar', 'isImage' => true],
                     ['key' => 'judul', 'label' => 'Judul Artikel', 'isPrimary' => true],
                     ['key' => 'kategori', 'label' => 'Kategori'],
-                    ['key' => 'created_at', 'label' => 'Tanggal'],
+                    ['key' => 'penulis', 'label' => 'Penulis'],
+                    ['key' => 'status_publish', 'label' => 'Status'],
+                    ['key' => 'views', 'label' => 'Dibaca'],
+                    ['key' => 'created_at', 'label' => 'Tanggal', 'isDate' => true],
                 ],
             ],
             'komentar-artikel' => [

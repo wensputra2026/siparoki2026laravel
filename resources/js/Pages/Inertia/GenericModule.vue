@@ -2192,13 +2192,22 @@ const getImageUrl = (path) => {
     const clean = path.replace(/^\/?(public\/)?/, '').replace(/^\//, '');
     // Bare filename (no directory, e.g. CI3 hashed photo like 195b6ba...jpg)
     if (!clean.includes('/')) {
+        if (['konten', 'artikel', 'berita'].includes(props.moduleKey)) {
+            return `/uploads/konten/${clean}`;
+        }
+        if (['pengumuman'].includes(props.moduleKey)) {
+            return `/uploads/pengumuman/${clean}`;
+        }
+        if (['galeri'].includes(props.moduleKey)) {
+            return `/uploads/galeri/${clean}`;
+        }
         return `/foto-pastor/${clean}`;
     }
     return `/${clean}`;
 };
 
 const isImageField = (col, val) => {
-    if (col.isImage || col.key === 'logo' || col.key === 'foto') return true;
+    if (col.isImage || col.key === 'logo' || col.key === 'foto' || col.key === 'gambar' || col.key === 'banner' || col.key === 'poster') return true;
     if (typeof val === 'string' && (val.endsWith('.png') || val.endsWith('.jpg') || val.endsWith('.jpeg') || val.endsWith('.svg') || val.endsWith('.webp') || val.includes('uploads/'))) {
         return true;
     }

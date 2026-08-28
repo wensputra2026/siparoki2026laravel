@@ -332,6 +332,11 @@
         </div>
         @endif
 
+        <!-- Share Buttons -->
+        <div style="margin-top: 30px; background: #ffffff; border-radius: 20px; padding: 25px 35px; box-shadow: 0 5px 22px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+            @include('partials.share-buttons', ['title' => 'Statistik & Demografi Umat - ' . ($globalNamaParoki ?? 'Paroki')])
+        </div>
+
     </div>
 </section>
 

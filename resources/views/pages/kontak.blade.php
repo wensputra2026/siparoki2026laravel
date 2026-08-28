@@ -186,6 +186,11 @@
                 Lokasi Gereja & Sekretariat
             </h4>
             <div id="contact-map" class="online-map" style="width: 100%; height: 380px; border-radius: 12px; overflow: hidden;" data-title="{{ e($displayName) }}" data-address="{{ e($primaryAddress) }}" data-lat="{{ e($mapLat) }}" data-lng="{{ e($mapLng) }}"></div>
+
+            <!-- Share Buttons -->
+            <div style="margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 15px;">
+                @include('partials.share-buttons', ['title' => 'Kontak & Lokasi Paroki - ' . ($displayName ?? 'Paroki')])
+            </div>
         </div>
     </div>
 </section>

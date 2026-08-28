@@ -193,6 +193,9 @@
                         </div>
                     </div>
 
+                    <!-- Share Buttons -->
+                    @include('partials.share-buttons', ['title' => 'Kata Sambutan Pastor Paroki - ' . ($namaPastor ?? 'Paroki')])
+
                     <!-- Bottom Nav -->
                     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                         <a href="/" style="display: inline-flex; align-items: center; gap: 8px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-teal, #00897b)'" onmouseout="this.style.color='#64748b'">

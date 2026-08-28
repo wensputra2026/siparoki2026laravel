@@ -107,6 +107,9 @@
                         </div>
                     @endif
 
+                    <!-- Share Buttons -->
+                    @include('partials.share-buttons', ['title' => $item->judul ?? null])
+
                     <!-- ACTIONS & NAV -->
                     <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; border-top: 1px solid #f1f5f9; padding-top: 25px;">
                         <a href="/renungan" class="btn" style="background: #f1f5f9; color: #334155; border-radius: 25px; padding: 8px 22px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;">

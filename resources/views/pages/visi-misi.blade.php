@@ -67,6 +67,11 @@
 
         </div>
 
+        <!-- Share Buttons -->
+        <div style="margin-top: 30px; background: #ffffff; border-radius: 15px; padding: 25px 35px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+            @include('partials.share-buttons', ['title' => 'Visi & Misi - ' . ($globalNamaParoki ?? 'Paroki')])
+        </div>
+
     </div>
 </section>
 @endsection
