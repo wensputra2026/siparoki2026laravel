@@ -155,7 +155,7 @@ class ChatController extends Controller
     }
 
     /**
-     * Send a new chat message
+     * Send a new chat message with optional image/screenshot attachment
      */
     public function sendMessage(Request $request): JsonResponse
     {
@@ -166,15 +166,50 @@ class ChatController extends Controller
 
         $validated = $request->validate([
             'penerima_id' => 'required|integer|exists:users,id',
-            'pesan' => 'required|string|max:3000',
-            'lampiran' => 'nullable|string|max:500',
+            'pesan' => 'nullable|string|max:3000',
+            'lampiran_file' => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,pdf|max:10240',
+            'lampiran_base64' => 'nullable|string',
         ]);
+
+        if (empty(trim((string) ($validated['pesan'] ?? ''))) && !$request->hasFile('lampiran_file') && empty($validated['lampiran_base64'])) {
+            return response()->json(['error' => 'Pesan atau gambar tidak boleh kosong.'], 422);
+        }
+
+        $lampiranPath = null;
+        $chatUploadDir = public_path('uploads/chat');
+        if (!is_dir($chatUploadDir)) {
+            @mkdir($chatUploadDir, 0755, true);
+        }
+
+        // 1. Handle File Upload
+        if ($request->hasFile('lampiran_file')) {
+            $file = $request->file('lampiran_file');
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move($chatUploadDir, $fileName);
+            $lampiranPath = 'uploads/chat/' . $fileName;
+        }
+        // 2. Handle Clipboard Screenshot Base64 Paste
+        elseif (!empty($validated['lampiran_base64']) && str_starts_with($validated['lampiran_base64'], 'data:image/')) {
+            $base64Data = $validated['lampiran_base64'];
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $type)) {
+                $base64Data = substr($base64Data, strpos($base64Data, ',') + 1);
+                $ext = strtolower($type[1]);
+                if (in_array($ext, ['jpeg', 'jpg', 'png', 'webp', 'gif'])) {
+                    $decoded = base64_decode($base64Data);
+                    if ($decoded !== false) {
+                        $fileName = 'screenshot_' . time() . '_' . uniqid() . '.' . ($ext === 'jpeg' ? 'jpg' : $ext);
+                        file_put_contents($chatUploadDir . '/' . $fileName, $decoded);
+                        $lampiranPath = 'uploads/chat/' . $fileName;
+                    }
+                }
+            }
+        }
 
         $created = ChatPesan::create([
             'pengirim_id' => $currentUserId,
             'penerima_id' => $validated['penerima_id'],
-            'pesan' => trim($validated['pesan']),
-            'lampiran' => $validated['lampiran'] ?? null,
+            'pesan' => trim((string) ($validated['pesan'] ?? '')),
+            'lampiran' => $lampiranPath,
             'is_read' => false,
         ]);
 

@@ -19,6 +19,13 @@ const messageText = ref('');
 const isSending = ref(false);
 const messagesContainer = ref(null);
 
+// Attachments & Screenshot Paste
+const attachmentPreview = ref(null);
+const attachmentBase64 = ref(null);
+const attachmentFile = ref(null);
+const fileInputRef = ref(null);
+const zoomImageSrc = ref(null);
+
 let pollTimer = null;
 let latestMessageId = 0;
 let audioCtx = null;
@@ -81,13 +88,13 @@ const selectContact = async (contact) => {
     activeContact.value = contact;
     isLoadingMessages.value = true;
     messages.value = [];
+    clearAttachment();
     try {
         const res = await axios.get(`/api/chat/messages/${contact.id}`);
         messages.value = res.data.messages || [];
         if (res.data.recipient) {
             activeContact.value = { ...contact, ...res.data.recipient };
         }
-        // Update local unread counter
         totalUnread.value = Math.max(0, totalUnread.value - (contact.unread_count || 0));
         contact.unread_count = 0;
         scrollToBottom();
@@ -100,12 +107,54 @@ const selectContact = async (contact) => {
 const closeChat = () => {
     activeContact.value = null;
     messages.value = [];
+    clearAttachment();
     fetchContacts();
+};
+
+const clearAttachment = () => {
+    attachmentPreview.value = null;
+    attachmentBase64.value = null;
+    attachmentFile.value = null;
+    if (fileInputRef.value) fileInputRef.value.value = '';
+};
+
+// Handle Clipboard Paste Screenshot (Ctrl + V)
+const handlePaste = (e) => {
+    const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            const blob = items[i].getAsFile();
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                attachmentPreview.value = event.target.result;
+                attachmentBase64.value = event.target.result;
+                attachmentFile.value = null;
+            };
+            reader.readAsDataURL(blob);
+            e.preventDefault();
+            break;
+        }
+    }
+};
+
+// Handle File Input Selection
+const onFileSelected = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    attachmentFile.value = file;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        attachmentPreview.value = event.target.result;
+        attachmentBase64.value = null;
+    };
+    reader.readAsDataURL(file);
 };
 
 const sendMessage = async () => {
     const text = messageText.value.trim();
-    if (!text || !activeContact.value || isSending.value) return;
+    const hasAttachment = Boolean(attachmentPreview.value);
+    if ((!text && !hasAttachment) || !activeContact.value || isSending.value) return;
 
     const tempId = Date.now();
     const optimisticMsg = {
@@ -114,20 +163,39 @@ const sendMessage = async () => {
         penerima_id: activeContact.value.id,
         is_me: true,
         pesan: text,
+        lampiran: attachmentPreview.value,
         is_read: false,
         time_formatted: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
     };
 
     messages.value.push(optimisticMsg);
+    
+    // Save current attachment for payload then clear local inputs
+    const payloadBase64 = attachmentBase64.value;
+    const payloadFile = attachmentFile.value;
     messageText.value = '';
+    clearAttachment();
     scrollToBottom();
     isSending.value = true;
 
     try {
-        const res = await axios.post('/api/chat/send', {
-            penerima_id: activeContact.value.id,
-            pesan: text,
-        });
+        let res;
+        if (payloadFile) {
+            const formData = new FormData();
+            formData.append('penerima_id', activeContact.value.id);
+            formData.append('pesan', text);
+            formData.append('lampiran_file', payloadFile);
+            res = await axios.post('/api/chat/send', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+        } else {
+            res = await axios.post('/api/chat/send', {
+                penerima_id: activeContact.value.id,
+                pesan: text,
+                lampiran_base64: payloadBase64,
+            });
+        }
+
         if (res.data.success && res.data.message) {
             const idx = messages.value.findIndex(m => m.id === tempId);
             if (idx !== -1) {
@@ -136,7 +204,6 @@ const sendMessage = async () => {
         }
         fetchContacts();
     } catch (e) {
-        // Rollback optimistic message if error
         messages.value = messages.value.filter(m => m.id !== tempId);
     } finally {
         isSending.value = false;
@@ -174,6 +241,7 @@ const pollNewChats = async () => {
                             penerima_id: newMsg.penerima_id,
                             is_me: false,
                             pesan: newMsg.pesan,
+                            lampiran: newMsg.lampiran,
                             is_read: true,
                             time_formatted: newMsg.time_formatted,
                         });
@@ -203,6 +271,7 @@ watch(search, () => {
     }, 300);
 });
 
+// Instant 0ms client-side filter
 const filteredContacts = computed(() => {
     const q = (search.value || '').trim().toLowerCase();
     if (!q) return contacts.value;
@@ -221,6 +290,13 @@ const getAvatarUrl = (photo) => {
     if (!clean.includes('/')) {
         return `/uploads/users/${clean}`;
     }
+    return '/' + clean;
+};
+
+const getLampiranUrl = (path) => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    const clean = path.replace(/^\/?(public\/)?/, '').replace(/^\//, '');
     return '/' + clean;
 };
 
@@ -257,6 +333,15 @@ onUnmounted(() => {
 
 <template>
     <div class="relative">
+        <!-- Hidden file picker for image/screenshot -->
+        <input
+            type="file"
+            ref="fileInputRef"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            class="hidden"
+            @change="onFileSelected"
+        />
+
         <!-- Chat Trigger Button in Topbar -->
         <button
             type="button"
@@ -455,12 +540,23 @@ onUnmounted(() => {
                                 :class="m.is_me ? 'items-end' : 'items-start'"
                             >
                                 <div
-                                    class="max-w-[82%] px-3.5 py-2.5 text-xs shadow-2xs leading-relaxed"
+                                    class="max-w-[85%] px-3 py-2 text-xs shadow-2xs leading-relaxed"
                                     :class="m.is_me
                                         ? 'bg-blue-600 text-white rounded-2xl rounded-tr-xs font-normal'
                                         : 'bg-white border border-slate-200 text-slate-900 rounded-2xl rounded-tl-xs'"
                                 >
-                                    <p class="whitespace-pre-wrap break-words">{{ m.pesan }}</p>
+                                    <!-- Image / Screenshot Attachment -->
+                                    <div v-if="m.lampiran" class="mb-1.5 overflow-hidden rounded-xl bg-black/10 border border-white/20">
+                                        <img
+                                            :src="getLampiranUrl(m.lampiran)"
+                                            alt="Lampiran Screenshot"
+                                            class="max-h-48 w-full object-cover cursor-pointer hover:opacity-95 transition"
+                                            @click="zoomImageSrc = getLampiranUrl(m.lampiran)"
+                                        />
+                                    </div>
+
+                                    <!-- Message Text -->
+                                    <p v-if="m.pesan" class="whitespace-pre-wrap break-words">{{ m.pesan }}</p>
                                 </div>
                                 <div class="flex items-center gap-1 mt-1 px-1 text-[10px] text-slate-400 font-mono">
                                     <span>{{ m.time_formatted }}</span>
@@ -476,31 +572,89 @@ onUnmounted(() => {
                                 <i class="fa-solid fa-paper-plane"></i>
                             </div>
                             <p class="text-xs font-bold text-slate-700">Belum ada percakapan</p>
-                            <p class="text-[11px] text-slate-400">Kirim pesan pertama Anda untuk memulai koordinasi dengan {{ activeContact.name }}.</p>
+                            <p class="text-[11px] text-slate-400">Ketik pesan atau tekan <b>Ctrl + V</b> untuk menempelkan tangkapan layar (screenshot).</p>
                         </div>
                     </div>
 
-                    <!-- Input Bar -->
+                    <!-- Selected Attachment Preview Chip -->
+                    <div v-if="attachmentPreview" class="px-3 py-1.5 bg-blue-50 border-t border-blue-200 flex items-center justify-between shrink-0">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <img :src="attachmentPreview" class="w-9 h-9 rounded-lg object-cover border border-blue-300 shadow-2xs shrink-0" />
+                            <div class="min-w-0">
+                                <p class="text-[11px] font-bold text-blue-900 truncate">Screenshot / Gambar siap dikirim</p>
+                                <p class="text-[9px] text-blue-600">Tekan Enter atau Kirim</p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            @click="clearAttachment"
+                            class="w-6 h-6 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-600 flex items-center justify-center text-xs transition cursor-pointer"
+                            title="Batalkan gambar"
+                        >
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Input Bar (Supports Ctrl + V screenshot paste) -->
                     <div class="p-2.5 bg-white border-t border-slate-200 shrink-0">
                         <form @submit.prevent="sendMessage" class="flex items-center gap-2">
+                            <!-- Attach File / Image Button -->
+                            <button
+                                type="button"
+                                @click="fileInputRef?.click()"
+                                class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-500 flex items-center justify-center text-xs transition cursor-pointer border border-slate-200/80 shrink-0"
+                                title="Lampirkan Gambar / Screenshot"
+                            >
+                                <i class="fa-solid fa-image"></i>
+                            </button>
+
                             <input
                                 v-model="messageText"
                                 @keydown="handleKeyDown"
+                                @paste="handlePaste"
                                 type="text"
-                                placeholder="Ketik pesan..."
-                                class="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                                placeholder="Ketik pesan atau Ctrl+V screenshot..."
+                                class="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                             />
                             <button
                                 type="submit"
-                                :disabled="!messageText.trim() || isSending"
+                                :disabled="(!messageText.trim() && !attachmentPreview) || isSending"
                                 class="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white flex items-center justify-center text-xs transition cursor-pointer shadow-xs shrink-0"
                                 title="Kirim Pesan (Enter)"
                             >
-                                <i class="fa-solid fa-paper-plane"></i>
+                                <i v-if="!isSending" class="fa-solid fa-paper-plane"></i>
+                                <i v-else class="fa-solid fa-circle-notch fa-spin text-xs"></i>
                             </button>
                         </form>
                     </div>
                 </template>
+            </div>
+        </transition>
+
+        <!-- Image Lightbox Modal Zoom -->
+        <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="zoomImageSrc"
+                class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs"
+                @click="zoomImageSrc = null"
+            >
+                <div class="relative max-w-3xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl p-2">
+                    <img :src="zoomImageSrc" alt="Screenshot Zoom" class="max-w-full max-h-[85vh] object-contain mx-auto rounded-lg" />
+                    <button
+                        type="button"
+                        @click="zoomImageSrc = null"
+                        class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-sm transition cursor-pointer"
+                    >
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
             </div>
         </transition>
     </div>
