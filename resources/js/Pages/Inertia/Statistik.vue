@@ -54,7 +54,7 @@ const printDemografi = () => {
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout :fullWidth="true">
         <Head :title="activeKub ? `Demografi & Statistik ${activeKub.nama_kub} - SIPAROKI` : 'Demografi & Statistik Paroki - SIPAROKI'" />
 
         <div class="w-full space-y-6 pb-12">

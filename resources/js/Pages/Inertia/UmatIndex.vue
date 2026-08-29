@@ -66,7 +66,7 @@ const formatPaginationLabel = (label) => {
 </script>
 
 <template>
-    <AppLayout title="Data Umat Paroki">
+    <AppLayout title="Data Umat Paroki" :fullWidth="true">
         <Head title="Data Umat - SIPAROKI" />
 
         <!-- Header Card -->

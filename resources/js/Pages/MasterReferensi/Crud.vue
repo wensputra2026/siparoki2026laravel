@@ -17,7 +17,7 @@ defineProps({
 </script>
 
 <template>
-    <AppLayout :title="label">
+    <AppLayout :title="label" :fullWidth="true">
         <Head :title="`${label} - Master Referensi`" />
         <CrudTable
             :type="type"

@@ -104,7 +104,7 @@ const sakramenSubtitle = computed(() => {
 </script>
 
 <template>
-    <AppLayout title="Dashboard" :role="role">
+    <AppLayout title="Dashboard" :role="role" :fullWidth="true">
         <Head title="Dashboard - SIPAROKI" />
 
         <div class="space-y-6 pb-8">

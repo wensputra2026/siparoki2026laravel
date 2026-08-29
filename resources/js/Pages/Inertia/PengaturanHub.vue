@@ -395,7 +395,7 @@ const getYoutubeEmbed = (url) => {
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout :fullWidth="true">
         <Head title="Pengaturan Web & Integrasi - SIPAROKI" />
 
         <div class="w-full space-y-5 pb-24">
@@ -1052,7 +1052,7 @@ const getYoutubeEmbed = (url) => {
             </div>
 
             <!-- Tab 3: Video Header -->
-            <div v-show="activeTab === 'video'" class="max-w-4xl space-y-6">
+            <div v-show="activeTab === 'video'" class="w-full space-y-6">
                 <form @submit.prevent="submitVideo" class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-6">
                     <div class="flex items-start justify-between gap-4">
                         <div>
@@ -1277,7 +1277,7 @@ const getYoutubeEmbed = (url) => {
             </div>
 
             <!-- Tab 5: SEO & Meta Tags -->
-            <div v-show="activeTab === 'seo'" class="max-w-3xl space-y-6">
+            <div v-show="activeTab === 'seo'" class="w-full space-y-6">
                 <form @submit.prevent="submitSeo" class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-5">
                     <div>
                         <h3 class="font-extrabold text-slate-900 dark:text-white text-base">
@@ -1327,7 +1327,7 @@ const getYoutubeEmbed = (url) => {
             </div>
 
             <!-- Tab 6: Widget & Medsos -->
-            <div v-show="activeTab === 'widget'" class="max-w-3xl space-y-6">
+            <div v-show="activeTab === 'widget'" class="w-full space-y-6">
                 <form @submit.prevent="submitWidget" class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-5">
                     <!-- FITUR CHAT & KOMUNIKASI INTERNAL -->
                     <div class="p-5 rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-slate-50 border border-blue-200/80 dark:bg-slate-900 dark:border-blue-900/50 space-y-3">
@@ -1437,7 +1437,7 @@ const getYoutubeEmbed = (url) => {
             </div>
 
             <!-- Tab 7: Mode Maintenance -->
-            <div v-show="activeTab === 'maintenance'" class="max-w-3xl space-y-6">
+            <div v-show="activeTab === 'maintenance'" class="w-full space-y-6">
                 <form @submit.prevent="submitMaintenance" class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-6">
                     <div class="flex items-start justify-between gap-4">
                         <div>

@@ -99,7 +99,7 @@ const reloadMaster = () => {
 </script>
 
 <template>
-    <AppLayout title="Master Referensi">
+    <AppLayout title="Master Referensi" :fullWidth="true">
         <Head title="Master Referensi - SIPAROKI" />
 
         <div class="w-full space-y-5 pb-24 overflow-y-auto">

@@ -241,7 +241,7 @@ const saveParoki = () => {
 </script>
 
 <template>
-    <AppLayout title="Profil Paroki">
+    <AppLayout title="Profil Paroki" :fullWidth="true">
         <Head title="Profil Paroki - SIPAROKI" />
 
         <div class="w-full space-y-5 pb-24 overflow-y-auto">

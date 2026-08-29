@@ -97,7 +97,7 @@ const handleDeleteBackup = (backup) => {
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout :fullWidth="true">
         <Head title="Backup & Restore Database - SIPAROKI" />
 
         <div class="w-full space-y-6 pb-12">

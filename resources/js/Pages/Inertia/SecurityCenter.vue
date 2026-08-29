@@ -202,7 +202,7 @@ const formatDate = (dateStr) => {
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout :fullWidth="true">
         <Head title="Security Center & Keamanan - SIPAROKI" />
 
         <div class="w-full space-y-6 pb-12">

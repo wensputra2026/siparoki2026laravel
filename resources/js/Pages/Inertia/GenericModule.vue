@@ -2464,7 +2464,7 @@ const showKubFilter = computed(() => {
 </script>
 
 <template>
-    <AppLayout :title="title" :role="role">
+    <AppLayout :title="title" :role="role" :fullWidth="true">
         <Head :title="`${title} - SIPAROKI`" />
 
         <!-- Responsive layout: natural flow on mobile/tablet, full-height pinned on desktop -->

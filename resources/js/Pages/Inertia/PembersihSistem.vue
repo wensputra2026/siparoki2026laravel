@@ -109,7 +109,7 @@ const confirmDeleteOrphans = async () => {
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout :fullWidth="true">
         <Head title="Pembersih Sistem" />
 
         <div class="px-4 sm:px-6 py-6 w-full space-y-5 pb-24">
