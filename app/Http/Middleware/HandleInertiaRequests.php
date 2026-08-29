@@ -103,6 +103,11 @@ class HandleInertiaRequests extends Middleware
         $logoParoki = $activeParoki?->logo
             ?: ($profilParoki?->logo ?? null);
 
+        // Track user online status in cache (active within last 3 minutes)
+        if ($request->user()) {
+            Cache::put('user_online_' . $request->user()->id, now()->timestamp, now()->addMinutes(3));
+        }
+
         // Cache scopeOptions for 10 minutes — these rarely change
         $currentRole = $request->user()?->role?->nama_role ?? $request->user()?->role?->slug ?? '';
         $roleKey = str_replace(['_', '-', ' '], '', strtolower($currentRole));

@@ -21,6 +21,9 @@ class ChatController extends Controller
             return response()->json(['contacts' => [], 'total_unread' => 0], 401);
         }
 
+        // Touch current user online cache
+        \Illuminate\Support\Facades\Cache::put('user_online_' . $currentUserId, now()->timestamp, now()->addMinutes(3));
+
         $search = trim((string) $request->query('search', ''));
 
         $usersQuery = User::with(['role', 'wilayah', 'kapela', 'kub'])
@@ -43,7 +46,7 @@ class ChatController extends Controller
 
         $users = $usersQuery->get();
 
-        // Get latest message for each conversation
+        // Get latest message and online status for each contact
         $contacts = $users->map(function ($user) use ($currentUserId) {
             $lastMsg = ChatPesan::betweenUsers($currentUserId, $user->id)
                 ->latest('created_at')
@@ -64,21 +67,27 @@ class ChatController extends Controller
                 $roleLabel = "Wilayah " . $user->wilayah->nama_wilayah;
             }
 
+            // Accurate online check: active in cache within last 3 minutes
+            $isOnline = \Illuminate\Support\Facades\Cache::has('user_online_' . $user->id);
+
             return [
                 'id' => $user->id,
                 'name' => $user->nama_lengkap ?: ($user->username ?: 'Pengguna Paroki'),
                 'username' => $user->username,
                 'foto' => $user->foto,
                 'role_name' => $roleLabel,
+                'is_online' => $isOnline,
                 'last_message' => $lastMsg ? $lastMsg->pesan : null,
                 'last_message_time' => $lastMsg ? $lastMsg->created_at->toIso8601String() : null,
                 'unread_count' => $unreadCount,
             ];
         });
 
-        // Sort: contacts with latest messages first, then by name
+        // Sort: online and unread first, then by last message time, then name
         $sortedContacts = $contacts->sortByDesc(function ($contact) {
-            return $contact['last_message_time'] ?? '1970-01-01T00:00:00Z';
+            return ($contact['unread_count'] > 0 ? 2000000000 : 0) +
+                   ($contact['is_online'] ? 1000000000 : 0) +
+                   strtotime($contact['last_message_time'] ?? '1970-01-01');
         })->values();
 
         $totalUnread = ChatPesan::where('penerima_id', $currentUserId)
@@ -100,6 +109,8 @@ class ChatController extends Controller
         if (!$currentUserId) {
             return response()->json(['messages' => []], 401);
         }
+
+        \Illuminate\Support\Facades\Cache::put('user_online_' . $currentUserId, now()->timestamp, now()->addMinutes(3));
 
         $recipient = User::with(['role', 'wilayah', 'kapela', 'kub'])->find($recipientId);
         if (!$recipient) {
@@ -142,6 +153,8 @@ class ChatController extends Controller
             $roleLabel = "Wilayah " . $recipient->wilayah->nama_wilayah;
         }
 
+        $isOnline = \Illuminate\Support\Facades\Cache::has('user_online_' . $recipient->id);
+
         return response()->json([
             'recipient' => [
                 'id' => $recipient->id,
@@ -149,6 +162,7 @@ class ChatController extends Controller
                 'username' => $recipient->username,
                 'foto' => $recipient->foto,
                 'role_name' => $roleLabel,
+                'is_online' => $isOnline,
             ],
             'messages' => $messages,
         ]);

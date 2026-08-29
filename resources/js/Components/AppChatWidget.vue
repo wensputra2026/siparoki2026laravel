@@ -485,16 +485,32 @@ onUnmounted(() => {
                                     >
                                         {{ getInitials(c.name) }}
                                     </div>
-                                    <!-- Online Indicator -->
-                                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white"></span>
+                                    <!-- Dynamic Online / Offline Indicator -->
+                                    <span
+                                        v-if="c.is_online"
+                                        class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white shadow-2xs"
+                                        title="Online Sekarang"
+                                    ></span>
+                                    <span
+                                        v-else
+                                        class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-slate-300 border-2 border-white"
+                                        title="Offline"
+                                    ></span>
                                 </div>
 
                                 <!-- Info -->
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between gap-1 mb-0.5">
-                                        <h5 class="text-xs font-bold text-slate-900 truncate group-hover:text-blue-600 transition">
-                                            {{ c.name }}
-                                        </h5>
+                                        <div class="flex items-center gap-1.5 min-w-0">
+                                            <h5 class="text-xs font-bold text-slate-900 truncate group-hover:text-blue-600 transition">
+                                                {{ c.name }}
+                                            </h5>
+                                            <span
+                                                v-if="c.is_online"
+                                                class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"
+                                                title="Online"
+                                            ></span>
+                                        </div>
                                         <span v-if="c.unread_count > 0" class="px-1.5 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-black shrink-0 animate-bounce">
                                             {{ c.unread_count }}
                                         </span>
@@ -504,7 +520,7 @@ onUnmounted(() => {
                                             {{ c.role_name }}
                                         </span>
                                         <p class="text-slate-400 truncate text-[11px]">
-                                            {{ c.last_message || 'Mulai percakapan baru...' }}
+                                            {{ c.last_message || (c.is_online ? 'Sedang aktif' : 'Offline') }}
                                         </p>
                                     </div>
                                 </div>
@@ -533,21 +549,40 @@ onUnmounted(() => {
                                 <i class="fa-solid fa-chevron-left"></i>
                             </button>
 
-                            <div class="w-8 h-8 rounded-full overflow-hidden border border-white/20 bg-white/10 flex items-center justify-center shrink-0">
-                                <img v-if="activeContact.foto" :src="getAvatarUrl(activeContact.foto)" class="w-full h-full object-cover" />
-                                <span v-else class="text-xs font-black text-white">{{ getInitials(activeContact.name) }}</span>
+                            <div class="relative shrink-0">
+                                <div class="w-8 h-8 rounded-full overflow-hidden border border-white/20 bg-white/10 flex items-center justify-center">
+                                    <img v-if="activeContact.foto" :src="getAvatarUrl(activeContact.foto)" class="w-full h-full object-cover" />
+                                    <span v-else class="text-xs font-black text-white">{{ getInitials(activeContact.name) }}</span>
+                                </div>
+                                <span
+                                    v-if="activeContact.is_online"
+                                    class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-900 shadow-xs"
+                                    title="Online"
+                                ></span>
                             </div>
 
                             <div class="min-w-0">
                                 <h4 class="font-bold text-xs truncate leading-tight">{{ activeContact.name }}</h4>
-                                <p class="text-[10px] text-blue-200 font-medium truncate">{{ activeContact.role_name }}</p>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                    <span
+                                        v-if="activeContact.is_online"
+                                        class="inline-flex items-center gap-1 text-[10px] text-emerald-300 font-semibold leading-none"
+                                    >
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        Online
+                                    </span>
+                                    <span v-else class="text-[10px] text-slate-300 font-medium leading-none">Offline</span>
+                                    <span class="text-white/30 text-[8px]">&bull;</span>
+                                    <p class="text-[10px] text-blue-200 font-medium truncate leading-none">{{ activeContact.role_name }}</p>
+                                </div>
                             </div>
                         </div>
 
                         <button
                             type="button"
                             @click="isOpen = false"
-                            class="text-white/70 hover:text-white p-1 text-sm cursor-pointer transition shrink-0"
+                            class="text-white/70 hover:text-white p-1 text-sm cursor-pointer transition shrink-0 rounded-lg hover:bg-white/10"
+                            title="Tutup Chat"
                         >
                             <i class="fa-solid fa-xmark"></i>
                         </button>
