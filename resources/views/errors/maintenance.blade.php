@@ -182,6 +182,31 @@
             <i class="fa-solid fa-screwdriver-wrench"></i>
         </div>
 
+        @if(!empty($isSuperAdmin) && $isSuperAdmin)
+        <div style="background: rgba(20, 184, 166, 0.15); border: 1px solid rgba(20, 184, 166, 0.35); border-radius: 16px; padding: 14px 18px; margin-bottom: 24px; text-align: left; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span style="font-size: 12px; font-weight: 800; color: #2dd4bf; display: flex; align-items: center; gap: 6px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #2dd4bf; display: inline-block;"></span>
+                    Anda Login sebagai Super Admin
+                </span>
+                <span style="font-size: 11px; background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 2px 8px; border-radius: 999px; font-weight: 700;">
+                    Mode Maintenance Aktif
+                </span>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; line-height: 1.4;">
+                Pengunjung umum melihat tampilan ini. Anda dapat mengelola pengaturan atau melewati tampilan ini untuk mempratinjau website publik.
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+                <a href="/superadmin/pengaturan?tab=maintenance" style="padding: 6px 14px; border-radius: 10px; background: #0f766e; color: #ffffff; font-size: 11px; font-weight: 700; text-decoration: none;">
+                    <i class="fa-solid fa-gears"></i> Kelola di Pengaturan
+                </a>
+                <a href="/?admin_preview=1" style="padding: 6px 14px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); font-size: 11px; font-weight: 700; text-decoration: none;">
+                    <i class="fa-solid fa-eye"></i> Pratinjau Website Publik
+                </a>
+            </div>
+        </div>
+        @endif
+
         <div class="paroki-badge">
             <i class="fa-solid fa-church"></i>
             {{ $globalNamaParoki ?? 'Paroki St. Vinsensius a Paulo Benlutu' }}
@@ -214,10 +239,17 @@
             </div>
         </div>
 
+        @if(empty($isSuperAdmin))
         <a href="/login" class="btn-admin">
             <i class="fa-solid fa-lock"></i>
             Login Panel Petugas / Admin
         </a>
+        @else
+        <a href="/superadmin/dashboard" class="btn-admin">
+            <i class="fa-solid fa-table-columns"></i>
+            Masuk ke Panel Dashboard
+        </a>
+        @endif
 
         <div class="footer-text">
             SIPAROKI &copy; {{ date('Y') }} {{ $globalNamaParoki ?? 'St. Vinsensius a Paulo Benlutu' }}. All rights reserved.
