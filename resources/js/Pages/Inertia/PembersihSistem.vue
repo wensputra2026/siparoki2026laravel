@@ -3,6 +3,8 @@ import { ref, computed } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
+import axios from 'axios';
+
 const props = defineProps({
     role: { type: String, default: 'Super Admin' },
     prefix: { type: String, default: 'superadmin' },
@@ -12,6 +14,10 @@ const props = defineProps({
     scanned: { type: Boolean, default: false },
     cacheInfo: { type: Object, default: () => ({ cache: 0, views: 0, sessions: 0, logs: 0 }) },
 });
+
+const localOrphans = ref([...props.orphans]);
+const localTotalFiles = ref(props.totalFiles);
+const localTotalSize = ref(props.totalSize);
 
 const formatBytes = (bytes) => {
     if (!bytes || bytes <= 0) return '0 B';
@@ -30,13 +36,13 @@ const visibleLimit = ref(150);
 const selected = ref({});
 const filteredOrphans = computed(() => {
     const q = orphanSearch.value.trim().toLowerCase();
-    if (!q) return props.orphans;
-    return props.orphans.filter((o) => String(o.path || '').toLowerCase().includes(q));
+    if (!q) return localOrphans.value;
+    return localOrphans.value.filter((o) => String(o.path || '').toLowerCase().includes(q));
 });
 const visibleOrphans = computed(() => filteredOrphans.value.slice(0, visibleLimit.value));
 const hiddenOrphansCount = computed(() => Math.max(filteredOrphans.value.length - visibleOrphans.value.length, 0));
 const selectedCount = computed(() => Object.values(selected.value).filter(Boolean).length);
-const selectedPaths = computed(() => props.orphans.filter(o => selected.value[o.path]).map(o => o.path));
+const selectedPaths = computed(() => localOrphans.value.filter(o => selected.value[o.path]).map(o => o.path));
 
 const toggleAll = (event) => {
     const checked = event.target.checked;
@@ -48,35 +54,57 @@ const toggleAll = (event) => {
 // Modern Confirmation Modal States
 const showClearCacheModal = ref(false);
 const showDeleteOrphansModal = ref(false);
+const alertMessage = ref(null);
 
 const clearing = ref(false);
-const confirmClearCache = () => {
+const confirmClearCache = async () => {
     clearing.value = true;
-    router.post(`/${props.prefix}/pembersih-sistem/aksi`, { action: 'clear_cache' }, {
-        preserveScroll: true,
-        onFinish: () => {
-            clearing.value = false;
-            showClearCacheModal.value = false;
-        },
-    });
+    try {
+        const res = await axios.post(`/${props.prefix}/pembersih-sistem/aksi`, { action: 'clear_cache' });
+        showClearCacheModal.value = false;
+        alertMessage.value = res.data.message || 'Cache sistem berhasil dibersihkan.';
+        setTimeout(() => { alertMessage.value = null; }, 4000);
+    } catch (e) {
+        showClearCacheModal.value = false;
+        alertMessage.value = 'Gagal membersihkan cache: ' + (e.response?.data?.message || e.message);
+    } finally {
+        clearing.value = false;
+    }
 };
 
-const deleteForm = useForm({ action: 'delete_orphans', paths: [] });
 const deleting = ref(false);
-const confirmDeleteOrphans = () => {
+const confirmDeleteOrphans = async () => {
     if (selectedCount.value === 0) return;
     deleting.value = true;
-    deleteForm.paths = selectedPaths.value;
-    deleteForm.post(`/${props.prefix}/pembersih-sistem/aksi`, {
-        preserveScroll: true,
-        onSuccess: () => {
-            selected.value = {};
-            showDeleteOrphansModal.value = false;
-        },
-        onFinish: () => {
-            deleting.value = false;
-        },
-    });
+    const pathsToDelete = [...selectedPaths.value];
+    
+    // Close modal immediately
+    showDeleteOrphansModal.value = false;
+
+    try {
+        const res = await axios.post(`/${props.prefix}/pembersih-sistem/aksi`, {
+            action: 'delete_orphans',
+            paths: pathsToDelete,
+        });
+        
+        // Remove deleted items locally in 0ms
+        const toDeleteSet = new Set(pathsToDelete);
+        const deletedBytes = localOrphans.value
+            .filter(o => toDeleteSet.has(o.path))
+            .reduce((acc, o) => acc + (o.size || 0), 0);
+
+        localOrphans.value = localOrphans.value.filter(o => !toDeleteSet.has(o.path));
+        localTotalFiles.value = Math.max(0, localTotalFiles.value - pathsToDelete.length);
+        localTotalSize.value = Math.max(0, localTotalSize.value - deletedBytes);
+        selected.value = {};
+
+        alertMessage.value = res.data.message || `${pathsToDelete.length} file yatim berhasil dihapus.`;
+        setTimeout(() => { alertMessage.value = null; }, 4000);
+    } catch (e) {
+        alertMessage.value = 'Gagal menghapus file: ' + (e.response?.data?.message || e.message);
+    } finally {
+        deleting.value = false;
+    }
 };
 </script>
 
@@ -85,6 +113,26 @@ const confirmDeleteOrphans = () => {
         <Head title="Pembersih Sistem" />
 
         <div class="px-4 sm:px-6 py-6 w-full space-y-5 pb-24">
+            <!-- Toast Notification -->
+            <transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="transform -translate-y-2 opacity-0"
+                enter-to-class="transform translate-y-0 opacity-100"
+                leave-active-class="transition duration-150 ease-in"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+            >
+                <div v-if="alertMessage" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between shadow-xs">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                        <span>{{ alertMessage }}</span>
+                    </div>
+                    <button type="button" @click="alertMessage = null" class="text-emerald-500 hover:text-emerald-700 p-1 cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </transition>
+
             <!-- Header Bar -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-xs">
                 <div class="flex items-center gap-3.5">

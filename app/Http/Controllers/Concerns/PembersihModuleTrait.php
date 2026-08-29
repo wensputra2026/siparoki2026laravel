@@ -91,13 +91,20 @@ trait PembersihModuleTrait
 
         if ($action === 'clear_cache') {
             try {
+                \Illuminate\Support\Facades\Cache::flush();
                 \Illuminate\Support\Facades\Artisan::call('config:clear');
                 \Illuminate\Support\Facades\Artisan::call('route:clear');
                 \Illuminate\Support\Facades\Artisan::call('view:clear');
                 \Illuminate\Support\Facades\Artisan::call('cache:clear');
                 \Illuminate\Support\Facades\Artisan::call('optimize:clear');
             } catch (\Throwable $e) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
+                }
                 return redirect()->back()->with('error', 'Gagal membersihkan cache: ' . $e->getMessage());
+            }
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Seluruh cache aplikasi berhasil dibersihkan.']);
             }
             return redirect()->back()->with('success', 'Seluruh cache aplikasi berhasil dibersihkan.');
         }
@@ -116,6 +123,10 @@ trait PembersihModuleTrait
                     @unlink($full);
                     $deleted++;
                 }
+            }
+            \Illuminate\Support\Facades\Cache::forget('pembersih_references');
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'deleted' => $deleted, 'message' => "{$deleted} file yatim berhasil dihapus."]);
             }
             return redirect()->back()->with('success', $deleted . ' file yatim berhasil dihapus.');
         }
