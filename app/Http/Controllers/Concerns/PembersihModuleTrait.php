@@ -44,44 +44,54 @@ trait PembersihModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $uploads = public_path('uploads');
-        $scanned = is_dir($uploads);
-        $orphans = [];
-        $totalFiles = 0;
-        $totalSize = 0;
+        $scanData = \Illuminate\Support\Facades\Cache::remember('pembersih_scan_result', 300, function () {
+            $uploads = public_path('uploads');
+            $scanned = is_dir($uploads);
+            $orphans = [];
+            $totalFiles = 0;
+            $totalSize = 0;
 
-        if ($scanned) {
-            $referenced = $this->pembersihCollectReferences();
-            $files = $this->pembersihScan($uploads, $uploads);
-            foreach ($files as $f) {
-                $totalFiles++;
-                $totalSize += $f['size'];
-                $rel = ltrim(str_replace(DIRECTORY_SEPARATOR, '/', substr($f['path'], strlen($uploads))), '/');
-                if (!isset($referenced[$rel]) && !isset($referenced[basename($rel)])) {
-                    $orphans[] = [
-                        'path' => $rel,
-                        'size' => $f['size'],
-                        'mtime' => $f['mtime'],
-                    ];
+            if ($scanned) {
+                $referenced = $this->pembersihCollectReferences();
+                $files = $this->pembersihScan($uploads, $uploads);
+                foreach ($files as $f) {
+                    $totalFiles++;
+                    $totalSize += $f['size'];
+                    $rel = ltrim(str_replace(DIRECTORY_SEPARATOR, '/', substr($f['path'], strlen($uploads))), '/');
+                    if (!isset($referenced[$rel]) && !isset($referenced[basename($rel)])) {
+                        $orphans[] = [
+                            'path' => $rel,
+                            'size' => $f['size'],
+                            'mtime' => $f['mtime'],
+                        ];
+                    }
                 }
             }
-        }
 
-        $cacheInfo = [
-            'cache'   => $this->pembersihDirSize(storage_path('framework/cache')),
-            'views'   => $this->pembersihDirSize(storage_path('framework/views')),
-            'sessions'=> $this->pembersihDirSize(storage_path('framework/sessions')),
-            'logs'    => $this->pembersihDirSize(storage_path('logs')),
-        ];
+            $cacheInfo = [
+                'cache'   => $this->pembersihDirSize(storage_path('framework/cache')),
+                'views'   => $this->pembersihDirSize(storage_path('framework/views')),
+                'sessions'=> $this->pembersihDirSize(storage_path('framework/sessions')),
+                'logs'    => $this->pembersihDirSize(storage_path('logs')),
+            ];
+
+            return [
+                'scanned' => $scanned,
+                'orphans' => $orphans,
+                'totalFiles' => $totalFiles,
+                'totalSize' => $totalSize,
+                'cacheInfo' => $cacheInfo,
+            ];
+        });
 
         return \Inertia\Inertia::render('Inertia/PembersihSistem', [
             'role'       => $resolvedRole,
             'prefix'     => $firstSegment,
-            'orphans'    => $orphans,
-            'totalFiles' => $totalFiles,
-            'totalSize'  => $totalSize,
-            'scanned'    => $scanned,
-            'cacheInfo'  => $cacheInfo,
+            'orphans'    => $scanData['orphans'] ?? [],
+            'totalFiles' => $scanData['totalFiles'] ?? 0,
+            'totalSize'  => $scanData['totalSize'] ?? 0,
+            'scanned'    => $scanData['scanned'] ?? false,
+            'cacheInfo'  => $scanData['cacheInfo'] ?? ['cache' => 0, 'views' => 0, 'sessions' => 0, 'logs' => 0],
         ]);
     }
 

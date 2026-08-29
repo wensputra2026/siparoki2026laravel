@@ -83,6 +83,7 @@ const fetchNotifications = async () => {
 };
 
 const pollNewNotifications = async () => {
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
     try {
         const res = await axios.get('/api/notifikasi/poll', {
             params: { last_id: latestId.value }
@@ -231,8 +232,8 @@ onMounted(() => {
     window.addEventListener('touchstart', handleFirstGesture, { passive: true });
     window.addEventListener('keydown', handleFirstGesture, { passive: true });
 
-    // Fast polling every 3.5 seconds to guarantee 100% zero-reload realtime notifications
-    pollTimer = setInterval(pollNewNotifications, 3500);
+    // Efficient polling every 15 seconds only when tab is active
+    pollTimer = setInterval(pollNewNotifications, 15000);
 });
 
 onUnmounted(() => {

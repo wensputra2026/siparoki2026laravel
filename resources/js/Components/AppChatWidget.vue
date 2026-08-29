@@ -218,6 +218,7 @@ const handleKeyDown = (e) => {
 };
 
 const pollNewChats = async () => {
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
     try {
         const res = await axios.get('/api/chat/poll', {
             params: { last_id: latestMessageId }
@@ -323,7 +324,7 @@ const getAvatarBg = (name) => {
 
 onMounted(() => {
     fetchContacts(true);
-    pollTimer = setInterval(pollNewChats, 3500);
+    pollTimer = setInterval(pollNewChats, 12000);
 });
 
 onUnmounted(() => {
