@@ -45,20 +45,6 @@ class User extends Authenticatable
         ];
     }
 
-    public function getRememberToken()
-    {
-        return null;
-    }
-
-    public function setRememberToken($value)
-    {
-        // No-op for legacy schema without remember_token column
-    }
-
-    public function getRememberTokenName()
-    {
-        return '';
-    }
 
     public function role()
     {

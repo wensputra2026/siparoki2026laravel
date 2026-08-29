@@ -2296,9 +2296,33 @@ const showKubFilter = computed(() => {
     return ['kub', 'umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'user', 'users', 'iuran'].includes(props.moduleKey);
 });
 
-const showStatusFilter = computed(() => {
-    return ['user', 'users', 'kategori-konten', 'kategori_konten', 'konten', 'agenda', 'pengumuman', 'renungan'].includes(props.moduleKey) || props.columns?.some(c => c.key === 'status');
-});
+    const showStatusFilter = computed(() => {
+        return ['user', 'users', 'kategori-konten', 'kategori_konten', 'konten', 'agenda', 'pengumuman', 'renungan'].includes(props.moduleKey) || props.columns?.some(c => c.key === 'status');
+    });
+
+    const showKeuskupanFilter = computed(() => {
+        return ['dekenat', 'kevikepan', 'paroki', 'kuasi-paroki'].includes(props.moduleKey);
+    });
+
+    // Daftar pesan error validasi dari server (Inertia error bag)
+    const validationErrors = computed(() => {
+        const errs = page.props.errors || {};
+        const list = [];
+        for (const key in errs) {
+            if (Array.isArray(errs[key])) {
+                list.push(...errs[key]);
+            } else if (errs[key]) {
+                list.push(errs[key]);
+            }
+        }
+        return { map: errs, list };
+    });
+
+    const fieldError = (name) => {
+        const v = validationErrors.value.map[name];
+        return Array.isArray(v) ? v[0] : (v || '');
+    };
+
 </script>
 
 <template>
@@ -2520,6 +2544,21 @@ const showStatusFilter = computed(() => {
                     />
                 </div>
 
+                <!-- Filter Keuskupan (untuk Dekenat/Kevikepan/Paroki) -->
+                <div v-if="showKeuskupanFilter" class="w-full">
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Filter Keuskupan</label>
+                    <SearchableSelect
+                        v-model="keuskupanFilter"
+                        :options="keuskupanList"
+                        valueKey="id_keuskupan"
+                        labelKey="nama_keuskupan"
+                        placeholder="Semua Keuskupan"
+                        searchPlaceholder="Cari keuskupan..."
+                        icon="fa-church"
+                        iconColor="text-amber-600"
+                    />
+                </div>
+
                 <!-- Cari Data -->
                 <div class="w-full sm:col-span-2 lg:col-span-2 xl:col-span-1">
                     <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Cari Data</label>
@@ -2633,14 +2672,11 @@ const showStatusFilter = computed(() => {
                                 <!-- Image / Logo Column -->
                                 <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto' || isImageField(col, getFieldValue(item, col))" class="w-8.5 h-8.5 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5">
                                     <img
-                                        :src="getImageUrl(getFieldValue(item, col)) || (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey) ? '/assets/frontend/siparoki/images/default-pastor.jpg' : '')"
+                                        :src="moduleKey === 'keuskupan' ? (item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-keuskupan.png')) : ((col.key === 'logo' && item.logo_url) ? item.logo_url : (getImageUrl(getFieldValue(item, col)) || (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey) ? '/assets/frontend/siparoki/images/default-pastor.jpg' : (moduleKey === 'keuskupan' ? '/images/logo-keuskupan.png' : (moduleKey === 'paroki' ? (item.logo_url || '/images/logo-paroki.png') : '')))))"
                                         :alt="item.nama_pastor || item.nama_lengkap || item.nama_keuskupan || 'Foto'"
-                                        class="w-full h-full object-cover rounded-md"
-                                        @error="(e) => { if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey)) { e.target.src = '/assets/frontend/siparoki/images/default-pastor.jpg'; } else { e.target.style.display = 'none'; e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex'); } }"
+                                        :class="['w-full h-full rounded-md', col.key === 'logo' || moduleKey === 'keuskupan' ? 'object-contain' : 'object-cover']"
+                                        @error="(e) => { if (moduleKey === 'keuskupan' || col.key === 'logo') { e.target.src = '/images/logo-keuskupan.png'; } else if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey)) { e.target.src = '/assets/frontend/siparoki/images/default-pastor.jpg'; } else if (moduleKey === 'paroki') { e.target.src = item.logo_url || '/images/logo-paroki.png'; } else { e.target.style.display = 'none'; e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex'); } }"
                                     />
-                                    <div :class="['w-full h-full rounded-md flex items-center justify-center text-xs', getFieldValue(item, col) !== '—' && getFieldValue(item, col) ? 'hidden' : '', col.key === 'foto' || ['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'direktori-dpp', 'direktori-katekis', 'direktori-misdinar', 'user'].includes(moduleKey) ? 'bg-slate-100 text-slate-400' : 'bg-amber-50 text-amber-600']">
-                                        <i :class="col.key === 'foto' || ['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor'].includes(moduleKey) ? 'fa-solid fa-user-tie text-slate-400' : (moduleKey === 'user' ? 'fa-solid fa-user text-slate-400' : 'fa-solid fa-church')"></i>
-                                    </div>
                                 </div>
 
                                 <!-- Dedicated Icon Column (isIcon) -->
@@ -3306,13 +3342,11 @@ const showStatusFilter = computed(() => {
                             <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
                                 <div class="w-28 h-28 rounded-2xl overflow-hidden bg-white border border-slate-200 p-2 shadow-xs mb-3 flex items-center justify-center">
                                     <img
-                                        v-if="selectedItem.logo || isImageField({key: 'logo'}, selectedItem.logo)"
-                                        :src="getImageUrl(selectedItem.logo)"
-                                        :alt="selectedItem.nama_keuskupan"
+                                        :src="selectedItem?.logo ? getImageUrl(selectedItem.logo) : (selectedItem?.logo_url || '/images/logo-keuskupan.png')"
+                                        :alt="selectedItem?.nama_keuskupan || 'Logo Keuskupan'"
                                         class="w-full h-full object-contain"
-                                        @error="(e) => { e.target.onerror = null; e.target.src = '/uploads/keuskupan/logo_keuskupan_kupang.svg'; }"
+                                        @error="(e) => { e.target.onerror = null; e.target.src = '/images/logo-keuskupan.png'; }"
                                     />
-                                    <i v-else class="fa-solid fa-church text-4xl text-amber-600"></i>
                                 </div>
                                 <h4 class="font-black text-slate-900 text-sm leading-snug">
                                     {{ selectedItem.nama_keuskupan || '—' }}
@@ -3593,7 +3627,7 @@ const showStatusFilter = computed(() => {
                                         :src="getImageUrl(selectedItem.logo)"
                                         :alt="selectedItem.nama_paroki"
                                         class="w-full h-full object-contain"
-                                        @error="(e) => { e.target.onerror = null; e.target.src = '/uploads/keuskupan/logo_keuskupan_kupang.svg'; }"
+                                        @error="(e) => { e.target.onerror = null; e.target.src = '/images/logo-keuskupan.png'; }"
                                     />
                                     <i v-else class="fa-solid fa-place-of-worship text-4xl text-amber-600"></i>
                                 </div>
@@ -4383,6 +4417,17 @@ const showStatusFilter = computed(() => {
                     </button>
                 </div>
 
+                <!-- Banner error validasi server -->
+                <div v-if="validationErrors.list.length" class="mx-1 mb-1 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs space-y-1">
+                    <div class="font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>Terdapat {{ validationErrors.list.length }} kesalahan pada input:</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-0.5">
+                        <li v-for="(msg, idx) in validationErrors.list" :key="idx">{{ msg }}</li>
+                    </ul>
+                </div>
+
                 <form @submit.prevent="submitForm" class="space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar pr-1">
                     <!-- 1. KEUSKUPAN FORM -->
                     <template v-if="moduleKey === 'keuskupan'">
@@ -4420,8 +4465,9 @@ const showStatusFilter = computed(() => {
                                         type="text"
                                         placeholder="Contoh: Keuskupan Agung Kupang"
                                         required
-                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                        :class="['w-full px-3.5 py-2 rounded-xl bg-slate-50 border text-xs text-slate-900 focus:outline-none focus:ring-1 transition', fieldError('nama_keuskupan') ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500']"
                                     />
+                                    <p v-if="fieldError('nama_keuskupan')" class="text-[10px] text-rose-600 mt-1">{{ fieldError('nama_keuskupan') }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Latin Keuskupan</label>
@@ -4566,13 +4612,11 @@ const showStatusFilter = computed(() => {
                             <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-4">
                                 <div class="w-20 h-20 rounded-2xl bg-white border border-slate-200 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
                                     <img
-                                        v-if="previewImage || (formData.logo && typeof formData.logo === 'string')"
-                                        :src="previewImage || getImageUrl(formData.logo)"
+                                        :src="previewImage || (formData.logo && typeof formData.logo === 'string' && formData.logo.length > 0 ? getImageUrl(formData.logo) : (selectedItem?.logo_url || '/images/logo-keuskupan.png'))"
                                         :alt="formData.nama_keuskupan || 'Logo'"
                                         class="w-full h-full object-contain"
-                                        @error="(e) => { e.target.onerror = null; e.target.src = '/uploads/keuskupan/logo_keuskupan_kupang.svg'; }"
+                                        @error="(e) => { e.target.onerror = null; e.target.src = '/images/logo-keuskupan.png'; }"
                                     />
-                                    <i v-else class="fa-solid fa-church text-3xl text-amber-600"></i>
                                 </div>
                                 <div class="space-y-1.5 flex-1">
                                     <input
@@ -4610,13 +4654,14 @@ const showStatusFilter = computed(() => {
                                     <select
                                         v-model="formData.keuskupan_id"
                                         required
-                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
+                                        :class="['w-full px-3.5 py-2 rounded-xl bg-slate-50 border text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500 transition font-medium', fieldError('keuskupan_id') ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-200 focus:border-amber-500']"
                                     >
                                         <option value="" disabled>Pilih Keuskupan...</option>
                                         <option v-for="k in keuskupanList" :key="k.id || k.id_keuskupan" :value="k.id || k.id_keuskupan">
                                             {{ k.nama_keuskupan }}
                                         </option>
                                     </select>
+                                    <p v-if="fieldError('keuskupan_id')" class="text-[10px] text-rose-600 mt-1">{{ fieldError('keuskupan_id') }}</p>
                                 </div>
 
                                 <div>
@@ -4637,8 +4682,9 @@ const showStatusFilter = computed(() => {
                                         type="text"
                                         placeholder="Contoh: KEV-01"
                                         required
-                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 font-mono transition"
+                                        :class="['w-full px-3.5 py-2 rounded-xl bg-slate-50 border text-xs text-slate-900 focus:outline-none focus:ring-1 transition font-mono', fieldError('kode_kevikepan') ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500']"
                                     />
+                                    <p v-if="fieldError('kode_kevikepan')" class="text-[10px] text-rose-600 mt-1">{{ fieldError('kode_kevikepan') }}</p>
                                 </div>
 
                                 <div>
@@ -4648,8 +4694,9 @@ const showStatusFilter = computed(() => {
                                         type="text"
                                         placeholder="Contoh: Kevikepan/Dekenat Kota Kupang"
                                         required
-                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                        :class="['w-full px-3.5 py-2 rounded-xl bg-slate-50 border text-xs text-slate-900 focus:outline-none focus:ring-1 transition', fieldError('nama_kevikepan') ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-200 focus:border-amber-500 focus:ring-amber-500']"
                                     />
+                                    <p v-if="fieldError('nama_kevikepan')" class="text-[10px] text-rose-600 mt-1">{{ fieldError('nama_kevikepan') }}</p>
                                 </div>
 
                                 <div class="md:col-span-2">
@@ -4859,11 +4906,11 @@ const showStatusFilter = computed(() => {
                                     <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-4">
                                         <div class="w-18 h-18 rounded-2xl bg-white border border-slate-200 p-1 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
                                             <img
-                                                v-if="previewImage || (formData.logo && typeof formData.logo === 'string')"
-                                                :src="previewImage || getImageUrl(formData.logo)"
+                                                v-if="previewImage || (formData.logo && typeof formData.logo === 'string') || selectedItem?.logo_url"
+                                                :src="previewImage || selectedItem?.logo_url || getImageUrl(formData.logo)"
                                                 :alt="formData.nama_paroki || 'Logo'"
                                                 class="w-full h-full object-contain"
-                                                @error="(e) => { e.target.onerror = null; e.target.src = '/uploads/keuskupan/logo_keuskupan_kupang.svg'; }"
+                                                @error="(e) => { e.target.onerror = null; e.target.src = '/images/logo-paroki.png'; }"
                                             />
                                             <i v-else class="fa-solid fa-place-of-worship text-3xl text-amber-600"></i>
                                         </div>
@@ -8375,7 +8422,7 @@ const showStatusFilter = computed(() => {
                                             :src="previewImage || getImageUrl(formData[col.key])"
                                             :alt="col.label"
                                             class="w-full h-full object-contain"
-                                            @error="(e) => { e.target.onerror = null; e.target.src = '/uploads/keuskupan/logo_keuskupan_kupang.svg'; }"
+                                            @error="(e) => { e.target.onerror = null; e.target.src = '/images/logo-keuskupan.png'; }"
                                         />
                                         <i v-else class="fa-solid fa-cloud-arrow-up text-2xl text-slate-300"></i>
                                     </div>

@@ -257,6 +257,10 @@ class SetupParokiController extends Controller
      */
     public function resetSetup(Request $request)
     {
+        if (!auth()->check() || !in_array(strtolower($request->user()->role?->slug ?? ''), ['superadmin', 'superadministrator', 'paroki', 'administrator'], true)) {
+            abort(403, 'Hanya Super Administrator yang dapat mereset konfigurasi Paroki.');
+        }
+
         PengaturanAplikasi::ensureSetupColumns();
 
         if (Schema::hasTable('pengaturan_aplikasi') && Schema::hasColumn('pengaturan_aplikasi', 'is_setup_completed')) {

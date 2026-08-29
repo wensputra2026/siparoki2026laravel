@@ -238,66 +238,41 @@ trait ParokiModuleTrait
     protected function ensureRiwayatPastorParokiTableAndData(): void
     {
         try {
-            $checkTable = \Illuminate\Support\Facades\DB::select("SHOW TABLES LIKE 'riwayat_pastor_paroki'");
-            $needsSync = empty($checkTable);
-
-            if (!$needsSync) {
-                $count = \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')->count();
-                $hasDamasus = \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')->where('nama_pastor', 'like', '%Damasus%')->exists();
-                if ($count < 5 || !$hasDamasus) {
-                    $needsSync = true;
-                }
-            }
-
-            if ($needsSync) {
-                try {
-                    \Illuminate\Support\Facades\DB::statement("DROP TABLE IF EXISTS riwayat_pastor_paroki");
-                    \Illuminate\Support\Facades\DB::statement("CREATE TABLE riwayat_pastor_paroki LIKE parokibenlutuci31.riwayat_pastor_paroki");
-                    \Illuminate\Support\Facades\DB::statement("INSERT INTO riwayat_pastor_paroki SELECT * FROM parokibenlutuci31.riwayat_pastor_paroki");
-                } catch (\Throwable $ex) {
-                    \Illuminate\Support\Facades\Schema::create('riwayat_pastor_paroki', function ($table) {
-                        $table->increments('id');
-                        $table->unsignedInteger('paroki_id')->nullable();
-                        $table->string('nama_pastor', 150);
-                        $table->string('gelar', 50)->nullable();
-                        $table->string('jabatan', 100)->nullable();
-                        $table->string('periode_mulai', 50)->nullable();
-                        $table->string('periode_selesai', 50)->nullable();
-                        $table->string('tahun_mulai', 10)->nullable();
-                        $table->string('tahun_selesai', 10)->nullable();
-                        $table->string('foto', 255)->nullable();
-                        $table->string('status', 50)->default('Aktif');
-                        $table->string('status_pelayanan', 50)->nullable();
-                        $table->integer('urutan')->default(1);
-                        $table->text('keterangan')->nullable();
-                        $table->text('karya_pelayanan')->nullable();
-                    });
-
-                    \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')->insert([
-                        ['nama_pastor' => 'P. Damasus Sumardi', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2002', 'periode_selesai' => '2007', 'tahun_mulai' => '2002', 'tahun_selesai' => '2007', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 1, 'foto' => 'uploads/pastor/damasus.jpg'],
-                        ['nama_pastor' => 'P. Siprianus Asa', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2007', 'periode_selesai' => '2010', 'tahun_mulai' => '2007', 'tahun_selesai' => '2010', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 2, 'foto' => null],
-                        ['nama_pastor' => 'P. Walburga Poca', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2010', 'periode_selesai' => '2012', 'tahun_mulai' => '2010', 'tahun_selesai' => '2012', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 3, 'foto' => null],
-                        ['nama_pastor' => 'P. Damianus Lamak Tasaeb', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2012', 'periode_selesai' => '2016', 'tahun_mulai' => '2012', 'tahun_selesai' => '2016', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 4, 'foto' => null],
-                        ['nama_pastor' => 'RD. Herman Hillers Penga', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2026', 'periode_selesai' => 'Sekarang', 'tahun_mulai' => '2026', 'tahun_selesai' => 'Sekarang', 'status' => 'Aktif', 'status_pelayanan' => 'Aktif', 'urutan' => 5, 'foto' => null],
-                    ]);
-                }
+            if (!\Illuminate\Support\Facades\Schema::hasTable('riwayat_pastor_paroki')) {
+                \Illuminate\Support\Facades\Schema::create('riwayat_pastor_paroki', function ($table) {
+                    $table->increments('id');
+                    $table->unsignedInteger('paroki_id')->nullable();
+                    $table->string('nama_pastor', 150);
+                    $table->string('gelar', 50)->nullable();
+                    $table->string('jabatan', 100)->nullable();
+                    $table->string('periode_mulai', 50)->nullable();
+                    $table->string('periode_selesai', 50)->nullable();
+                    $table->string('tahun_mulai', 10)->nullable();
+                    $table->string('tahun_selesai', 10)->nullable();
+                    $table->string('foto', 255)->nullable();
+                    $table->string('status', 50)->default('Aktif');
+                    $table->string('status_pelayanan', 50)->nullable();
+                    $table->integer('urutan')->default(1);
+                    $table->text('keterangan')->nullable();
+                    $table->text('karya_pelayanan')->nullable();
+                    $table->timestamps();
+                });
             }
 
             if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_pastor_paroki')) {
-                $existingCols = \Illuminate\Support\Facades\Schema::getColumnListing('riwayat_pastor_paroki');
-                \Illuminate\Support\Facades\Schema::table('riwayat_pastor_paroki', function ($table) use ($existingCols) {
-                    if (!in_array('foto', $existingCols, true)) $table->string('foto', 255)->nullable();
-                    if (!in_array('status_pelayanan', $existingCols, true)) $table->string('status_pelayanan', 50)->nullable();
-                    if (!in_array('periode_mulai', $existingCols, true)) $table->string('periode_mulai', 50)->nullable();
-                    if (!in_array('periode_selesai', $existingCols, true)) $table->string('periode_selesai', 50)->nullable();
-                    if (!in_array('tahun_mulai', $existingCols, true)) $table->string('tahun_mulai', 50)->nullable();
-                    if (!in_array('tahun_selesai', $existingCols, true)) $table->string('tahun_selesai', 50)->nullable();
-                    if (!in_array('urutan', $existingCols, true)) $table->integer('urutan')->default(1);
-                    if (!in_array('keterangan', $existingCols, true)) $table->text('keterangan')->nullable();
-                });
+                $count = \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')->count();
+                if ($count === 0) {
+                    \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')->insert([
+                        ['nama_pastor' => 'P. Damasus Sumardi', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2002', 'periode_selesai' => '2007', 'tahun_mulai' => '2002', 'tahun_selesai' => '2007', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 1, 'foto' => 'uploads/pastor/damasus.jpg', 'created_at' => now(), 'updated_at' => now()],
+                        ['nama_pastor' => 'P. Siprianus Asa', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2007', 'periode_selesai' => '2010', 'tahun_mulai' => '2007', 'tahun_selesai' => '2010', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 2, 'foto' => null, 'created_at' => now(), 'updated_at' => now()],
+                        ['nama_pastor' => 'P. Walburga Poca', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2010', 'periode_selesai' => '2012', 'tahun_mulai' => '2010', 'tahun_selesai' => '2012', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 3, 'foto' => null, 'created_at' => now(), 'updated_at' => now()],
+                        ['nama_pastor' => 'P. Damianus Lamak Tasaeb', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2012', 'periode_selesai' => '2016', 'tahun_mulai' => '2012', 'tahun_selesai' => '2016', 'status' => 'Purna Tugas', 'status_pelayanan' => 'Purna Tugas', 'urutan' => 4, 'foto' => null, 'created_at' => now(), 'updated_at' => now()],
+                        ['nama_pastor' => 'RD. Herman Hillers Penga', 'jabatan' => 'Pastor Paroki', 'periode_mulai' => '2026', 'periode_selesai' => 'Sekarang', 'tahun_mulai' => '2026', 'tahun_selesai' => 'Sekarang', 'status' => 'Aktif', 'status_pelayanan' => 'Aktif', 'urutan' => 5, 'foto' => null, 'created_at' => now(), 'updated_at' => now()],
+                    ]);
+                }
             }
         } catch (\Throwable $e) {
-            // Silently continue
+            \Illuminate\Support\Facades\Log::warning('Gagal sinkronisasi tabel riwayat_pastor_paroki: ' . $e->getMessage());
         }
     }
 

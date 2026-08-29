@@ -10,7 +10,57 @@ class MasterPastor extends Model
     use HasIndirectId;
 
     protected $table = 'master_pastor';
-    protected $guarded = [];
+    protected $fillable = [
+        'nama_pastor',
+        'nama_singkat',
+        'gelar_depan',
+        'gelar_belakang',
+        'jabatan',
+        'jenis_imam',
+        'ordo_kongregasi',
+        'keuskupan',
+        'keuskupan_id',
+        'no_hp',
+        'email',
+        'foto',
+        'tanggal_tahbisan',
+        'keterangan',
+        'status',
+        'jenis_tempat_tugas',
+        'periode_mulai',
+        'periode_selesai',
+        'tampil_frontend',
+        'urutan',
+        'catatan_pelayanan',
+        'riwayat_tambahan',
+        'nama_baptis',
+        'nama_lahir',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'tgl_tahbisan_diakon',
+        'ordo',
+        'tgl_tahbisan',
+        'uskup_penahbis',
+        'tempat_tahbisan',
+        'motto_tahbisan',
+        'paroki_tugas',
+        'pendidikan_terakhir',
+        'seminari_tinggi',
+        'sedang_bertugas',
+        'is_deleted',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'sedang_bertugas' => 'boolean',
+            'is_deleted' => 'boolean',
+            'tgl_tahbisan' => 'date',
+            'tanggal_tahbisan' => 'date',
+            'tanggal_lahir' => 'date',
+        ];
+    }
+
     protected $appends = ['nama_lengkap_gelar', 'hashid'];
 
     /**

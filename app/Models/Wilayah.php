@@ -33,14 +33,19 @@ class Wilayah extends Model
         return $this->belongsTo(Paroki::class, 'paroki_id', 'id_paroki');
     }
 
+    public function kapelas()
+    {
+        return $this->hasManyThrough(Kapela::class, Lingkungan::class, 'wilayah_id', 'id', 'id', 'kapela_id')->distinct();
+    }
+
     public function kapela()
     {
-        return $this->belongsTo(Kapela::class, 'kapela_id');
+        return $this->hasOneThrough(Kapela::class, Lingkungan::class, 'wilayah_id', 'id', 'id', 'kapela_id');
     }
 
     public function stasi()
     {
-        return $this->belongsTo(Kapela::class, 'kapela_id');
+        return $this->kapela();
     }
 
     public function lingkungan()

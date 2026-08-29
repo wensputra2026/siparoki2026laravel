@@ -4,47 +4,13 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\MasterReferensiController;
 use Illuminate\Support\Facades\Route;
 
-if (!function_exists('siparoki_resolve_safe_file')) {
-    /**
-     * Safely resolve a candidate list of file paths, guaranteeing the final
-     * realpath stays inside one of the allowed base directories. Prevents
-     * directory traversal (e.g. /assets/uploads/../../.env) from disclosing
-     * arbitrary files outside the web root.
-     */
-    function siparoki_resolve_safe_file(array $candidates, array $allowedBases): ?string
-    {
-        $normalized = [];
-        foreach ($allowedBases as $base) {
-            $real = realpath($base);
-            if ($real === false) {
-                $real = $base;
-            }
-            $normalized[] = rtrim($real, '/\\') . DIRECTORY_SEPARATOR;
-        }
-
-        foreach ($candidates as $candidate) {
-            $real = realpath($candidate);
-            if ($real === false || !is_file($real)) {
-                continue;
-            }
-            $real .= (is_dir($real) ? DIRECTORY_SEPARATOR : '');
-            foreach ($normalized as $base) {
-                if (strncmp($real, $base, strlen($base)) === 0) {
-                    return $real;
-                }
-            }
-        }
-
-        return null;
-    }
-}
 
 
 // Inisialisasi & Setup Paroki Wizard (Untuk Instalasi Baru GitHub / Ganti Paroki)
 Route::get('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'index'])->name('setup.paroki');
 Route::post('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'save'])->name('setup.paroki.save');
 Route::get('/api/setup/hierarchy', [\App\Http\Controllers\SetupParokiController::class, 'getHierarchy'])->name('setup.paroki.hierarchy');
-Route::post('/admin/setup-paroki/reset', [\App\Http\Controllers\SetupParokiController::class, 'resetSetup'])->name('setup.paroki.reset');
+Route::post('/admin/setup-paroki/reset', [\App\Http\Controllers\SetupParokiController::class, 'resetSetup'])->name('setup.paroki.reset')->middleware('auth');
 
 // Beranda
 Route::get('/', [PageController::class, 'beranda'])->name('beranda');
@@ -121,8 +87,9 @@ Route::post('/lupa-password', [\App\Http\Controllers\AuthController::class, 'pro
 // API GeoJSON Kapela (Untuk Leaflet Map)
 Route::get('/api/kapela-geojson', [PageController::class, 'kapelaGeojson'])->name('api.kapela-geojson');
 
-// Auth Logout
-Route::match(['get', 'post'], '/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
+// Auth Logout (Strict POST for CSRF protection, safe GET redirect)
+Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
+Route::get('/logout', fn () => redirect('/login'))->name('logout.redirect');
 
 // Static / Dynamic smart uploads handler for katedral assets
 Route::get('/assets/uploads/{path}', function($path) {
@@ -169,6 +136,25 @@ Route::get('/uploads/{path}', function($path) {
     abort(404);
 })->where('path', '.*');
 
+// Static fallback handler for /assets/css/{path}
+Route::get('/assets/css/{path}', function($path) {
+    $baseName = basename($path);
+    $candidates = [
+        public_path('assets/css/' . $path),
+        public_path('css/' . $path),
+        public_path('assets/css/' . $baseName),
+        public_path('css/' . $baseName),
+    ];
+    $safe = siparoki_resolve_safe_file($candidates, [public_path()]);
+    if ($safe) {
+        return response()->file($safe, [
+            'Content-Type' => 'text/css; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=31536000',
+        ]);
+    }
+    abort(404);
+})->where('path', '.*');
+
 // Static / Dynamic storage uploads handler for galeri & assets
 Route::get('/storage/{path}', function($path) {
     $cleanPath = preg_replace('#^(uploads/)?#', '', $path);
@@ -191,35 +177,25 @@ Route::get('/storage/{path}', function($path) {
 
 
 
-// Proxy route: serve CI3 pastor/umat photos by filename
+// Proxy route: serve pastor/umat photos by filename securely within public/storage
 Route::get('/foto-pastor/{filename}', function(string $filename) {
     $baseName = basename($filename);
-    $ci3Root = base_path('../../parokibenlutuci31');
     $laravelPublic = public_path();
 
     $candidates = [
-        // Laravel public paths first
         $laravelPublic . '/uploads/pastor/' . $baseName,
         $laravelPublic . '/uploads/profil/' . $baseName,
         $laravelPublic . '/uploads/' . $baseName,
         $laravelPublic . '/assets/uploads/pastor/' . $baseName,
         $laravelPublic . '/assets/uploads/profil/' . $baseName,
         $laravelPublic . '/assets/uploads/' . $baseName,
-        // CI3 source paths
-        $ci3Root . '/assets/uploads/pastor/' . $baseName,
-        $ci3Root . '/assets/uploads/profil/' . $baseName,
-        $ci3Root . '/assets/uploads/' . $baseName,
-        $ci3Root . '/uploads/pastor/' . $baseName,
-        $ci3Root . '/uploads/' . $baseName,
-        // Laragon www root
-        base_path('../../parokibenlutuci31/assets/uploads/' . $baseName),
-        base_path('../../parokibenlutuci31/uploads/' . $baseName),
+        storage_path('app/public/pastor/' . $baseName),
+        storage_path('app/public/' . $baseName),
     ];
 
-    foreach ($candidates as $path) {
-        if (file_exists($path) && !is_dir($path)) {
-            return response()->file($path);
-        }
+    $safe = siparoki_resolve_safe_file($candidates, [$laravelPublic, storage_path('app/public')]);
+    if ($safe) {
+        return response()->file($safe);
     }
 
     // Return default pastor photo as fallback
@@ -425,10 +401,7 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
 }
 });
 
-// Global Dashboard & Admin Aliases
-Route::middleware([\App\Http\Middleware\PanelAccess::class])->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\InertiaPanelController::class, 'dashboard'])->name('dashboard');
-});
+// Global Admin Aliases
 Route::get('/panduan', function () {
     $user = auth()->user();
     if (!$user) return redirect()->route('login');
@@ -639,7 +612,6 @@ Route::get('/media_library/{path}', function ($path) {
 // ==========================================
 Route::post('/midtrans/snap-token', [\App\Http\Controllers\MidtransController::class, 'createSnapToken'])->name('midtrans.snap-token');
 Route::post('/midtrans/callback', [\App\Http\Controllers\MidtransController::class, 'handleCallback'])->name('midtrans.callback');
-Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransController::class, 'handleCallback'])->name('midtrans.webhook');
 Route::get('/midtrans/status/{orderId}', [\App\Http\Controllers\MidtransController::class, 'checkStatus'])->name('midtrans.status');
 
 // Fallback redirect untuk URL lawas /v2/* ke /superadmin/*

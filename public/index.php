@@ -5,10 +5,9 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-// Auto-detect core Laravel root directory (Local Dev vs cPanel hosting structure)
-$corePath = __DIR__ . '/..';
+// Auto-detect core Laravel root directory (Direct cPanel root vs Local Dev public/ folder)
+$corePath = file_exists(__DIR__ . '/vendor/autoload.php') ? __DIR__ : (__DIR__ . '/..');
 if (!file_exists($corePath . '/vendor/autoload.php')) {
-    // If placed inside public_html while core is in sibling folder (e.g. /home/user/parokibenlutu)
     $possibleCorePaths = [
         __DIR__ . '/../parokibenlutu',
         __DIR__ . '/../parokibenlutularavel12',

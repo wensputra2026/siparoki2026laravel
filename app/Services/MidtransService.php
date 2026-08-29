@@ -10,21 +10,32 @@ use Illuminate\Support\Facades\Log;
 
 class MidtransService
 {
-    protected PengaturanMidtrans $config;
+    protected ?PengaturanMidtrans $_config = null;
 
     public function __construct(?PengaturanMidtrans $config = null)
     {
-        $this->config = $config ?? PengaturanMidtrans::getActiveConfig();
+        $this->_config = $config;
     }
 
     public function getConfig(): PengaturanMidtrans
     {
-        return $this->config;
+        if ($this->_config === null) {
+            $this->_config = PengaturanMidtrans::getActiveConfig();
+        }
+        return $this->_config;
+    }
+
+    public function __get(string $name)
+    {
+        if ($name === 'config') {
+            return $this->getConfig();
+        }
+        return null;
     }
 
     public function isProduction(): bool
     {
-        return (bool) $this->config->is_production;
+        return (bool) $this->getConfig()->is_production;
     }
 
     public function getSnapJsUrl(): string

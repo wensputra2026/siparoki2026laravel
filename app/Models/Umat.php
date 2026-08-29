@@ -73,6 +73,10 @@ class Umat extends Model
         'status_umat',
         'pasangan_umat_id',
         'foto',
+        'wilayah_id',
+        'kub_id',
+        'lingkungan_id',
+        'kapela_id',
         'created_by',
         'updated_by',
     ];
@@ -119,7 +123,37 @@ class Umat extends Model
 
     public function lingkungan()
     {
-        return $this->belongsTo(Lingkungan::class);
+        return $this->belongsTo(Lingkungan::class, 'lingkungan_id');
+    }
+
+    public function kub()
+    {
+        return $this->belongsTo(Kub::class, 'kub_id');
+    }
+
+    public function wilayah()
+    {
+        return $this->belongsTo(Wilayah::class, 'wilayah_id');
+    }
+
+    public function kapela()
+    {
+        return $this->belongsTo(Kapela::class, 'kapela_id');
+    }
+
+    public function getEffectiveLingkunganAttribute()
+    {
+        return $this->lingkungan ?? $this->kk?->lingkungan;
+    }
+
+    public function getEffectiveKubAttribute()
+    {
+        return $this->kub ?? $this->kk?->kub;
+    }
+
+    public function getEffectiveWilayahAttribute()
+    {
+        return $this->wilayah ?? $this->kk?->wilayah;
     }
 
     public function sakramen()
@@ -130,5 +164,10 @@ class Umat extends Model
     public function sakramenUmat()
     {
         return $this->hasOne(SakramenUmat::class, 'umat_id');
+    }
+
+    public function pengajuanSakramen()
+    {
+        return $this->hasMany(PengajuanSakramen::class, 'umat_id');
     }
 }

@@ -8,7 +8,14 @@ class Kecamatan extends Model
 {
     protected $table = 'kecamatan';
     protected $primaryKey = 'id_kecamatan';
-    protected $guarded = [];
+    protected $fillable = [
+        'kabupaten_id',
+        'kode_kecamatan',
+        'nama_kecamatan',
+        'status',
+        'delete_reason',
+        'is_deleted',
+    ];
 
     public function kabupaten()
     {

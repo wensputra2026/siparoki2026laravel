@@ -86,7 +86,7 @@ trait SettingsModuleTrait
             'initialTab' => $activeTab,
             'metodePembayaran' => $metodePembayaran,
             'pengaturanMidtrans' => $pengaturanMidtrans,
-            'webhookUrl' => url('/midtrans/callback'),
+            'webhookUrl' => url('/api/midtrans/webhook'),
             'pengaturanOtp' => $pengaturanOtp,
             'sliders' => $sliders,
             'pengaturanAplikasi' => $pengaturanAplikasi,

@@ -17,6 +17,11 @@ class MinifyHtml
     {
         $response = $next($request);
 
+        // Skip on local/testing or debug mode for easier inspection and better dev performance
+        if (app()->environment(['local', 'testing']) || config('app.debug')) {
+            return $response;
+        }
+
         // Skip binary, streaming, AJAX, and Inertia responses
         if (
             $response instanceof BinaryFileResponse ||

@@ -8,7 +8,23 @@ class Dekenat extends Model
 {
     protected $table = 'dekenat';
     protected $primaryKey = 'id_dekenat';
-    protected $guarded = [];
+    protected $fillable = [
+        'keuskupan_id',
+        'kode_dekenat',
+        'nama_dekenat',
+        'deken',
+        'alamat',
+        'provinsi_id',
+        'kabupaten_id',
+        'kecamatan_id',
+        'desa_id',
+        'telepon',
+        'email',
+        'keterangan',
+        'status',
+        'delete_reason',
+        'is_deleted',
+    ];
 
     public function keuskupan()
     {

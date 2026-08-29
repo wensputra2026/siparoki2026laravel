@@ -7,7 +7,37 @@ use Illuminate\Database\Eloquent\Model;
 class KuasiParoki extends Model
 {
     protected $table = 'kuasi_paroki';
-    protected $guarded = [];
+    protected $fillable = [
+        'paroki_id',
+        'NamaKuasiParoki',
+        'KodeKuasiParoki',
+        'AlamatKuasiParoki',
+        'RT',
+        'RW',
+        'Kelurahan',
+        'Kecamatan',
+        'Kota',
+        'KodePos',
+        'Telepon',
+        'Email',
+        'Website',
+        'PastorKuasiParoki',
+        'AdminKuasiParoki',
+        'TahunDidirikan',
+        'TanggalDiresmikan',
+        'StatusAktif',
+        'Keterangan',
+        'Latitude',
+        'Longitude',
+        'CreatedAt',
+        'UpdatedAt',
+        'CreatedBy',
+        'UpdatedBy',
+        'provinsi_id',
+        'kabupaten_id',
+        'kecamatan_id',
+        'desa_id',
+    ];
     protected $appends = [
         'nama_kuasi',
         'kode_kuasi',

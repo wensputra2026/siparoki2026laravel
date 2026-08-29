@@ -7,7 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class Kevikepan extends Model
 {
     protected $table = 'kevikepan';
-    protected $guarded = [];
+    protected $fillable = [
+        'nama_kevikepan',
+        'vikep',
+        'alamat',
+        'telepon',
+        'email',
+        'keuskupan_id',
+        'status',
+    ];
 
     public function keuskupan()
     {

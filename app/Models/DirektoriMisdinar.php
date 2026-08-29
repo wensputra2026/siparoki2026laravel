@@ -8,7 +8,28 @@ class DirektoriMisdinar extends Model
 {
     protected $table = 'direktori_misdinar';
     protected $primaryKey = 'id_misdinar';
-    protected $guarded = [];
+    protected $fillable = [
+        'id_misdinar',
+        'paroki_id',
+        'stasi_kapela_id',
+        'wilayah_id',
+        'lingkungan_id',
+        'kub_id',
+        'umat_id',
+        'umat_peran_id',
+        'nama_lengkap',
+        'tingkat',
+        'tanggal_bergabung',
+        'status_aktif',
+        'no_hp',
+        'nama_orang_tua',
+        'no_hp_orang_tua',
+        'foto',
+        'catatan',
+        'tampil_frontend',
+        'delete_reason',
+        'is_deleted',
+    ];
 
     protected $appends = ['nama', 'status', 'kontak'];
 

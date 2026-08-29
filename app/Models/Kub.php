@@ -7,7 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 class Kub extends Model
 {
     protected $table = 'kub';
-    protected $guarded = [];
+    protected $fillable = [
+        'paroki_id',
+        'wilayah_id',
+        'kapela_id',
+        'lingkungan_id',
+        'kode_kub',
+        'nama_kub',
+        'nama_pelindung',
+        'ketua_kub',
+        'deskripsi',
+        'no_hp',
+        'keterangan',
+        'status',
+        'delete_reason',
+        'is_deleted',
+    ];
 
     public function lingkungan()
     {

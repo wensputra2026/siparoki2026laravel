@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -292,6 +293,10 @@ trait GenericModuleTrait
                 if ($pkVal) {
                     $item->hashid = encode_id($pkVal);
                     $item->iid = $item->hashid;
+                }
+                // Sediakan URL logo (dengan fallback default) ke frontend
+                if ($slug === 'keuskupan' && method_exists($item, 'getLogoUrlAttribute')) {
+                    $item->append('logo_url');
                 }
                 if (in_array($slug, ['kategori-konten', 'kategori_konten'], true)) {
                     $catId = $pkVal;
@@ -663,6 +668,9 @@ trait GenericModuleTrait
             ]);
         }
 
+        // Validasi khusus modul wilayah gerejawi (Keuskupan & Dekenat/Kevikepan)
+        $this->validateTerritoryModule($request, $slug);
+
         $data = $request->except(['_token', '_method']);
 
         // Universal file upload processing
@@ -706,6 +714,14 @@ trait GenericModuleTrait
         if ($slug === 'kuasi-paroki') {
             $data = $this->normalizeKuasiParokiPayload($data);
         }
+
+        // Normalisasi field form (shared dengan Kevikepan) ke kolom tabel Dekenat
+        if ($slug === 'keuskupan') {
+            $data = $this->normalizeKeuskupanPayload($data);
+        }
+        if ($slug === 'dekenat') {
+            $data = $this->normalizeDekenatPayload($data);
+        }
         if ($slug === 'direktori-dpp' || $slug === 'direktori_dpp') {
             $data = $this->normalizeDirektoriDppPayload($data);
         }
@@ -729,16 +745,25 @@ trait GenericModuleTrait
             }
         }
 
-        // Filter data strictly by database table schema to prevent unknown column errors
-        $table = (new $modelClass)->getTable();
+        // Filter data strictly by database table schema to prevent unknown column errors and mass assignment tampering
+        $modelObj = new $modelClass;
+        $table = $modelObj->getTable();
+        $pkName = $modelObj->getKeyName();
         $validColumns = $this->schemaColumns($table);
+        $blockedColumns = ['created_at', 'updated_at', 'deleted_at', 'deleted_by', 'delete_reason', 'is_deleted', 'remember_token', 'password_hash'];
+        $authUser = auth()->user();
+        $isSuperAdmin = $authUser && ((int)$authUser->role_id === 1 || (int)$authUser->id === 1 || in_array(strtolower(preg_replace('/[^a-z0-9]/', '', $authUser->role?->slug ?? '')), ['superadmin', 'superadministrator'], true));
+
         $cleanData = [];
         foreach ($data as $k => $v) {
-            if ($k === 'is_deleted') {
+            if ($k === $pkName || $k === 'id' || in_array($k, $blockedColumns, true)) {
                 continue;
             }
-            if (in_array($k, $validColumns, true) && !in_array($k, ['created_at', 'updated_at', 'deleted_at'], true)) {
-                if (in_array($k, ['status_aktif', 'tampil_frontend', 'is_deleted'], true)) {
+            if ($k === 'role_id' && !$isSuperAdmin) {
+                continue;
+            }
+            if (in_array($k, $validColumns, true)) {
+                if (in_array($k, ['status_aktif', 'tampil_frontend'], true)) {
                     if (is_string($v)) {
                         $v = in_array(strtolower($v), ['aktif', 'active', '1', 'true', 'ya'], true) ? 1 : 0;
                     } elseif (is_bool($v)) {
@@ -792,6 +817,9 @@ trait GenericModuleTrait
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
 
+        // Validasi khusus modul wilayah gerejawi (Keuskupan & Dekenat/Kevikepan)
+        $this->validateTerritoryModule($request, $slug, decode_id($id) ?: $id);
+
         $modelInstance = new $modelClass;
         $pk = $modelInstance->getKeyName();
 
@@ -827,7 +855,13 @@ trait GenericModuleTrait
 
         // Universal file upload processing
         foreach ($request->allFiles() as $fileKey => $uploadedFile) {
+            $oldFile = $item->{$fileKey} ?? null;
             $data[$fileKey] = $this->storeModuleUploadedFile($slug, $fileKey, $uploadedFile);
+
+            // Hapus file lama dari storage bila logo/gambar diganti
+            if ($oldFile && $oldFile !== $data[$fileKey]) {
+                $this->deleteModuleFile($oldFile);
+            }
         }
 
         if ($slug === 'user') {
@@ -866,6 +900,14 @@ trait GenericModuleTrait
         if ($slug === 'kuasi-paroki') {
             $data = $this->normalizeKuasiParokiPayload($data, $item);
         }
+
+        // Normalisasi field form (shared dengan Kevikepan) ke kolom tabel Dekenat
+        if ($slug === 'keuskupan') {
+            $data = $this->normalizeKeuskupanPayload($data);
+        }
+        if ($slug === 'dekenat') {
+            $data = $this->normalizeDekenatPayload($data);
+        }
         if ($slug === 'direktori-dpp' || $slug === 'direktori_dpp') {
             $data = $this->normalizeDirektoriDppPayload($data);
         }
@@ -889,16 +931,25 @@ trait GenericModuleTrait
             }
         }
 
-        // Filter data strictly by database table schema to prevent unknown column errors
-        $table = (new $modelClass)->getTable();
+        // Filter data strictly by database table schema to prevent unknown column errors and mass assignment tampering
+        $modelObj = new $modelClass;
+        $table = $modelObj->getTable();
+        $pkName = $modelObj->getKeyName();
         $validColumns = $this->schemaColumns($table);
+        $blockedColumns = ['created_at', 'updated_at', 'deleted_at', 'deleted_by', 'delete_reason', 'is_deleted', 'remember_token', 'password_hash'];
+        $authUser = auth()->user();
+        $isSuperAdmin = $authUser && ((int)$authUser->role_id === 1 || (int)$authUser->id === 1 || in_array(strtolower(preg_replace('/[^a-z0-9]/', '', $authUser->role?->slug ?? '')), ['superadmin', 'superadministrator'], true));
+
         $cleanData = [];
         foreach ($data as $k => $v) {
-            if ($k === 'is_deleted') {
+            if ($k === $pkName || $k === 'id' || in_array($k, $blockedColumns, true)) {
                 continue;
             }
-            if (in_array($k, $validColumns, true) && !in_array($k, ['created_at', 'updated_at', 'deleted_at'], true)) {
-                if (in_array($k, ['status_aktif', 'tampil_frontend', 'is_deleted'], true)) {
+            if ($k === 'role_id' && !$isSuperAdmin) {
+                continue;
+            }
+            if (in_array($k, $validColumns, true)) {
+                if (in_array($k, ['status_aktif', 'tampil_frontend'], true)) {
                     if (is_string($v)) {
                         $v = in_array(strtolower($v), ['aktif', 'active', '1', 'true', 'ya'], true) ? 1 : 0;
                     } elseif (is_bool($v)) {
@@ -1248,8 +1299,45 @@ trait GenericModuleTrait
             return null;
         }
 
+        // 9. Proteksi Keuskupan
+        if ($slug === 'keuskupan') {
+            $namaKeuskupan = $item->nama_keuskupan ?? ('ID ' . $id);
+            $links = [];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('dekenat', 'keuskupan_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('dekenat')->where('keuskupan_id', $id)->count();
+                if ($c > 0) $links[] = "Dekenat/Kevikepan ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('paroki', 'keuskupan_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('paroki')->where('keuskupan_id', $id)->count();
+                if ($c > 0) $links[] = "Paroki ({$c})";
+            }
+            if (!empty($links)) {
+                return "Keuskupan '{$namaKeuskupan}' tidak dapat dihapus karena masih memuat: " . implode(', ', $links) . ". Pindahkan atau hapus data terkait terlebih dahulu.";
+            }
+            return null;
+        }
+
+        // 10. Proteksi Dekenat / Kevikepan
+        if (in_array($slug, ['dekenat', 'kevikepan'], true)) {
+            $nama = $item->nama_dekenat ?? $item->nama_kevikepan ?? ('ID ' . $id);
+            $links = [];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('paroki', 'dekenat_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('paroki')->where('dekenat_id', $id)->count();
+                if ($c > 0) $links[] = "Paroki ({$c})";
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('kuasi_paroki', 'dekenat_id')) {
+                $c = \Illuminate\Support\Facades\DB::table('kuasi_paroki')->where('dekenat_id', $id)->count();
+                if ($c > 0) $links[] = "Kuasi Paroki ({$c})";
+            }
+            if (!empty($links)) {
+                return "Dekenat/Kevikepan '{$nama}' tidak dapat dihapus karena masih memiliki data aktif: " . implode(', ', $links) . ". Pindahkan atau hapus Paroki terkait terlebih dahulu.";
+            }
+            return null;
+        }
+
         return null;
     }
+
 
     public function destroyModule(Request $request, string $slug, $id)
     {
@@ -3018,6 +3106,143 @@ trait GenericModuleTrait
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
         }
         return $data;
+    }
+
+
+    /**
+     * Validasi khusus modul wilayah gerejawi (Keuskupan & Dekenat/Kevikepan).
+     * Mencegah duplikasi kode/nama dalam satu keuskupan untuk Dekenat.
+     */
+    protected function validateTerritoryModule(Request $request, string $slug, $ignoreId = null): void
+    {
+        if ($slug === 'keuskupan') {
+            $uniqueNameRule = Rule::unique('keuskupan', 'nama_keuskupan')
+                ->where(function ($q) {
+                    $q->whereNull('deleted_at')
+                      ->where(function ($sq) {
+                          $sq->whereNull('is_deleted')->orWhere('is_deleted', 0);
+                      });
+                });
+
+            if ($ignoreId && $ignoreId !== 'NULL') {
+                $uniqueNameRule->ignore($ignoreId, 'id_keuskupan');
+            }
+
+            $request->validate([
+                'nama_keuskupan' => ['required', 'string', 'max:150', $uniqueNameRule],
+                'kode_keuskupan' => 'nullable|string|max:50',
+                'nama_latin' => 'nullable|string|max:150',
+                'nama_uskup' => 'nullable|string|max:150',
+                'uskup' => 'nullable|string|max:150',
+                'alamat' => 'nullable|string',
+                'telepon' => 'nullable|string|max:50',
+                'no_telp' => 'nullable|string|max:50',
+                'email' => 'nullable|email|max:100',
+                'website' => 'nullable|string|max:150',
+                'logo' => $request->hasFile('logo') ? 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048' : 'nullable',
+            ], [
+                'nama_keuskupan.required' => 'Nama Keuskupan wajib diisi.',
+                'nama_keuskupan.unique' => 'Nama Keuskupan sudah terdaftar.',
+                'email.email' => 'Format email tidak valid.',
+                'logo.image' => 'Logo harus berupa gambar.',
+                'logo.mimes' => 'Logo harus berformat: png, jpg, jpeg, webp, atau svg.',
+                'logo.max' => 'Ukuran logo maksimal 2MB.',
+            ]);
+            return;
+        }
+
+        if (in_array($slug, ['dekenat', 'kevikepan'], true)) {
+            $table = $slug === 'dekenat' ? 'dekenat' : 'kevikepan';
+            $kodeCol = $slug === 'dekenat' ? 'kode_dekenat' : 'kode_kevikepan';
+            $namaCol = $slug === 'dekenat' ? 'nama_dekenat' : 'nama_kevikepan';
+            $idCol = 'id_' . $table;
+
+            $request->validate([
+                'keuskupan_id' => 'required|exists:keuskupan,id_keuskupan',
+                'kode_kevikepan' => [
+                    'required', 'string', 'max:50',
+                    Rule::unique($table, $kodeCol)
+                        ->where(fn ($q) => $q->where('keuskupan_id', $request->input('keuskupan_id'))->whereNull('deleted_at')->where(fn ($sq) => $sq->whereNull('is_deleted')->orWhere('is_deleted', 0)))
+                        ->ignore($ignoreId ?: null, $idCol),
+                ],
+                'nama_kevikepan' => [
+                    'required', 'string', 'max:150',
+                    Rule::unique($table, $namaCol)
+                        ->where(fn ($q) => $q->where('keuskupan_id', $request->input('keuskupan_id'))->whereNull('deleted_at')->where(fn ($sq) => $sq->whereNull('is_deleted')->orWhere('is_deleted', 0)))
+                        ->ignore($ignoreId ?: null, $idCol),
+                ],
+                'vikep' => 'nullable|string|max:150',
+                'deken' => 'nullable|string|max:150',
+                'alamat' => 'nullable|string',
+                'telepon' => 'nullable|string|max:50',
+                'email' => 'nullable|email|max:100',
+            ], [
+                'keuskupan_id.required' => 'Keuskupan naungan wajib dipilih.',
+                'keuskupan_id.exists' => 'Keuskupan naungan tidak valid.',
+                'kode_kevikepan.required' => 'Kode Kevikepan/Dekenat wajib diisi.',
+                'kode_kevikepan.unique' => 'Kode sudah digunakan untuk keuskupan yang sama.',
+                'nama_kevikepan.required' => 'Nama Kevikepan/Dekenat wajib diisi.',
+                'nama_kevikepan.unique' => 'Nama sudah digunakan untuk keuskupan yang sama.',
+                'email.email' => 'Format email tidak valid.',
+            ]);
+            return;
+        }
+    }
+
+    /**
+     * Normalisasi field form Keuskupan (binding frontend: uskup, no_telp)
+     * ke kolom tabel yang sesungguhnya.
+     */
+    protected function normalizeKeuskupanPayload(array $data): array
+    {
+        if (isset($data['uskup']) && !isset($data['nama_uskup'])) {
+            $data['nama_uskup'] = $data['uskup'];
+        }
+        if (isset($data['no_telp']) && !isset($data['telepon'])) {
+            $data['telepon'] = $data['no_telp'];
+        }
+        if (isset($data['nama_keuskupan_latin']) && !isset($data['nama_latin'])) {
+            $data['nama_latin'] = $data['nama_keuskupan_latin'];
+        }
+        if (isset($data['logo']) && (!is_string($data['logo']) || in_array($data['logo'], ['', 'null', 'undefined', '[object Object]'], true))) {
+            unset($data['logo']);
+        }
+        return $data;
+    }
+
+    /**
+     * Form Dekenat berbagi layout dengan Kevikepan sehingga mengirimkan
+     * field bernama kode_kevikepan/nama_kevikepan/vikep. Normalisasi ke
+     * kolom tabel dekenat yang sebenarnya.
+     */
+    protected function normalizeDekenatPayload(array $data): array
+    {
+        if (isset($data['kode_kevikepan']) && !isset($data['kode_dekenat'])) {
+            $data['kode_dekenat'] = $data['kode_kevikepan'];
+        }
+        if (isset($data['nama_kevikepan']) && !isset($data['nama_dekenat'])) {
+            $data['nama_dekenat'] = $data['nama_kevikepan'];
+        }
+        if (isset($data['vikep']) && !isset($data['deken'])) {
+            $data['deken'] = $data['vikep'];
+        }
+        return $data;
+    }
+
+    /**
+     * Hapus file fisik hasil upload modul (logo/gambar) dari public/.
+     */
+    protected function deleteModuleFile(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+        $relative = ltrim((string) $path, '/');
+        $relative = str_starts_with($relative, 'public/') ? substr($relative, 7) : $relative;
+        $absolute = public_path($relative);
+        if (is_file($absolute)) {
+            @unlink($absolute);
+        }
     }
 
 }

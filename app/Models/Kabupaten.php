@@ -8,7 +8,15 @@ class Kabupaten extends Model
 {
     protected $table = 'kabupaten';
     protected $primaryKey = 'id_kabupaten';
-    protected $guarded = [];
+    protected $fillable = [
+        'provinsi_id',
+        'kode_kabupaten',
+        'nama_kabupaten',
+        'tipe',
+        'status',
+        'delete_reason',
+        'is_deleted',
+    ];
 
     public function provinsi()
     {

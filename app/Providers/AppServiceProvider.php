@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
@@ -86,6 +85,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         require_once app_path('Helpers/IdHelper.php');
+        require_once app_path('Helpers/FileHelper.php');
     }
 
     /**
@@ -116,42 +116,7 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        // Auto sync assets from C:/laragon/www/katedral/assets/frontend/siparoki/images if present
-        $katedralImagesPath = 'C:/laragon/www/katedral/assets/frontend/siparoki/images';
-        $destPath = public_path('assets/frontend/siparoki/images');
-        $publicImagesPath = public_path('images');
-
-        if (is_dir($katedralImagesPath)) {
-            if (!is_dir($destPath)) {
-                @mkdir($destPath, 0777, true);
-            }
-            if (!is_dir($publicImagesPath)) {
-                @mkdir($publicImagesPath, 0777, true);
-            }
-            $files = @scandir($katedralImagesPath) ?: [];
-            foreach ($files as $f) {
-                if ($f !== '.' && $f !== '..' && is_file($katedralImagesPath . '/' . $f)) {
-                    @copy($katedralImagesPath . '/' . $f, $destPath . '/' . $f);
-                    @copy($katedralImagesPath . '/' . $f, $publicImagesPath . '/' . $f);
-                }
-            }
-
-            if (file_exists($destPath . '/default-pastor.jpg')) {
-                @copy($destPath . '/default-pastor.jpg', $publicImagesPath . '/pastor-avatar.jpg');
-                @copy($destPath . '/default-pastor.jpg', $publicImagesPath . '/imam.jpg');
-            }
-        }
-
         $this->registerPolicies();
-
-        Model::unguard();
-
-        try {
-            \App\Models\KomentarArtikel::ensureTableExists();
-            \App\Models\PengaturanAplikasi::ensureSetupColumns();
-        } catch (\Throwable $e) {
-            // Silently continue
-        }
 
         // Superadmin bypass — Pastor Paroki & Admin full access
         Gate::before(function (User $user, string $ability): ?bool {

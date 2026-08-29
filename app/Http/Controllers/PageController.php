@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class PageController extends Controller
 {
@@ -229,7 +230,9 @@ class PageController extends Controller
                             })
                             ->first();
                     }
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                    Log::warning('Gagal query pastor paroki: ' . $e->getMessage());
+                }
             }
 
             if ($pastorParokiObj) {
@@ -287,7 +290,9 @@ class PageController extends Controller
                     if ($activePastorRiwayat && !empty($activePastorRiwayat->foto)) {
                         $rawPastorFoto = $activePastorRiwayat->foto;
                     }
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                    Log::warning('Gagal query foto imam: ' . $e->getMessage());
+                }
             }
 
             $pastorFotoUrl = null;
@@ -362,7 +367,9 @@ class PageController extends Controller
                         })
                         ->orderBy('nama_kategori')
                         ->get();
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                    Log::warning('Gagal query kategori konten: ' . $e->getMessage());
+                }
             }
 
             return [
@@ -429,7 +436,9 @@ class PageController extends Controller
                     ], 503);
                 }
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::warning('Gagal query statistik umum paroki: ' . $e->getMessage());
+        }
 
         return null;
     }
@@ -830,7 +839,9 @@ class PageController extends Controller
                           ->orWhereNull('is_deleted');
                     })->first();
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+                Log::warning('Gagal query sambutan pastor: ' . $e->getMessage());
+            }
         }
 
         return view('pages.sambutan', array_merge($common, compact('sambutan')));
@@ -1070,7 +1081,9 @@ class PageController extends Controller
                     $c->total = $kontenCounts->get($name, 0);
                     return $c;
                 });
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+                Log::warning('Gagal count konten kategori: ' . $e->getMessage());
+            }
         }
 
         if ($categories->isEmpty()) {
@@ -1197,7 +1210,9 @@ class PageController extends Controller
         // Increment views counter
         try {
             DB::table('konten')->where('id', $item->id)->increment('views');
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            Log::warning('Gagal increment views konten: ' . $e->getMessage());
+        }
 
         $terkait = DB::table('konten')
             ->where('status_publish', 'Publish')

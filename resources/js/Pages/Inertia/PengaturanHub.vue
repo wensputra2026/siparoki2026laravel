@@ -132,7 +132,7 @@ const testMidtransConnection = () => {
 };
 
 const copyWebhookUrl = () => {
-    const url = props.webhookUrl || `${window.location.origin}/midtrans/callback`;
+    const url = props.webhookUrl || `${window.location.origin}/api/midtrans/webhook`;
     navigator.clipboard.writeText(url).then(() => {
         copiedWebhook.value = true;
         setTimeout(() => {
@@ -834,7 +834,7 @@ const getYoutubeEmbed = (url) => {
 
                             <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
                                 <div class="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 break-all font-bold">
-                                    {{ webhookUrl || `${$page.props.appUrl || 'http://127.0.0.1:8000'}/midtrans/callback` }}
+                                    {{ webhookUrl || `${$page.props.appUrl || 'http://127.0.0.1:8000'}/api/midtrans/webhook` }}
                                 </div>
                                 <button
                                     type="button"

@@ -8,7 +8,31 @@ class DirektoriKatekis extends Model
 {
     protected $table = 'direktori_katekis';
     protected $primaryKey = 'id_katekis';
-    protected $guarded = [];
+    protected $fillable = [
+        'id_katekis',
+        'paroki_id',
+        'stasi_kapela_id',
+        'wilayah_id',
+        'lingkungan_id',
+        'kub_id',
+        'umat_id',
+        'umat_peran_id',
+        'nama_lengkap',
+        'jenis_katekis',
+        'wilayah_pelayanan',
+        'sertifikasi',
+        'nomor_sk',
+        'tanggal_mulai_tugas',
+        'tanggal_selesai_tugas',
+        'no_hp',
+        'email',
+        'foto',
+        'status_aktif',
+        'tampil_frontend',
+        'keterangan',
+        'delete_reason',
+        'is_deleted',
+    ];
 
     protected $appends = ['nama', 'status', 'kontak'];
 

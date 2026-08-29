@@ -91,7 +91,7 @@ const triggerToast = (msg, type = 'success') => {
 
 const confirmLogout = () => {
     showLogoutModal.value = false;
-    window.location.href = '/logout';
+    router.post('/logout');
 };
 
 const userAvatar = computed(() => {

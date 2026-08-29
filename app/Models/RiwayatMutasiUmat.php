@@ -10,7 +10,28 @@ class RiwayatMutasiUmat extends Model
     use HasFactory;
 
     protected $table = 'riwayat_mutasi_umat';
-    protected $guarded = [];
+    protected $fillable = [
+        'umat_id',
+        'jenis_mutasi',
+        'paroki_tujuan',
+        'no_surat_pindah',
+        'tgl_mutasi',
+        'alasan',
+        'status_sebelum',
+        'status_sesudah',
+        'paroki_asal_id',
+        'paroki_asal_nama',
+        'paroki_tujuan_id',
+        'paroki_tujuan_nama',
+        'wilayah_asal_id',
+        'wilayah_tujuan_id',
+        'kub_asal_id',
+        'kub_tujuan_id',
+        'alamat_sebelum',
+        'alamat_sesudah',
+        'tgl_surat_pindah',
+        'kk_id',
+    ];
 
     public function umat()
     {

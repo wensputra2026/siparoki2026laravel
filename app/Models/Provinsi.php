@@ -8,7 +8,13 @@ class Provinsi extends Model
 {
     protected $table = 'provinsi';
     protected $primaryKey = 'id_provinsi';
-    protected $guarded = [];
+    protected $fillable = [
+        'kode_provinsi',
+        'nama_provinsi',
+        'status',
+        'delete_reason',
+        'is_deleted',
+    ];
 
     public function kabupatens()
     {

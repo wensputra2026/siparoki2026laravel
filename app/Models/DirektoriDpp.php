@@ -8,7 +8,26 @@ class DirektoriDpp extends Model
 {
     protected $table = 'direktori_dpp';
     protected $primaryKey = 'id_dpp';
-    protected $guarded = [];
+    protected $fillable = [
+        'id_dpp',
+        'paroki_id',
+        'umat_id',
+        'umat_peran_id',
+        'nama_lengkap',
+        'jabatan',
+        'bidang',
+        'periode_mulai',
+        'periode_selesai',
+        'no_hp',
+        'email',
+        'foto',
+        'urutan',
+        'status_aktif',
+        'tampil_frontend',
+        'keterangan',
+        'delete_reason',
+        'is_deleted',
+    ];
 
     protected $appends = ['seksi', 'status', 'nama', 'periode'];
 
