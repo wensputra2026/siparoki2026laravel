@@ -206,7 +206,9 @@ class HandleInertiaRequests extends Middleware
                 'nama_paroki' => $namaParoki,
                 'logo'        => $logoParoki,
                 'favicon'     => $logoParoki,
+                'fitur_chat_aktif' => (bool) ($pengaturanAplikasi?->fitur_chat_aktif ?? true),
             ],
+            'fitur_chat_aktif' => (bool) ($pengaturanAplikasi?->fitur_chat_aktif ?? true),
         ];
     }
 }

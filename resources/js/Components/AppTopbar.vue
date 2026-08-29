@@ -196,8 +196,8 @@ onUnmounted(() => {
                 <span>Panduan RBAC</span>
             </Link>
 
-            <!-- Real-time Internal Chat & Messaging -->
-            <AppChatWidget />
+            <!-- Real-time Internal Chat & Messaging (Active only when enabled by Super Admin) -->
+            <AppChatWidget v-if="$page.props.auth?.user?.is_super_admin || $page.props.fitur_chat_aktif !== false" />
 
             <!-- Real-time Notification Bell -->
             <AppNotificationBell />

@@ -412,6 +412,7 @@ trait SettingsModuleTrait
     {
         $this->ensureSettingsHubTables();
         $validated = $request->validate([
+            'fitur_chat_aktif' => 'nullable|string|max:10',
             'widget_jadwal_misa' => 'nullable|string|max:10',
             'widget_renungan' => 'nullable|string|max:10',
             'widget_statistik' => 'nullable|string|max:10',
@@ -426,6 +427,7 @@ trait SettingsModuleTrait
         if (Schema::hasTable('pengaturan_aplikasi')) {
             $first = DB::table('pengaturan_aplikasi')->first();
             $payload = [
+                'fitur_chat_aktif' => $validated['fitur_chat_aktif'] ?? '1',
                 'widget_jadwal_misa' => $validated['widget_jadwal_misa'] ?? '1',
                 'widget_renungan' => $validated['widget_renungan'] ?? '1',
                 'widget_statistik' => $validated['widget_statistik'] ?? '1',

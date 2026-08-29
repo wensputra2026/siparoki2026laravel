@@ -12,6 +12,26 @@ use Illuminate\Support\Facades\DB;
 class ChatController extends Controller
 {
     /**
+     * Check if internal chat feature is enabled globally
+     */
+    protected function isChatEnabled(): bool
+    {
+        $user = Auth::user();
+        if (!$user) return false;
+        $roleName = strtolower($user->role?->nama_role ?? '');
+        if ((int) $user->role_id === 1 || str_contains($roleName, 'super')) {
+            return true;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasTable('pengaturan_aplikasi')) {
+            $val = \Illuminate\Support\Facades\DB::table('pengaturan_aplikasi')->value('fitur_chat_aktif');
+            if ($val !== null && ((string) $val === '0' || $val === false)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Get available contacts list with last message and unread count
      */
     public function getContacts(Request $request): JsonResponse
@@ -19,6 +39,10 @@ class ChatController extends Controller
         $currentUserId = Auth::id();
         if (!$currentUserId) {
             return response()->json(['contacts' => [], 'total_unread' => 0], 401);
+        }
+
+        if (!$this->isChatEnabled()) {
+            return response()->json(['contacts' => [], 'total_unread' => 0, 'disabled' => true]);
         }
 
         // Touch current user online cache
@@ -176,6 +200,10 @@ class ChatController extends Controller
         $currentUserId = Auth::id();
         if (!$currentUserId) {
             return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+
+        if (!$this->isChatEnabled()) {
+            return response()->json(['error' => 'Fitur chat internal sedang dinonaktifkan oleh administrator paroki.'], 403);
         }
 
         $validated = $request->validate([

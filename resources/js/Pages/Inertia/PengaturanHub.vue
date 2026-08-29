@@ -350,6 +350,7 @@ const submitSeo = () => {
 
 // Widget Form
 const widgetForm = useForm({
+    fitur_chat_aktif: props.pengaturanAplikasi?.fitur_chat_aktif !== undefined ? String(props.pengaturanAplikasi.fitur_chat_aktif) : '1',
     widget_jadwal_misa: props.pengaturanAplikasi?.widget_jadwal_misa ?? '1',
     widget_renungan: props.pengaturanAplikasi?.widget_renungan ?? '1',
     widget_statistik: props.pengaturanAplikasi?.widget_statistik ?? '1',
@@ -537,8 +538,8 @@ const getYoutubeEmbed = (url) => {
                             : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
                     ]"
                 >
-                    <i class="fa-solid fa-puzzle-piece text-indigo-500"></i>
-                    <span>Widget &amp; Medsos</span>
+                    <i class="fa-solid fa-comments text-blue-500"></i>
+                    <span>Widget &amp; Fitur Chat</span>
                 </button>
 
                 <button
@@ -1326,6 +1327,50 @@ const getYoutubeEmbed = (url) => {
             <!-- Tab 6: Widget & Medsos -->
             <div v-show="activeTab === 'widget'" class="max-w-3xl space-y-6">
                 <form @submit.prevent="submitWidget" class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-5">
+                    <!-- FITUR CHAT & KOMUNIKASI INTERNAL -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-slate-50 border border-blue-200/80 dark:bg-slate-900 dark:border-blue-900/50 space-y-3">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg shrink-0 shadow-md shadow-blue-600/20">
+                                    <i class="fa-solid fa-comments"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-extrabold text-slate-900 dark:text-white">
+                                        Fitur Chat Internal Antar-Pengguna &amp; Pastoral
+                                    </h4>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
+                                        Kendali sakelar master untuk mengaktifkan atau menonaktifkan fitur obrolan instan (real-time chat) di seluruh sistem.
+                                    </p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                <input
+                                    v-model="widgetForm.fitur_chat_aktif"
+                                    true-value="1"
+                                    false-value="0"
+                                    type="checkbox"
+                                    class="sr-only peer"
+                                />
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="pt-2 border-t border-blue-200/60 dark:border-blue-800/40 flex items-center justify-between text-[11px]">
+                            <span class="text-slate-500 dark:text-slate-400">Status Saat Ini:</span>
+                            <span
+                                :class="[
+                                    'px-2.5 py-0.5 rounded-full font-bold border',
+                                    widgetForm.fitur_chat_aktif === '1' || widgetForm.fitur_chat_aktif === true
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                        : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300'
+                                ]"
+                            >
+                                <i :class="['fa-solid me-1', widgetForm.fitur_chat_aktif === '1' || widgetForm.fitur_chat_aktif === true ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-rose-600']"></i>
+                                {{ widgetForm.fitur_chat_aktif === '1' || widgetForm.fitur_chat_aktif === true ? 'Chat Aktif (Dapat Diakses)' : 'Chat Dinonaktifkan (Disembunyikan)' }}
+                            </span>
+                        </div>
+                    </div>
+
                     <div>
                         <h3 class="font-extrabold text-slate-900 dark:text-white text-base">
                             Widget Tampilan &amp; Media Sosial
