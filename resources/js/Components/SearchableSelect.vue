@@ -73,7 +73,7 @@ let debounceTimer = null;
 
 const getItemValue = (item) => {
     if (typeof item !== 'object' || item === null) return item;
-    return item[props.valueKey] !== undefined ? item[props.valueKey] : (item.id || item.id_keuskupan || item.id_kevikepan || item.id_paroki || '');
+    return item[props.valueKey] !== undefined ? item[props.valueKey] : (item.id || item.id_dekenat || item.id_keuskupan || item.id_kevikepan || item.id_paroki || '');
 };
 
 const getItemLabel = (item) => {

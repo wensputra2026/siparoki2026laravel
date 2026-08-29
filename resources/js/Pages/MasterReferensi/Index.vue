@@ -88,9 +88,11 @@ const reloadMaster = () => {
     isReloading.value = true;
     router.reload({
         preserveScroll: true,
-        preserveState: true,
+        preserveState: false,
         onFinish: () => {
-            isReloading.value = false;
+            setTimeout(() => {
+                isReloading.value = false;
+            }, 400);
         },
     });
 };

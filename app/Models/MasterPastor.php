@@ -20,6 +20,8 @@ class MasterPastor extends Model
         'ordo_kongregasi',
         'keuskupan',
         'keuskupan_id',
+        'dekenat_id',
+        'paroki_id',
         'no_hp',
         'email',
         'foto',
@@ -151,5 +153,28 @@ class MasterPastor extends Model
         }
 
         return $formatted;
+    }
+
+    // ─── Relasi Hierarki Pastor ────────────────────────────────────────────────
+
+    public function keuskupan()
+    {
+        return $this->belongsTo(Keuskupan::class, 'keuskupan_id', 'id_keuskupan');
+    }
+
+    public function dekenat()
+    {
+        return $this->belongsTo(Dekenat::class, 'dekenat_id', 'id_dekenat');
+    }
+
+    /** Alias dekenat() menggunakan istilah Kevikepan */
+    public function kevikepan()
+    {
+        return $this->belongsTo(Dekenat::class, 'dekenat_id', 'id_dekenat');
+    }
+
+    public function paroki()
+    {
+        return $this->belongsTo(Paroki::class, 'paroki_id', 'id_paroki');
     }
 }

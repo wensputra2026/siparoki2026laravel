@@ -132,6 +132,14 @@ const props = defineProps({
         type: Object,
         default: () => ({ search: '' }),
     },
+    isKubLocked: {
+        type: Boolean,
+        default: false,
+    },
+    currentKub: {
+        type: Object,
+        default: null,
+    },
 });
 
 const search = ref(props.filters.search || '');
@@ -151,6 +159,43 @@ const pastorRekanSearch = ref('');
 const isCustomKategori = ref(false);
 const importFileInput = ref(null);
 let debounce = null;
+
+const isKubReadOnlyScope = computed(() => {
+    const path = window.location.pathname;
+    const prefix = path.split('/').filter(Boolean)[0] || '';
+    const roleSlug = String(props.role?.slug || props.role?.nama_role || props.role || '').toLowerCase();
+    return props.isKubLocked || prefix === 'kub' || roleSlug.includes('kub');
+});
+
+const resolvedKub = computed(() => {
+    if (props.currentKub) return props.currentKub;
+    if (kubFilter.value) {
+        return (props.kubList || []).find(k => String(k.id) === String(kubFilter.value)) || null;
+    }
+    const userKubId = page.props.auth?.user?.kub_id;
+    if (userKubId) {
+        return (props.kubList || []).find(k => String(k.id) === String(userKubId)) || null;
+    }
+    return (props.kubList || [])[0] || null;
+});
+
+const resolvedWilayahName = computed(() => {
+    if (resolvedKub.value?.wilayah?.nama_wilayah) return resolvedKub.value.wilayah.nama_wilayah;
+    const wId = resolvedKub.value?.wilayah_id || wilayahFilter.value;
+    const w = (props.wilayahList || []).find(item => String(item.id || item.id_wilayah) === String(wId));
+    return w?.nama_wilayah || '-';
+});
+
+const resolvedKapelaName = computed(() => {
+    if (resolvedKub.value?.kapela?.nama_kapela) return resolvedKub.value.kapela.nama_kapela;
+    const kId = resolvedKub.value?.kapela_id || kapelaFilter.value;
+    const kp = (props.kapelaList || []).find(item => String(item.id || item.id_kapela) === String(kId));
+    return kp?.nama_kapela || 'Pusat Paroki';
+});
+
+const resolvedKubName = computed(() => {
+    return resolvedKub.value?.nama_kub || '-';
+});
 
 const statusOptions = [
     { value: '', label: 'Semua Status' },
@@ -246,15 +291,10 @@ const onMutasiUmatSelected = (umatId) => {
     formData.value.umat_id = umatId;
     const selected = (props.umatList || []).find(u => String(u.id) === String(umatId));
     if (selected) {
-        if (selected.kub_id && !formData.value.kub_asal_id) {
-            formData.value.kub_asal_id = selected.kub_id;
-        }
-        if (selected.wilayah_id && !formData.value.wilayah_asal_id) {
-            formData.value.wilayah_asal_id = selected.wilayah_id;
-        }
-        if (selected.kk_id) {
-            formData.value.kk_id = selected.kk_id;
-        }
+        formData.value.kub_asal_id = selected.kub_id || '';
+        formData.value.wilayah_asal_id = selected.wilayah_id || '';
+        formData.value.kapela_asal_id = selected.kapela_id || '';
+        formData.value.kk_id = selected.kk_id || '';
     }
 };
 
@@ -452,15 +492,7 @@ watch(search, () => {
 
     const isReloadingData = ref(false);
     const reloadModuleData = () => {
-        isReloadingData.value = true;
-        router.reload({
-            only: ['items', 'filters'],
-            preserveScroll: true,
-            preserveState: true,
-            onFinish: () => {
-                isReloadingData.value = false;
-            },
-        });
+        refreshData();
     };
 
 watch(kabupatenFilter, () => {
@@ -557,17 +589,7 @@ const roleBadgeClass = (role) => {
 };
 
 const isUmatReadOnlyRole = computed(() => {
-    const path = window.location.pathname;
-    const prefix = path.split('/').filter(Boolean)[0] || '';
-    const roleSlug = String(props.role?.slug || props.role?.nama_role || props.role || '').toLowerCase();
-    
-    // Wilayah, Kapela/Stasi are strictly VIEW ONLY for data KK, Umat, Wilayah, KUB, and Sakramen
-    const isWilayahOrKapela = ['wilayah', 'kapela', 'stasi'].includes(prefix) || 
-                              roleSlug.includes('wilayah') || 
-                              roleSlug.includes('kapela') || 
-                              roleSlug.includes('stasi');
-                              
-    return ['umat', 'data-umat', 'data_umat', 'kk-katolik', 'kk', 'keluarga', 'wilayah', 'kub', 'sakramen', 'buku-sakramen'].includes(props.moduleKey) && isWilayahOrKapela;
+    return false;
 });
 
 const isViewAndEditOnlyRole = computed(() => {
@@ -876,7 +898,7 @@ watch(() => formData.value.keuskupan_id, (newVal) => {
             formData.value.kode_paroki = `${prefix}-${num}`;
         }
         if (formData.value.dekenat_id) {
-            const isValid = availableDekenats.value.some(d => (d.id || d.id_kevikepan) == formData.value.dekenat_id);
+            const isValid = availableDekenats.value.some(d => (d.id || d.id_dekenat || d.id_kevikepan) == formData.value.dekenat_id);
             if (!isValid) formData.value.dekenat_id = '';
         }
     }
@@ -1456,7 +1478,7 @@ const openCreateModal = () => {
         formData.value = {
             umat_id: props.umatList?.[0]?.id || '',
             kk_id: props.umatList?.[0]?.kk_id || '',
-            jenis_mutasi: 'Mutasi Antar KUB (Dalam Paroki)',
+            jenis_mutasi: isKubLevel.value ? 'Meninggal Dunia' : 'Mutasi Antar KUB (Dalam Paroki)',
             kub_asal_id: props.umatList?.[0]?.kub_id || '',
             kub_tujuan_id: '',
             wilayah_asal_id: props.umatList?.[0]?.wilayah_id || '',
@@ -2057,6 +2079,14 @@ const moduleBasePath = computed(() => window.location.pathname.replace(/\/$/, ''
 const exportModuleUrl = (format) => {
     const params = new URLSearchParams();
     if (search.value) params.set('search', search.value);
+    if (isKubReadOnlyScope.value) {
+        const kubId = resolvedKub.value?.id || kubFilter.value;
+        if (kubId) params.set('kub_id', kubId);
+    } else {
+        if (wilayahFilter.value) params.set('wilayah_id', wilayahFilter.value);
+        if (kapelaFilter.value) params.set('kapela_id', kapelaFilter.value);
+        if (kubFilter.value) params.set('kub_id', kubFilter.value);
+    }
     return `${moduleBasePath.value}/export/${format}${params.toString() ? `?${params.toString()}` : ''}`;
 };
 
@@ -2183,7 +2213,16 @@ const openDeleteModal = (item) => {
 };
 
 const refreshData = () => {
-    router.reload({ preserveScroll: true });
+    isReloadingData.value = true;
+    router.reload({
+        preserveScroll: true,
+        preserveState: false,
+        onFinish: () => {
+            setTimeout(() => {
+                isReloadingData.value = false;
+            }, 300);
+        },
+    });
 };
 
 const getImageUrl = (path) => {
@@ -2233,13 +2272,35 @@ const formatIndonesianDate = (val) => {
 const getFieldValue = (item, col) => {
     if (!item) return '—';
     let val = '—';
-    if (col.relation && item[col.relation]) {
-        val = item[col.relation][col.relationKey] || (col.altRelationKey ? item[col.relation][col.altRelationKey] : null) || '—';
+
+    // 1. Resolve relation (supports camelCase e.g. kubAsal or snake_case e.g. kub_asal)
+    const relKey = col.relation;
+    const relSnakeKey = relKey ? relKey.replace(/([A-Z])/g, '_$1').toLowerCase() : null;
+    const relObj = (relKey && item[relKey]) || (relSnakeKey && item[relSnakeKey]) || (typeof item[col.key] === 'object' && item[col.key] !== null ? item[col.key] : null);
+
+    if (relObj && typeof relObj === 'object') {
+        val = (col.relationKey && relObj[col.relationKey]) 
+            || (col.altRelationKey && relObj[col.altRelationKey]) 
+            || relObj.nama_lengkap 
+            || relObj.nama_kub 
+            || relObj.nama_wilayah 
+            || relObj.nama_kapela 
+            || relObj.nama_stasi 
+            || relObj.nama_paroki 
+            || relObj.nama 
+            || relObj.label 
+            || '—';
     } else if (item[col.key] !== null && item[col.key] !== undefined && item[col.key] !== '') {
         val = item[col.key];
     } else if (col.altKey && item[col.altKey] !== null && item[col.altKey] !== undefined && item[col.altKey] !== '') {
         val = item[col.altKey];
     }
+
+    // Safety: if val is still an object (e.g. raw Eloquent model attribute), extract readable property
+    if (typeof val === 'object' && val !== null) {
+        val = val.nama_lengkap || val.nama_kub || val.nama_wilayah || val.nama_kapela || val.nama_stasi || val.nama_paroki || val.nama || val.label || '—';
+    }
+
     if (val !== '—' && (col.isDate || col.key.includes('tanggal') || col.key.includes('tgl'))) {
         return formatIndonesianDate(String(val));
     }
@@ -2323,6 +2384,83 @@ const showKubFilter = computed(() => {
         return Array.isArray(v) ? v[0] : (v || '');
     };
 
+    const isSuperOrParokiAdmin = computed(() => {
+        const p = basePrefix.value.toLowerCase();
+        const r = String(props.role || page.props.role || '').toLowerCase();
+        return p === '/superadmin' || p === '/paroki' || p === '/admin' || p === '/v2' ||
+               r.includes('super') || r.includes('admin paroki') || r.includes('sekretariat') || r.includes('pastor');
+    });
+
+    const canDeleteCurrentModule = computed(() => {
+        if (['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey)) {
+            return isSuperOrParokiAdmin.value;
+        }
+        return true;
+    });
+
+    const isKubLevel = computed(() => {
+        const p = basePrefix.value.toLowerCase();
+        const r = String(props.role || page.props.role || '').toLowerCase();
+        return p === '/kub' || r.includes('kub') || r.includes('ketua kub');
+    });
+
+    const mutasiTujuanType = ref('wilayah'); // 'wilayah' | 'kapela'
+
+    const filteredKubTujuanList = computed(() => {
+        const list = props.kubList || [];
+        if (formData.value.wilayah_tujuan_id) {
+            return list.filter((k) => String(k.wilayah_id) === String(formData.value.wilayah_tujuan_id));
+        }
+        if (formData.value.kapela_tujuan_id) {
+            return list.filter((k) => String(k.kapela_id) === String(formData.value.kapela_tujuan_id));
+        }
+        return list;
+    });
+
+    const onWilayahTujuanChanged = (val) => {
+        formData.value.wilayah_tujuan_id = val;
+        formData.value.kapela_tujuan_id = '';
+        if (formData.value.kub_tujuan_id) {
+            const kub = (props.kubList || []).find((k) => String(k.id) === String(formData.value.kub_tujuan_id));
+            if (kub && String(kub.wilayah_id) !== String(val)) {
+                formData.value.kub_tujuan_id = '';
+            }
+        }
+    };
+
+    const onKapelaTujuanChanged = (val) => {
+        formData.value.kapela_tujuan_id = val;
+        formData.value.wilayah_tujuan_id = '';
+        if (formData.value.kub_tujuan_id) {
+            const kub = (props.kubList || []).find((k) => String(k.id) === String(formData.value.kub_tujuan_id));
+            if (kub && String(kub.kapela_id) !== String(val)) {
+                formData.value.kub_tujuan_id = '';
+            }
+        }
+    };
+
+    const onKubTujuanChanged = (val) => {
+        formData.value.kub_tujuan_id = val;
+        if (val) {
+            const kub = (props.kubList || []).find((k) => String(k.id) === String(val));
+            if (kub) {
+                if (kub.wilayah_id) {
+                    formData.value.wilayah_tujuan_id = kub.wilayah_id;
+                    formData.value.kapela_tujuan_id = '';
+                    mutasiTujuanType.value = 'wilayah';
+                } else if (kub.kapela_id) {
+                    formData.value.kapela_tujuan_id = kub.kapela_id;
+                    formData.value.wilayah_tujuan_id = '';
+                    mutasiTujuanType.value = 'kapela';
+                }
+            }
+        }
+    };
+
+    const setQuickAlasan = (text) => {
+        formData.value.alasan = text;
+    };
+
 </script>
 
 <template>
@@ -2392,7 +2530,7 @@ const showKubFilter = computed(() => {
                             class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
                         >
                             <i class="fa-solid fa-plus text-[11px]"></i>
-                            <span>Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : title }}</span>
+                            <span>Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : (['riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'mutasi_umat'].includes(moduleKey) ? 'Mutasi Umat' : title) }}</span>
                         </button>
                     </template>
 
@@ -2478,11 +2616,19 @@ const showKubFilter = computed(() => {
 
                 <!-- 1. Filter Wilayah -->
                 <div v-if="showWilayahFilter" class="w-full">
-                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-                        Filter Wilayah
-                        <span v-if="kapelaFilter" class="text-rose-500 text-[10px] font-normal lowercase">(stasi aktif)</span>
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <span>Filter Wilayah</span>
+                        <span v-if="isKubReadOnlyScope" class="text-amber-600 font-semibold lowercase text-[10px] flex items-center gap-1">
+                            <i class="fa-solid fa-lock text-[9px]"></i> Wilayah KUB
+                        </span>
+                        <span v-else-if="kapelaFilter" class="text-rose-500 text-[10px] font-normal lowercase">(stasi aktif)</span>
                     </label>
+                    <div v-if="isKubReadOnlyScope" class="w-full px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold flex items-center gap-2 min-h-[40px] cursor-not-allowed select-none shadow-2xs">
+                        <i class="fa-solid fa-church text-blue-600 text-xs"></i>
+                        <span class="truncate">{{ resolvedWilayahName }}</span>
+                    </div>
                     <SearchableSelect
+                        v-else
                         v-model="wilayahFilter"
                         :options="filteredWilayahsForFilter"
                         :disabled="Boolean(kapelaFilter)"
@@ -2497,11 +2643,19 @@ const showKubFilter = computed(() => {
 
                 <!-- 2. Filter Kapela / Stasi -->
                 <div v-if="showKapelaFilter" class="w-full">
-                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
-                        Filter Kapela / Stasi
-                        <span v-if="wilayahFilter" class="text-rose-500 text-[10px] font-normal lowercase">(wilayah aktif)</span>
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <span>Filter Kapela / Stasi</span>
+                        <span v-if="isKubReadOnlyScope" class="text-amber-600 font-semibold lowercase text-[10px] flex items-center gap-1">
+                            <i class="fa-solid fa-lock text-[9px]"></i> Stasi KUB
+                        </span>
+                        <span v-else-if="wilayahFilter" class="text-rose-500 text-[10px] font-normal lowercase">(wilayah aktif)</span>
                     </label>
+                    <div v-if="isKubReadOnlyScope" class="w-full px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold flex items-center gap-2 min-h-[40px] cursor-not-allowed select-none shadow-2xs">
+                        <i class="fa-solid fa-place-of-worship text-indigo-600 text-xs"></i>
+                        <span class="truncate">{{ resolvedKapelaName }}</span>
+                    </div>
                     <SearchableSelect
+                        v-else
                         v-model="kapelaFilter"
                         :options="filteredKapelasForFilter"
                         :disabled="Boolean(wilayahFilter)"
@@ -2516,8 +2670,18 @@ const showKubFilter = computed(() => {
 
                 <!-- 3. Filter KUB -->
                 <div v-if="showKubFilter" class="w-full">
-                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Filter KUB</label>
+                    <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <span>Filter KUB</span>
+                        <span v-if="isKubReadOnlyScope" class="text-amber-600 font-semibold lowercase text-[10px] flex items-center gap-1">
+                            <i class="fa-solid fa-lock text-[9px]"></i> Terkunci
+                        </span>
+                    </label>
+                    <div v-if="isKubReadOnlyScope" class="w-full px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold flex items-center gap-2 min-h-[40px] cursor-not-allowed select-none shadow-2xs">
+                        <i class="fa-solid fa-users text-teal-600 text-xs"></i>
+                        <span class="truncate">{{ resolvedKubName }}</span>
+                    </div>
                     <SearchableSelect
+                        v-else
                         v-model="kubFilter"
                         :options="filteredKubsForFilter"
                         valueKey="id"
@@ -2585,7 +2749,7 @@ const showKubFilter = computed(() => {
             leave-to-class="transform opacity-0 -translate-y-2"
         >
             <div
-                v-if="selectedIds.length > 0"
+                v-if="canDeleteCurrentModule && selectedIds.length > 0"
                 class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl border border-slate-800 shrink-0"
             >
                 <div class="flex items-center gap-2.5">
@@ -2622,7 +2786,7 @@ const showKubFilter = computed(() => {
                 <table class="w-full min-w-[980px] text-left text-xs sm:text-[13px]">
                     <thead class="bg-slate-100/90 text-slate-700 uppercase tracking-wider text-xs sm:text-[12px] font-bold border-b border-slate-200/90 sticky top-0 z-10">
                         <tr>
-                            <th class="px-3 py-3 w-10 text-center">
+                            <th v-if="canDeleteCurrentModule" class="px-3 py-3 w-10 text-center">
                                 <input
                                     type="checkbox"
                                     :checked="isAllSelected"
@@ -2647,7 +2811,7 @@ const showKubFilter = computed(() => {
                             :class="['hover:bg-slate-50/80 transition-colors group', selectedIds.includes(resolveEntityId(item)) ? 'bg-rose-50/30' : '']"
                         >
                             <!-- Checkbox Column -->
-                            <td class="px-3 py-3 text-center">
+                            <td v-if="canDeleteCurrentModule" class="px-3 py-3 text-center">
                                 <input
                                     type="checkbox"
                                     :value="resolveEntityId(item)"
@@ -2672,10 +2836,10 @@ const showKubFilter = computed(() => {
                                 <!-- Image / Logo Column -->
                                 <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto' || isImageField(col, getFieldValue(item, col))" class="w-8.5 h-8.5 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5">
                                     <img
-                                        :src="moduleKey === 'keuskupan' ? (item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-keuskupan.png')) : ((col.key === 'logo' && item.logo_url) ? item.logo_url : (getImageUrl(getFieldValue(item, col)) || (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey) ? '/assets/frontend/siparoki/images/default-pastor.jpg' : (moduleKey === 'keuskupan' ? '/images/logo-keuskupan.png' : (moduleKey === 'paroki' ? (item.logo_url || '/images/logo-paroki.png') : '')))))"
-                                        :alt="item.nama_pastor || item.nama_lengkap || item.nama_keuskupan || 'Foto'"
-                                        :class="['w-full h-full rounded-md', col.key === 'logo' || moduleKey === 'keuskupan' ? 'object-contain' : 'object-cover']"
-                                        @error="(e) => { if (moduleKey === 'keuskupan' || col.key === 'logo') { e.target.src = '/images/logo-keuskupan.png'; } else if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey)) { e.target.src = '/assets/frontend/siparoki/images/default-pastor.jpg'; } else if (moduleKey === 'paroki') { e.target.src = item.logo_url || '/images/logo-paroki.png'; } else { e.target.style.display = 'none'; e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex'); } }"
+                                        :src="moduleKey === 'keuskupan' ? (item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-keuskupan.png')) : (moduleKey === 'paroki' ? (item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-paroki.png')) : ((col.key === 'logo' && item.logo_url) ? item.logo_url : (getImageUrl(getFieldValue(item, col)) || (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey) ? '/assets/frontend/siparoki/images/default-pastor.jpg' : ''))))"
+                                        :alt="item.nama_pastor || item.nama_lengkap || item.nama_paroki || item.nama_keuskupan || 'Foto'"
+                                        :class="['w-full h-full rounded-md', col.key === 'logo' || moduleKey === 'keuskupan' || moduleKey === 'paroki' ? 'object-contain' : 'object-cover']"
+                                        @error="(e) => { if (moduleKey === 'keuskupan') { e.target.src = '/images/logo-keuskupan.png'; } else if (moduleKey === 'paroki' || col.key === 'logo') { e.target.src = '/images/logo-paroki.png'; } else if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey)) { e.target.src = '/assets/frontend/siparoki/images/default-pastor.jpg'; } else { e.target.style.display = 'none'; e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex'); } }"
                                     />
                                 </div>
 
@@ -2986,9 +3150,9 @@ const showKubFilter = computed(() => {
                                         <i class="fa-solid fa-toggle-on text-xs"></i>
                                     </button>
 
-                                    <!-- Delete Button (Hidden for Read-Only and View/Edit Only roles) -->
+                                    <!-- Delete Button (Only visible if authorized to delete) -->
                                     <button
-                                        v-if="!isUmatReadOnlyRole && !isViewAndEditOnlyRole"
+                                        v-if="canDeleteCurrentModule"
                                         type="button"
                                         @click="openDeleteModal(item)"
                                         :disabled="isSelfUser(item)"
@@ -3006,7 +3170,7 @@ const showKubFilter = computed(() => {
 
                         <!-- Empty State -->
                         <tr v-if="!items.data || !items.data.length">
-                            <td :colspan="columns.length + 3" class="px-5 py-8 text-center text-slate-400">
+                            <td :colspan="columns.length + (canDeleteCurrentModule ? 3 : 2)" class="px-5 py-8 text-center text-slate-400">
                                 <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-300 border border-slate-200 mx-auto flex items-center justify-center text-lg mb-2">
                                     <i class="fa-solid fa-folder-open"></i>
                                 </div>
@@ -3623,13 +3787,11 @@ const showKubFilter = computed(() => {
                             <div class="md:col-span-4 flex flex-col items-center text-center p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80">
                                 <div class="w-28 h-28 rounded-2xl overflow-hidden bg-white border border-slate-200 p-2 shadow-xs mb-3 flex items-center justify-center">
                                     <img
-                                        v-if="selectedItem.logo || isImageField({key: 'logo'}, selectedItem.logo)"
-                                        :src="getImageUrl(selectedItem.logo)"
-                                        :alt="selectedItem.nama_paroki"
+                                        :src="selectedItem?.logo ? getImageUrl(selectedItem.logo) : (selectedItem?.logo_url || '/images/logo-paroki.png')"
+                                        :alt="selectedItem?.nama_paroki || 'Logo Paroki'"
                                         class="w-full h-full object-contain"
-                                        @error="(e) => { e.target.onerror = null; e.target.src = '/images/logo-keuskupan.png'; }"
+                                        @error="(e) => { e.target.onerror = null; e.target.src = '/images/logo-paroki.png'; }"
                                     />
-                                    <i v-else class="fa-solid fa-place-of-worship text-4xl text-amber-600"></i>
                                 </div>
                                 <h4 class="font-black text-slate-900 text-sm leading-snug">
                                     {{ selectedItem.nama_paroki || '—' }}
@@ -4396,8 +4558,8 @@ const showKubFilter = computed(() => {
         >
             <div
                 :class="[
-                    'bg-white rounded-3xl p-6 w-full shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 my-8',
-                    (moduleKey === 'keuskupan' || moduleKey === 'dekenat' || moduleKey === 'kevikepan' || moduleKey === 'paroki' || moduleKey === 'kapela' || moduleKey === 'stasi' || moduleKey === 'user' || moduleKey === 'role' || moduleKey === 'roles' || moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga' || moduleKey === 'umat' || moduleKey === 'data-umat') ? 'max-w-4xl' : (['rapat', 'rapat-notulen', 'kegiatan', 'surat-masuk', 'surat-keluar', 'arsip-digital'].includes(moduleKey) ? 'max-w-2xl' : 'max-w-lg')
+                    'bg-white rounded-3xl p-6 sm:p-7 w-full shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 my-8 transition-all',
+                    (moduleKey === 'keuskupan' || moduleKey === 'dekenat' || moduleKey === 'kevikepan' || moduleKey === 'paroki' || moduleKey === 'kapela' || moduleKey === 'stasi' || moduleKey === 'user' || moduleKey === 'role' || moduleKey === 'roles' || moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga' || moduleKey === 'umat' || moduleKey === 'data-umat' || moduleKey === 'riwayat-mutasi-umat' || moduleKey === 'riwayat-mutasi' || moduleKey === 'mutasi-umat' || moduleKey === 'mutasi_umat') ? 'max-w-4xl' : (['rapat', 'rapat-notulen', 'kegiatan', 'surat-masuk', 'surat-keluar', 'arsip-digital'].includes(moduleKey) ? 'max-w-2xl' : 'max-w-lg')
                 ]"
             >
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -4782,14 +4944,13 @@ const showKubFilter = computed(() => {
                                 <div>
                                     <div class="flex items-center justify-between mb-1">
                                         <label class="block text-[11px] font-bold text-slate-700">Kode Paroki</label>
-                                        <span class="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Readonly (Otomatis)</span>
+                                        <span class="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Otomatis / Kustom</span>
                                     </div>
                                     <input
                                         v-model="formData.kode_paroki"
                                         type="text"
-                                        placeholder="Otomatis terisi saat memilih keuskupan..."
-                                        readonly
-                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-100/90 border border-slate-200 text-xs text-slate-700 font-mono font-bold cursor-not-allowed transition"
+                                        placeholder="Contoh: 012.014"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                                     />
                                 </div>
 
@@ -4902,17 +5063,15 @@ const showKubFilter = computed(() => {
                                 </div>
 
                                 <div class="md:col-span-2 space-y-2 pt-1">
-                                    <label class="block text-[11px] font-bold text-slate-700">Logo / Foto Paroki</label>
+                                    <label class="block text-[11px] font-bold text-slate-700">Logo / Lambang Paroki</label>
                                     <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center gap-4">
                                         <div class="w-18 h-18 rounded-2xl bg-white border border-slate-200 p-1 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
                                             <img
-                                                v-if="previewImage || (formData.logo && typeof formData.logo === 'string') || selectedItem?.logo_url"
-                                                :src="previewImage || selectedItem?.logo_url || getImageUrl(formData.logo)"
+                                                :src="previewImage || (formData.logo && typeof formData.logo === 'string' && formData.logo.length > 0 ? getImageUrl(formData.logo) : (selectedItem?.logo_url || '/images/logo-paroki.png'))"
                                                 :alt="formData.nama_paroki || 'Logo'"
                                                 class="w-full h-full object-contain"
                                                 @error="(e) => { e.target.onerror = null; e.target.src = '/images/logo-paroki.png'; }"
                                             />
-                                            <i v-else class="fa-solid fa-place-of-worship text-3xl text-amber-600"></i>
                                         </div>
                                         <div class="space-y-1.5 flex-1">
                                             <input
@@ -4930,7 +5089,7 @@ const showKubFilter = computed(() => {
                                                 <span>{{ (previewImage || formData.logo) ? 'Ganti Foto / Logo Paroki' : 'Pilih Foto / Logo Paroki' }}</span>
                                             </label>
                                             <p class="text-[10px] text-slate-400">
-                                                Format: JPG, PNG, GIF, SVG, WEBP. Maksimal 2MB (Kosongkan jika tidak ada)
+                                                Format: JPG, PNG, GIF, SVG, WEBP. Maksimal 2MB. Default: logo-paroki.png
                                             </p>
                                         </div>
                                     </div>
@@ -6180,8 +6339,12 @@ const showKubFilter = computed(() => {
                                     <i class="fa-solid fa-arrows-split-up-and-left"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-xs font-black text-amber-950">Form Mutasi Umat &amp; Wilayah Gerejawi</h4>
-                                    <p class="text-[11px] text-amber-800">Pilih data Umat, KUB, dan Wilayah yang terhubung langsung ke database paroki.</p>
+                                    <h4 class="text-xs font-black text-amber-950">
+                                        {{ isKubLevel ? 'Pencatatan Mutasi Umat Meninggal Dunia (KUB)' : 'Form Mutasi Umat & Wilayah Gerejawi' }}
+                                    </h4>
+                                    <p class="text-[11px] text-amber-800">
+                                        {{ isKubLevel ? 'Catat data umat yang telah berpulang (meninggal dunia) untuk dilaporkan ke database Paroki dan dicatat ke buku Defunctorum.' : 'Pilih data Umat, KUB, dan Wilayah yang terhubung langsung ke database paroki.' }}
+                                    </p>
                                 </div>
                             </div>
 
@@ -6206,107 +6369,242 @@ const showKubFilter = computed(() => {
                                 <div class="md:col-span-2">
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Jenis Mutasi *</label>
                                     <select
+                                        v-if="!isKubLevel"
                                         v-model="formData.jenis_mutasi"
                                         class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition cursor-pointer"
                                     >
+                                        <option value="Meninggal Dunia">Meninggal Dunia (Kematian)</option>
                                         <option value="Mutasi Antar KUB (Dalam Paroki)">Mutasi Antar KUB (Dalam Paroki)</option>
                                         <option value="Pindah Wilayah Pastoral">Pindah Wilayah Pastoral</option>
-                                        <option value="Pecah KK / Keluarga Baru">Pecah KK / Bentuk Keluarga Baru</option>
+                                        <option value="Pecah KK / Bentuk Keluarga Baru">Pecah KK / Bentuk Keluarga Baru</option>
                                         <option value="Pindah Paroki (Keluar)">Pindah Paroki (Keluar)</option>
                                         <option value="Pindah Masuk dari Paroki Lain">Pindah Masuk dari Paroki Lain</option>
                                         <option value="Lainnya">Lainnya</option>
                                     </select>
+                                    <div v-else class="px-3.5 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-800 flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-book-skull text-rose-600 text-sm"></i>
+                                            <span>Meninggal Dunia (Laporan Kematian Umat KUB)</span>
+                                        </div>
+                                        <span class="text-[10px] bg-rose-200/70 text-rose-900 px-2 py-0.5 rounded-full uppercase tracking-wider font-extrabold">Khusus KUB</span>
+                                    </div>
                                 </div>
 
-                                <!-- 3. KUB Asal -->
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">KUB Asal (Database)</label>
-                                    <SearchableSelect
-                                        v-model="formData.kub_asal_id"
-                                        :options="kubList"
-                                        valueKey="id"
-                                        labelKey="nama_kub"
-                                        placeholder="-- Pilih KUB Asal --"
-                                        searchPlaceholder="Cari KUB asal..."
-                                        icon="fa-people-roof"
-                                        iconColor="text-rose-500"
-                                    />
-                                </div>
+                                <!-- Territory Fields (Hidden for Meninggal Dunia or KUB Level) -->
+                                <template v-if="!isKubLevel && formData.jenis_mutasi !== 'Meninggal Dunia'">
+                                    <div class="md:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        <!-- Panel Asal Umat -->
+                                        <div class="p-4 rounded-2xl bg-rose-50/70 border border-rose-200/90 space-y-3 shadow-2xs flex flex-col justify-between">
+                                            <div class="flex items-center gap-2 text-rose-800 font-bold text-xs pb-1 border-b border-rose-200/60">
+                                                <i class="fa-solid fa-arrow-right-from-bracket text-rose-500"></i>
+                                                <span>Asal Umat (Otomatis dari Database)</span>
+                                            </div>
+                                            
+                                            <div class="space-y-3">
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Wilayah Pastoral Asal</label>
+                                                    <SearchableSelect
+                                                        v-model="formData.wilayah_asal_id"
+                                                        :options="wilayahList"
+                                                        valueKey="id"
+                                                        labelKey="nama_wilayah"
+                                                        placeholder="-- Wilayah Asal --"
+                                                        searchPlaceholder="Cari wilayah asal..."
+                                                        icon="fa-map-location-dot"
+                                                        iconColor="text-rose-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Stasi / Kapela Asal</label>
+                                                    <SearchableSelect
+                                                        v-model="formData.kapela_asal_id"
+                                                        :options="kapelaList"
+                                                        valueKey="id"
+                                                        labelKey="nama_kapela"
+                                                        placeholder="-- Stasi / Kapela Asal --"
+                                                        searchPlaceholder="Cari stasi / kapela asal..."
+                                                        icon="fa-church"
+                                                        iconColor="text-rose-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">KUB Asal</label>
+                                                    <SearchableSelect
+                                                        v-model="formData.kub_asal_id"
+                                                        :options="kubList"
+                                                        valueKey="id"
+                                                        labelKey="nama_kub"
+                                                        placeholder="-- KUB Asal Terisi Otomatis --"
+                                                        searchPlaceholder="Cari KUB asal..."
+                                                        icon="fa-people-roof"
+                                                        iconColor="text-rose-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                <!-- 4. KUB Tujuan -->
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">KUB Tujuan (Database)</label>
-                                    <SearchableSelect
-                                        v-model="formData.kub_tujuan_id"
-                                        :options="kubList"
-                                        valueKey="id"
-                                        labelKey="nama_kub"
-                                        placeholder="-- Pilih KUB Tujuan --"
-                                        searchPlaceholder="Cari KUB tujuan..."
-                                        icon="fa-people-roof"
-                                        iconColor="text-emerald-600"
-                                    />
-                                </div>
+                                        <!-- Panel Tujuan Mutasi (Wilayah vs Stasi/Kapela) -->
+                                        <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/90 space-y-3 shadow-2xs flex flex-col justify-between">
+                                            <div class="flex items-center justify-between gap-2 pb-1 border-b border-emerald-200/60">
+                                                <div class="flex items-center gap-2 text-emerald-800 font-bold text-xs">
+                                                    <i class="fa-solid fa-arrow-right-to-bracket text-emerald-600"></i>
+                                                    <span>Tujuan Mutasi (Pindah Ke)</span>
+                                                </div>
 
-                                <!-- 5. Wilayah Asal -->
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Wilayah Pastoral Asal (Database)</label>
-                                    <SearchableSelect
-                                        v-model="formData.wilayah_asal_id"
-                                        :options="wilayahList"
-                                        valueKey="id"
-                                        labelKey="nama_wilayah"
-                                        placeholder="-- Pilih Wilayah Asal --"
-                                        searchPlaceholder="Cari wilayah asal..."
-                                        icon="fa-map-location-dot"
-                                        iconColor="text-rose-500"
-                                    />
-                                </div>
+                                                <!-- Switcher Tipe Tujuan -->
+                                                <div class="flex items-center bg-white rounded-lg p-0.5 border border-emerald-300 text-[10px] font-bold shadow-2xs">
+                                                    <button
+                                                        type="button"
+                                                        @click="mutasiTujuanType = 'wilayah'; formData.kapela_tujuan_id = ''"
+                                                        class="px-2.5 py-1 rounded-md transition cursor-pointer"
+                                                        :class="mutasiTujuanType === 'wilayah' ? 'bg-emerald-600 text-white shadow-xs' : 'text-emerald-800 hover:bg-emerald-50'"
+                                                    >
+                                                        Ke Wilayah
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        @click="mutasiTujuanType = 'kapela'; formData.wilayah_tujuan_id = ''"
+                                                        class="px-2.5 py-1 rounded-md transition cursor-pointer"
+                                                        :class="mutasiTujuanType === 'kapela' ? 'bg-emerald-600 text-white shadow-xs' : 'text-emerald-800 hover:bg-emerald-50'"
+                                                    >
+                                                        Ke Stasi/Kapela
+                                                    </button>
+                                                </div>
+                                            </div>
 
-                                <!-- 6. Wilayah Tujuan -->
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Wilayah Pastoral Tujuan (Database)</label>
-                                    <SearchableSelect
-                                        v-model="formData.wilayah_tujuan_id"
-                                        :options="wilayahList"
-                                        valueKey="id"
-                                        labelKey="nama_wilayah"
-                                        placeholder="-- Pilih Wilayah Tujuan --"
-                                        searchPlaceholder="Cari wilayah tujuan..."
-                                        icon="fa-map-location-dot"
-                                        iconColor="text-emerald-600"
-                                    />
-                                </div>
+                                            <div class="space-y-3">
+                                                <!-- Option 1: Ke Wilayah Pastoral -->
+                                                <div v-if="mutasiTujuanType === 'wilayah'">
+                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">1. Wilayah Pastoral Tujuan *</label>
+                                                    <SearchableSelect
+                                                        :modelValue="formData.wilayah_tujuan_id"
+                                                        @update:modelValue="onWilayahTujuanChanged"
+                                                        :options="wilayahList"
+                                                        valueKey="id"
+                                                        labelKey="nama_wilayah"
+                                                        placeholder="-- Pilih Wilayah Tujuan --"
+                                                        searchPlaceholder="Cari wilayah tujuan..."
+                                                        icon="fa-map-location-dot"
+                                                        iconColor="text-emerald-600"
+                                                    />
+                                                </div>
 
-                                <!-- 7. Tanggal Mutasi -->
+                                                <!-- Option 2: Ke Stasi / Kapela -->
+                                                <div v-else>
+                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">1. Stasi / Kapela Tujuan *</label>
+                                                    <SearchableSelect
+                                                        :modelValue="formData.kapela_tujuan_id"
+                                                        @update:modelValue="onKapelaTujuanChanged"
+                                                        :options="kapelaList"
+                                                        valueKey="id"
+                                                        labelKey="nama_kapela"
+                                                        placeholder="-- Pilih Stasi / Kapela Tujuan --"
+                                                        searchPlaceholder="Cari stasi / kapela tujuan..."
+                                                        icon="fa-church"
+                                                        iconColor="text-emerald-600"
+                                                    />
+                                                </div>
+
+                                                <!-- KUB Tujuan -->
+                                                <div>
+                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">2. KUB Tujuan *</label>
+                                                    <SearchableSelect
+                                                        :modelValue="formData.kub_tujuan_id"
+                                                        @update:modelValue="onKubTujuanChanged"
+                                                        :options="filteredKubTujuanList"
+                                                        valueKey="id"
+                                                        labelKey="nama_kub"
+                                                        :placeholder="(formData.wilayah_tujuan_id || formData.kapela_tujuan_id) ? '-- Pilih KUB Tujuan --' : '-- Pilih Wilayah / Kapela Dahulu --'"
+                                                        searchPlaceholder="Cari KUB tujuan..."
+                                                        icon="fa-people-roof"
+                                                        iconColor="text-emerald-600"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- 7. Tanggal Mutasi / Meninggal -->
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Mutasi *</label>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        {{ (isKubLevel || formData.jenis_mutasi === 'Meninggal Dunia') ? 'Tanggal Meninggal Dunia *' : 'Tanggal Mutasi *' }}
+                                    </label>
                                     <input
                                         v-model="formData.tgl_mutasi"
                                         type="date"
+                                        required
                                         class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                                     />
                                 </div>
 
-                                <!-- 8. No. Surat Pindah / Pengantar -->
+                                <!-- 8. No. Surat Pindah / Pengantar / Kematian -->
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">No. Surat Pengantar / Pindah</label>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                                        {{ (isKubLevel || formData.jenis_mutasi === 'Meninggal Dunia') ? 'No. Surat Kematian / Akta (Opsional)' : 'No. Surat Pengantar / Pindah' }}
+                                    </label>
                                     <input
                                         v-model="formData.no_surat_pindah"
                                         type="text"
-                                        placeholder="Contoh: SP/001/VIII/2026"
+                                        :placeholder="(isKubLevel || formData.jenis_mutasi === 'Meninggal Dunia') ? 'Contoh: SKM/001/VIII/2026' : 'Contoh: SP/001/VIII/2026'"
                                         class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono"
                                     />
                                 </div>
 
-                                <!-- 9. Alasan / Keterangan -->
-                                <div class="md:col-span-2">
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Alasan / Catatan Pastoral</label>
+                                <!-- 9. Alasan / Keterangan (Wajib) -->
+                                <div class="md:col-span-2 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <label class="block text-[11px] font-bold text-slate-700">
+                                            {{ (isKubLevel || formData.jenis_mutasi === 'Meninggal Dunia') ? 'Keterangan Kematian / Tempat Pemakaman *' : 'Alasan Pindah KUB / Catatan Pastoral *' }}
+                                        </label>
+                                        <span class="text-[10px] text-amber-600 font-bold">* Wajib Diisi</span>
+                                    </div>
+
+                                    <!-- Quick Alasan Chips (Khusus Mutasi) -->
+                                    <div v-if="formData.jenis_mutasi !== 'Meninggal Dunia'" class="flex flex-wrap gap-1.5 pt-0.5">
+                                        <button
+                                            type="button"
+                                            @click="setQuickAlasan('Pindah domisili / tempat tinggal')"
+                                            class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 text-[10px] font-bold transition cursor-pointer border border-slate-200"
+                                        >
+                                            🏠 Pindah Domisili
+                                        </button>
+                                        <button
+                                            type="button"
+                                            @click="setQuickAlasan('Menikah & membentuk keluarga baru')"
+                                            class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 text-[10px] font-bold transition cursor-pointer border border-slate-200"
+                                        >
+                                            💍 Menikah / Keluarga Baru
+                                        </button>
+                                        <button
+                                            type="button"
+                                            @click="setQuickAlasan('Pekerjaan / tugas dinas')"
+                                            class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 text-[10px] font-bold transition cursor-pointer border border-slate-200"
+                                        >
+                                            💼 Pekerjaan / Dinas
+                                        </button>
+                                        <button
+                                            type="button"
+                                            @click="setQuickAlasan('Pemekaran lingkungan KUB baru')"
+                                            class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 text-[10px] font-bold transition cursor-pointer border border-slate-200"
+                                        >
+                                            🌱 Pemekaran KUB
+                                        </button>
+                                        <button
+                                            type="button"
+                                            @click="setQuickAlasan('Pindah ke Stasi / Kapela')"
+                                            class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 text-[10px] font-bold transition cursor-pointer border border-slate-200"
+                                        >
+                                            ⛪ Ke Stasi / Kapela
+                                        </button>
+                                    </div>
+
                                     <textarea
                                         v-model="formData.alasan"
-                                        rows="2"
-                                        placeholder="Tuliskan keterangan mutasi (misal: Menikah dan bentuk keluarga baru, domisili kerja, pindah alamat)..."
-                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                        rows="2.5"
+                                        required
+                                        :placeholder="(isKubLevel || formData.jenis_mutasi === 'Meninggal Dunia') ? 'Tuliskan keterangan kematian (misal: Sakit, usia lanjut, dimakamkan di TPU Paroki)...' : 'Tuliskan alasan kepindahan KUB secara lengkap (misal: Pindah rumah ke wilayah stasi, menikah, dinas pekerjaan)...'"
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition leading-relaxed"
                                     ></textarea>
                                 </div>
                             </div>

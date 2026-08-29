@@ -27,9 +27,13 @@ const isReloadingData = ref(false);
 const reloadData = () => {
     isReloadingData.value = true;
     router.reload({
-        only: ['umats', 'filters'],
         preserveScroll: true,
-        onFinish: () => { isReloadingData.value = false; },
+        preserveState: false,
+        onFinish: () => {
+            setTimeout(() => {
+                isReloadingData.value = false;
+            }, 400);
+        },
     });
 };
 

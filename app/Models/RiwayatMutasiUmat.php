@@ -25,6 +25,8 @@ class RiwayatMutasiUmat extends Model
         'paroki_tujuan_nama',
         'wilayah_asal_id',
         'wilayah_tujuan_id',
+        'kapela_asal_id',
+        'kapela_tujuan_id',
         'kub_asal_id',
         'kub_tujuan_id',
         'alamat_sebelum',
@@ -61,6 +63,16 @@ class RiwayatMutasiUmat extends Model
     public function wilayahTujuan()
     {
         return $this->belongsTo(Wilayah::class, 'wilayah_tujuan_id');
+    }
+
+    public function kapelaAsal()
+    {
+        return $this->belongsTo(Kapela::class, 'kapela_asal_id');
+    }
+
+    public function kapelaTujuan()
+    {
+        return $this->belongsTo(Kapela::class, 'kapela_tujuan_id');
     }
 
     public function parokiAsal()

@@ -83,6 +83,67 @@
             .bi, [class^="bi-"], [class*=" bi-"] {
                 font-family: "bootstrap-icons" !important;
             }
+
+            /* Inertia Modern Centered Spinner & Top Loading Bar */
+            #nprogress {
+                pointer-events: none;
+            }
+            #nprogress .bar {
+                background: linear-gradient(90deg, #f59e0b, #0ea5e9, #10b981) !important;
+                position: fixed;
+                z-index: 99999;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 3px !important;
+                box-shadow: 0 0 10px #f59e0b, 0 0 5px #0ea5e9;
+            }
+            #nprogress .peg {
+                display: block;
+                position: absolute;
+                right: 0px;
+                width: 100px;
+                height: 100%;
+                box-shadow: 0 0 12px #f59e0b, 0 0 6px #f59e0b;
+                opacity: 1.0;
+                transform: rotate(3deg) translate(0px, -4px);
+            }
+            #nprogress .spinner {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                position: fixed;
+                z-index: 99999;
+                top: 50% !important;
+                left: 50% !important;
+                right: auto !important;
+                bottom: auto !important;
+                transform: translate(-50%, -50%) !important;
+                width: 58px;
+                height: 58px;
+                background: rgba(255, 255, 255, 0.94);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                border: 1px solid rgba(226, 232, 240, 0.95);
+                border-radius: 18px;
+                box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.14), 0 6px 12px -4px rgba(0, 0, 0, 0.08);
+                pointer-events: none;
+            }
+            #nprogress .spinner-icon {
+                width: 28px !important;
+                height: 28px !important;
+                box-sizing: border-box;
+                border: solid 3px transparent !important;
+                border-top-color: #f59e0b !important;
+                border-right-color: #0ea5e9 !important;
+                border-bottom-color: #10b981 !important;
+                border-radius: 50% !important;
+                animation: nprogress-spinner 600ms linear infinite !important;
+            }
+            @keyframes nprogress-spinner {
+                0%   { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
         </style>
 
         <!-- Local Font Awesome -->

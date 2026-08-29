@@ -146,16 +146,103 @@ trait PembersihModuleTrait
 
     protected function pembersihCollectReferences(): array
     {
-        $refs = [];
-        $pairs = [
-            ['users', 'photo'], ['users', 'foto'],
-            ['paroki', 'logo'], ['paroki', 'banner'], ['paroki', 'foto'],
-            ['keuskupan', 'logo'],
-            ['galeri', 'gambar'], ['galeri', 'file'],
-            ['konten', 'gambar'], ['konten', 'featured_image'],
-            ['umat', 'foto'],
-            ['kk_katolik', 'foto'],
+        $refs = [
+            '.gitkeep' => true,
+            '.htaccess' => true,
+            'index.html' => true,
+            'index.php' => true,
+            'favicon.ico' => true,
+            'logo.png' => true,
+            'default.jpg' => true,
+            'default-pastor.jpg' => true,
+            'avatar-default.jpg' => true,
+            'church-logo.png' => true,
+            'logo-paroki.png' => true,
+            'logo-keuskupan.png' => true,
         ];
+
+        $pairs = [
+            ['anggota_kategorial', 'foto'],
+            ['arsip_digital', 'file_path'],
+            ['artikel', 'gambar'],
+            ['aset', 'foto'],
+            ['aset', 'foto_aset'],
+            ['aset', 'dokumen_aset'],
+            ['backup_database', 'nama_file'],
+            ['banner', 'gambar'],
+            ['chat_pesan', 'lampiran'],
+            ['defunctorum', 'foto'],
+            ['direktori_dpp', 'foto'],
+            ['direktori_katekis', 'foto'],
+            ['direktori_misdinar', 'foto'],
+            ['downloads', 'file_path'],
+            ['downloads', 'file_name'],
+            ['galeri', 'gambar'],
+            ['galeri', 'og_image'],
+            ['galeri_album', 'og_image'],
+            ['galeri_item', 'file_foto'],
+            ['jadwal_misa', 'foto'],
+            ['kegiatan', 'gambar'],
+            ['keuangan', 'bukti'],
+            ['keuskupan', 'logo'],
+            ['kk_katolik', 'foto'],
+            ['konten', 'gambar'],
+            ['konten', 'file_pdf'],
+            ['konten', 'featured_image'],
+            ['kronik_paroki', 'foto_utama'],
+            ['kronik_paroki', 'dokumen_lampiran'],
+            ['kronik_paroki', 'og_image'],
+            ['lapak_produk', 'foto'],
+            ['lapak_transaksi', 'bukti_pembayaran'],
+            ['master_frater', 'foto'],
+            ['master_pastor', 'foto'],
+            ['master_uskup', 'foto'],
+            ['metode_pembayaran', 'logo_bank'],
+            ['metode_pembayaran', 'gambar_qris'],
+            ['panduan_doa', 'gambar'],
+            ['paroki', 'logo'],
+            ['paroki', 'banner'],
+            ['paroki', 'foto'],
+            ['pembayaran_cetak_sakramen', 'bukti_transfer'],
+            ['pengajuan_sakramen', 'bukti_pembayaran'],
+            ['pengaturan_aplikasi', 'qris_image'],
+            ['pengaturan_aplikasi', 'hero_video_file'],
+            ['pengaturan_aplikasi', 'hero_video_poster'],
+            ['pengaturan_aplikasi', 'video_header_file'],
+            ['pengaturan_aplikasi', 'video_header_poster'],
+            ['pengumuman', 'gambar'],
+            ['penulis', 'foto'],
+            ['peran_kategorial', 'foto'],
+            ['peran_kategorial', 'ikon'],
+            ['peran_kategorial', 'og_image'],
+            ['profil_paroki', 'logo'],
+            ['profil_paroki', 'foto_gereja'],
+            ['profil_paroki', 'banner'],
+            ['rapat', 'file_lampiran'],
+            ['renungan_harian', 'gambar'],
+            ['riwayat_pastor_paroki', 'foto'],
+            ['sakramen', 'dokumen'],
+            ['sakramen', 'lampiran'],
+            ['sakramen_verifikasi', 'bukti_dokumen'],
+            ['sambutan_pastor', 'foto_pastor'],
+            ['sambutan_pastor', 'og_image'],
+            ['sambutan_pastor', 'foto'],
+            ['seo_pages', 'og_image'],
+            ['setting', 'logo_kanan'],
+            ['setting', 'logo_kiri'],
+            ['slider_banner', 'gambar'],
+            ['sliders', 'gambar'],
+            ['stasi_kapela', 'foto'],
+            ['surat_keluar', 'file_pdf'],
+            ['surat_masuk', 'lampiran'],
+            ['surat_masuk', 'file_scan'],
+            ['umat', 'foto'],
+            ['users', 'foto'],
+            ['users', 'photo'],
+            ['uskup', 'foto'],
+            ['web_sliders', 'image'],
+        ];
+
         foreach ($pairs as [$table, $col]) {
             if (!\Illuminate\Support\Facades\Schema::hasTable($table) || !\Illuminate\Support\Facades\Schema::hasColumn($table, $col)) {
                 continue;
@@ -166,8 +253,10 @@ trait PembersihModuleTrait
                 if (!$val) {
                     continue;
                 }
+                $cleanVal = ltrim(str_replace(DIRECTORY_SEPARATOR, '/', (string) $val), '/');
                 $refs[basename($val)] = true;
-                $refs[ltrim(str_replace(DIRECTORY_SEPARATOR, '/', (string) $val), '/')] = true;
+                $refs[$cleanVal] = true;
+                $refs[preg_replace('#^(public/)?uploads/#', '', $cleanVal)] = true;
             }
         }
         return $refs;

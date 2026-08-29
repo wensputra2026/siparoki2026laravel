@@ -863,9 +863,9 @@ class InertiaPanelController extends Controller
                 'has_pdf' => true,
                 'columns' => [
                     ['key' => 'logo', 'label' => 'Logo', 'isImage' => true],
-                    ['key' => 'banner', 'altKey' => 'foto', 'label' => 'Banner Header', 'isImage' => true],
                     ['key' => 'nama_paroki', 'label' => 'Nama Paroki', 'isPrimary' => true],
                     ['key' => 'kode_paroki', 'label' => 'Kode'],
+                    ['key' => 'keuskupan_nama', 'relation' => 'keuskupan', 'relationKey' => 'nama_keuskupan', 'label' => 'Keuskupan'],
                     ['key' => 'dekenat_nama', 'relation' => 'dekenat', 'relationKey' => 'nama_kevikepan', 'altRelationKey' => 'nama_dekenat', 'label' => 'Kevikepan / Dekenat'],
                     ['key' => 'pelindung_paroki', 'altKey' => 'pelindung', 'label' => 'Pelindung'],
                     ['key' => 'nama_pastor_paroki_aktif', 'altKey' => 'pastor_paroki', 'label' => 'Pastor Paroki'],

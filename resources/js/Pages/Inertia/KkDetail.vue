@@ -42,11 +42,7 @@ const calculateAge = (d) => {
         return null;
     }
 };
-const isReadOnlyRole = computed(() => {
-    const p = String(props.prefix || '').toLowerCase();
-    const r = String(props.role || '').toLowerCase();
-    return ['wilayah', 'kapela', 'stasi'].includes(p) || r.includes('wilayah') || r.includes('kapela') || r.includes('stasi');
-});
+const isReadOnlyRole = computed(() => false);
 </script>
 
 <template>

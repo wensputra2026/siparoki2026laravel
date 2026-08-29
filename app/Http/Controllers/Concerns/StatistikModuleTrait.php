@@ -50,33 +50,60 @@ trait StatistikModuleTrait
         $authUser = auth()->user();
         $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));
 
+        $targetKubId = $request->input('kub_id') ?: $authUser?->kub_id;
+        $activeKub = null;
+        if ($firstSegment === 'kub' || str_contains($slugClean, 'kub') || $request->filled('kub_id')) {
+            if ($targetKubId) {
+                $activeKub = \App\Models\Kub::with(['wilayah', 'kapela', 'paroki'])->find($targetKubId);
+            }
+            if (!$activeKub) {
+                $activeKub = \App\Models\Kub::with(['wilayah', 'kapela', 'paroki'])->first();
+            }
+        }
+
         $umatQuery = \App\Models\Umat::query();
         $kkQuery = \App\Models\KkKatolik::query();
         $kubQuery = \App\Models\Kub::query();
         $wilayahQuery = \App\Models\Wilayah::query();
         $kapelaQuery = \App\Models\Kapela::query();
 
-        if (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
+        if ($activeKub) {
+            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $activeKub->id));
+            $kkQuery->where('kub_id', $activeKub->id);
+            $kubQuery->where('id', $activeKub->id);
+            if ($activeKub->wilayah_id) {
+                $wilayahQuery->where('id', $activeKub->wilayah_id);
+            }
+            if ($activeKub->kapela_id) {
+                $kapelaQuery->where('id', $activeKub->kapela_id);
+            }
+            $totalWilayah = $activeKub->wilayah_id ? 1 : 0;
+            $totalKapela = $activeKub->kapela_id ? 1 : 0;
+            $totalKub = 1;
+        } elseif (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
             $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $authUser->wilayah_id));
             $kkQuery->where('wilayah_id', $authUser->wilayah_id);
             $kubQuery->where('wilayah_id', $authUser->wilayah_id);
             $wilayahQuery->where('id', $authUser->wilayah_id);
+            $totalWilayah = $wilayahQuery->count();
+            $totalKapela = $kapelaQuery->count();
+            $totalKub = $kubQuery->count();
         } elseif ((str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) && !empty($authUser?->kapela_id)) {
             $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $authUser->kapela_id));
             $kkQuery->where('kapela_id', $authUser->kapela_id);
             $kubQuery->where('kapela_id', $authUser->kapela_id);
             $kapelaQuery->where('id', $authUser->kapela_id);
-        } elseif (str_contains($slugClean, 'kub') && !empty($authUser?->kub_id)) {
-            $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
-            $kkQuery->where('kub_id', $authUser->kub_id);
-            $kubQuery->where('id', $authUser->kub_id);
+            $totalWilayah = $wilayahQuery->count();
+            $totalKapela = $kapelaQuery->count();
+            $totalKub = $kubQuery->count();
+        } else {
+            $totalWilayah = $wilayahQuery->count();
+            $totalKapela = $kapelaQuery->count();
+            $totalKub = $kubQuery->count();
         }
 
         $totalUmat = $umatQuery->count();
         $totalKk = $kkQuery->count();
-        $totalKub = $kubQuery->count();
-        $totalWilayah = $wilayahQuery->count();
-        $totalKapela = $kapelaQuery->count();
 
         // Gender Stats
         $pria = (clone $umatQuery)->whereIn('jenis_kelamin', ['L', 'Laki-laki', 'LAKI-LAKI', 'Pria'])->count();
@@ -86,11 +113,23 @@ trait StatistikModuleTrait
             $wanita = $totalUmat - $pria;
         }
 
-        // Age Group breakdown
-        $anak = (int) round($totalUmat * 0.22);
-        $omk = (int) round($totalUmat * 0.28);
-        $dewasa = (int) round($totalUmat * 0.38);
-        $lansia = max(0, $totalUmat - ($anak + $omk + $dewasa));
+        // Age Group breakdown - dihitung dari tanggal lahir jika tersedia
+        $hasBirthDates = (clone $umatQuery)->whereNotNull('tanggal_lahir')->exists();
+        if ($hasBirthDates && $totalUmat > 0) {
+            $anak = (clone $umatQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) <= 12')->count();
+            $omk = (clone $umatQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 13 AND 25')->count();
+            $dewasa = (clone $umatQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 26 AND 59')->count();
+            $lansia = (clone $umatQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count();
+            $sisa = max(0, $totalUmat - ($anak + $omk + $dewasa + $lansia));
+            if ($sisa > 0) {
+                $dewasa += $sisa;
+            }
+        } else {
+            $anak = (int) round($totalUmat * 0.22);
+            $omk = (int) round($totalUmat * 0.28);
+            $dewasa = (int) round($totalUmat * 0.38);
+            $lansia = max(0, $totalUmat - ($anak + $omk + $dewasa));
+        }
 
         $usiaStats = [
             ['label' => 'Anak-anak & Remaja Awal', 'range' => '0 - 12 Tahun', 'count' => $anak, 'percentage' => round(($anak / max(1, $totalUmat)) * 100), 'icon' => 'fa-solid fa-child', 'color' => 'bg-emerald-500'],
@@ -100,7 +139,6 @@ trait StatistikModuleTrait
         ];
 
         // Sakramen
-        $totalSakramen = \Illuminate\Support\Facades\Schema::hasTable('sakramen') ? \App\Models\Sakramen::count() : 0;
         $sakramenStats = [
             'baptis' => $totalUmat,
             'komuni' => (int) round($totalUmat * 0.78),
@@ -108,9 +146,24 @@ trait StatistikModuleTrait
             'nikah' => (int) round($totalKk * 0.92),
         ];
 
-        // Wilayah Breakdown
+        // Sebaran Umat: Jika KUB aktif, tampilkan daftar KK di KUB tersebut
         $wilayahStats = [];
-        if (\Illuminate\Support\Facades\Schema::hasTable('wilayah')) {
+        if ($activeKub) {
+            $wilayahStats = \App\Models\KkKatolik::withCount('anggota')
+                ->where('kub_id', $activeKub->id)
+                ->orderBy('nama_lahir_pemilik')
+                ->get()
+                ->map(fn($kk) => [
+                    'id' => $kk->id,
+                    'nama_wilayah' => ($kk->nama_baptis_pemilik ? $kk->nama_baptis_pemilik . ' ' : '') . $kk->nama_lahir_pemilik,
+                    'no_kk' => $kk->no_kk_kw ?: ($kk->no_kk_dukcapil ?: '-'),
+                    'kub_count' => 1,
+                    'kk_count' => 1,
+                    'alamat' => $kk->alamat_sekarang ?: '-',
+                    'umat_count' => $kk->anggota_count ?: 1,
+                ])
+                ->toArray();
+        } elseif (\Illuminate\Support\Facades\Schema::hasTable('wilayah')) {
             $wilayahs = \App\Models\Wilayah::withCount('kubs')->get();
             foreach ($wilayahs as $w) {
                 $wilayahStats[] = [
@@ -122,7 +175,8 @@ trait StatistikModuleTrait
                 ];
             }
         }
-        if (empty($wilayahStats)) {
+
+        if (empty($wilayahStats) && !$activeKub) {
             $wilayahStats = [
                 ['id' => 1, 'nama_wilayah' => 'Wilayah I - St. Yosef', 'kub_count' => 6, 'kk_count' => 160, 'umat_count' => 710],
                 ['id' => 2, 'nama_wilayah' => 'Wilayah II - St. Petrus', 'kub_count' => 5, 'kk_count' => 145, 'umat_count' => 640],
@@ -144,6 +198,7 @@ trait StatistikModuleTrait
             'role' => $resolvedRole,
             'prefix' => $firstSegment,
             'paroki' => $paroki,
+            'activeKub' => $activeKub,
             'summary' => [
                 'totalUmat' => $totalUmat,
                 'totalKK' => $totalKk,
@@ -166,6 +221,21 @@ trait StatistikModuleTrait
 
     public function exportStatistik(Request $request, string $format)
     {
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $authUser = auth()->user();
+        $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $authUser?->role?->slug ?? $authUser?->role?->nama_role ?? ''));
+
+        $targetKubId = $request->input('kub_id') ?: $authUser?->kub_id;
+        $activeKub = null;
+        if ($firstSegment === 'kub' || str_contains($slugClean, 'kub') || $request->filled('kub_id')) {
+            if ($targetKubId) {
+                $activeKub = \App\Models\Kub::with(['wilayah', 'kapela', 'paroki'])->find($targetKubId);
+            }
+            if (!$activeKub) {
+                $activeKub = \App\Models\Kub::with(['wilayah', 'kapela', 'paroki'])->first();
+            }
+        }
+
         $defaultParokiId = $this->defaultParokiIdFromProfile();
         $paroki = Paroki::with('keuskupan')->find($defaultParokiId)
             ?? Paroki::with('keuskupan')->first();
@@ -175,14 +245,21 @@ trait StatistikModuleTrait
         $keuskupanLogo = $keuskupan?->logo ?: '/uploads/keuskupan/logo_keuskupan_kupang.svg';
         $parokiLogo = $paroki?->logo ?: '/assets/uploads/profil/logo_paroki_1787370466.jpeg';
 
-        $totalUmat = \App\Models\Umat::count() ?: 5420;
-        $totalKk = \App\Models\KkKatolik::count() ?: (\App\Models\Keluarga::count() ?: 1250);
-        $totalKub = \App\Models\Kub::count() ?: 45;
-        $totalWilayah = \App\Models\Wilayah::count() ?: 8;
-        $totalKapela = \App\Models\Kapela::count() ?: 12;
+        $umatQuery = \App\Models\Umat::query();
+        $kkQuery = \App\Models\KkKatolik::query();
+        if ($activeKub) {
+            $umatQuery->whereHas('kk', fn($q) => $q->where('kub_id', $activeKub->id));
+            $kkQuery->where('kub_id', $activeKub->id);
+        }
 
-        $pria = \App\Models\Umat::whereIn('jenis_kelamin', ['L', 'Laki-laki', 'LAKI-LAKI', 'Pria'])->count();
-        $wanita = \App\Models\Umat::whereIn('jenis_kelamin', ['P', 'Perempuan', 'PEREMPUAN', 'Wanita'])->count();
+        $totalUmat = $umatQuery->count() ?: ($activeKub ? 0 : (\App\Models\Umat::count() ?: 5420));
+        $totalKk = $kkQuery->count() ?: ($activeKub ? 0 : (\App\Models\KkKatolik::count() ?: 1250));
+        $totalKub = $activeKub ? 1 : (\App\Models\Kub::count() ?: 45);
+        $totalWilayah = $activeKub ? ($activeKub->wilayah_id ? 1 : 0) : (\App\Models\Wilayah::count() ?: 8);
+        $totalKapela = $activeKub ? ($activeKub->kapela_id ? 1 : 0) : (\App\Models\Kapela::count() ?: 12);
+
+        $pria = (clone $umatQuery)->whereIn('jenis_kelamin', ['L', 'Laki-laki', 'LAKI-LAKI', 'Pria'])->count();
+        $wanita = (clone $umatQuery)->whereIn('jenis_kelamin', ['P', 'Perempuan', 'PEREMPUAN', 'Wanita'])->count();
         if ($pria === 0 && $wanita === 0 && $totalUmat > 0) {
             $pria = (int) round($totalUmat * 0.49);
             $wanita = $totalUmat - $pria;
@@ -196,13 +273,14 @@ trait StatistikModuleTrait
             'Keterangan Pastoral',
         ];
 
+        $scopeTitle = $activeKub ? 'KUB ' . $activeKub->nama_kub : 'Paroki';
         $rows = collect([
             // Summary
-            ['Ringkasan Master', 'Total Umat Terdaftar (Jiwa)', $totalUmat, '100%', 'Umat aktif paroki'],
-            ['Ringkasan Master', 'Total Kepala Keluarga (KK)', $totalKk, '-', 'Kartu Keluarga Katolik aktif'],
-            ['Ringkasan Master', 'Komunitas Basis (KUB / KBG)', $totalKub, '-', 'Komunitas Umat Basis'],
-            ['Ringkasan Master', 'Wilayah Pastoral', $totalWilayah, '-', 'Wilayah koordinasi paroki'],
-            ['Ringkasan Master', 'Stasi / Kapela', $totalKapela, '-', 'Gereja stasi & pos pelayanan'],
+            ['Ringkasan Master', 'Total Umat Terdaftar (Jiwa)', $totalUmat, '100%', "Umat aktif {$scopeTitle}"],
+            ['Ringkasan Master', 'Total Kepala Keluarga (KK)', $totalKk, '-', "Kartu Keluarga Katolik aktif {$scopeTitle}"],
+            ['Ringkasan Master', 'Komunitas Basis (KUB / KBG)', $totalKub, '-', $activeKub ? $activeKub->nama_kub : 'Komunitas Umat Basis'],
+            ['Ringkasan Master', 'Wilayah Pastoral', $totalWilayah, '-', $activeKub ? ($activeKub->wilayah?->nama_wilayah ?: '-') : 'Wilayah koordinasi paroki'],
+            ['Ringkasan Master', 'Stasi / Kapela', $totalKapela, '-', $activeKub ? ($activeKub->kapela?->nama_kapela ?: 'Pusat Paroki') : 'Gereja stasi & pos pelayanan'],
 
             // Gender
             ['Jenis Kelamin', 'Laki-Laki (Pria)', $pria, round(($pria / max(1, $totalUmat)) * 100) . '%', 'Umat beriman laki-laki'],
@@ -221,13 +299,18 @@ trait StatistikModuleTrait
             ['Penerimaan Sakramen', 'Sakramen Pernikahan Katolik', (int) round($totalKk * 0.92), '92%', 'Sah secara kanonik gereja'],
         ]);
 
+        $reportTitle = $activeKub
+            ? "Rekapitulasi Statistik & Demografi Umat KUB {$activeKub->nama_kub}"
+            : 'Rekapitulasi Statistik & Demografi Umat Paroki';
+
         if (in_array($format, ['excel', 'xlsx'], true)) {
-            $fileName = 'rekap-statistik-demografi-paroki-' . now()->format('Ymd-His') . '.xlsx';
-            return $this->styledExcelDownload('Rekapitulasi Statistik & Demografi Umat Paroki', $headings, $rows, $fileName);
+            $slugPrefix = $activeKub ? 'rekap-statistik-kub-' . Str::slug($activeKub->nama_kub) : 'rekap-statistik-demografi-paroki';
+            $fileName = $slugPrefix . '-' . now()->format('Ymd-His') . '.xlsx';
+            return $this->styledExcelDownload($reportTitle, $headings, $rows, $fileName);
         }
 
         return response()->view('exports.keuskupan-print', [
-            'title' => 'Laporan Demografi & Statistik Umat Paroki',
+            'title' => $activeKub ? "Laporan Demografi & Statistik KUB {$activeKub->nama_kub}" : 'Laporan Demografi & Statistik Umat Paroki',
             'headings' => $headings,
             'rows' => $rows,
             'paroki' => $paroki,

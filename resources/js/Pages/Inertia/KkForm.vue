@@ -1,9 +1,14 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import { triggerToast } from '@/composables/useRoleMenu';
+
+const page = usePage();
+const isKubRole = computed(() => {
+    return props.prefix === 'kub' || String(props.role).toLowerCase().includes('kub');
+});
 
 const props = defineProps({
     role: { type: String, default: 'Super Admin' },
@@ -321,6 +326,15 @@ const generateNoKkParoki = (force = false) => {
 };
 
 onMounted(() => {
+    if (isKubRole.value && !props.isEdit) {
+        const kubId = page.props.auth?.user?.kub_id;
+        const matchedKub = (props.kubList || []).find(k => String(k.id) === String(kubId)) || (props.kubList || [])[0];
+        if (matchedKub) {
+            form.kub_id = matchedKub.id;
+            if (matchedKub.wilayah_id) form.wilayah_id = matchedKub.wilayah_id;
+            if (matchedKub.kapela_id) form.kapela_id = matchedKub.kapela_id;
+        }
+    }
     if (!props.isEdit && !form.no_kk_kw) {
         generateNoKkParoki(true);
     }
@@ -584,15 +598,16 @@ const submitForm = () => {
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
                                 <span>Stasi / Kapela</span>
-                                <span v-if="form.wilayah_id" class="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">Nonaktif</span>
+                                <span v-if="isKubRole" class="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">Terkunci KUB</span>
+                                <span v-else-if="form.wilayah_id" class="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">Nonaktif</span>
                             </label>
                             <SearchableSelect
                                 v-model="form.kapela_id"
                                 :options="kapelaList"
-                                :disabled="!!form.wilayah_id"
+                                :disabled="isKubRole || !!form.wilayah_id"
                                 valueKey="id"
                                 labelKey="nama_kapela"
-                                :placeholder="form.wilayah_id ? '-- Nonaktif (Wilayah Dipilih) --' : '-- Pilih Stasi / Kapela --'"
+                                :placeholder="isKubRole ? (form.kapela_id ? '-- Terkunci KUB --' : 'Pusat Paroki') : (form.wilayah_id ? '-- Nonaktif (Wilayah Dipilih) --' : '-- Pilih Stasi / Kapela --')"
                                 searchPlaceholder="Cari stasi / kapela..."
                                 icon="fa-solid fa-church"
                                 iconColor="text-blue-600"
@@ -603,15 +618,16 @@ const submitForm = () => {
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
                                 <span>Wilayah Pastoral</span>
-                                <span v-if="form.kapela_id" class="text-[10px] text-blue-600 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">Nonaktif</span>
+                                <span v-if="isKubRole" class="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">Terkunci KUB</span>
+                                <span v-else-if="form.kapela_id" class="text-[10px] text-blue-600 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">Nonaktif</span>
                             </label>
                             <SearchableSelect
                                 v-model="form.wilayah_id"
                                 :options="wilayahList"
-                                :disabled="!!form.kapela_id"
+                                :disabled="isKubRole || !!form.kapela_id"
                                 valueKey="id"
                                 labelKey="nama_wilayah"
-                                :placeholder="form.kapela_id ? '-- Nonaktif (Stasi Dipilih) --' : '-- Pilih Wilayah Pastoral --'"
+                                :placeholder="isKubRole ? '-- Terkunci KUB --' : (form.kapela_id ? '-- Nonaktif (Stasi Dipilih) --' : '-- Pilih Wilayah Pastoral --')"
                                 searchPlaceholder="Cari wilayah pastoral..."
                                 icon="fa-solid fa-map"
                                 iconColor="text-amber-600"
@@ -621,12 +637,14 @@ const submitForm = () => {
 
                         <!-- KUB / KBG -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                KUB / KBG
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                                <span>KUB / KBG</span>
+                                <span v-if="isKubRole" class="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">Terkunci</span>
                             </label>
                             <SearchableSelect
                                 v-model="form.kub_id"
                                 :options="filteredKubList"
+                                :disabled="isKubRole"
                                 valueKey="id"
                                 labelKey="nama_kub"
                                 placeholder="-- Pilih KUB / KBG --"

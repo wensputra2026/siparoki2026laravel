@@ -10,9 +10,11 @@ const reloadDashboard = () => {
     isReloading.value = true;
     router.reload({
         preserveScroll: true,
-        preserveState: true,
+        preserveState: false,
         onFinish: () => {
-            isReloading.value = false;
+            setTimeout(() => {
+                isReloading.value = false;
+            }, 400);
         },
     });
 };
@@ -83,6 +85,21 @@ const isSuperAdminRole = computed(() => {
 const totalUmatCount = computed(() => {
     const statItem = props.stats.find(s => s.title.toLowerCase().includes('umat'));
     return statItem ? Number(statItem.value) : (props.genderStats.total || 0);
+});
+
+const sakramenSubtitle = computed(() => {
+    const r = String(props.role || page.props.role || '').toLowerCase();
+    const p = basePrefix.value.toLowerCase();
+    if (r.includes('kub') || p === '/kub') {
+        return 'Data sakramen yang tercatat di KUB ini';
+    }
+    if (r.includes('wilayah') || p === '/wilayah') {
+        return 'Data sakramen yang tercatat di Wilayah ini';
+    }
+    if (r.includes('kapela') || r.includes('stasi') || p === '/kapela') {
+        return 'Data sakramen yang tercatat di Stasi / Kapela ini';
+    }
+    return 'Data sakramen yang tercatat di paroki';
 });
 </script>
 
@@ -389,7 +406,7 @@ const totalUmatCount = computed(() => {
                 <div class="rounded-2xl bg-white border border-slate-200/80 p-6 shadow-xs space-y-6">
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Ringkasan Sakramen</h3>
-                        <p class="text-xs text-slate-500">Data sakramen yang tercatat di paroki</p>
+                        <p class="text-xs text-slate-500">{{ sakramenSubtitle }}</p>
                     </div>
 
                     <div class="space-y-3">

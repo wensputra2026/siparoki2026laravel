@@ -91,22 +91,37 @@ body, html {
 }
 
 #nprogress .spinner {
-    display: block;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
     position: fixed;
     z-index: 99999;
-    top: 15px;
-    right: 18px;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    width: 58px;
+    height: 58px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 18px;
+    box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.12), 0 6px 12px -4px rgba(0, 0, 0, 0.06);
+    pointer-events: none;
 }
 
 #nprogress .spinner-icon {
-    width: 18px;
-    height: 18px;
+    width: 28px !important;
+    height: 28px !important;
     box-sizing: border-box;
-    border: solid 2.5px transparent;
+    border: solid 3px transparent !important;
     border-top-color: #f59e0b !important;
-    border-left-color: #0ea5e9 !important;
-    border-radius: 50%;
-    animation: nprogress-spinner 400ms linear infinite;
+    border-right-color: #0ea5e9 !important;
+    border-bottom-color: #10b981 !important;
+    border-radius: 50% !important;
+    animation: nprogress-spinner 600ms linear infinite !important;
 }
 
 @keyframes nprogress-spinner {
@@ -119,4 +134,10 @@ body, html {
    on data-heavy pages like iuran). */
 .custom-scrollbar {
     scrollbar-gutter: stable;
+}
+
+/* Pastikan teks dalam semua tabel tidak membungkus baris (nowrap) */
+table th,
+table td {
+    white-space: nowrap !important;
 }

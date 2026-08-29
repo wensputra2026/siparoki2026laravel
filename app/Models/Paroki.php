@@ -8,6 +8,7 @@ class Paroki extends Model
 
     protected $table = 'paroki';
     protected $primaryKey = 'id_paroki';
+    protected $appends = ['logo_url'];
 
     protected $fillable = [
         'keuskupan_id',
@@ -106,5 +107,27 @@ class Paroki extends Model
     public function kuasiParokis()
     {
         return $this->hasMany(KuasiParoki::class, 'paroki_id');
+    }
+
+    /**
+     * URL logo paroki. Bila belum diupload atau file tidak ditemukan,
+     * kembalikan logo default agar tidak muncul broken image.
+     */
+    public function getLogoUrlAttribute(): string
+    {
+        $default = asset('images/logo-paroki.png');
+
+        if (!empty($this->attributes['logo'])) {
+            $relative = ltrim((string) $this->attributes['logo'], '/');
+            $relative = str_starts_with($relative, 'public/')
+                ? substr($relative, 7)
+                : $relative;
+
+            if (file_exists(public_path($relative))) {
+                return asset($relative);
+            }
+        }
+
+        return $default;
     }
 }

@@ -121,11 +121,13 @@ Route::get('/uploads/{path}', function($path) {
         public_path('uploads/' . $cleanPath),
         public_path('assets/uploads/' . $path),
         public_path('assets/uploads/' . $cleanPath),
-        public_path('assets/uploads/video/' . $baseName),
+        public_path('uploads/users/' . $baseName),
+        public_path('uploads/profil/' . $baseName),
+        public_path('assets/uploads/users/' . $baseName),
         public_path('assets/uploads/profil/' . $baseName),
+        public_path('assets/uploads/video/' . $baseName),
         public_path('assets/uploads/galeri/' . $baseName),
         public_path('uploads/video/' . $baseName),
-        public_path('uploads/profil/' . $baseName),
         public_path('uploads/galeri/' . $baseName),
         storage_path('app/public/' . $path),
     ];
@@ -162,8 +164,12 @@ Route::get('/storage/{path}', function($path) {
     $candidates = [
         storage_path('app/public/' . $path),
         public_path('uploads/' . $path),
+        public_path('uploads/users/' . $baseName),
+        public_path('uploads/profil/' . $baseName),
         public_path('uploads/galeri/' . $baseName),
         public_path('assets/uploads/' . $path),
+        public_path('assets/uploads/users/' . $baseName),
+        public_path('assets/uploads/profil/' . $baseName),
         public_path('assets/uploads/galeri/' . $baseName),
         public_path('uploads/' . $cleanPath),
         public_path('assets/uploads/' . $cleanPath),
@@ -174,6 +180,27 @@ Route::get('/storage/{path}', function($path) {
     }
     abort(404);
 })->where('path', '.*');
+
+// Static fallback for bare image filenames (e.g. /1787542903_6a8bbd774c7de.webp)
+Route::get('/{filename}.{ext}', function($filename, $ext) {
+    $fullName = $filename . '.' . $ext;
+    $candidates = [
+        public_path('uploads/users/' . $fullName),
+        public_path('uploads/profil/' . $fullName),
+        public_path('uploads/galeri/' . $fullName),
+        public_path('uploads/konten/' . $fullName),
+        public_path('uploads/' . $fullName),
+        public_path('assets/uploads/users/' . $fullName),
+        public_path('assets/uploads/profil/' . $fullName),
+        public_path('assets/uploads/' . $fullName),
+        storage_path('app/public/' . $fullName),
+    ];
+    $safe = siparoki_resolve_safe_file($candidates, [public_path(), storage_path('app/public')]);
+    if ($safe) {
+        return response()->file($safe);
+    }
+    abort(404);
+})->where('ext', 'webp|jpg|jpeg|png|gif|svg|ico|jfif');
 
 
 
@@ -614,8 +641,30 @@ Route::post('/midtrans/snap-token', [\App\Http\Controllers\MidtransController::c
 Route::post('/midtrans/callback', [\App\Http\Controllers\MidtransController::class, 'handleCallback'])->name('midtrans.callback');
 Route::get('/midtrans/status/{orderId}', [\App\Http\Controllers\MidtransController::class, 'checkStatus'])->name('midtrans.status');
 
+// ==========================================
+// NOTIFIKASI REAL-TIME (REVERB / POLLING)
+// ==========================================
+Route::middleware('auth')->prefix('api/notifikasi')->group(function () {
+    Route::get('/list', [\App\Http\Controllers\NotifikasiController::class, 'list'])->name('notifikasi.list');
+    Route::get('/poll', [\App\Http\Controllers\NotifikasiController::class, 'poll'])->name('notifikasi.poll');
+    Route::post('/mark-read/{id?}', [\App\Http\Controllers\NotifikasiController::class, 'markAsRead'])->name('notifikasi.mark-read');
+});
+
+// ==========================================
+// CHAT & PESAN INTERNAL REAL-TIME
+// ==========================================
+Route::middleware('auth')->prefix('api/chat')->group(function () {
+    Route::get('/contacts', [\App\Http\Controllers\ChatController::class, 'getContacts'])->name('chat.contacts');
+    Route::get('/messages/{recipientId}', [\App\Http\Controllers\ChatController::class, 'getMessages'])->name('chat.messages');
+    Route::post('/send', [\App\Http\Controllers\ChatController::class, 'sendMessage'])->name('chat.send');
+    Route::get('/poll', [\App\Http\Controllers\ChatController::class, 'poll'])->name('chat.poll');
+    Route::post('/mark-read/{senderId}', [\App\Http\Controllers\ChatController::class, 'markRead'])->name('chat.mark-read');
+});
+
 // Fallback redirect untuk URL lawas /v2/* ke /superadmin/*
 Route::get('/v2/{path?}', function ($path = '') {
     $target = '/superadmin' . ($path ? '/' . $path : '');
     return redirect($target);
 })->where('path', '.*');
+
+

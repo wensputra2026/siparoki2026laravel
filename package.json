@@ -8,8 +8,10 @@
     },
     "dependencies": {
         "@primevue/themes": "^4.3.1",
+        "laravel-echo": "^2.4.0",
         "primeicons": "^7.0.0",
-        "primevue": "^4.3.1"
+        "primevue": "^4.3.1",
+        "pusher-js": "^8.6.0"
     },
     "devDependencies": {
         "@fontsource/poppins": "^5.3.0",

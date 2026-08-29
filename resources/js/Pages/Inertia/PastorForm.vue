@@ -11,6 +11,7 @@ const props = defineProps({
     pastorItem: { type: Object, default: null },
     riwayatList: { type: Array, default: () => [] },
     keuskupanList: { type: Array, default: () => [] },
+    dekenatList: { type: Array, default: () => [] },
     parokiList: { type: Array, default: () => [] },
     ordoList: { type: Array, default: () => [] },
     jabatanList: { type: Array, default: () => [] },
@@ -81,6 +82,9 @@ const form = useForm({
     uskup_penahbis: props.pastorItem?.uskup_penahbis || '',
     tempat_tahbisan: props.pastorItem?.tempat_tahbisan || '',
     motto_tahbisan: props.pastorItem?.motto_tahbisan || props.pastorItem?.motto || '',
+    keuskupan_id: props.pastorItem?.keuskupan_id || '',
+    dekenat_id: props.pastorItem?.dekenat_id || '',
+    paroki_id: props.pastorItem?.paroki_id || '',
     keuskupan: props.pastorItem?.keuskupan || 'Keuskupan Agung Kupang',
     
     // Riwayat Tugas Utama
@@ -266,6 +270,53 @@ const parokiOptions = computed(() => {
         name: p.nama_paroki,
     }));
 });
+
+// Dekenat / Kevikepan Options
+const dekenatOptions = computed(() => {
+    const list = props.dekenatList || [];
+    if (!form.keuskupan_id) return list;
+    return list.filter(d => String(d.keuskupan_id) === String(form.keuskupan_id));
+});
+
+// Filtered Paroki by dekenat_id
+const filteredParokiById = computed(() => {
+    const list = props.parokiList || [];
+    if (!form.dekenat_id) return list;
+    return list.filter(p => String(p.dekenat_id) === String(form.dekenat_id));
+});
+
+// Keuskupan options with id as id_keuskupan (for cascading)
+const keuskupanById = computed(() => {
+    return (props.keuskupanList || []).map(k => ({
+        id: k.id_keuskupan,
+        name: k.nama_keuskupan,
+    }));
+});
+
+// When paroki_id changes, auto-fill dekenat_id and keuskupan_id
+const onParokiIdChange = (val) => {
+    const paroki = (props.parokiList || []).find(p => String(p.id_paroki) === String(val));
+    if (paroki) {
+        if (paroki.dekenat_id) form.dekenat_id = paroki.dekenat_id;
+        if (paroki.keuskupan_id) form.keuskupan_id = paroki.keuskupan_id;
+        form.paroki_tugas = paroki.nama_paroki || form.paroki_tugas;
+    }
+};
+
+// When dekenat_id changes, auto-fill keuskupan_id
+const onDekenatIdChange = (val) => {
+    const dekenat = (props.dekenatList || []).find(d => String(d.id_dekenat) === String(val));
+    if (dekenat?.keuskupan_id) {
+        form.keuskupan_id = dekenat.keuskupan_id;
+    }
+    // reset paroki_id if the paroki does not belong to this dekenat
+    if (form.paroki_id) {
+        const paroki = (props.parokiList || []).find(p => String(p.id_paroki) === String(form.paroki_id));
+        if (paroki && String(paroki.dekenat_id) !== String(val)) {
+            form.paroki_id = '';
+        }
+    }
+};
 
 // Compute whether Ordo is disabled based on jenis_imam
 const isOrdoDisabled = computed(() => {
@@ -505,20 +556,60 @@ const submit = () => {
                                     />
                                 </div>
 
-                                <!-- Keuskupan -->
+                                <!-- Keuskupan (by ID, cascade) -->
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                        Keuskupan <span class="text-rose-500">*</span>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                                        <span>Keuskupan <span class="text-rose-500">*</span></span>
+                                        <span v-if="form.keuskupan_id" class="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">Terhubung</span>
                                     </label>
                                     <SearchableSelect
-                                        v-model="form.keuskupan"
-                                        :options="keuskupanOptions"
+                                        v-model="form.keuskupan_id"
+                                        :options="keuskupanById"
                                         valueKey="id"
                                         labelKey="name"
                                         placeholder="Pilih keuskupan..."
                                         searchPlaceholder="Cari keuskupan..."
                                         icon="fa-church"
                                         iconColor="text-amber-600"
+                                    />
+                                </div>
+
+                                <!-- Kevikepan / Dekenat (cascade dari Keuskupan) -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                                        <span>Kevikepan / Dekenat</span>
+                                        <span v-if="!form.keuskupan_id" class="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Pilih Keuskupan dulu</span>
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="form.dekenat_id"
+                                        :options="dekenatOptions"
+                                        :disabled="!form.keuskupan_id"
+                                        valueKey="id_dekenat"
+                                        labelKey="nama_dekenat"
+                                        :placeholder="form.keuskupan_id ? 'Pilih kevikepan / dekenat...' : '— Pilih Keuskupan dahulu —'"
+                                        searchPlaceholder="Cari kevikepan..."
+                                        icon="fa-layer-group"
+                                        iconColor="text-indigo-600"
+                                        @update:modelValue="onDekenatIdChange"
+                                    />
+                                </div>
+
+                                <!-- Paroki Tugas (by ID, cascade dari Dekenat) -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                                        <span>Paroki Tugas</span>
+                                        <span v-if="form.paroki_id" class="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">Terhubung ID</span>
+                                    </label>
+                                    <SearchableSelect
+                                        v-model="form.paroki_id"
+                                        :options="filteredParokiById"
+                                        valueKey="id_paroki"
+                                        labelKey="nama_paroki"
+                                        placeholder="Pilih paroki tugas..."
+                                        searchPlaceholder="Cari paroki..."
+                                        icon="fa-place-of-worship"
+                                        iconColor="text-blue-600"
+                                        @update:modelValue="onParokiIdChange"
                                     />
                                 </div>
 

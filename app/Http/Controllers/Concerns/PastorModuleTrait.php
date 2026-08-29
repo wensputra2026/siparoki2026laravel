@@ -103,7 +103,8 @@ trait PastorModuleTrait
             'isEdit' => false,
             'pastorItem' => null,
             'keuskupanList' => \App\Models\Keuskupan::orderBy('nama_keuskupan')->get(['id_keuskupan', 'nama_keuskupan']),
-            'parokiList' => \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'nama_paroki', 'kode_paroki']),
+            'dekenatList' => \App\Models\Dekenat::orderBy('nama_dekenat')->get(['id_dekenat', 'nama_dekenat', 'keuskupan_id']),
+            'parokiList' => \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'nama_paroki', 'kode_paroki', 'dekenat_id', 'keuskupan_id']),
             'ordoList' => $ordoList,
             'jabatanList' => $jabatanList,
         ]);
@@ -191,7 +192,8 @@ trait PastorModuleTrait
             'isEdit' => true,
             'pastorItem' => $pastorItem,
             'keuskupanList' => \App\Models\Keuskupan::orderBy('nama_keuskupan')->get(['id_keuskupan', 'nama_keuskupan']),
-            'parokiList' => \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'nama_paroki', 'kode_paroki']),
+            'dekenatList' => \App\Models\Dekenat::orderBy('nama_dekenat')->get(['id_dekenat', 'nama_dekenat', 'keuskupan_id']),
+            'parokiList' => \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'nama_paroki', 'kode_paroki', 'dekenat_id', 'keuskupan_id']),
             'ordoList' => $ordoList,
             'jabatanList' => $jabatanList,
         ]);

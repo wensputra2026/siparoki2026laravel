@@ -135,9 +135,9 @@ class PanelAccess
         $moduleAccess = [
             'bendahara' => ['keuangan', 'aset', 'kategori-keuangan', 'lapak-produk', 'jenis-iuran', 'iuran', 'kolekte', 'intensi-misa', 'intensi', 'umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga'],
             'penulis' => ['konten', 'kategori-konten', 'pengumuman', 'galeri', 'renungan', 'kegiatan', 'artikel', 'berita', 'komentar-artikel', 'download'],
-            'wilayah' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kegiatan', 'iuran', 'kolekte', 'keuangan', 'aset', 'user', 'users'],
-            'kapela' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kapela', 'stasi', 'kegiatan', 'iuran', 'kolekte', 'keuangan', 'aset', 'user', 'users'],
-            'kub' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'sakramen', 'pengajuan-sakramen', 'lingkungan', 'kub', 'iuran', 'keuangan', 'aset', 'lapak-produk'],
+            'wilayah' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'sakramen', 'buku-sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kegiatan', 'iuran', 'kolekte', 'keuangan', 'aset', 'user', 'users'],
+            'kapela' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'sakramen', 'buku-sakramen', 'pengajuan-sakramen', 'wilayah', 'lingkungan', 'kub', 'kapela', 'stasi', 'kegiatan', 'iuran', 'kolekte', 'keuangan', 'aset', 'user', 'users'],
+            'kub' => ['umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'sakramen', 'buku-sakramen', 'pengajuan-sakramen', 'lingkungan', 'kub', 'iuran', 'keuangan', 'aset', 'lapak-produk'],
             'umat' => ['kk-katolik', 'kk', 'keluarga', 'pengajuan-sakramen', 'lapak-produk', 'umat'],
         ];
 

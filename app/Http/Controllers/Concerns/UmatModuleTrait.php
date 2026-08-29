@@ -66,6 +66,86 @@ trait UmatModuleTrait
             $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $authUser->kub_id));
             $kkQuery->where('kub_id', $authUser->kub_id);
             $kubQuery->where('id', $authUser->kub_id);
+        } elseif ($firstSegment === 'kub' || str_contains($slugClean, 'kub')) {
+            $targetKubId = $authUser?->kub_id ?: \App\Models\Kub::value('id');
+            if ($targetKubId) {
+                $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kub_id', $targetKubId));
+                $kkQuery->where('kub_id', $targetKubId);
+                $kubQuery->where('id', $targetKubId);
+            }
+        } elseif ($firstSegment === 'wilayah' || str_contains($slugClean, 'wilayah')) {
+            $targetWilayahId = $authUser?->wilayah_id ?: \App\Models\Wilayah::value('id');
+            if ($targetWilayahId) {
+                $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('wilayah_id', $targetWilayahId));
+                $kkQuery->where('wilayah_id', $targetWilayahId);
+                $kubQuery->where('wilayah_id', $targetWilayahId);
+            }
+        } elseif ($firstSegment === 'kapela' || str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) {
+            $targetKapelaId = $authUser?->kapela_id ?: \App\Models\Kapela::value('id');
+            if ($targetKapelaId) {
+                $umatQuery->whereHas('kk', fn($kkQ) => $kkQ->where('kapela_id', $targetKapelaId));
+                $kkQuery->where('kapela_id', $targetKapelaId);
+                $kubQuery->where('kapela_id', $targetKapelaId);
+                $kapelaQuery->where('id', $targetKapelaId);
+            }
+        }
+
+        $card3Change = 'Komunitas basis';
+        $card4Title = 'Stasi / Kapela';
+        $card4Value = $kapelaQuery->count();
+        $card4Icon = 'fa-map-location-dot';
+        $card4Change = 'Wilayah pelayanan';
+
+        if ($firstSegment === 'kub' || str_contains($slugClean, 'kub')) {
+            $currentKub = null;
+            if (!empty($targetKubId)) {
+                $currentKub = \App\Models\Kub::with(['wilayah', 'kapela'])->find($targetKubId);
+            } elseif (!empty($authUser?->kub_id)) {
+                $currentKub = \App\Models\Kub::with(['wilayah', 'kapela'])->find($authUser->kub_id);
+            }
+            if ($currentKub) {
+                $card3Change = $currentKub->nama_kub ?: 'Komunitas basis';
+                if ($currentKub->wilayah_id || $currentKub->wilayah) {
+                    $card4Title = 'Wilayah';
+                    $card4Value = 1;
+                    $card4Icon = 'fa-map-location-dot';
+                    $card4Change = $currentKub->wilayah?->nama_wilayah ?: 'Wilayah naungan';
+                } elseif ($currentKub->kapela_id || $currentKub->kapela) {
+                    $card4Title = 'Stasi / Kapela';
+                    $card4Value = 1;
+                    $card4Icon = 'fa-place-of-worship';
+                    $card4Change = $currentKub->kapela?->nama_kapela ?: 'Stasi naungan';
+                } else {
+                    $card4Title = 'Wilayah';
+                    $card4Value = 1;
+                    $card4Icon = 'fa-church';
+                    $card4Change = 'Pusat Paroki';
+                }
+            }
+        } elseif ($firstSegment === 'wilayah' || str_contains($slugClean, 'wilayah')) {
+            $currentWilayah = null;
+            if (!empty($targetWilayahId)) {
+                $currentWilayah = \App\Models\Wilayah::find($targetWilayahId);
+            } elseif (!empty($authUser?->wilayah_id)) {
+                $currentWilayah = \App\Models\Wilayah::find($authUser->wilayah_id);
+            }
+            $card3Change = 'KUB di Wilayah ini';
+            $card4Title = 'Wilayah';
+            $card4Value = 1;
+            $card4Icon = 'fa-map-location-dot';
+            $card4Change = $currentWilayah?->nama_wilayah ?: 'Wilayah pelayanan';
+        } elseif ($firstSegment === 'kapela' || str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) {
+            $currentKapela = null;
+            if (!empty($targetKapelaId)) {
+                $currentKapela = \App\Models\Kapela::find($targetKapelaId);
+            } elseif (!empty($authUser?->kapela_id)) {
+                $currentKapela = \App\Models\Kapela::find($authUser->kapela_id);
+            }
+            $card3Change = 'KUB di Stasi ini';
+            $card4Title = 'Stasi / Kapela';
+            $card4Value = 1;
+            $card4Icon = 'fa-place-of-worship';
+            $card4Change = $currentKapela?->nama_kapela ?: 'Stasi pelayanan';
         }
 
         $stats = [
@@ -89,15 +169,15 @@ trait UmatModuleTrait
                 'title' => 'Komunitas KUB',
                 'value' => $kubQuery->count(),
                 'icon' => 'fa-church',
-                'change' => 'Komunitas basis',
+                'change' => $card3Change,
                 'trend' => 'neutral',
                 'color' => 'emerald',
             ],
             [
-                'title' => 'Stasi / Kapela',
-                'value' => $kapelaQuery->count(),
-                'icon' => 'fa-map-location-dot',
-                'change' => 'Wilayah pelayanan',
+                'title' => $card4Title,
+                'value' => $card4Value,
+                'icon' => $card4Icon,
+                'change' => $card4Change,
                 'trend' => 'neutral',
                 'color' => 'purple',
             ],
@@ -176,7 +256,6 @@ trait UmatModuleTrait
         $hasTglKrisma = Schema::hasColumn('umat', 'tgl_krisma');
         $hasTglPerkawinan = Schema::hasColumn('umat', 'tgl_perkawinan');
 
-        $baptisTable = Schema::hasTable('sakramen') ? Sakramen::where('tipe_sakramen', 'like', '%Baptis%')->count() : 0;
         $baptisUmat = 0;
         if ($hasTglBaptis || $hasStatusBaptis) {
             $baptisUmat = (clone $umatQuery)->where(function($q) use ($hasTglBaptis, $hasStatusBaptis) {
@@ -193,18 +272,42 @@ trait UmatModuleTrait
             })->count();
         }
 
-        $komuniTable = Schema::hasTable('sakramen') ? Sakramen::where('tipe_sakramen', 'like', '%Komuni%')->count() : 0;
         $komuniUmat = $hasTglKomuni ? (clone $umatQuery)->whereNotNull('tgl_komuni_1')->count() : 0;
-
-        $krismaTable = Schema::hasTable('sakramen') ? Sakramen::where('tipe_sakramen', 'like', '%Krisma%')->count() : 0;
         $krismaUmat = $hasTglKrisma ? (clone $umatQuery)->whereNotNull('tgl_krisma')->count() : 0;
+        $nikahUmat = $hasTglPerkawinan ? (clone $umatQuery)->whereNotNull('tgl_perkawinan')->count() : 0;
 
-        $nikahTable = Schema::hasTable('sakramen') ? Sakramen::where(function($q) {
+        $sakramenQuery = Sakramen::query();
+        if (str_contains($slugClean, 'wilayah') && !empty($authUser?->wilayah_id)) {
+            $sakramenQuery->whereHas('umat.kk', fn($q) => $q->where('wilayah_id', $authUser->wilayah_id));
+        } elseif ((str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) && !empty($authUser?->kapela_id)) {
+            $sakramenQuery->whereHas('umat.kk', fn($q) => $q->where('kapela_id', $authUser->kapela_id));
+        } elseif (str_contains($slugClean, 'kub') && !empty($authUser?->kub_id)) {
+            $sakramenQuery->whereHas('umat.kk', fn($q) => $q->where('kub_id', $authUser->kub_id));
+        } elseif ($firstSegment === 'kub' || str_contains($slugClean, 'kub')) {
+            $targetKubId = $authUser?->kub_id ?: \App\Models\Kub::value('id');
+            if ($targetKubId) {
+                $sakramenQuery->whereHas('umat.kk', fn($q) => $q->where('kub_id', $targetKubId));
+            }
+        } elseif ($firstSegment === 'wilayah' || str_contains($slugClean, 'wilayah')) {
+            $targetWilayahId = $authUser?->wilayah_id ?: \App\Models\Wilayah::value('id');
+            if ($targetWilayahId) {
+                $sakramenQuery->whereHas('umat.kk', fn($q) => $q->where('wilayah_id', $targetWilayahId));
+            }
+        } elseif ($firstSegment === 'kapela' || str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) {
+            $targetKapelaId = $authUser?->kapela_id ?: \App\Models\Kapela::value('id');
+            if ($targetKapelaId) {
+                $sakramenQuery->whereHas('umat.kk', fn($q) => $q->where('kapela_id', $targetKapelaId));
+            }
+        }
+
+        $baptisTable = Schema::hasTable('sakramen') ? (clone $sakramenQuery)->where('tipe_sakramen', 'like', '%Baptis%')->count() : 0;
+        $komuniTable = Schema::hasTable('sakramen') ? (clone $sakramenQuery)->where('tipe_sakramen', 'like', '%Komuni%')->count() : 0;
+        $krismaTable = Schema::hasTable('sakramen') ? (clone $sakramenQuery)->where('tipe_sakramen', 'like', '%Krisma%')->count() : 0;
+        $nikahTable = Schema::hasTable('sakramen') ? (clone $sakramenQuery)->where(function($q) {
             $q->where('tipe_sakramen', 'like', '%Nikah%')
               ->orWhere('tipe_sakramen', 'like', '%Kawin%')
               ->orWhere('tipe_sakramen', 'like', '%Perkawinan%');
         })->count() : 0;
-        $nikahUmat = $hasTglPerkawinan ? (clone $umatQuery)->whereNotNull('tgl_perkawinan')->count() : 0;
 
         $sakramenCount = [
             'baptis' => max($baptisTable, $baptisUmat),
@@ -287,9 +390,6 @@ trait UmatModuleTrait
     {
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) {
-            return redirect("/{$firstSegment}/umat")->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
-        }
 
         $roleMap = [
             'superadmin' => 'Super Admin',
@@ -337,9 +437,6 @@ trait UmatModuleTrait
     {
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) {
-            return redirect("/{$firstSegment}/umat")->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
-        }
 
         $roleMap = [
             'superadmin' => 'Super Admin',
@@ -392,9 +489,6 @@ trait UmatModuleTrait
     {
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) {
-            return redirect("/{$firstSegment}/umat")->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
-        }
 
         $data = $request->all();
         $validColumns = $this->schemaColumns('umat');
@@ -421,9 +515,6 @@ trait UmatModuleTrait
     {
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
-        if (in_array($firstSegment, ['wilayah', 'kapela', 'stasi'], true) || str_contains($userRoleSlug, 'wilayah') || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi')) {
-            return redirect("/{$firstSegment}/umat")->with('error', 'Akses ditolak. Pengelolaan data Umat (tambah/edit/hapus) hanya dapat dilakukan pada tingkat KUB atau Sekretariat Paroki.');
-        }
 
         $decodedId = decode_id($id) ?: $id;
         $umat = \App\Models\Umat::findOrFail($decodedId);

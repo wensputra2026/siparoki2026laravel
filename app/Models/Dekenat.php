@@ -8,6 +8,7 @@ class Dekenat extends Model
 {
     protected $table = 'dekenat';
     protected $primaryKey = 'id_dekenat';
+    protected $appends = ['id', 'id_kevikepan', 'nama_kevikepan'];
     protected $fillable = [
         'keuskupan_id',
         'kode_dekenat',
@@ -39,5 +40,20 @@ class Dekenat extends Model
     public function kuasiParokis()
     {
         return $this->hasMany(KuasiParoki::class, 'dekenat_id', 'id_dekenat');
+    }
+
+    public function getIdAttribute()
+    {
+        return $this->attributes['id_dekenat'] ?? $this->attributes['id_kevikepan'] ?? null;
+    }
+
+    public function getIdKevikepanAttribute()
+    {
+        return $this->attributes['id_kevikepan'] ?? $this->attributes['id_dekenat'] ?? null;
+    }
+
+    public function getNamaKevikepanAttribute()
+    {
+        return $this->attributes['nama_kevikepan'] ?? $this->attributes['nama_dekenat'] ?? null;
     }
 }

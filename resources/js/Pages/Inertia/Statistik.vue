@@ -8,9 +8,11 @@ const reloadStats = () => {
     isReloading.value = true;
     router.reload({
         preserveScroll: true,
-        preserveState: true,
+        preserveState: false,
         onFinish: () => {
-            isReloading.value = false;
+            setTimeout(() => {
+                isReloading.value = false;
+            }, 400);
         },
     });
 };
@@ -19,6 +21,7 @@ const props = defineProps({
     role: { type: String, default: 'Super Admin' },
     prefix: { type: String, default: 'superadmin' },
     paroki: { type: Object, default: () => ({}) },
+    activeKub: { type: Object, default: null },
     summary: { type: Object, default: () => ({}) },
     genderStats: { type: Object, default: () => ({ pria: 0, wanita: 0, total: 0 }) },
     usiaStats: { type: Array, default: () => [] },
@@ -52,7 +55,7 @@ const printDemografi = () => {
 
 <template>
     <AppLayout>
-        <Head title="Demografi & Statistik Paroki - SIPAROKI" />
+        <Head :title="activeKub ? `Demografi & Statistik ${activeKub.nama_kub} - SIPAROKI` : 'Demografi & Statistik Paroki - SIPAROKI'" />
 
         <div class="w-full space-y-6 pb-12">
             <!-- 1. EXECUTIVE HEADER BANNER -->
@@ -64,13 +67,18 @@ const printDemografi = () => {
                     <div class="space-y-2">
                         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-amber-100 text-xs font-semibold border border-white/20">
                             <i class="fa-solid fa-chart-pie"></i>
-                            <span>Sistem Informasi Statistik Pastoral & Demografi Umat</span>
+                            <span>{{ activeKub ? `Statistik Komunitas Umat Basis: ${activeKub.nama_kub}` : 'Sistem Informasi Statistik Pastoral & Demografi Umat' }}</span>
                         </div>
                         <h1 class="text-2xl sm:text-3xl font-black tracking-tight">
-                            Demografi & Statistik Paroki
+                            {{ activeKub ? `Demografi & Statistik KUB - ${activeKub.nama_kub}` : 'Demografi & Statistik Paroki' }}
                         </h1>
                         <p class="text-amber-100 text-xs sm:text-sm max-w-2xl leading-relaxed">
-                            {{ paroki.nama_paroki || 'Paroki St. Vinsensius a Paulo Benlutu' }} • Monitoring sebaran umat, piramida usia, statistik sakramen, dan profil sosial ekonomi secara real-time.
+                            <template v-if="activeKub">
+                                KUB: <strong>{{ activeKub.nama_kub }}</strong> • Wilayah: {{ activeKub.wilayah?.nama_wilayah || '-' }} • Stasi / Kapela: {{ activeKub.kapela?.nama_kapela || 'Pusat Paroki' }} • {{ paroki.nama_paroki || 'Paroki St. Vinsensius a Paulo Benlutu' }}
+                            </template>
+                            <template v-else>
+                                {{ paroki.nama_paroki || 'Paroki St. Vinsensius a Paulo Benlutu' }} • Monitoring sebaran umat, piramida usia, statistik sakramen, dan profil sosial ekonomi secara real-time.
+                            </template>
                         </p>
                     </div>
 
@@ -89,7 +97,7 @@ const printDemografi = () => {
 
                         <!-- Ekspor Excel -->
                         <a
-                            :href="`/${prefix}/statistik/export/excel`"
+                            :href="`/${prefix}/statistik/export/excel${activeKub ? '?kub_id=' + activeKub.id : ''}`"
                             class="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-900/20 transition flex items-center gap-2 cursor-pointer"
                         >
                             <i class="fa-solid fa-file-excel"></i>
@@ -98,7 +106,7 @@ const printDemografi = () => {
 
                         <!-- Cetak / PDF -->
                         <a
-                            :href="`/${prefix}/statistik/export/print`"
+                            :href="`/${prefix}/statistik/export/print${activeKub ? '?kub_id=' + activeKub.id : ''}`"
                             target="_blank"
                             class="px-4 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2 cursor-pointer"
                         >
@@ -156,33 +164,39 @@ const printDemografi = () => {
                 </div>
 
                 <!-- Total KUB -->
-                <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-500">Komunitas Umat (KUB)</span>
-                        <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm shadow-2xs">
-                            <i class="fa-solid fa-people-group"></i>
+                <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-500">Komunitas Umat (KUB)</span>
+                            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm shadow-2xs shrink-0">
+                                <i class="fa-solid fa-people-group"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span :class="activeKub ? 'text-xs sm:text-sm md:text-base leading-snug' : 'text-2xl'" class="font-black text-slate-900 break-words block" :title="activeKub ? activeKub.nama_kub : (formatNumber(summary.totalKUB) + ' KUB')">
+                                {{ activeKub ? activeKub.nama_kub : (formatNumber(summary.totalKUB) + ' KUB') }}
+                            </span>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <span class="text-2xl font-black text-slate-900">{{ formatNumber(summary.totalKUB) }}</span>
-                        <span class="text-xs font-semibold text-slate-400 ml-1">KUB</span>
-                    </div>
                     <div class="mt-2 text-[11px] text-slate-400">
-                        Basis Komunitas Umat
+                        {{ activeKub ? 'Basis Komunitas Aktif' : 'Basis Komunitas Umat' }}
                     </div>
                 </div>
 
                 <!-- Total Wilayah -->
-                <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-500">Wilayah Rohani</span>
-                        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm shadow-2xs">
-                            <i class="fa-solid fa-map-location-dot"></i>
+                <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-500">Wilayah Rohani</span>
+                            <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm shadow-2xs shrink-0">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mt-3">
-                        <span class="text-2xl font-black text-slate-900">{{ formatNumber(summary.totalWilayah) }}</span>
-                        <span class="text-xs font-semibold text-slate-400 ml-1">Wilayah</span>
+                        <div class="mt-3">
+                            <span :class="activeKub ? 'text-xs sm:text-sm md:text-base leading-snug' : 'text-2xl'" class="font-black text-slate-900 break-words block" :title="activeKub?.wilayah?.nama_wilayah ? activeKub.wilayah.nama_wilayah : (formatNumber(summary.totalWilayah) + ' Wilayah')">
+                                {{ activeKub?.wilayah?.nama_wilayah ? activeKub.wilayah.nama_wilayah : (formatNumber(summary.totalWilayah) + ' Wilayah') }}
+                            </span>
+                        </div>
                     </div>
                     <div class="mt-2 text-[11px] text-slate-400">
                         Wilayah Pelayanan Paroki
@@ -190,16 +204,19 @@ const printDemografi = () => {
                 </div>
 
                 <!-- Total Kapela / Stasi -->
-                <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-500">Stasi / Kapela</span>
-                        <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm shadow-2xs">
-                            <i class="fa-solid fa-place-of-worship"></i>
+                <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-500">Stasi / Kapela</span>
+                            <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm shadow-2xs shrink-0">
+                                <i class="fa-solid fa-place-of-worship"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mt-3">
-                        <span class="text-2xl font-black text-slate-900">{{ formatNumber(summary.totalKapela) }}</span>
-                        <span class="text-xs font-semibold text-slate-400 ml-1">Stasi</span>
+                        <div class="mt-3">
+                            <span :class="activeKub ? 'text-xs sm:text-sm md:text-base leading-snug' : 'text-2xl'" class="font-black text-slate-900 break-words block" :title="activeKub?.kapela?.nama_kapela ? activeKub.kapela.nama_kapela : (formatNumber(summary.totalKapela) + ' Stasi')">
+                                {{ activeKub?.kapela?.nama_kapela ? activeKub.kapela.nama_kapela : (formatNumber(summary.totalKapela) + ' Stasi') }}
+                            </span>
+                        </div>
                     </div>
                     <div class="mt-2 text-[11px] text-slate-400">
                         Pos Pelayanan Ekaristi
@@ -294,11 +311,14 @@ const printDemografi = () => {
                     <div class="space-y-0.5">
                         <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
                             <i class="fa-solid fa-book-bible text-amber-600"></i>
-                            <span>Penerimaan Sakramen Umat Paroki</span>
+                            <span>{{ activeKub ? `Penerimaan Sakramen Umat ${activeKub.nama_kub}` : 'Penerimaan Sakramen Umat Paroki' }}</span>
                         </h3>
-                        <p class="text-[11px] text-slate-400">Persentase dan status inisiasi kristiani umat paroki</p>
+                        <p class="text-[11px] text-slate-400">Persentase dan status inisiasi kristiani umat {{ activeKub ? 'di KUB bersangkutan' : 'paroki' }}</p>
                     </div>
-                    <Link :href="`/${prefix}/sakramen`" class="text-xs font-bold text-amber-600 hover:text-amber-700 underline">
+                    <Link
+                        :href="`/${prefix}/sakramen`"
+                        class="text-xs font-bold text-amber-600 hover:text-amber-700 underline"
+                    >
                         Kelola Buku Sakramen &rarr;
                     </Link>
                 </div>
@@ -311,7 +331,7 @@ const printDemografi = () => {
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Inisiasi</span>
                         </div>
                         <div class="text-2xl font-black text-slate-900">{{ formatNumber(sakramenStats.baptis || summary.totalUmat) }}</div>
-                        <p class="text-[11px] text-slate-500">Tercatat dalam Buku Baptis Paroki</p>
+                        <p class="text-[11px] text-slate-500">Tercatat dalam Buku Baptis</p>
                     </div>
 
                     <!-- Sakramen Ekaristi / Komuni -->
@@ -346,24 +366,30 @@ const printDemografi = () => {
                 </div>
             </div>
 
-            <!-- 5. SEBARAN UMAT PER WILAYAH & KUB -->
+            <!-- 5. SEBARAN UMAT PER WILAYAH & KUB ATAU DAFTAR KK KUB -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- WILAYAH BREAKDOWN TABLE -->
+                <!-- WILAYAH / KK BREAKDOWN TABLE -->
                 <div class="lg:col-span-7 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <i class="fa-solid fa-map-location-dot text-amber-600"></i>
-                            <span>Distribusi Umat per Wilayah & KUB</span>
+                            <i :class="activeKub ? 'fa-solid fa-house-chimney-user' : 'fa-solid fa-map-location-dot'" class="text-amber-600"></i>
+                            <span>{{ activeKub ? `Daftar Keluarga (KK) di ${activeKub.nama_kub}` : 'Distribusi Umat per Wilayah & KUB' }}</span>
                         </h3>
-                        <Link :href="`/${prefix}/wilayah`" class="text-xs font-bold text-amber-600 hover:text-amber-700 underline">
-                            Data Wilayah &rarr;
+                        <Link :href="activeKub ? `/${prefix}/kk-katolik` : `/${prefix}/wilayah`" class="text-xs font-bold text-amber-600 hover:text-amber-700 underline">
+                            {{ activeKub ? 'Kelola Data KK &rarr;' : 'Data Wilayah &rarr;' }}
                         </Link>
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] font-bold tracking-wider">
-                                <tr>
+                                <tr v-if="activeKub">
+                                    <th class="py-2.5 px-3 rounded-l-xl">Nama Kepala Keluarga</th>
+                                    <th class="py-2.5 px-3 text-center">No. KK Katolik</th>
+                                    <th class="py-2.5 px-3">Alamat Domisili</th>
+                                    <th class="py-2.5 px-3 text-right rounded-r-xl">Anggota (Jiwa)</th>
+                                </tr>
+                                <tr v-else>
                                     <th class="py-2.5 px-3 rounded-l-xl">Nama Wilayah</th>
                                     <th class="py-2.5 px-3 text-center">Jumlah KUB</th>
                                     <th class="py-2.5 px-3 text-right">Jumlah KK</th>
@@ -373,17 +399,21 @@ const printDemografi = () => {
                             <tbody class="divide-y divide-slate-100">
                                 <tr v-for="w in wilayahStats" :key="w.id || w.nama_wilayah" class="hover:bg-slate-50/60 transition">
                                     <td class="py-3 px-3 font-bold text-slate-900 flex items-center gap-2">
-                                        <div class="w-6 h-6 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center text-[10px]">
-                                            <i class="fa-solid fa-cross"></i>
+                                        <div class="w-6 h-6 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center text-[10px] shrink-0">
+                                            <i :class="activeKub ? 'fa-solid fa-house-user' : 'fa-solid fa-cross'"></i>
                                         </div>
-                                        <span>{{ w.nama_wilayah }}</span>
+                                        <span class="truncate max-w-[200px]">{{ w.nama_wilayah }}</span>
                                     </td>
-                                    <td class="py-3 px-3 text-center font-bold text-slate-600">{{ w.kub_count || 0 }} KUB</td>
-                                    <td class="py-3 px-3 text-right font-bold text-slate-700">{{ formatNumber(w.kk_count) }}</td>
+                                    <td v-if="activeKub" class="py-3 px-3 text-center font-bold text-slate-600 font-mono text-[11px]">{{ w.no_kk || '-' }}</td>
+                                    <td v-if="activeKub" class="py-3 px-3 text-slate-500 truncate max-w-[150px]">{{ w.alamat || '-' }}</td>
+                                    <td v-if="!activeKub" class="py-3 px-3 text-center font-bold text-slate-600">{{ w.kub_count || 0 }} KUB</td>
+                                    <td v-if="!activeKub" class="py-3 px-3 text-right font-bold text-slate-700">{{ formatNumber(w.kk_count) }}</td>
                                     <td class="py-3 px-3 text-right font-black text-amber-700">{{ formatNumber(w.umat_count) }}</td>
                                 </tr>
                                 <tr v-if="!wilayahStats.length">
-                                    <td colspan="4" class="py-6 text-center text-slate-400">Belum ada data wilayah tersinkronisasi</td>
+                                    <td :colspan="activeKub ? 4 : 4" class="py-6 text-center text-slate-400">
+                                        {{ activeKub ? 'Belum ada data KK terdaftar di KUB ini' : 'Belum ada data wilayah tersinkronisasi' }}
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

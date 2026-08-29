@@ -100,10 +100,11 @@ const userAvatar = computed(() => {
     if (foto.startsWith('http://') || foto.startsWith('https://') || foto.startsWith('data:')) {
         return foto;
     }
-    if (foto.startsWith('/')) {
-        return foto;
+    const clean = foto.replace(/^\/?(public\/)?/, '').replace(/^\//, '');
+    if (!clean.includes('/')) {
+        return `/uploads/users/${clean}`;
     }
-    return '/' + foto;
+    return '/' + clean;
 });
 
 const userName = computed(() => {
