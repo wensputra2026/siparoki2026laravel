@@ -118,6 +118,33 @@ const clearAttachment = () => {
     if (fileInputRef.value) fileInputRef.value.value = '';
 };
 
+// High-speed client-side image/screenshot compressor (< 150KB, max 1280px)
+const compressImage = (dataUrl, maxWidth = 1280, quality = 0.82) => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressed = canvas.toDataURL('image/jpeg', quality);
+            resolve(compressed);
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+    });
+};
+
 // Handle Clipboard Paste Screenshot (Ctrl + V)
 const handlePaste = (e) => {
     const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
@@ -126,9 +153,10 @@ const handlePaste = (e) => {
         if (items[i].type.indexOf('image') !== -1) {
             const blob = items[i].getAsFile();
             const reader = new FileReader();
-            reader.onload = (event) => {
-                attachmentPreview.value = event.target.result;
-                attachmentBase64.value = event.target.result;
+            reader.onload = async (event) => {
+                const compressed = await compressImage(event.target.result);
+                attachmentPreview.value = compressed;
+                attachmentBase64.value = compressed;
                 attachmentFile.value = null;
             };
             reader.readAsDataURL(blob);
@@ -142,11 +170,12 @@ const handlePaste = (e) => {
 const onFileSelected = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    attachmentFile.value = file;
     const reader = new FileReader();
-    reader.onload = (event) => {
-        attachmentPreview.value = event.target.result;
-        attachmentBase64.value = null;
+    reader.onload = async (event) => {
+        const compressed = await compressImage(event.target.result);
+        attachmentPreview.value = compressed;
+        attachmentBase64.value = compressed;
+        attachmentFile.value = null;
     };
     reader.readAsDataURL(file);
 };
