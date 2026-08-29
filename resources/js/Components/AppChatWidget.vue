@@ -362,7 +362,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="relative">
+    <div class="inline-block">
         <!-- Hidden file picker for image/screenshot -->
         <input
             type="file"
@@ -372,7 +372,7 @@ onUnmounted(() => {
             @change="onFileSelected"
         />
 
-        <!-- Chat Trigger Button in Topbar -->
+        <!-- 1. Topbar Trigger Button -->
         <button
             type="button"
             @click="unlockAudio(); isOpen = !isOpen; if(isOpen && !activeContact) fetchContacts(true);"
@@ -390,32 +390,45 @@ onUnmounted(() => {
             </span>
         </button>
 
-        <!-- Backdrop Overlay (Mobile/Desktop Close) -->
-        <div
-            v-if="isOpen"
-            class="fixed inset-0 z-40"
-            @click="isOpen = false"
-        ></div>
+        <!-- 2. Bottom-Right Floating Action Button (FAB) -->
+        <div v-if="!isOpen" class="fixed bottom-5 right-5 z-40">
+            <button
+                type="button"
+                @click="unlockAudio(); isOpen = true; if(!activeContact) fetchContacts(true);"
+                class="group relative flex items-center justify-center w-13 h-13 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-700 to-slate-900 text-white shadow-xl shadow-blue-900/30 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/20"
+                title="Buka Chat Paroki"
+            >
+                <i class="fa-solid fa-comments text-xl group-hover:rotate-6 transition-transform"></i>
 
-        <!-- Chat Floating Panel -->
+                <!-- Pulse Badge on Unread Messages -->
+                <span
+                    v-if="totalUnread > 0"
+                    class="absolute -top-1 -right-1 flex h-5 min-w-[20px] px-1.5 items-center justify-center rounded-full bg-rose-600 border-2 border-white text-[10px] font-black text-white shadow-md animate-bounce"
+                >
+                    {{ totalUnread > 9 ? '9+' : totalUnread }}
+                </span>
+            </button>
+        </div>
+
+        <!-- 3. Chat Floating Window (Docked at Bottom-Right Corner) -->
         <transition
-            enter-active-class="transition duration-200 ease-out"
-            enter-from-class="transform scale-95 opacity-0"
-            enter-to-class="transform scale-100 opacity-100"
+            enter-active-class="transition duration-250 cubic-bezier(0.16, 1, 0.3, 1)"
+            enter-from-class="transform translate-y-6 scale-95 opacity-0"
+            enter-to-class="transform translate-y-0 scale-100 opacity-100"
             leave-active-class="transition duration-150 ease-in"
-            leave-from-class="transform scale-100 opacity-100"
-            leave-to-class="transform scale-95 opacity-0"
+            leave-from-class="transform translate-y-0 scale-100 opacity-100"
+            leave-to-class="transform translate-y-6 scale-95 opacity-0"
         >
             <div
                 v-if="isOpen"
-                class="fixed inset-x-2 top-16 sm:absolute sm:right-0 sm:top-auto sm:inset-x-auto sm:mt-2 w-auto sm:w-96 h-[540px] max-h-[82vh] rounded-3xl bg-white border border-slate-200/90 shadow-2xl z-50 overflow-hidden flex flex-col"
+                class="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 w-[calc(100vw-32px)] sm:w-[380px] h-[550px] max-h-[85vh] rounded-3xl bg-white border border-slate-200/90 shadow-2xl z-50 overflow-hidden flex flex-col"
             >
                 <!-- VIEW 1: DAFTAR KONTAK & PERCAKAPAN -->
                 <template v-if="!activeContact">
                     <!-- Header -->
-                    <div class="px-4 py-3.5 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white flex items-center justify-between shadow-xs shrink-0">
+                    <div class="px-4 py-3 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white flex items-center justify-between shadow-xs shrink-0">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-7.5 h-7.5 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center text-xs">
+                            <div class="w-8 h-8 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-xs">
                                 <i class="fa-solid fa-comments text-blue-300"></i>
                             </div>
                             <div>
@@ -433,7 +446,8 @@ onUnmounted(() => {
                             <button
                                 type="button"
                                 @click="isOpen = false"
-                                class="text-white/70 hover:text-white p-1 text-sm cursor-pointer transition"
+                                class="text-white/70 hover:text-white p-1 text-sm cursor-pointer transition rounded-lg hover:bg-white/10"
+                                title="Tutup Chat"
                             >
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
