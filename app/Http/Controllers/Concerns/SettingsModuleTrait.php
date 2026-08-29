@@ -462,6 +462,8 @@ trait SettingsModuleTrait
         $this->ensureSettingsHubTables();
         $validated = $request->validate([
             'maintenance_mode' => 'nullable|string|max:10',
+            'maintenance_backend' => 'nullable|string|max:10',
+            'maintenance_message_backend' => 'nullable|string|max:1000',
             'maintenance_title' => 'nullable|string|max:200',
             'maintenance_message' => 'nullable|string|max:1000',
             'maintenance_until' => 'nullable|string|max:100',
@@ -473,6 +475,8 @@ trait SettingsModuleTrait
             $first = DB::table('pengaturan_aplikasi')->first();
             $payload = [
                 'maintenance_mode' => $validated['maintenance_mode'] ?? '0',
+                'maintenance_backend' => $validated['maintenance_backend'] ?? '0',
+                'maintenance_message_backend' => $validated['maintenance_message_backend'] ?? 'Panel administrasi aplikasi sedang dalam pemeliharaan sistem oleh Super Admin. Seluruh akses pengguna selain Super Admin sementara ditutup.',
                 'maintenance_title' => $validated['maintenance_title'] ?? 'Website Sedang Dalam Pemeliharaan / Perawatan',
                 'maintenance_message' => $validated['maintenance_message'] ?? 'Mohon maaf atas ketidaknyamanannya. Website Paroki St. Vinsensius a Paulo Benlutu sedang melakukan pembaruan berkala. Silakan kembali dalam beberapa saat.',
                 'maintenance_until' => $validated['maintenance_until'] ?? '',
@@ -494,8 +498,9 @@ trait SettingsModuleTrait
             Cache::forget('global_pengaturan_aplikasi_first');
         }
 
-        $modeStatus = ($validated['maintenance_mode'] ?? '0') === '1' ? 'diaktifkan' : 'dinonaktifkan';
-        return back()->with('success', "Mode Maintenance berhasil {$modeStatus}.");
+        $frontendStatus = ($validated['maintenance_mode'] ?? '0') === '1' ? 'Aktif' : 'Nonaktif';
+        $backendStatus = ($validated['maintenance_backend'] ?? '0') === '1' ? 'Aktif' : 'Nonaktif';
+        return back()->with('success', "Pengaturan Mode Pemeliharaan berhasil disimpan (Frontend: {$frontendStatus}, Panel Petugas: {$backendStatus}).");
     }
 
 

@@ -50,14 +50,39 @@ class AuthController extends Controller
     /**
      * Show login page.
      */
-    public function showLogin()
+    public function showLogin(Request $request)
     {
         if (Auth::check()) {
-            return $this->redirectUserByRole(Auth::user());
+            $user = Auth::user();
+            $isSuperAdmin = ((int) ($user->role_id ?? 0) === 1) || in_array(strtolower($user->role?->nama_role ?? ($user->role?->name ?? ($user->role?->slug ?? ''))), ['superadmin', 'super admin', 'super administrator', 'superadministrator'], true);
+
+            // If backend maintenance is active and user is not Super Admin, logout immediately
+            if (!$isSuperAdmin && \Illuminate\Support\Facades\Schema::hasTable('pengaturan_aplikasi')) {
+                $p = DB::table('pengaturan_aplikasi')->first();
+                if ($p && ($p->maintenance_backend ?? '0') === '1') {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    $msg = $p->maintenance_message_backend ?: ($p->pesan_maintenance ?: 'Panel aplikasi sedang dalam pemeliharaan sistem oleh Super Admin. Seluruh akses pengguna selain Super Admin sementara ditutup.');
+                    return view('pages.auth.login', [
+                        'status' => null,
+                        'errors' => new \Illuminate\Support\ViewErrorBag(),
+                    ])->with('error', $msg);
+                }
+            }
+
+            return $this->redirectUserByRole($user);
+        }
+
+        $kickedMsg = null;
+        if ($request->query('maintenance_kicked') === '1') {
+            $kickedMsg = 'Sesi Anda telah dihentikan otomatis karena Super Admin sedang mengaktifkan Mode Pemeliharaan Panel Petugas & Umat.';
         }
 
         return view('pages.auth.login', [
             'status' => session('status'),
+            'error_message' => $kickedMsg ?: session('error'),
         ]);
     }
 
@@ -104,6 +129,26 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+
+            // Check if Backend / Panel Maintenance is active for non-superadmin
+            $isSuperAdmin = ((int) ($user->role_id ?? 0) === 1) || in_array(strtolower($user->role?->nama_role ?? ($user->role?->name ?? ($user->role?->slug ?? ''))), ['superadmin', 'super admin', 'super administrator', 'superadministrator'], true);
+
+            if (!$isSuperAdmin && \Illuminate\Support\Facades\Schema::hasTable('pengaturan_aplikasi')) {
+                $p = DB::table('pengaturan_aplikasi')->first();
+                if ($p && ($p->maintenance_backend ?? '0') === '1') {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    $msg = $p->maintenance_message_backend
+                        ?: ($p->pesan_maintenance
+                        ?: 'Panel administrasi aplikasi sedang dalam masa pemeliharaan sistem oleh Super Admin. Akses pengguna selain Super Admin sementara ditutup.');
+
+                    return back()->withErrors([
+                        'login' => $msg,
+                    ])->onlyInput('login');
+                }
+            }
 
             // Log successful login
             try {

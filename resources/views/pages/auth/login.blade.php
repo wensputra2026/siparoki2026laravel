@@ -76,6 +76,16 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Sistem Informasi Pelayanan &amp; Administrasi Paroki</p>
             </div>
 
+            @if (!empty($error_message) || session('error'))
+                <div class="mb-5 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-3 shadow-xs">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base shrink-0 mt-0.5"></i>
+                    <div class="space-y-0.5">
+                        <span class="font-bold block">Pemberitahuan Pemeliharaan:</span>
+                        <p class="leading-relaxed">{{ $error_message ?? session('error') }}</p>
+                    </div>
+                </div>
+            @endif
+
             @if (session('status'))
                 <div class="mb-5 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-xs text-emerald-700 dark:text-emerald-300">
                     {{ session('status') }}

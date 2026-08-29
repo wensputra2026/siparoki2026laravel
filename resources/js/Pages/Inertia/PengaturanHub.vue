@@ -370,7 +370,9 @@ const submitWidget = () => {
 
 // Maintenance Form
 const maintenanceForm = useForm({
-    maintenance_mode: props.pengaturanAplikasi?.maintenance_mode ?? '0',
+    maintenance_mode: props.pengaturanAplikasi?.maintenance_mode !== undefined ? String(props.pengaturanAplikasi.maintenance_mode) : '0',
+    maintenance_backend: props.pengaturanAplikasi?.maintenance_backend !== undefined ? String(props.pengaturanAplikasi.maintenance_backend) : '0',
+    maintenance_message_backend: props.pengaturanAplikasi?.maintenance_message_backend || 'Panel administrasi aplikasi sedang dalam pemeliharaan sistem oleh Super Admin. Seluruh akses pengguna selain Super Admin sementara ditutup.',
     maintenance_title: props.pengaturanAplikasi?.maintenance_title || 'Website Sedang Dalam Pemeliharaan / Perawatan',
     maintenance_message: props.pengaturanAplikasi?.maintenance_message || 'Mohon maaf atas ketidaknyamanannya. Website Paroki St. Vinsensius a Paulo Benlutu sedang melakukan pembaruan berkala. Silakan kembali dalam beberapa saat.',
     maintenance_until: props.pengaturanAplikasi?.maintenance_until || '25 Agustus 2026, 17:00 WITA',
@@ -1436,7 +1438,7 @@ const getYoutubeEmbed = (url) => {
 
             <!-- Tab 7: Mode Maintenance -->
             <div v-show="activeTab === 'maintenance'" class="max-w-3xl space-y-6">
-                <form @submit.prevent="submitMaintenance" class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-5">
+                <form @submit.prevent="submitMaintenance" class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-700/80 shadow-xs space-y-6">
                     <div class="flex items-start justify-between gap-4">
                         <div>
                             <h3 class="font-extrabold text-slate-900 dark:text-white text-base flex items-center gap-2">
@@ -1444,88 +1446,142 @@ const getYoutubeEmbed = (url) => {
                                 Pengaturan Mode Maintenance (Pemeliharaan Sistem)
                             </h3>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                Aktifkan halaman pemeliharaan saat sistem sedang diperbarui. Admin yang login tetap dapat mengakses panel admin seperti biasa.
+                                Kendali terpisah untuk pemeliharaan sistem panel petugas dan pemeliharaan website publik.
                             </p>
                         </div>
-                        <span
-                            :class="[
-                                'px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase',
-                                maintenanceForm.maintenance_mode === '1'
-                                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300'
-                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300'
-                            ]"
-                        >
-                            {{ maintenanceForm.maintenance_mode === '1' ? 'Perawatan Aktif' : 'Website Online' }}
-                        </span>
                     </div>
 
-                    <!-- Status Toggle Card -->
-                    <div class="p-5 rounded-2xl border" :class="maintenanceForm.maintenance_mode === '1' ? 'bg-rose-50/50 border-rose-200 dark:bg-rose-950/20 dark:border-rose-900/40' : 'bg-slate-50 border-slate-200 dark:bg-slate-900 dark:border-slate-700'">
-                        <label class="flex items-center justify-between cursor-pointer">
-                            <div class="space-y-0.5">
-                                <span class="text-xs font-extrabold text-slate-900 dark:text-white">
-                                    Aktifkan Mode Maintenance Website Publik
-                                </span>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                                    Pengunjung umum akan melihat halaman pemeliharaan, sementara Admin tetap dapat login ke panel.
-                                </p>
+                    <!-- FITUR 1: MAINTENANCE KHUSUS LEVEL DI BAWAH SUPER ADMIN (BACKEND LOCK) -->
+                    <div class="p-5.5 rounded-3xl border transition-all duration-300" :class="maintenanceForm.maintenance_backend === '1' ? 'bg-rose-50/80 border-rose-300 dark:bg-rose-950/30 dark:border-rose-800' : 'bg-slate-50/80 border-slate-200 dark:bg-slate-900/60 dark:border-slate-700'">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-lg shrink-0 shadow-md shadow-rose-600/20">
+                                    <i class="fa-solid fa-user-lock"></i>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="text-sm font-black text-slate-900 dark:text-white">
+                                            Maintenance Panel Petugas &amp; Umat (Kunci Level di Bawah Super Admin)
+                                        </h4>
+                                        <span
+                                            :class="[
+                                                'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider',
+                                                maintenanceForm.maintenance_backend === '1'
+                                                    ? 'bg-rose-600 text-white'
+                                                    : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                            ]"
+                                        >
+                                            {{ maintenanceForm.maintenance_backend === '1' ? 'Terkunci' : 'Terbuka' }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        Ketika diaktifkan: Seluruh level di bawah Super Admin (<span class="font-bold text-rose-700 dark:text-rose-400">Pastor, Admin Paroki, Bendahara, Wilayah, Kapela/Stasi, Ketua KUB, Penulis, dan Umat</span>) <span class="underline font-bold">tidak dapat login</span>. Pengguna yang sementara aktif sedang login akan <span class="underline font-bold text-rose-700 dark:text-rose-400">otomatis terpental keluar (auto-logout)</span> saat melakukan klik/aktivitas. <strong class="text-emerald-700 dark:text-emerald-400">Website publik (frontend) tetap tampil normal dan aktif.</strong>
+                                    </p>
+                                </div>
                             </div>
-                            <input v-model="maintenanceForm.maintenance_mode" true-value="1" false-value="0" type="checkbox" class="w-5 h-5 rounded text-orange-600 focus:ring-orange-500 cursor-pointer" />
-                        </label>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Judul Halaman Pemeliharaan</label>
-                        <input v-model="maintenanceForm.maintenance_title" type="text" placeholder="Contoh: Website Sedang Dalam Pemeliharaan / Perawatan" class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Pesan / Keterangan untuk Jemaat</label>
-                        <textarea v-model="maintenanceForm.maintenance_message" rows="3" placeholder="Tuliskan alasan pemeliharaan dan permohonan maaf..." class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs focus:ring-2 focus:ring-orange-500 focus:outline-none"></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Estimasi Waktu Selesai (WITA)</label>
-                            <input v-model="maintenanceForm.maintenance_until" type="text" placeholder="Contoh: 25 Agustus 2026, 17:00 WITA" class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                <input
+                                    v-model="maintenanceForm.maintenance_backend"
+                                    true-value="1"
+                                    false-value="0"
+                                    type="checkbox"
+                                    class="sr-only peer"
+                                />
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+                            </label>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Kontak Darurat Sekretariat</label>
-                            <input v-model="maintenanceForm.maintenance_contact" type="text" placeholder="Contoh: 0812-3456-7890 (Sekretariat Paroki)" class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                        </div>
-
-                        <div class="sm:col-span-2">
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Kunci Bypass URL Rahasia (Secret Key)</label>
-                            <div class="flex items-center gap-2">
-                                <input v-model="maintenanceForm.maintenance_bypass_key" type="text" placeholder="siparoki2026" class="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                            </div>
-                            <span class="text-[11px] text-slate-400 mt-1 block">Akses darurat langsung tanpa login: <code>http://127.0.0.1:8000/?bypass={{ maintenanceForm.maintenance_bypass_key }}</code></span>
-                        </div>
-                    </div>
-
-                    <!-- Live Preview Box -->
-                    <div class="p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-slate-900/10 border border-orange-200 dark:border-orange-900/40 space-y-3">
-                        <span class="text-[10px] uppercase font-black text-orange-600 dark:text-orange-400 tracking-wider">Preview Halaman Maintenance Publik</span>
-                        <div class="text-center py-4 space-y-2">
-                            <div class="w-12 h-12 mx-auto rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-500/30">
-                                <i class="fa-solid fa-screwdriver-wrench"></i>
-                            </div>
-                            <h4 class="font-black text-slate-900 dark:text-white text-base">
-                                {{ maintenanceForm.maintenance_title }}
-                            </h4>
-                            <p class="text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto">
-                                {{ maintenanceForm.maintenance_message }}
-                            </p>
-                            <div v-if="maintenanceForm.maintenance_until" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 text-[11px] font-bold">
-                                <i class="fa-solid fa-clock"></i> Estimasi Selesai: {{ maintenanceForm.maintenance_until }}
-                            </div>
+                        <!-- Pesan Saat Terkunci -->
+                        <div class="mt-4 pt-3 border-t border-rose-200/70 dark:border-rose-900/50 space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                                Pesan Peringatan Saat Petugas/User Terkunci:
+                            </label>
+                            <textarea
+                                v-model="maintenanceForm.maintenance_message_backend"
+                                rows="2"
+                                placeholder="Panel administrasi aplikasi sedang dalam pemeliharaan sistem oleh Super Admin..."
+                                class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/60 text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                            ></textarea>
                         </div>
                     </div>
 
-                    <div class="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-700">
-                        <button type="submit" class="px-6 py-2.5 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-lg shadow-orange-600/30 transition cursor-pointer">
-                            <i class="fa-solid fa-save me-1"></i> Simpan Mode Maintenance
+                    <!-- FITUR 2: MAINTENANCE WEBSITE PUBLIK (FRONTEND) -->
+                    <div class="p-5.5 rounded-3xl border transition-all duration-300" :class="maintenanceForm.maintenance_mode === '1' ? 'bg-amber-50/80 border-amber-300 dark:bg-amber-950/30 dark:border-amber-800' : 'bg-slate-50/80 border-slate-200 dark:bg-slate-900/60 dark:border-slate-700'">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shrink-0 shadow-md shadow-amber-500/20">
+                                    <i class="fa-solid fa-globe"></i>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="text-sm font-black text-slate-900 dark:text-white">
+                                            Mode Maintenance Website Publik (Frontend)
+                                        </h4>
+                                        <span
+                                            :class="[
+                                                'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider',
+                                                maintenanceForm.maintenance_mode === '1'
+                                                    ? 'bg-amber-600 text-white'
+                                                    : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                            ]"
+                                        >
+                                            {{ maintenanceForm.maintenance_mode === '1' ? 'Perawatan Aktif' : 'Website Online' }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        Pengunjung umum website publik dialihkan ke halaman pemeliharaan, sementara seluruh administrator tetap dapat login ke panel.
+                                    </p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                <input
+                                    v-model="maintenanceForm.maintenance_mode"
+                                    true-value="1"
+                                    false-value="0"
+                                    type="checkbox"
+                                    class="sr-only peer"
+                                />
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                            </label>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-amber-200/70 dark:border-amber-900/50 space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Judul Halaman Pemeliharaan Publik</label>
+                                <input v-model="maintenanceForm.maintenance_title" type="text" placeholder="Contoh: Website Sedang Dalam Pemeliharaan / Perawatan" class="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Pesan / Keterangan untuk Jemaat</label>
+                                <textarea v-model="maintenanceForm.maintenance_message" rows="3" placeholder="Tuliskan alasan pemeliharaan dan permohonan maaf..." class="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Estimasi Waktu Selesai (WITA)</label>
+                                    <input v-model="maintenanceForm.maintenance_until" type="text" placeholder="Contoh: 25 Agustus 2026, 17:00 WITA" class="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Kontak Darurat Sekretariat</label>
+                                    <input v-model="maintenanceForm.maintenance_contact" type="text" placeholder="Contoh: 0812-3456-7890 (Sekretariat Paroki)" class="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Kunci Bypass URL Rahasia (Secret Key)</label>
+                                    <div class="flex items-center gap-2">
+                                        <input v-model="maintenanceForm.maintenance_bypass_key" type="text" placeholder="siparoki2026" class="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" />
+                                    </div>
+                                    <span class="text-[11px] text-slate-400 mt-1 block">Akses darurat langsung tanpa login: <code>http://127.0.0.1:8000/?bypass={{ maintenanceForm.maintenance_bypass_key }}</code></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-700">
+                        <button type="submit" class="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-orange-600 to-rose-600 hover:from-orange-700 hover:to-rose-700 text-white font-bold text-xs shadow-lg shadow-orange-600/30 transition cursor-pointer flex items-center gap-2">
+                            <i class="fa-solid fa-save"></i>
+                            <span>Simpan Pengaturan Maintenance</span>
                         </button>
                     </div>
                 </form>

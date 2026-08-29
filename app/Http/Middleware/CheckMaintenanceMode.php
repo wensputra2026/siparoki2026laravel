@@ -18,8 +18,31 @@ class CheckMaintenanceMode
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. Never block admin panels, auth routes, and backend APIs
         $path = trim($request->path(), '/');
+
+        // A. CHECK BACKEND MAINTENANCE (KICK OUT NON-SUPERADMIN USERS IMMEDIATELY)
+        if (Auth::check()) {
+            $user = Auth::user();
+            $isSuperAdmin = ((int) ($user->role_id ?? 0) === 1) || in_array(strtolower($user->role?->nama_role ?? ($user->role?->name ?? ($user->role?->slug ?? ''))), ['superadmin', 'super admin', 'super administrator', 'superadministrator'], true);
+
+            if (!$isSuperAdmin && Schema::hasTable('pengaturan_aplikasi')) {
+                $p = DB::table('pengaturan_aplikasi')->first();
+                if ($p && ($p->maintenance_backend ?? '0') === '1') {
+                    if ($path !== 'logout') {
+                        Auth::logout();
+                        $request->session()->invalidate();
+                        $request->session()->regenerateToken();
+
+                        if ($request->header('X-Inertia') || $request->ajax() || $request->wantsJson()) {
+                            return \Inertia\Inertia::location(route('login', ['maintenance_kicked' => 1]));
+                        }
+                        return redirect()->route('login', ['maintenance_kicked' => 1]);
+                    }
+                }
+            }
+        }
+
+        // B. NEVER BLOCK ADMIN PANELS, AUTH ROUTES, AND APIS FROM PUBLIC MAINTENANCE
         $exemptPrefixes = [
             'superadmin',
             'pastor',
@@ -30,6 +53,7 @@ class CheckMaintenanceMode
             'kub',
             'penulis',
             'admin',
+            'umat',
             'login',
             'logout',
             'register',
@@ -48,7 +72,7 @@ class CheckMaintenanceMode
             }
         }
 
-        // 2. Check if maintenance mode is enabled in database
+        // C. CHECK FRONTEND (PUBLIC WEBSITE) MAINTENANCE MODE
         try {
             if (!Schema::hasTable('pengaturan_aplikasi')) {
                 return $next($request);
