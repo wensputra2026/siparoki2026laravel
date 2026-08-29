@@ -26,42 +26,6 @@ const attachmentFile = ref(null);
 const fileInputRef = ref(null);
 const zoomImageSrc = ref(null);
 
-let pollTimer = null;
-let latestMessageId = 0;
-let audioCtx = null;
-
-const unlockAudio = () => {
-    try {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-    } catch (e) {}
-};
-
-// Subtle 2-tone chime for incoming chat message
-const playChatChime = () => {
-    try {
-        unlockAudio();
-        if (!audioCtx) return;
-        const now = audioCtx.currentTime;
-
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, now); // C5
-        osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.35);
-    } catch (e) {}
-};
-
 const scrollToBottom = () => {
     nextTick(() => {
         if (messagesContainer.value) {
@@ -246,6 +210,48 @@ const handleKeyDown = (e) => {
     }
 };
 
+let pollTimer = null;
+let latestMessageId = 0;
+let isInitialChatPollDone = false;
+let audioCtx = null;
+
+const unlockAudio = () => {
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    } catch (e) {}
+};
+
+// Subtle 2-tone chime for incoming chat message
+const playChatChime = () => {
+    try {
+        unlockAudio();
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+
+        const playTone = (freq, startTime, duration, vol = 0.22) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, startTime);
+            gain.gain.setValueAtTime(vol, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        };
+
+        // Two-tone messenger chime: F5 (698.46Hz) -> A5 (880.00Hz)
+        playTone(698.46, now, 0.25, 0.18);
+        playTone(880.00, now + 0.1, 0.35, 0.22);
+    } catch (e) {}
+};
+
 const pollNewChats = async () => {
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
     try {
@@ -258,6 +264,12 @@ const pollNewChats = async () => {
         }
 
         totalUnread.value = res.data.total_unread || 0;
+
+        // Skip audio chime on initial load sync
+        if (!isInitialChatPollDone) {
+            isInitialChatPollDone = true;
+            return;
+        }
 
         if (res.data.new_messages && res.data.new_messages.length > 0) {
             let hasIncomingForActive = false;

@@ -69,6 +69,8 @@ const showIncomingToast = (notif) => {
     }, 6500);
 };
 
+let isInitialNotifLoaded = false;
+
 const fetchNotifications = async () => {
     try {
         const res = await axios.get('/api/notifikasi/list');
@@ -77,6 +79,7 @@ const fetchNotifications = async () => {
         if (notifications.value.length > 0) {
             latestId.value = Math.max(...notifications.value.map(n => n.id));
         }
+        isInitialNotifLoaded = true;
     } catch (err) {
         // silent
     }
@@ -88,6 +91,13 @@ const pollNewNotifications = async () => {
         const res = await axios.get('/api/notifikasi/poll', {
             params: { last_id: latestId.value }
         });
+
+        if (!isInitialNotifLoaded) {
+            if (res.data.latest_id) latestId.value = res.data.latest_id;
+            isInitialNotifLoaded = true;
+            return;
+        }
+
         if (res.data.new_items && res.data.new_items.length > 0) {
             res.data.new_items.forEach((item) => {
                 if (!notifications.value.some(n => n.id === item.id)) {
