@@ -742,12 +742,25 @@ class InertiaPanelController extends Controller
 
     private function defaultParokiIdFromProfile(): ?int
     {
+        $sessionParokiId = session()->get('default_paroki_id');
+        if ($sessionParokiId && Paroki::whereKey($sessionParokiId)->exists()) {
+            return (int) $sessionParokiId;
+        }
+
         $profileParokiId = Schema::hasTable('profil_paroki')
             ? DB::table('profil_paroki')->whereNotNull('paroki_id')->value('paroki_id')
             : null;
 
         if ($profileParokiId && Paroki::whereKey($profileParokiId)->exists()) {
             return (int) $profileParokiId;
+        }
+
+        $settingParokiId = Schema::hasTable('pengaturan_aplikasi')
+            ? DB::table('pengaturan_aplikasi')->whereNotNull('paroki_id')->value('paroki_id')
+            : null;
+
+        if ($settingParokiId && Paroki::whereKey($settingParokiId)->exists()) {
+            return (int) $settingParokiId;
         }
 
         return Paroki::where('nama_paroki', 'like', '%Benlutu%')->value('id_paroki')
@@ -1308,9 +1321,11 @@ class InertiaPanelController extends Controller
                 'has_export' => true,
                 'has_pdf' => true,
                 'columns' => [
-                    ['key' => 'nama_dokumen', 'label' => 'Nama Dokumen', 'isPrimary' => true],
-                    ['key' => 'kategori', 'label' => 'Kategori'],
-                    ['key' => 'tgl_arsip', 'label' => 'Tanggal Arsip'],
+                    ['key' => 'judul', 'altKey' => 'nama_dokumen', 'label' => 'Nama Dokumen / Judul', 'isPrimary' => true],
+                    ['key' => 'nomor_arsip', 'label' => 'Nomor Arsip'],
+                    ['key' => 'kategori_arsip', 'altKey' => 'kategori', 'label' => 'Kategori'],
+                    ['key' => 'tanggal_arsip', 'altKey' => 'tgl_arsip', 'label' => 'Tanggal Arsip', 'isDate' => true],
+                    ['key' => 'hak_akses', 'altKey' => 'privacy_level', 'label' => 'Hak Akses'],
                 ],
             ],
             'rapat-notulen' => [

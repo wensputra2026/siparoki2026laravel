@@ -142,10 +142,17 @@ const filteredDekenat = computed(() => {
 
 const applyAndSync = () => {
     if (selectedParokiId.value) {
-        router.get(
-            window.location.pathname,
-            { paroki_id: selectedParokiId.value, set_default: 1 },
-            { preserveScroll: true, preserveState: false }
+        isSubmitting.value = true;
+        router.post(
+            `/${props.prefix}/profil-paroki/set-default`,
+            { paroki_id: selectedParokiId.value },
+            {
+                preserveScroll: true,
+                preserveState: false,
+                onFinish: () => {
+                    isSubmitting.value = false;
+                }
+            }
         );
     }
 };
@@ -223,11 +230,12 @@ const saveParoki = () => {
     });
     payload.append('_method', 'PUT');
 
-    const updateUrl = `/${props.prefix}/paroki/${props.paroki?.id_paroki}`;
+    const updateUrl = `/${props.prefix}/profil-paroki`;
 
     router.post(updateUrl, payload, {
         forceFormData: true,
         preserveScroll: true,
+        preserveState: false,
         onSuccess: () => {
             showEditModal.value = false;
             showImageModal.value = false;
@@ -349,22 +357,23 @@ const saveParoki = () => {
                                     <i class="fa-regular fa-image text-xs"></i>
                                     <span class="truncate">Gambar & Sejarah</span>
                                 </button>
-                                <Link
-                                    :href="`/${prefix}/paroki?search=${encodeURIComponent(paroki?.nama_paroki || '')}&edit_id=${paroki?.id_paroki}`"
+                                <button
+                                    type="button"
+                                    @click="openEditModal"
                                     class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
                                 >
                                     <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                    <span class="truncate">Edit Data</span>
-                                </Link>
+                                    <span class="truncate">Edit Data Profil</span>
+                                </button>
                             </div>
                         </div>
 
                         <!-- Read-Only Sync Notice -->
                         <div class="p-3 rounded-lg bg-cyan-50/80 border border-cyan-200/90 flex items-start gap-2.5 text-xs text-cyan-950">
-                            <i class="fa-solid fa-lock text-cyan-600 text-xs mt-0.5 shrink-0"></i>
+                            <i class="fa-solid fa-rotate text-cyan-600 text-xs mt-0.5 shrink-0"></i>
                             <div class="leading-relaxed text-[11.5px]">
-                                <span class="font-bold text-cyan-900">Data Tersinkron (Read-Only):</span>
-                                Halaman ini menampilkan data profil dari paroki yang dipilih sebagai <b>Paroki Utama</b>. Untuk mengubah data paroki ini, silakan klik tombol <Link :href="`/${prefix}/paroki?search=${encodeURIComponent(paroki?.nama_paroki || '')}&edit_id=${paroki?.id_paroki}`" class="font-bold text-cyan-700 underline hover:text-cyan-900">Edit Data Paroki</Link> atau via menu <Link :href="`/${prefix}/paroki`" class="font-bold text-cyan-700 underline hover:text-cyan-900">Manajemen Paroki</Link>.
+                                <span class="font-bold text-cyan-900">Sinkronisasi Otomatis Terintegrasi:</span>
+                                Paroki yang dipilih di halaman ini otomatis menjadi <b>Paroki Default</b> aplikasi. Seluruh perubahan profil, logo, kontak, maupun penggantian paroki utama akan <b>langsung otomatis mengubah tampilan Frontend dan Backend</b> secara seketika.
                             </div>
                         </div>
 

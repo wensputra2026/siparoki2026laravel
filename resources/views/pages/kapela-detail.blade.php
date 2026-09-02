@@ -295,9 +295,11 @@
                     <a href="{{ $backRoute }}" style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; border: 1px solid #cbd5e1; color: #334155; font-size: 0.88rem; font-weight: 700; padding: 10px 22px; border-radius: 25px; text-decoration: none; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
                         <i class="fas fa-arrow-left"></i> Kembali ke Daftar Stasi
                     </a>
-                    <a href="/peta-kapela" style="display: inline-flex; align-items: center; gap: 8px; background: #0f172a; color: #ffffff; font-size: 0.88rem; font-weight: 700; padding: 10px 22px; border-radius: 25px; text-decoration: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                        <i class="fas fa-map-location-dot" style="color: #14b8a6;"></i> Buka Peta Interaktif
-                    </a>
+                    @if($mapsUrl)
+                        <a href="{{ $mapsUrl }}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px; background: #0f172a; color: #ffffff; font-size: 0.88rem; font-weight: 700; padding: 10px 22px; border-radius: 25px; text-decoration: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <i class="fas fa-location-arrow" style="color: #14b8a6;"></i> Petunjuk Arah (Maps)
+                        </a>
+                    @endif
                 </div>
             </div>
 

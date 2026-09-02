@@ -295,15 +295,15 @@ const displayedColumns = computed(() => {
         <!-- Table -->
         <div class="flex-1 min-h-0 rounded-2xl bg-white border border-slate-200/80 overflow-hidden shadow-2xs flex flex-col">
             <div class="flex-1 overflow-auto custom-scrollbar">
-                <table class="w-full text-left text-xs sm:text-[12.5px]">
+                <table class="w-full text-left text-xs sm:text-[12.5px] whitespace-nowrap">
                     <thead class="bg-slate-100/90 text-slate-700 uppercase tracking-wider text-[11px] sm:text-[11.5px] font-bold border-b border-slate-200/90 sticky top-0 z-10">
                         <tr>
-                            <th class="px-3.5 py-3 w-12 text-center">#</th>
-                            <th v-for="col in displayedColumns" :key="col.name" class="px-4 py-3">
+                            <th class="px-3.5 py-3 w-12 text-center whitespace-nowrap">#</th>
+                            <th v-for="col in displayedColumns" :key="col.name" class="px-4 py-3 whitespace-nowrap">
                                 {{ col.label }}
                             </th>
-                            <th class="px-3.5 py-3 text-center">Status</th>
-                            <th class="px-4 py-3 text-right w-28">Aksi</th>
+                            <th class="px-3.5 py-3 text-center whitespace-nowrap">Status</th>
+                            <th class="px-4 py-3 text-right w-28 whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-slate-700 text-xs sm:text-[12.5px]">
@@ -312,44 +312,44 @@ const displayedColumns = computed(() => {
                             :key="item._pk || idx"
                             class="hover:bg-slate-50/80 transition-colors group"
                         >
-                            <td class="px-3.5 py-3 text-center font-bold text-slate-400 text-xs">
+                            <td class="px-3.5 py-3 text-center font-bold text-slate-400 text-xs whitespace-nowrap">
                                 {{ (rows.from || 1) + idx }}
                             </td>
-                            <td v-for="col in displayedColumns" :key="col.name" class="px-4 py-3">
-                                <div v-if="['foto', 'logo', 'gambar', 'avatar'].includes(col.name) && item[col.name]" class="flex items-center gap-2">
+                            <td v-for="col in displayedColumns" :key="col.name" class="px-4 py-3 whitespace-nowrap">
+                                <div v-if="['foto', 'logo', 'gambar', 'avatar'].includes(col.name) && item[col.name]" class="flex items-center gap-2 whitespace-nowrap">
                                     <img :src="item[col.name]" class="w-8.5 h-8.5 rounded-xl object-cover border border-slate-200 shrink-0 shadow-2xs" />
                                 </div>
-                                <span v-else-if="col.fk" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                <span v-else-if="col.fk" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
                                     {{ cellValue(item, col) }}
                                 </span>
-                                <span v-else class="text-slate-700 font-medium text-xs sm:text-[12.5px]">{{ cellValue(item, col) }}</span>
+                                <span v-else class="text-slate-700 font-medium text-xs sm:text-[12.5px] whitespace-nowrap">{{ cellValue(item, col) }}</span>
                             </td>
-                            <td class="px-3.5 py-3 text-center">
+                            <td class="px-3.5 py-3 text-center whitespace-nowrap">
                                 <span :class="[
-                                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border',
+                                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap',
                                     statusIsActive(item.status)
                                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                         : 'bg-rose-50 text-rose-700 border-rose-200'
                                 ]">
-                                    <span :class="['w-1.5 h-1.5 rounded-full', statusIsActive(item.status) ? 'bg-emerald-500' : 'bg-rose-500']"></span>
+                                    <span :class="['w-1.5 h-1.5 rounded-full shrink-0', statusIsActive(item.status) ? 'bg-emerald-500' : 'bg-rose-500']"></span>
                                     {{ statusText(item.status) }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-right">
-                                <div class="flex items-center justify-end gap-1.5">
+                            <td class="px-4 py-3 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-1.5 whitespace-nowrap">
                                     <button type="button" @click="openEditModal(item)" title="Ubah"
-                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs">
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs shrink-0">
                                         <i class="fa-solid fa-pen-to-square text-xs"></i>
                                     </button>
                                     <button type="button" @click="openDeleteModal(item)" title="Hapus"
-                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-rose-50 hover:text-rose-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs">
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-rose-50 hover:text-rose-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs shrink-0">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </div>
                             </td>
                         </tr>
                         <tr v-if="!rows.data || !rows.data.length">
-                            <td :colspan="tableColumns.length + 3" class="px-5 py-8 text-center text-slate-400">
+                            <td :colspan="tableColumns.length + 3" class="px-5 py-8 text-center text-slate-400 whitespace-nowrap">
                                 <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-300 border border-slate-200 mx-auto flex items-center justify-center text-lg mb-2">
                                     <i class="fa-solid fa-folder-open"></i>
                                 </div>

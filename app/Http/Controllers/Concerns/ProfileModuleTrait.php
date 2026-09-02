@@ -48,16 +48,16 @@ trait ProfileModuleTrait
             ->get(['id_paroki', 'nama_paroki', 'kode_paroki', 'keuskupan_id', 'dekenat_id', 'status_paroki', 'status']);
 
         $selectedParokiId = $request->query('paroki_id')
-            ?? $request->session()->get('default_paroki_id')
-            ?? (Paroki::where('nama_paroki', 'like', '%Benlutu%')->value('id_paroki') ?? Paroki::value('id_paroki'));
+            ?? $this->defaultParokiIdFromProfile();
 
         if ($request->query('set_default') && $request->query('paroki_id')) {
-            $request->session()->put('default_paroki_id', (int) $request->query('paroki_id'));
             $selectedParokiId = (int) $request->query('paroki_id');
 
             // Safe auto-sync selected default paroki to global settings
-            $chosen = Paroki::find($selectedParokiId);
-            $this->syncParokiToGlobalSettings($chosen);
+            $chosen = Paroki::with(['keuskupan', 'dekenat', 'provinsi', 'kabupaten', 'kecamatan', 'desa'])->find($selectedParokiId);
+            if ($chosen) {
+                $this->syncParokiToGlobalSettings($chosen);
+            }
         }
 
         $paroki = Paroki::with(['keuskupan', 'dekenat', 'provinsi', 'kabupaten', 'kecamatan', 'desa'])->find($selectedParokiId)
@@ -132,6 +132,70 @@ trait ProfileModuleTrait
             'desaList' => $desaList,
             'pastors' => $pastors,
         ]);
+    }
+
+    public function setDefaultParoki(Request $request)
+    {
+        $parokiId = (int) $request->input('paroki_id');
+        $chosen = Paroki::with(['keuskupan', 'dekenat', 'provinsi', 'kabupaten', 'kecamatan', 'desa'])->find($parokiId);
+        if (!$chosen) {
+            return back()->with('error', 'Data paroki tidak ditemukan.');
+        }
+
+        $this->syncParokiToGlobalSettings($chosen);
+
+        return back()->with('success', "Paroki default berhasil diubah ke {$chosen->nama_paroki}. Seluruh tampilan Frontend dan Backend otomatis tersinkronisasi.");
+    }
+
+    public function updateProfilParokiDirect(Request $request)
+    {
+        $parokiId = (int) ($request->input('paroki_id') ?: $request->input('id_paroki') ?: $this->defaultParokiIdFromProfile());
+        $paroki = Paroki::findOrFail($parokiId);
+
+        $validCols = $this->schemaColumns('paroki');
+        $cleanData = [];
+
+        if ($request->hasFile('logo')) {
+            $file = $request->file('logo');
+            $ext = $file->getClientOriginalExtension() ?: 'webp';
+            $filename = 'paroki_' . time() . '_' . Str::random(8) . '.' . $ext;
+            $file->move(public_path('uploads/paroki'), $filename);
+            $cleanData['logo'] = '/uploads/paroki/' . $filename;
+        }
+
+        if ($request->hasFile('banner')) {
+            $file = $request->file('banner');
+            $ext = $file->getClientOriginalExtension() ?: 'webp';
+            $filename = 'banner_' . time() . '_' . Str::random(8) . '.' . $ext;
+            $file->move(public_path('uploads/banner'), $filename);
+            $cleanData['banner'] = '/uploads/banner/' . $filename;
+        }
+
+        if ($request->hasFile('foto_gereja')) {
+            $file = $request->file('foto_gereja');
+            $ext = $file->getClientOriginalExtension() ?: 'webp';
+            $filename = 'gereja_' . time() . '_' . Str::random(8) . '.' . $ext;
+            $file->move(public_path('uploads/gereja'), $filename);
+            $cleanData['foto_gereja'] = '/uploads/gereja/' . $filename;
+        }
+
+        $inputData = $request->except(['_token', '_method', 'logo', 'banner', 'foto_gereja']);
+        foreach ($inputData as $k => $v) {
+            if (in_array($k, $validCols, true) && !in_array($k, ['created_at', 'updated_at', 'deleted_at', 'is_deleted', 'id_paroki'], true)) {
+                $cleanData[$k] = $v;
+            }
+        }
+
+        if (in_array('updated_by', $validCols, true)) {
+            $cleanData['updated_by'] = auth()->id();
+        }
+
+        $paroki->update($cleanData);
+        $paroki->refresh();
+
+        $this->syncParokiToGlobalSettings($paroki);
+
+        return back()->with('success', "Profil Paroki {$paroki->nama_paroki} berhasil diperbarui dan disinkronkan secara global.");
     }
 
 

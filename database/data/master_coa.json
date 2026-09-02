@@ -1,0 +1,102 @@
+[
+    {
+        "id": 1,
+        "kode_akun": "401",
+        "nama_akun": "Kolekte Misa I",
+        "jenis": "pemasukan",
+        "deskripsi": "Persembahan kantong kolekte pertama",
+        "status": 1,
+        "created_at": "2026-08-02 06:39:05",
+        "updated_at": null
+    },
+    {
+        "id": 2,
+        "kode_akun": "402",
+        "nama_akun": "Kolekte Misa II",
+        "jenis": "pemasukan",
+        "deskripsi": "Persembahan kantong kolekte kedua\/khusus",
+        "status": 1,
+        "created_at": "2026-08-02 06:39:05",
+        "updated_at": null
+    },
+    {
+        "id": 3,
+        "kode_akun": "403",
+        "nama_akun": "Stipendium Misa & Intensi",
+        "jenis": "pemasukan",
+        "deskripsi": "Intensi misa permohonan\/arwah",
+        "status": 1,
+        "created_at": "2026-08-02 06:39:05",
+        "updated_at": null
+    },
+    {
+        "id": 4,
+        "kode_akun": "404",
+        "nama_akun": "Donasi & Persembahan Umat",
+        "jenis": "pemasukan",
+        "deskripsi": "Sumbangan\/donasi sukarela",
+        "status": 1,
+        "created_at": "2026-08-02 06:39:05",
+        "updated_at": null
+    },
+    {
+        "id": 5,
+        "kode_akun": "405",
+        "nama_akun": "Iuran KUB & Wilayah",
+        "jenis": "pemasukan",
+        "deskripsi": "Iuran bulanan\/kegiatan KUB",
+        "status": 1,
+        "created_at": "2026-08-02 06:39:05",
+        "updated_at": null
+    },
+    {
+        "id": 6,
+        "kode_akun": "501",
+        "nama_akun": "Operasional Liturgi & Sakramen",
+        "jenis": "pengeluaran",
+        "deskripsi": "Lilin, anggur, hosti, perlengkapan altare",
+        "status": 1,
+        "created_at": "2026-08-02 06:39:05",
+        "updated_at": null
+    },
+    {
+        "id": 7,
+        "kode_akun": "502",
+        "nama_akun": "Pastoran & Honorarium",
+        "jenis": "pengeluaran",
+        "deskripsi": "Insentif pastor, petugas, koster",
+        "status": 1,
+        "created_at": "2026-08-02 06:39:05",
+        "updated_at": null
+    },
+    {
+        "id": 8,
+        "kode_akun": "503",
+        "nama_akun": "Pemeliharaan Gedung & Sarana",
+        "jenis": "pengeluaran",
+        "deskripsi": "Perbaikan fisik gereja & inventaris",
+        "status": 1,
+        "created_at": "2026-08-02 06:39:05",
+        "updated_at": null
+    },
+    {
+        "id": 9,
+        "kode_akun": "504",
+        "nama_akun": "Seksi Pelayanan Sosial \/ Caritas",
+        "jenis": "pengeluaran",
+        "deskripsi": "Bantuan umat sakit & kurang mampu",
+        "status": 1,
+        "created_at": "2026-08-02 06:39:05",
+        "updated_at": null
+    },
+    {
+        "id": 10,
+        "kode_akun": "505",
+        "nama_akun": "Pembinaan Katekese & Orang Muda",
+        "jenis": "pengeluaran",
+        "deskripsi": "Kegiatan OMK, BIA, BIR, Katekumen",
+        "status": 1,
+        "created_at": "2026-08-02 06:39:05",
+        "updated_at": null
+    }
+]

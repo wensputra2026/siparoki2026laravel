@@ -187,37 +187,37 @@ const reloadMaster = () => {
                 <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
                         <i class="fa-solid fa-church text-amber-600 text-sm"></i>
-                        <h2 class="text-xs font-black text-slate-800 uppercase tracking-wider">MODUL REFERENSI KHUSUS</h2>
+                        <h2 class="text-xs font-black text-slate-800 uppercase tracking-wider whitespace-nowrap">MODUL REFERENSI KHUSUS</h2>
                     </div>
-                    <span class="text-[11px] font-bold text-slate-400">{{ specialModules.length }} Modul</span>
+                    <span class="text-[11px] font-bold text-slate-400 whitespace-nowrap">{{ specialModules.length }} Modul</span>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
                         <thead class="bg-slate-50/50 text-slate-500 uppercase tracking-wider text-[10px] font-bold border-b border-slate-200">
                             <tr>
-                                <th class="px-5 py-2.5">MODUL REFERENSI KHUSUS</th>
-                                <th class="px-5 py-2.5 text-center">JUMLAH</th>
-                                <th class="px-5 py-2.5 text-right">AKSI</th>
+                                <th class="px-5 py-2.5 whitespace-nowrap">MODUL REFERENSI KHUSUS</th>
+                                <th class="px-5 py-2.5 text-center whitespace-nowrap">JUMLAH</th>
+                                <th class="px-5 py-2.5 text-right whitespace-nowrap">AKSI</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
                             <tr v-for="m in specialModules" :key="m.slug" class="hover:bg-amber-50/40 transition">
-                                <td class="px-5 py-3 font-bold text-slate-900 flex items-center gap-2.5">
-                                    <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center justify-center text-xs">
+                                <td class="px-5 py-3 font-bold text-slate-900 flex items-center gap-2.5 whitespace-nowrap">
+                                    <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center justify-center text-xs shrink-0">
                                         <i class="fa-solid" :class="m.icon"></i>
                                     </div>
-                                    <span>{{ m.label }}</span>
+                                    <span class="whitespace-nowrap">{{ m.label }}</span>
                                 </td>
-                                <td class="px-5 py-3 text-center">
-                                    <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200/60">
+                                <td class="px-5 py-3 text-center whitespace-nowrap">
+                                    <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200/60 whitespace-nowrap">
                                         {{ m.count }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3 text-right">
+                                <td class="px-5 py-3 text-right whitespace-nowrap">
                                     <Link
                                         :href="m.url"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200/80 transition"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200/80 transition whitespace-nowrap"
                                     >
                                         <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                                         <span>Kelola</span>
@@ -235,8 +235,8 @@ const reloadMaster = () => {
                     <div>
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-list-check text-amber-600 text-sm"></i>
-                            <h2 class="text-sm font-black text-slate-900 tracking-tight">Daftar Item Referensi</h2>
-                            <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold">{{ totalItem }} Item</span>
+                            <h2 class="text-sm font-black text-slate-900 tracking-tight whitespace-nowrap">Daftar Item Referensi</h2>
+                            <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold whitespace-nowrap">{{ totalItem }} Item</span>
                         </div>
                         <p class="text-[11px] text-slate-500 mt-0.5">
                             Data dikelompokkan berdasarkan Grup Referensi. Pilih item untuk hapus atau edit per item.
@@ -266,14 +266,14 @@ const reloadMaster = () => {
                         <div class="bg-gradient-to-r from-slate-100 to-slate-50 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                                <h3 class="text-xs font-black text-slate-900 tracking-wide uppercase">{{ gName }}</h3>
-                                <span class="px-2 py-0.5 rounded-md bg-white text-slate-600 border border-slate-200 text-[10px] font-bold">
+                                <h3 class="text-xs font-black text-slate-900 tracking-wide uppercase whitespace-nowrap">{{ gName }}</h3>
+                                <span class="px-2 py-0.5 rounded-md bg-white text-slate-600 border border-slate-200 text-[10px] font-bold whitespace-nowrap">
                                     {{ gItems.length }} Item
                                 </span>
                             </div>
                             <Link
                                 :href="`/admin/master-referensi/master_referensi_item?grup=${gItems[0]?.referensi_id}`"
-                                class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 hover:text-amber-800 hover:underline"
+                                class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 hover:text-amber-800 hover:underline whitespace-nowrap"
                             >
                                 <i class="fa-solid fa-plus text-[10px]"></i>
                                 <span>Tambah Item {{ gName }}</span>
@@ -281,32 +281,32 @@ const reloadMaster = () => {
                         </div>
 
                         <!-- Table Items for this Group -->
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left text-xs whitespace-nowrap">
                                 <thead class="bg-white text-slate-500 uppercase tracking-wider text-[10px] font-bold border-b border-slate-200">
                                     <tr>
-                                        <th class="w-16 px-4 py-2 text-center">URUT</th>
-                                        <th class="px-4 py-2">NILAI / NAMA ITEM</th>
-                                        <th class="px-4 py-2">KODE</th>
-                                        <th class="px-4 py-2">GRUP REFERENSI</th>
-                                        <th class="px-4 py-2 text-center">STATUS</th>
-                                        <th class="px-4 py-2 text-right">AKSI</th>
+                                        <th class="w-16 px-4 py-2 text-center whitespace-nowrap">URUT</th>
+                                        <th class="px-4 py-2 whitespace-nowrap">NILAI / NAMA ITEM</th>
+                                        <th class="px-4 py-2 whitespace-nowrap">KODE</th>
+                                        <th class="px-4 py-2 whitespace-nowrap">GRUP REFERENSI</th>
+                                        <th class="px-4 py-2 text-center whitespace-nowrap">STATUS</th>
+                                        <th class="px-4 py-2 text-right whitespace-nowrap">AKSI</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 text-slate-700 bg-white">
                                     <tr v-for="item in gItems" :key="item.id" class="hover:bg-slate-50/70 transition">
-                                        <td class="px-4 py-2.5 text-center font-bold text-slate-500">{{ item.urutan }}</td>
-                                        <td class="px-4 py-2.5 font-bold text-slate-900">{{ item.nilai }}</td>
-                                        <td class="px-4 py-2.5 font-mono text-[11px] text-slate-500">{{ item.kode || '-' }}</td>
-                                        <td class="px-4 py-2.5 text-slate-600">{{ item.nama_grup }}</td>
-                                        <td class="px-4 py-2.5 text-center">
+                                        <td class="px-4 py-2.5 text-center font-bold text-slate-500 whitespace-nowrap">{{ item.urutan }}</td>
+                                        <td class="px-4 py-2.5 font-bold text-slate-900 whitespace-nowrap">{{ item.nilai }}</td>
+                                        <td class="px-4 py-2.5 font-mono text-[11px] text-slate-500 whitespace-nowrap">{{ item.kode || '-' }}</td>
+                                        <td class="px-4 py-2.5 text-slate-600 whitespace-nowrap">{{ item.nama_grup }}</td>
+                                        <td class="px-4 py-2.5 text-center whitespace-nowrap">
                                             <span :class="[
-                                                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border',
+                                                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap',
                                                 (item.status === 1 || item.status === 'Aktif')
                                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                                     : 'bg-rose-50 text-rose-700 border-rose-200'
                                             ]">
-                                                <span class="w-1.5 h-1.5 rounded-full" :class="(item.status === 1 || item.status === 'Aktif') ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                                                <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="(item.status === 1 || item.status === 'Aktif') ? 'bg-emerald-500' : 'bg-rose-500'"></span>
                                                 {{ (item.status === 1 || item.status === 'Aktif') ? 'Aktif' : 'Nonaktif' }}
                                             </span>
                                         </td>
@@ -314,7 +314,7 @@ const reloadMaster = () => {
                                             <button
                                                 type="button"
                                                 @click="openEditItem(item)"
-                                                class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs inline-flex items-center justify-center transition cursor-pointer"
+                                                class="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs inline-flex items-center justify-center transition cursor-pointer shrink-0"
                                                 title="Edit Item"
                                             >
                                                 <i class="fa-solid fa-pen-to-square text-[11px]"></i>
@@ -322,7 +322,7 @@ const reloadMaster = () => {
                                             <button
                                                 type="button"
                                                 @click="deleteItem(item)"
-                                                class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs inline-flex items-center justify-center transition cursor-pointer"
+                                                class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs inline-flex items-center justify-center transition cursor-pointer shrink-0"
                                                 title="Hapus Item"
                                             >
                                                 <i class="fa-solid fa-trash text-[11px]"></i>
@@ -346,46 +346,46 @@ const reloadMaster = () => {
                 <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
                         <i class="fa-solid fa-folder-tree text-amber-600 text-sm"></i>
-                        <h2 class="text-xs font-black text-slate-800 uppercase tracking-wider">GRUP REFERENSI</h2>
+                        <h2 class="text-xs font-black text-slate-800 uppercase tracking-wider whitespace-nowrap">GRUP REFERENSI</h2>
                     </div>
-                    <span class="text-[11px] font-bold text-slate-400">{{ grups.length }} Grup</span>
+                    <span class="text-[11px] font-bold text-slate-400 whitespace-nowrap">{{ grups.length }} Grup</span>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
                         <thead class="bg-slate-50/50 text-slate-500 uppercase tracking-wider text-[10px] font-bold border-b border-slate-200">
                             <tr>
-                                <th class="px-5 py-2.5">KODE</th>
-                                <th class="px-5 py-2.5">NAMA GRUP</th>
-                                <th class="px-5 py-2.5 text-center">ITEM</th>
-                                <th class="px-5 py-2.5 text-center">STATUS</th>
-                                <th class="px-5 py-2.5 text-right">AKSI</th>
+                                <th class="px-5 py-2.5 whitespace-nowrap">KODE</th>
+                                <th class="px-5 py-2.5 whitespace-nowrap">NAMA GRUP</th>
+                                <th class="px-5 py-2.5 text-center whitespace-nowrap">ITEM</th>
+                                <th class="px-5 py-2.5 text-center whitespace-nowrap">STATUS</th>
+                                <th class="px-5 py-2.5 text-right whitespace-nowrap">AKSI</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
                             <tr v-for="g in grups" :key="g.id" class="hover:bg-amber-50/40 transition">
-                                <td class="px-5 py-3 font-mono text-[11px] font-bold text-slate-600">{{ g.kode_grup }}</td>
-                                <td class="px-5 py-3 font-bold text-slate-900">{{ g.nama_grup }}</td>
-                                <td class="px-5 py-3 text-center">
-                                    <span class="px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 font-bold text-xs">
+                                <td class="px-5 py-3 font-mono text-[11px] font-bold text-slate-600 whitespace-nowrap">{{ g.kode_grup }}</td>
+                                <td class="px-5 py-3 font-bold text-slate-900 whitespace-nowrap">{{ g.nama_grup }}</td>
+                                <td class="px-5 py-3 text-center whitespace-nowrap">
+                                    <span class="px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 font-bold text-xs whitespace-nowrap">
                                         {{ g.count }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3 text-center">
+                                <td class="px-5 py-3 text-center whitespace-nowrap">
                                     <span :class="[
-                                        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border',
+                                        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap',
                                         (g.status === 1 || g.status === 'Aktif')
                                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                             : 'bg-rose-50 text-rose-700 border-rose-200'
                                     ]">
-                                        <span class="w-1.5 h-1.5 rounded-full" :class="(g.status === 1 || g.status === 'Aktif') ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="(g.status === 1 || g.status === 'Aktif') ? 'bg-emerald-500' : 'bg-rose-500'"></span>
                                         {{ (g.status === 1 || g.status === 'Aktif') ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3 text-right">
+                                <td class="px-5 py-3 text-right whitespace-nowrap">
                                     <Link
                                         :href="`/admin/master-referensi/master_referensi_item?grup=${g.id}`"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 transition"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 transition whitespace-nowrap"
                                     >
                                         <i class="fa-solid fa-list text-xs"></i>
                                         <span>Kelola Item</span>

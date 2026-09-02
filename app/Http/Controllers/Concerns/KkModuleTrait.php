@@ -816,13 +816,42 @@ trait KkModuleTrait
 
     protected function buildEcclesiasticalReferenceData(): array
     {
+        $dekenatNames = [];
+        if (\Illuminate\Support\Facades\Schema::hasTable('dekenat')) {
+            $col = \Illuminate\Support\Facades\Schema::hasColumn('dekenat', 'nama_dekenat') ? 'nama_dekenat' : (\Illuminate\Support\Facades\Schema::hasColumn('dekenat', 'nama_kevikepan') ? 'nama_kevikepan' : 'nama');
+            $dekenatNames = \App\Models\Dekenat::orderBy($col)->pluck($col)->filter()->values()->all();
+        } elseif (\Illuminate\Support\Facades\Schema::hasTable('kevikepan')) {
+            $col = \Illuminate\Support\Facades\Schema::hasColumn('kevikepan', 'nama_kevikepan') ? 'nama_kevikepan' : (\Illuminate\Support\Facades\Schema::hasColumn('kevikepan', 'nama_dekenat') ? 'nama_dekenat' : 'nama');
+            $dekenatNames = \Illuminate\Support\Facades\DB::table('kevikepan')->orderBy($col)->pluck($col)->filter()->values()->all();
+        }
+
+        $wilayahNames = \Illuminate\Support\Facades\Schema::hasTable('wilayah')
+            ? \App\Models\Wilayah::orderBy(\Illuminate\Support\Facades\Schema::hasColumn('wilayah', 'nama_wilayah') ? 'nama_wilayah' : 'nama')->pluck(\Illuminate\Support\Facades\Schema::hasColumn('wilayah', 'nama_wilayah') ? 'nama_wilayah' : 'nama')->filter()->values()->all()
+            : [];
+
+        $kubNames = \Illuminate\Support\Facades\Schema::hasTable('kub')
+            ? \App\Models\Kub::orderBy(\Illuminate\Support\Facades\Schema::hasColumn('kub', 'nama_kub') ? 'nama_kub' : 'nama')->pluck(\Illuminate\Support\Facades\Schema::hasColumn('kub', 'nama_kub') ? 'nama_kub' : 'nama')->filter()->values()->all()
+            : [];
+
+        $kapelaNames = \Illuminate\Support\Facades\Schema::hasTable('kapela')
+            ? \App\Models\Kapela::orderBy(\Illuminate\Support\Facades\Schema::hasColumn('kapela', 'nama_kapela') ? 'nama_kapela' : (\Illuminate\Support\Facades\Schema::hasColumn('kapela', 'nama_stasi_kapela') ? 'nama_stasi_kapela' : 'nama'))->pluck(\Illuminate\Support\Facades\Schema::hasColumn('kapela', 'nama_kapela') ? 'nama_kapela' : (\Illuminate\Support\Facades\Schema::hasColumn('kapela', 'nama_stasi_kapela') ? 'nama_stasi_kapela' : 'nama'))->filter()->values()->all()
+            : [];
+
+        $lingkunganNames = \Illuminate\Support\Facades\Schema::hasTable('lingkungan')
+            ? \App\Models\Lingkungan::orderBy(\Illuminate\Support\Facades\Schema::hasColumn('lingkungan', 'nama_lingkungan') ? 'nama_lingkungan' : 'nama')->pluck(\Illuminate\Support\Facades\Schema::hasColumn('lingkungan', 'nama_lingkungan') ? 'nama_lingkungan' : 'nama')->filter()->values()->all()
+            : [];
+
+        $parokiNames = \Illuminate\Support\Facades\Schema::hasTable('paroki')
+            ? \App\Models\Paroki::orderBy(\Illuminate\Support\Facades\Schema::hasColumn('paroki', 'nama_paroki') ? 'nama_paroki' : 'nama')->pluck(\Illuminate\Support\Facades\Schema::hasColumn('paroki', 'nama_paroki') ? 'nama_paroki' : 'nama')->filter()->values()->all()
+            : [];
+
         return [
-            'Wilayah Pastoral' => \App\Models\Wilayah::orderBy('nama_wilayah')->pluck('nama_wilayah')->filter()->values()->all() ?: ['Wilayah I - St. Petrus', 'Wilayah II - St. Paulus'],
-            'KUB / KBG' => \App\Models\Kub::orderBy('nama_kub')->pluck('nama_kub')->filter()->values()->all() ?: ['KUB Sta. Maria', 'KUB St. Yosef'],
-            'Stasi / Kapela' => \App\Models\Kapela::orderBy('nama_kapela')->pluck('nama_kapela')->filter()->values()->all() ?: ['Kapela St. Fransiskus'],
-            'Lingkungan' => \App\Models\Lingkungan::orderBy('nama_lingkungan')->pluck('nama_lingkungan')->filter()->values()->all() ?: ['Lingkungan St. Yohanes', 'Lingkungan St. Gabriel'],
-            'Paroki' => \App\Models\Paroki::orderBy('nama_paroki')->pluck('nama_paroki')->filter()->values()->all() ?: ['Paroki St. Vinsensius a Paulo Benlutu'],
-            'Kevikepan / Dekenat' => \App\Models\Dekenat::orderBy('nama_kevikepan')->pluck('nama_kevikepan')->filter()->values()->all() ?: ['Dekenat Timor Tengah Selatan (TTS)'],
+            'Wilayah Pastoral' => !empty($wilayahNames) ? $wilayahNames : ['Wilayah I - St. Petrus', 'Wilayah II - St. Paulus'],
+            'KUB / KBG' => !empty($kubNames) ? $kubNames : ['KUB Sta. Maria', 'KUB St. Yosef'],
+            'Stasi / Kapela' => !empty($kapelaNames) ? $kapelaNames : ['Kapela St. Fransiskus'],
+            'Lingkungan' => !empty($lingkunganNames) ? $lingkunganNames : ['Lingkungan St. Yohanes', 'Lingkungan St. Gabriel'],
+            'Paroki' => !empty($parokiNames) ? $parokiNames : ['Paroki St. Vinsensius a Paulo Benlutu'],
+            'Kevikepan / Dekenat' => !empty($dekenatNames) ? $dekenatNames : ['Dekenat Timor Tengah Selatan (TTS)'],
             'Kepemilikan Rumah' => ['Milik Sendiri', 'Sewa / Kontrak', 'Ikut Orang Tua', 'Rumah Dinas'],
             'Kategori Ekonomi Pastoral' => ['Prasejahtera', 'Sejahtera / Mandiri', 'Mampu'],
             'Jenis Penerimaan Baptis (KHK 849)' => ['Baptis Bayi (Infantis)', 'Baptis Dewasa (Adultus)', 'Receptio (Penerimaan ke Katolik)'],
@@ -837,11 +866,16 @@ trait KkModuleTrait
 
     protected function buildCivilReferenceData(): array
     {
+        $provNames = \Illuminate\Support\Facades\Schema::hasTable('provinsi') ? \App\Models\Provinsi::orderBy(\Illuminate\Support\Facades\Schema::hasColumn('provinsi', 'nama_provinsi') ? 'nama_provinsi' : 'nama')->pluck(\Illuminate\Support\Facades\Schema::hasColumn('provinsi', 'nama_provinsi') ? 'nama_provinsi' : 'nama')->filter()->values()->all() : [];
+        $kabNames = \Illuminate\Support\Facades\Schema::hasTable('kabupaten') ? \App\Models\Kabupaten::orderBy(\Illuminate\Support\Facades\Schema::hasColumn('kabupaten', 'nama_kabupaten') ? 'nama_kabupaten' : 'nama')->pluck(\Illuminate\Support\Facades\Schema::hasColumn('kabupaten', 'nama_kabupaten') ? 'nama_kabupaten' : 'nama')->filter()->values()->all() : [];
+        $kecNames = \Illuminate\Support\Facades\Schema::hasTable('kecamatan') ? \App\Models\Kecamatan::take(100)->orderBy(\Illuminate\Support\Facades\Schema::hasColumn('kecamatan', 'nama_kecamatan') ? 'nama_kecamatan' : 'nama')->pluck(\Illuminate\Support\Facades\Schema::hasColumn('kecamatan', 'nama_kecamatan') ? 'nama_kecamatan' : 'nama')->filter()->values()->all() : [];
+        $desaNames = \Illuminate\Support\Facades\Schema::hasTable('desa_kelurahan') ? \App\Models\DesaKelurahan::take(250)->orderBy(\Illuminate\Support\Facades\Schema::hasColumn('desa_kelurahan', 'nama_desa') ? 'nama_desa' : 'nama')->pluck(\Illuminate\Support\Facades\Schema::hasColumn('desa_kelurahan', 'nama_desa') ? 'nama_desa' : 'nama')->filter()->values()->all() : [];
+
         return [
-            'Provinsi' => \App\Models\Provinsi::orderBy('nama_provinsi')->pluck('nama_provinsi')->filter()->values()->all() ?: ['Nusa Tenggara Timur'],
-            'Kabupaten / Kota' => \App\Models\Kabupaten::orderBy('nama_kabupaten')->pluck('nama_kabupaten')->filter()->values()->all() ?: ['Kabupaten Timor Tengah Selatan', 'Kota Kupang'],
-            'Kecamatan' => \App\Models\Kecamatan::take(100)->orderBy('nama_kecamatan')->pluck('nama_kecamatan')->filter()->values()->all() ?: ['Kecamatan Batu Putih', 'Kecamatan Kota Soe'],
-            'Desa / Kelurahan' => \App\Models\DesaKelurahan::take(250)->orderBy('nama_desa')->pluck('nama_desa')->filter()->values()->all() ?: ['Desa Benlutu', 'Desa Oebobo'],
+            'Provinsi' => !empty($provNames) ? $provNames : ['Nusa Tenggara Timur'],
+            'Kabupaten / Kota' => !empty($kabNames) ? $kabNames : ['Kabupaten Timor Tengah Selatan', 'Kota Kupang'],
+            'Kecamatan' => !empty($kecNames) ? $kecNames : ['Kecamatan Batu Putih', 'Kecamatan Kota Soe'],
+            'Desa / Kelurahan' => !empty($desaNames) ? $desaNames : ['Desa Benlutu', 'Desa Oebobo'],
             'Hubungan Keluarga' => ['Kepala Keluarga', 'Istri', 'Anak', 'Orang Tua', 'Mertua', 'Menantu', 'Cucu', 'Famili Lain'],
             'Pekerjaan' => ['PNS / ASN', 'TNI / Polri', 'Karyawan Swasta', 'Wiraswasta / Pedagang', 'Petani / Pekebun', 'Peternak', 'Nelayan', 'Guru / Dosen', 'Tenaga Medis / Perawat / Dokter', 'Tukang / Buruh Bangunan', 'Pelajar / Mahasiswa', 'Ibu Rumah Tangga', 'Pensiunan', 'Belum / Tidak Bekerja', 'Lainnya'],
             'Pendidikan' => ['Tidak / Belum Sekolah', 'SD / Sederajat', 'SMP / Sederajat', 'SMA / SMK / Sederajat', 'Diploma (D1-D3)', 'Sarjana (S1)', 'Magister (S2)', 'Doktoral (S3)'],

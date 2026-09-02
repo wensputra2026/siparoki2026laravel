@@ -165,21 +165,56 @@ trait ParokiModuleTrait
     {
         if (!$paroki) return;
 
-        // Sync to profil_paroki if table exists
+        $parokiId = (int)($paroki->id_paroki ?? $paroki->id);
+        $keuskupan = $paroki->keuskupan ?? ($paroki->keuskupan_id ? \App\Models\Keuskupan::find($paroki->keuskupan_id) : null);
+        $dekenat = $paroki->dekenat ?? ($paroki->dekenat_id ? \App\Models\Dekenat::find($paroki->dekenat_id) : null);
+        $provinsi = $paroki->provinsi ?? ($paroki->provinsi_id ? \App\Models\Provinsi::find($paroki->provinsi_id) : null);
+        $kabupaten = $paroki->kabupaten ?? ($paroki->kabupaten_id ? \App\Models\Kabupaten::find($paroki->kabupaten_id) : null);
+        $kecamatan = $paroki->kecamatan ?? ($paroki->kecamatan_id ? \App\Models\Kecamatan::find($paroki->kecamatan_id) : null);
+        $desa = $paroki->desa ?? ($paroki->desa_id ? \App\Models\DesaKelurahan::find($paroki->desa_id) : null);
+
+        $namaKeuskupan = $keuskupan?->nama_keuskupan ?? 'Keuskupan Agung Kupang';
+        $namaDekenat = $dekenat?->nama_dekenat ?? $dekenat?->nama_kevikepan ?? null;
+        $namaProvinsi = $provinsi?->nama_provinsi ?? null;
+        $namaKabupaten = $kabupaten?->nama_kabupaten ?? null;
+        $namaKecamatan = $kecamatan?->nama_kecamatan ?? null;
+        $namaDesa = $desa?->nama_desa ?? null;
+
+        // 1. Sync to profil_paroki if table exists
         if (\Illuminate\Support\Facades\Schema::hasTable('profil_paroki')) {
             $cols = \Illuminate\Support\Facades\Schema::getColumnListing('profil_paroki');
             $payload = [];
             $map = [
+                'paroki_id' => $parokiId,
                 'nama_paroki' => $paroki->nama_paroki,
+                'kode_paroki' => $paroki->kode_paroki,
                 'alamat' => $paroki->alamat,
                 'alamat_paroki' => $paroki->alamat,
                 'telepon' => $paroki->telepon ?? $paroki->whatsapp,
                 'telepon_paroki' => $paroki->telepon ?? $paroki->whatsapp,
+                'whatsapp' => $paroki->whatsapp,
                 'email' => $paroki->email,
                 'email_paroki' => $paroki->email,
+                'website' => $paroki->website,
                 'logo' => $paroki->logo,
                 'pastor_paroki' => $paroki->nama_pastor_paroki_aktif,
+                'foto_pastor' => $paroki->foto_pastor,
+                'pastor_rekan' => $paroki->nama_pastor_rekan,
                 'pelindung' => $paroki->pelindung_paroki,
+                'status_paroki' => $paroki->status_paroki ?? 'Paroki',
+                'keuskupan_id' => $paroki->keuskupan_id,
+                'dekenat_id' => $paroki->dekenat_id,
+                'provinsi_id' => $paroki->provinsi_id,
+                'kabupaten_id' => $paroki->kabupaten_id,
+                'kecamatan_id' => $paroki->kecamatan_id,
+                'desa_id' => $paroki->desa_id,
+                'latitude' => $paroki->latitude,
+                'longitude' => $paroki->longitude,
+                'maps_url' => $paroki->maps_url,
+                'maps_embed' => $paroki->maps_embed,
+                'keterangan' => $paroki->keterangan,
+                'foto_gereja' => $paroki->foto_gereja ?? $paroki->logo,
+                'banner' => $paroki->banner,
             ];
             foreach ($map as $k => $v) {
                 if (in_array($k, $cols, true) && $v !== null) {
@@ -200,19 +235,33 @@ trait ParokiModuleTrait
             }
         }
 
-        // Sync to pengaturan_aplikasi if table exists
+        // 2. Sync to pengaturan_aplikasi if table exists
         if (\Illuminate\Support\Facades\Schema::hasTable('pengaturan_aplikasi')) {
             $cols = \Illuminate\Support\Facades\Schema::getColumnListing('pengaturan_aplikasi');
             $payload = [];
             $map = [
+                'paroki_id' => $parokiId,
                 'nama_paroki' => $paroki->nama_paroki,
+                'pelindung_paroki' => $paroki->pelindung_paroki,
+                'nama_keuskupan' => $namaKeuskupan,
+                'keuskupan_id' => $paroki->keuskupan_id,
+                'dekenat_id' => $paroki->dekenat_id,
                 'alamat' => $paroki->alamat,
                 'alamat_paroki' => $paroki->alamat,
                 'telepon' => $paroki->telepon ?? $paroki->whatsapp,
                 'telepon_paroki' => $paroki->telepon ?? $paroki->whatsapp,
+                'whatsapp' => $paroki->whatsapp,
                 'email' => $paroki->email,
                 'email_paroki' => $paroki->email,
+                'website' => $paroki->website,
                 'logo' => $paroki->logo,
+                'maps_embed' => $paroki->maps_embed,
+                'kota_kabupaten' => $namaKabupaten,
+                'provinsi' => $namaProvinsi,
+                'kecamatan' => $namaKecamatan,
+                'desa_kelurahan' => $namaDesa,
+                'hero_text_title' => 'Selamat Datang di Website Resmi ' . $paroki->nama_paroki,
+                'video_header_title' => 'Gereja ' . $paroki->nama_paroki,
             ];
             foreach ($map as $k => $v) {
                 if (in_array($k, $cols, true) && $v !== null) {
@@ -231,6 +280,34 @@ trait ParokiModuleTrait
                     \Illuminate\Support\Facades\DB::table('pengaturan_aplikasi')->insert($payload);
                 }
             }
+        }
+
+        // 3. Clear and bust ALL frontend & backend caches for instant update
+        \Illuminate\Support\Facades\Cache::forget('active_paroki_middleware_v3');
+        \Illuminate\Support\Facades\Cache::forget('global_app_profile');
+        \Illuminate\Support\Facades\Cache::forget('global_app_settings');
+        \Illuminate\Support\Facades\Cache::forget('ref_paroki_list');
+        \Illuminate\Support\Facades\Cache::forget('ref_keuskupan_list');
+        \Illuminate\Support\Facades\Cache::forget('ref_dekenat_list_v4');
+        \Illuminate\Support\Facades\Cache::forget('ref_wilayah_list_v2');
+        \Illuminate\Support\Facades\Cache::forget('ref_kapela_list_v2');
+        \Illuminate\Support\Facades\Cache::forget('ref_kub_list_v2');
+        \Illuminate\Support\Facades\Cache::forget('ref_kabupaten_list');
+        \Illuminate\Support\Facades\Cache::forget('ref_kecamatan_list');
+        \Illuminate\Support\Facades\Cache::forget('ref_desa_scoped_ntt');
+        \Illuminate\Support\Facades\Cache::forget('default_paroki_id');
+
+        for ($v = 1; $v <= 15; $v++) {
+            \Illuminate\Support\Facades\Cache::forget("frontend.common_data.{$v}");
+        }
+        \Illuminate\Support\Facades\Cache::increment('global_view_data_version');
+
+        if (session()) {
+            session()->put('default_paroki_id', $parokiId);
+        }
+
+        if (method_exists($this, 'clearFastAccessCache')) {
+            $this->clearFastAccessCache();
         }
     }
 

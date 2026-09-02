@@ -68,6 +68,7 @@ const selectedKubId = ref('');
 const showToast = ref(false);
 const toastMessage = ref('');
 const toastType = ref('success');
+const toastIsPersistent = ref(false);
 let toastTimer = null;
 
 const activeRole = ref('Super Admin');
@@ -76,15 +77,54 @@ const toggleSidebar = () => {
     isSidebarOpen.value = !isSidebarOpen.value;
 };
 
-const triggerToast = (msg, type = 'success') => {
+const isChildRelationOrCriticalMessage = (msg, type) => {
+    if (!msg) return false;
+    const lower = String(msg).toLowerCase();
+    return (
+        type === 'warning' ||
+        type === 'error' ||
+        lower.includes('terhubung dengan') ||
+        lower.includes('data terkait') ||
+        lower.includes('data turunan') ||
+        lower.includes('relasi data') ||
+        lower.includes('anggota keluarga') ||
+        lower.includes('tidak dapat dihapus') ||
+        lower.includes('dilewati karena') ||
+        lower.includes('konten aktif') ||
+        lower.includes('masih memiliki') ||
+        lower.includes('pindahkan atau') ||
+        lower.includes('dibatalkan karena') ||
+        lower.includes('foreign key') ||
+        lower.includes('integritas data') ||
+        msg.length > 110
+    );
+};
+
+const triggerToast = (msg, type = 'success', options = {}) => {
     if (!msg) return;
     toastMessage.value = msg;
     toastType.value = type;
     showToast.value = true;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-        showToast.value = false;
-    }, 4000);
+    if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+    }
+
+    const persistent =
+        options.persistent === true ||
+        options.autoHide === false ||
+        isChildRelationOrCriticalMessage(msg, type);
+
+    toastIsPersistent.value = persistent;
+
+    // Jika pesan adalah info data turunan / peringatan relasi / error / long text, JANGAN autohide sehingga bisa dibaca santai dan lama
+    if (!persistent) {
+        const duration = typeof options === 'number' ? options : (options.duration || 6000);
+        toastTimer = setTimeout(() => {
+            showToast.value = false;
+            toastIsPersistent.value = false;
+        }, duration);
+    }
 };
 
 // (Flash watcher is initialized inside init() with the reactive page instance)
@@ -280,12 +320,16 @@ const init = (page) => {
     // 1. Router event listener: langsung menangkap respon Inertia beserta flash message
     router.on('success', (event) => {
         const flash = event.detail.page?.props?.flash || usePage().props?.flash;
-        if (flash?.success) {
+        if (flash?.warning) {
+            triggerToast(flash.warning, 'warning');
+        } else if (flash?.error) {
+            triggerToast(flash.error, 'error');
+        } else if (flash?.info) {
+            triggerToast(flash.info, 'info');
+        } else if (flash?.success) {
             triggerToast(flash.success, 'success');
         } else if (flash?.status) {
             triggerToast(flash.status, 'success');
-        } else if (flash?.error) {
-            triggerToast(flash.error, 'error');
         }
     });
 
@@ -302,9 +346,11 @@ const init = (page) => {
     watch(
         () => page.props.flash,
         (flash) => {
-            if (flash?.success) triggerToast(flash.success, 'success');
-            else if (flash?.status) triggerToast(flash.status, 'success');
+            if (flash?.warning) triggerToast(flash.warning, 'warning');
             else if (flash?.error) triggerToast(flash.error, 'error');
+            else if (flash?.info) triggerToast(flash.info, 'info');
+            else if (flash?.success) triggerToast(flash.success, 'success');
+            else if (flash?.status) triggerToast(flash.status, 'success');
         },
         { deep: true, immediate: true }
     );
@@ -348,7 +394,7 @@ const init = (page) => {
     );
 };
 
-export { triggerToast };
+export { triggerToast, toastIsPersistent };
 
 export function useRoleMenu(props) {
     const page = usePage();
@@ -365,6 +411,7 @@ export function useRoleMenu(props) {
         showToast,
         toastMessage,
         toastType,
+        toastIsPersistent,
         triggerToast,
         userAvatar,
         userName,

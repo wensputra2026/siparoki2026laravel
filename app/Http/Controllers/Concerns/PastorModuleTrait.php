@@ -301,6 +301,28 @@ trait PastorModuleTrait
         }
 
         $pastor->update($cleanData);
+        if (!empty($cleanData['foto']) || !empty($pastor->foto)) {
+            $photoPath = $cleanData['foto'] ?? $pastor->foto;
+            $isPastorParoki = str_contains(strtolower($pastor->jabatan ?? ''), 'pastor paroki') || str_contains(strtolower((string)($pastor->status ?? '')), 'aktif') || (string)$pastor->status === '1';
+            if ($isPastorParoki) {
+                if (\Illuminate\Support\Facades\Schema::hasTable('profil_paroki')) {
+                    \Illuminate\Support\Facades\DB::table('profil_paroki')->update(['foto_pastor' => $photoPath]);
+                }
+                if (\Illuminate\Support\Facades\Schema::hasTable('paroki') && !empty($pastor->paroki_id)) {
+                    \Illuminate\Support\Facades\DB::table('paroki')->where('id_paroki', $pastor->paroki_id)->update(['foto_pastor' => $photoPath]);
+                }
+                if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_pastor_paroki')) {
+                    \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')
+                        ->where(function($q) use ($pastor) {
+                            $q->where('pastor_id', $pastor->id)
+                              ->orWhere('nama_pastor', 'like', '%' . $pastor->nama_pastor . '%')
+                              ->orWhere('status', 'like', '%aktif%')
+                              ->orWhere('periode_selesai', 'Sekarang');
+                        })
+                        ->update(['foto' => $photoPath]);
+                }
+            }
+        }
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $redirectUrl = str_contains($request->header('referer', ''), 'master-referensi') || str_contains($request->path(), 'master-referensi')
             ? '/admin/master-referensi/pastor'

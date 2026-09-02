@@ -1,0 +1,398 @@
+[
+  {
+    "id": 2,
+    "kode": "033",
+    "nama": "Keuskupan Agats",
+    "nama_latin": "Dioecesis Agatsensis",
+    "nama_uskup": "Mgr. Aloysius Murwito, O.F.M.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 3,
+    "kode": "040",
+    "nama": "Keuskupan Agung Dili",
+    "nama_latin": "Archidiœcesis Diliensis",
+    "nama_uskup": "Mgr. Virgilio do Carmo da Silva, S.D.B.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 4,
+    "kode": "008",
+    "nama": "Keuskupan Agung Ende",
+    "nama_latin": "Archidioecesis Endeensis",
+    "nama_uskup": "Mgr. Vincentius Sensi Potokota",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 5,
+    "kode": "029",
+    "nama": "Keuskupan Agung Makassar",
+    "nama_latin": "Archidioecesis Makassarensis",
+    "nama_uskup": "Mgr. Johannes Liku Ada'",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 6,
+    "kode": "013",
+    "nama": "Keuskupan Agung Medan",
+    "nama_latin": "Archidioecesis Medanensis",
+    "nama_uskup": "Mgr. Kornelius Sipayung, O.F.M. Cap.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 7,
+    "kode": "032",
+    "nama": "Keuskupan Agung Merauke",
+    "nama_latin": "Archidioecesis Meraukeensis",
+    "nama_uskup": "Mgr. Petrus Canisius Mandagi, M.S.C.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 8,
+    "kode": "016",
+    "nama": "Keuskupan Agung Palembang",
+    "nama_latin": "Archidioecesis Palembangensis",
+    "nama_uskup": "Mgr. Yohanes Harun Yuwono",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 9,
+    "kode": "021",
+    "nama": "Keuskupan Agung Pontianak",
+    "nama_latin": "Archidioecesis Pontianakensis",
+    "nama_uskup": "Mgr. Agustinus Agus",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 10,
+    "kode": "025",
+    "nama": "Keuskupan Agung Samarinda",
+    "nama_latin": "Archidioecesis Samarindaensis",
+    "nama_uskup": "Mgr. Yustinus Harjosusanto, M.S.C.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 11,
+    "kode": "004",
+    "nama": "Keuskupan Agung Semarang",
+    "nama_latin": "Archidioecesis Semarangensis",
+    "nama_uskup": "Mgr. Robertus Rubiyatmoko",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 12,
+    "kode": "031",
+    "nama": "Keuskupan Amboina",
+    "nama_latin": "Dioecesis Amboinaensis",
+    "nama_uskup": "Mgr. Petrus Canisius Mandagi, M.S.C.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 13,
+    "kode": "019",
+    "nama": "Keuskupan Atambua",
+    "nama_latin": "Dioecesis Atambuaensis",
+    "nama_uskup": "Mgr. Dominikus Saku",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 14,
+    "kode": "003",
+    "nama": "Keuskupan Bandung",
+    "nama_latin": "Diocese of Bandung",
+    "nama_uskup": "Mgr. Antonius Subianto Bunjamin",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 15,
+    "kode": "027",
+    "nama": "Keuskupan Banjarmasin",
+    "nama_latin": "Dioecesis Banjarmasinensis",
+    "nama_uskup": "Mgr. Petrus Boddeng Timang",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 16,
+    "kode": "044",
+    "nama": "Keuskupan Baucau",
+    "nama_latin": "Dioecesis Baucanus",
+    "nama_uskup": "Mgr. Leandro Maria Alves",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 17,
+    "kode": "002",
+    "nama": "Keuskupan Bogor",
+    "nama_latin": "Diocese of Bogor",
+    "nama_uskup": "Mgr. Paskalis Bruno Syukur",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 18,
+    "kode": "009",
+    "nama": "Keuskupan Denpasar",
+    "nama_latin": "Dioecesis Denpasarensis",
+    "nama_uskup": "Mgr. Silvester Tung Kiem San",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 19,
+    "kode": "036",
+    "nama": "Keuskupan Jayapura",
+    "nama_latin": "Dioecesis Jayapuraensis",
+    "nama_uskup": "Mgr. Leo Laba Ladjar, O.F.M.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 20,
+    "kode": "023",
+    "nama": "Keuskupan Ketapang",
+    "nama_latin": "Dioecesis Ketapangensis",
+    "nama_uskup": "Mgr. Pius Riana Prapdi",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 21,
+    "kode": "034",
+    "nama": "Keuskupan Labuan Bajo",
+    "nama_latin": "Dioecesis Labuan Bajoensis",
+    "nama_uskup": "Mgr. Maksimus Regus",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 22,
+    "kode": "035",
+    "nama": "Keuskupan Larantuka",
+    "nama_latin": "Dioecesis Larantukaensis",
+    "nama_uskup": "Mgr. Fransiskus Kopong Kung",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 23,
+    "kode": "007",
+    "nama": "Keuskupan Malang",
+    "nama_latin": "Dioecesis Malangensis",
+    "nama_uskup": "Mgr. Henricus Pidyarto Gunawan, O.Carm.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 24,
+    "kode": "043",
+    "nama": "Keuskupan Maliana",
+    "nama_latin": "Dioecesis Malianensis",
+    "nama_uskup": "Mgr. Norberto do Amaral",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 25,
+    "kode": "030",
+    "nama": "Keuskupan Manado",
+    "nama_latin": "Dioecesis Manadoensis",
+    "nama_uskup": "Mgr. Benedictus Estephanus Rolly Untu, M.S.C.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 26,
+    "kode": "038",
+    "nama": "Keuskupan Manokwari-Sorong",
+    "nama_latin": "Dioecesis Manokwari-Sorongensis",
+    "nama_uskup": "Mgr. Datus Hilarion Lega",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 27,
+    "kode": "011",
+    "nama": "Keuskupan Maumere",
+    "nama_latin": "Dioecesis Maumerensis",
+    "nama_uskup": "Mgr. Ewaldus Martinus Sedu",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 28,
+    "kode": "015",
+    "nama": "Keuskupan Padang",
+    "nama_latin": "Dioecesis Padangensis",
+    "nama_uskup": "Mgr. Vitus Rubianto Solichin, S.X.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 29,
+    "kode": "026",
+    "nama": "Keuskupan Palangka Raya",
+    "nama_latin": "Dioecesis Palangka Rayaensis",
+    "nama_uskup": "Mgr. Aloysius Maryadi Sutrisnaatmaka, M.S.C.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 30,
+    "kode": "017",
+    "nama": "Keuskupan Pangkalpinang",
+    "nama_latin": "Dioecesis Pangkalpinangensis",
+    "nama_uskup": "Mgr. Adrianus Sunarko, O.F.M.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 31,
+    "kode": "005",
+    "nama": "Keuskupan Purwokerto",
+    "nama_latin": "Dioecesis Purwokertensis",
+    "nama_uskup": "Mgr. Christophorus Tri Harsono",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 32,
+    "kode": "010",
+    "nama": "Keuskupan Ruteng",
+    "nama_latin": "Dioecesis Rutengensis",
+    "nama_uskup": "Mgr. Siprianus Hormat",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 33,
+    "kode": "022",
+    "nama": "Keuskupan Sanggau",
+    "nama_latin": "Dioecesis Sanggauensis",
+    "nama_uskup": "Mgr. Valentinus Saeng, C.P.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 34,
+    "kode": "004",
+    "nama": "Keuskupan Semarang",
+    "nama_latin": "Diocese of Semarang",
+    "nama_uskup": "Mgr. Robertus Rubiyatmoko",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 35,
+    "kode": "014",
+    "nama": "Keuskupan Sibolga",
+    "nama_latin": "Dioecesis Sibolgaensis",
+    "nama_uskup": "Mgr. Fransiskus Tuaman Sinaga",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 36,
+    "kode": "024",
+    "nama": "Keuskupan Sintang",
+    "nama_latin": "Dioecesis Sintangensis",
+    "nama_uskup": "Mgr. Samuel Oton Sidin, O.F.M. Cap.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 37,
+    "kode": "006",
+    "nama": "Keuskupan Surabaya",
+    "nama_latin": "Diocese of Surabaya",
+    "nama_uskup": "Mgr. Vincentius Sutikno Wisaksono",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 38,
+    "kode": "028",
+    "nama": "Keuskupan Tanjung Selor",
+    "nama_latin": "Dioecesis Tanjung Selorensis",
+    "nama_uskup": "Mgr. Yohanes Harun Yuwono",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 39,
+    "kode": "018",
+    "nama": "Keuskupan Tanjungkarang",
+    "nama_latin": "Dioecesis Tanjungkarangensis",
+    "nama_uskup": "Mgr. Yohanes Harun Yuwono",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 40,
+    "kode": "037",
+    "nama": "Keuskupan Timika",
+    "nama_latin": "Dioecesis Timikaensis",
+    "nama_uskup": "Mgr. John Philip Saklil",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 41,
+    "kode": "020",
+    "nama": "Keuskupan Weetebula",
+    "nama_latin": "Dioecesis Weetebulaensis",
+    "nama_uskup": "Mgr. Edmund Woga, C.Ss.R.",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 42,
+    "kode": "045",
+    "nama": "Nuncius Apostolik",
+    "nama_latin": "Nuncius Apostolik",
+    "nama_uskup": "Mgr. Antonio Guido Filipazzi",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 43,
+    "kode": "039",
+    "nama": "Ordinariat Militer Indonesia",
+    "nama_latin": "Ordinariatus Militaris Indonesiae",
+    "nama_uskup": "Mgr. Ignatius Suharyo Hardjoatmodjo",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 44,
+    "kode": "001",
+    "nama": "Keuskupan Agung Jakarta",
+    "nama_latin": "Archdiocese of Jakarta",
+    "nama_uskup": "Mgr. Ignatius Kardinal Suharyo",
+    "kontak": null,
+    "is_aktif": true
+  },
+  {
+    "id": 45,
+    "kode": "012",
+    "nama": "Keuskupan Agung Kupang",
+    "nama_latin": "Archidioecesis Kupangensis",
+    "nama_uskup": "Mgr. Hironimus Pakaenoni",
+    "kontak": null,
+    "is_aktif": true
+  }
+]

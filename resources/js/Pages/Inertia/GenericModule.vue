@@ -2783,10 +2783,10 @@ const showKubFilter = computed(() => {
         <!-- Table Container: flex-1 so it fills remaining height, with internal scroll on desktop, natural scroll on mobile -->
         <div class="flex-1 min-h-[420px] lg:min-h-0 rounded-xl bg-white border border-slate-200/80 overflow-hidden shadow-2xs flex flex-col">
             <div class="flex-1 overflow-auto custom-scrollbar">
-                <table class="w-full min-w-[980px] text-left text-xs sm:text-[13px]">
+                <table class="w-full min-w-[980px] text-left text-xs sm:text-[13px] whitespace-nowrap">
                     <thead class="bg-slate-100/90 text-slate-700 uppercase tracking-wider text-xs sm:text-[12px] font-bold border-b border-slate-200/90 sticky top-0 z-10">
                         <tr>
-                            <th v-if="canDeleteCurrentModule" class="px-3 py-3 w-10 text-center">
+                            <th v-if="canDeleteCurrentModule" class="px-3 py-3 w-10 text-center whitespace-nowrap">
                                 <input
                                     type="checkbox"
                                     :checked="isAllSelected"
@@ -2796,12 +2796,12 @@ const showKubFilter = computed(() => {
                                     title="Pilih Semua di Halaman Ini"
                                 />
                             </th>
-                            <th class="px-3 py-3 w-10 text-center">#</th>
-                            <th v-for="col in columns" :key="col.key" class="px-4 py-3">
+                            <th class="px-3 py-3 w-10 text-center whitespace-nowrap">#</th>
+                            <th v-for="col in columns" :key="col.key" class="px-4 py-3 whitespace-nowrap">
                                 {{ col.label }}
                             </th>
-                            <th class="px-3.5 py-3 text-center">Status</th>
-                            <th class="px-4 py-3 text-right w-28">Aksi</th>
+                            <th class="px-3.5 py-3 text-center whitespace-nowrap">Status</th>
+                            <th class="px-4 py-3 text-right w-28 whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-slate-800 text-xs sm:text-[13px]">
@@ -2811,7 +2811,7 @@ const showKubFilter = computed(() => {
                             :class="['hover:bg-slate-50/80 transition-colors group', selectedIds.includes(resolveEntityId(item)) ? 'bg-rose-50/30' : '']"
                         >
                             <!-- Checkbox Column -->
-                            <td v-if="canDeleteCurrentModule" class="px-3 py-3 text-center">
+                            <td v-if="canDeleteCurrentModule" class="px-3 py-3 text-center whitespace-nowrap">
                                 <input
                                     type="checkbox"
                                     :value="resolveEntityId(item)"
@@ -2823,7 +2823,7 @@ const showKubFilter = computed(() => {
                             </td>
 
                             <!-- Row Number -->
-                            <td class="px-3 py-3 text-center font-bold text-slate-400 text-xs">
+                            <td class="px-3 py-3 text-center font-bold text-slate-400 text-xs whitespace-nowrap">
                                 {{ (items.from || 1) + idx }}
                             </td>
 
@@ -2831,10 +2831,10 @@ const showKubFilter = computed(() => {
                             <td
                                 v-for="col in columns"
                                 :key="col.key"
-                                class="px-4 py-3"
+                                class="px-4 py-3 whitespace-nowrap"
                             >
                                 <!-- Image / Logo Column -->
-                                <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto' || isImageField(col, getFieldValue(item, col))" class="w-8.5 h-8.5 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5">
+                                <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto' || isImageField(col, getFieldValue(item, col))" class="w-8.5 h-8.5 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5 whitespace-nowrap">
                                     <img
                                         :src="moduleKey === 'keuskupan' ? (item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-keuskupan.png')) : (moduleKey === 'paroki' ? (item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-paroki.png')) : ((col.key === 'logo' && item.logo_url) ? item.logo_url : (getImageUrl(getFieldValue(item, col)) || (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey) ? '/assets/frontend/siparoki/images/default-pastor.jpg' : ''))))"
                                         :alt="item.nama_pastor || item.nama_lengkap || item.nama_paroki || item.nama_keuskupan || 'Foto'"
@@ -3005,20 +3005,20 @@ const showKubFilter = computed(() => {
                             </td>
 
                             <!-- Status Badge -->
-                            <td class="px-3.5 py-3 text-center">
+                            <td class="px-3.5 py-3 text-center whitespace-nowrap">
                                 <!-- Dekenat: show paroki count badge -->
                                 <template v-if="moduleKey === 'dekenat' || moduleKey === 'kevikepan'">
-                                    <div class="flex flex-col items-center gap-1">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                    <div class="flex flex-col items-center gap-1 whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">
                                             <i class="fa-solid fa-church text-[9px]"></i>
                                             <span>{{ (item.parokis && item.parokis.length) ? item.parokis.length : 0 }} Paroki</span>
                                         </span>
                                         <span :class="[
-                                            'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border',
+                                            'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap',
                                             statusBadgeClass(item)
                                         ]">
                                             <span :class="[
-                                                'w-1.5 h-1.5 rounded-full',
+                                                'w-1.5 h-1.5 rounded-full shrink-0',
                                                 statusDotClass(item)
                                             ]"></span>
                                             <span>{{ statusLabel(item) }}</span>
@@ -3027,11 +3027,11 @@ const showKubFilter = computed(() => {
                                 </template>
                                 <template v-else>
                                     <span :class="[
-                                        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border',
+                                        'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap',
                                         statusBadgeClass(item)
                                     ]">
                                         <span :class="[
-                                            'w-1.5 h-1.5 rounded-full',
+                                            'w-1.5 h-1.5 rounded-full shrink-0',
                                             statusDotClass(item)
                                         ]"></span>
                                         <span>{{ statusLabel(item) }}</span>
@@ -3040,8 +3040,8 @@ const showKubFilter = computed(() => {
                             </td>
 
                             <!-- Row Actions -->
-                            <td class="px-4 py-3 text-right">
-                                <div class="flex items-center justify-end gap-1.5">
+                            <td class="px-4 py-3 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-1.5 whitespace-nowrap">
                                     <!-- 1. Detail / Preview Button (Exactly ONE view icon per row) -->
                                     <Link
                                         v-if="moduleKey === 'konten'"

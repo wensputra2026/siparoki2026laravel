@@ -1,0 +1,107 @@
+[
+    {
+        "kode": "ANAK",
+        "nama_id": "Anak",
+        "nama_la": "Filius\/Filia",
+        "nama_en": "Child",
+        "urutan": 4
+    },
+    {
+        "kode": "ANAK_ANGKAT",
+        "nama_id": "Anak Angkat",
+        "nama_la": "Filius Adoptivus",
+        "nama_en": "Adopted Child",
+        "urutan": 5
+    },
+    {
+        "kode": "ANAK_KANDUNG",
+        "nama_id": "Anak Kandung",
+        "nama_la": "Filius \/ Filia",
+        "nama_en": "Child",
+        "urutan": 4
+    },
+    {
+        "kode": "CUCU",
+        "nama_id": "Cucu",
+        "nama_la": "Nepos",
+        "nama_en": "Grandchild",
+        "urutan": 7
+    },
+    {
+        "kode": "FAMILI_LAIN",
+        "nama_id": "Famili Lain",
+        "nama_la": "Consanguineus",
+        "nama_en": "Other Relative",
+        "urutan": 10
+    },
+    {
+        "kode": "ISTRI",
+        "nama_id": "Istri",
+        "nama_la": "Uxor",
+        "nama_en": "Wife",
+        "urutan": 2
+    },
+    {
+        "kode": "KEPALA",
+        "nama_id": "Kepala Keluarga",
+        "nama_la": "Paterfamilias",
+        "nama_en": "Head of Household",
+        "urutan": 1
+    },
+    {
+        "kode": "KEPALA_KELUARGA",
+        "nama_id": "Kepala Keluarga",
+        "nama_la": "Caput Familiae",
+        "nama_en": "Head of Family",
+        "urutan": 1
+    },
+    {
+        "kode": "LAINNYA",
+        "nama_id": "Lainnya",
+        "nama_la": "Alius",
+        "nama_en": "Other",
+        "urutan": 99
+    },
+    {
+        "kode": "MENANTU",
+        "nama_id": "Menantu",
+        "nama_la": "Gener \/ Nurus",
+        "nama_en": "Son\/Daughter in-law",
+        "urutan": 6
+    },
+    {
+        "kode": "MERTUA",
+        "nama_id": "Mertua",
+        "nama_la": "Socer \/ Socrus",
+        "nama_en": "Parent-in-law",
+        "urutan": 9
+    },
+    {
+        "kode": "ORANG_TUA",
+        "nama_id": "Orang Tua",
+        "nama_la": "Parentes",
+        "nama_en": "Parent",
+        "urutan": 5
+    },
+    {
+        "kode": "PEMBANTU",
+        "nama_id": "Lainnya \/ Art",
+        "nama_la": "Famulus",
+        "nama_en": "Other",
+        "urutan": 11
+    },
+    {
+        "kode": "SAUDARA",
+        "nama_id": "Saudara",
+        "nama_la": "Frater\/Soror",
+        "nama_en": "Sibling",
+        "urutan": 6
+    },
+    {
+        "kode": "SUAMI",
+        "nama_id": "Suami",
+        "nama_la": "Maritus",
+        "nama_en": "Husband",
+        "urutan": 3
+    }
+]

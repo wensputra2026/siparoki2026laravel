@@ -1,0 +1,54 @@
+[
+    {
+        "id": 1,
+        "nama_kategori": "Berita Paroki",
+        "slug": "berita-paroki",
+        "tipe": "Berita",
+        "status": 1,
+        "created_at": "2026-07-02 20:40:58",
+        "updated_at": "2026-07-02 20:40:58",
+        "deleted_at": null,
+        "deleted_by": null,
+        "delete_reason": null,
+        "is_deleted": 0
+    },
+    {
+        "id": 2,
+        "nama_kategori": "Artikel Rohani",
+        "slug": "artikel-rohani",
+        "tipe": "Artikel",
+        "status": 1,
+        "created_at": "2026-07-02 20:40:58",
+        "updated_at": "2026-07-02 20:40:58",
+        "deleted_at": null,
+        "deleted_by": null,
+        "delete_reason": null,
+        "is_deleted": 0
+    },
+    {
+        "id": 49,
+        "nama_kategori": "Liturgi & Sakramen",
+        "slug": "liturgi-sakramen",
+        "tipe": "Artikel",
+        "status": 1,
+        "created_at": "2026-08-24 10:13:24",
+        "updated_at": "2026-08-24 10:13:24",
+        "deleted_at": null,
+        "deleted_by": null,
+        "delete_reason": null,
+        "is_deleted": 0
+    },
+    {
+        "id": 50,
+        "nama_kategori": "Profil & Dokumen",
+        "slug": "profil-dokumen",
+        "tipe": "Artikel",
+        "status": 1,
+        "created_at": "2026-08-24 10:14:47",
+        "updated_at": "2026-08-24 10:14:47",
+        "deleted_at": null,
+        "deleted_by": null,
+        "delete_reason": null,
+        "is_deleted": 0
+    }
+]

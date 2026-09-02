@@ -12,6 +12,14 @@ Route::post('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class
 Route::get('/api/setup/hierarchy', [\App\Http\Controllers\SetupParokiController::class, 'getHierarchy'])->name('setup.paroki.hierarchy');
 Route::post('/admin/setup-paroki/reset', [\App\Http\Controllers\SetupParokiController::class, 'resetSetup'])->name('setup.paroki.reset')->middleware('auth');
 
+// Dropdown Wilayah Sipil (Kemendagri)
+Route::prefix('api/wilayah')->group(function () {
+    Route::get('/provinsi', [\App\Http\Controllers\WilayahDropdownController::class, 'getProvinsi'])->name('api.wilayah.provinsi');
+    Route::get('/kabupaten/{provinsiKode}', [\App\Http\Controllers\WilayahDropdownController::class, 'getKabupaten'])->name('api.wilayah.kabupaten');
+    Route::get('/kecamatan/{kabupatenKode}', [\App\Http\Controllers\WilayahDropdownController::class, 'getKecamatan'])->name('api.wilayah.kecamatan');
+    Route::get('/desa/{kecamatanKode}', [\App\Http\Controllers\WilayahDropdownController::class, 'getDesa'])->name('api.wilayah.desa');
+});
+
 // Beranda
 Route::get('/', [PageController::class, 'beranda'])->name('beranda');
 
@@ -309,8 +317,11 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::post('/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.pastor.update.alt");
         Route::post('/master-referensi/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-referensi.pastor.update");
         Route::post('/master-referensi/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-referensi.pastor.update.alt");
-        if (in_array($prefix, ['superadmin', 'admin'], true)) {
+        if (in_array($prefix, ['superadmin', 'admin', 'paroki'], true)) {
             Route::get('/profil-paroki', [\App\Http\Controllers\InertiaPanelController::class, 'profilParoki'])->name("panel.{$prefix}.profil-paroki");
+            Route::post('/profil-paroki/set-default', [\App\Http\Controllers\InertiaPanelController::class, 'setDefaultParoki'])->name("panel.{$prefix}.profil-paroki.set-default");
+            Route::post('/profil-paroki', [\App\Http\Controllers\InertiaPanelController::class, 'updateProfilParokiDirect'])->name("panel.{$prefix}.profil-paroki.update");
+            Route::put('/profil-paroki', [\App\Http\Controllers\InertiaPanelController::class, 'updateProfilParokiDirect'])->name("panel.{$prefix}.profil-paroki.update.put");
         }
         Route::get('/profil-saya', [\App\Http\Controllers\InertiaPanelController::class, 'profilSaya'])->name("panel.{$prefix}.profil-saya");
         Route::post('/profil-saya', [\App\Http\Controllers\InertiaPanelController::class, 'updateProfilSaya'])->name("panel.{$prefix}.profil-saya.update");

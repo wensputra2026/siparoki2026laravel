@@ -53,19 +53,12 @@ class PageController extends Controller
                     ->leftJoin('desa_kelurahan', 'paroki.desa_id', '=', 'desa_kelurahan.id_desa')
                     ->select($parokiSelect);
 
-                if (!empty($pengaturan?->paroki_id)) {
-                    $activeParoki = $parokiQuery()->where('paroki.id_paroki', $pengaturan->paroki_id)->first();
-                }
+                $sessionParokiId = session()->get('default_paroki_id');
+                $targetParokiId = $sessionParokiId
+                    ?: ($profil?->paroki_id ?: ($pengaturan?->paroki_id ?: null));
 
-                if (!$activeParoki && !empty($profil?->paroki_id)) {
-                    $activeParoki = $parokiQuery()->where('paroki.id_paroki', $profil->paroki_id)->first();
-                }
-
-                if (!$activeParoki && !empty($pengaturan?->nama_paroki)) {
-                    $activeParoki = $parokiQuery()
-                        ->where('paroki.nama_paroki', $pengaturan->nama_paroki)
-                        ->orWhere('paroki.nama_paroki', 'like', '%' . $pengaturan->nama_paroki . '%')
-                        ->first();
+                if ($targetParokiId) {
+                    $activeParoki = $parokiQuery()->where('paroki.id_paroki', $targetParokiId)->first();
                 }
 
                 if (!$activeParoki && !empty($profil?->nama_paroki)) {
@@ -75,11 +68,15 @@ class PageController extends Controller
                         ->first();
                 }
 
-                if (!$activeParoki) {
+                if (!$activeParoki && !empty($pengaturan?->nama_paroki)) {
                     $activeParoki = $parokiQuery()
-                        ->where('paroki.nama_paroki', 'like', '%Benlutu%')
-                        ->orWhere('paroki.id_paroki', 380)
+                        ->where('paroki.nama_paroki', $pengaturan->nama_paroki)
+                        ->orWhere('paroki.nama_paroki', 'like', '%' . $pengaturan->nama_paroki . '%')
                         ->first();
+                }
+
+                if (!$activeParoki) {
+                    $activeParoki = $parokiQuery()->first();
                 }
             }
 
@@ -297,20 +294,21 @@ class PageController extends Controller
 
             $pastorFotoUrl = null;
             if (!empty($rawPastorFoto)) {
+                $cleanPath = ltrim($rawPastorFoto, '/');
                 if (str_starts_with($rawPastorFoto, 'http://') || str_starts_with($rawPastorFoto, 'https://')) {
                     $pastorFotoUrl = $rawPastorFoto;
-                } elseif (file_exists(public_path($rawPastorFoto))) {
-                    $pastorFotoUrl = asset($rawPastorFoto);
-                } elseif (file_exists(public_path('assets/' . $rawPastorFoto))) {
-                    $pastorFotoUrl = asset('assets/' . $rawPastorFoto);
-                } elseif (file_exists(public_path('assets/uploads/' . $rawPastorFoto))) {
-                    $pastorFotoUrl = asset('assets/uploads/' . $rawPastorFoto);
-                } elseif (file_exists(public_path('uploads/' . $rawPastorFoto))) {
-                    $pastorFotoUrl = asset('uploads/' . $rawPastorFoto);
-                } elseif (file_exists(public_path('storage/' . $rawPastorFoto))) {
-                    $pastorFotoUrl = asset('storage/' . $rawPastorFoto);
+                } elseif (file_exists(public_path($cleanPath))) {
+                    $pastorFotoUrl = asset($cleanPath) . '?v=' . filemtime(public_path($cleanPath));
+                } elseif (file_exists(public_path('assets/' . $cleanPath))) {
+                    $pastorFotoUrl = asset('assets/' . $cleanPath) . '?v=' . filemtime(public_path('assets/' . $cleanPath));
+                } elseif (file_exists(public_path('assets/uploads/' . $cleanPath))) {
+                    $pastorFotoUrl = asset('assets/uploads/' . $cleanPath);
+                } elseif (file_exists(public_path('uploads/' . $cleanPath))) {
+                    $pastorFotoUrl = asset('uploads/' . $cleanPath);
+                } elseif (file_exists(public_path('storage/' . $cleanPath))) {
+                    $pastorFotoUrl = asset('storage/' . $cleanPath);
                 } else {
-                    $pastorFotoUrl = asset($rawPastorFoto);
+                    $pastorFotoUrl = asset($cleanPath);
                 }
             }
 

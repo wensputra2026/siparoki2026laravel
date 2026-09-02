@@ -52,6 +52,10 @@ class HandleInertiaRequests extends Middleware
 
                 if (Schema::hasTable('pengaturan_aplikasi')) {
                     $pengaturan = DB::table('pengaturan_aplikasi')->first();
+                    if ($pengaturan && !empty($pengaturan->paroki_id)) {
+                        $paroki = \App\Models\Paroki::where('id_paroki', $pengaturan->paroki_id)->first();
+                        if ($paroki) return $paroki;
+                    }
                     if ($pengaturan && !empty($pengaturan->nama_paroki)) {
                         $paroki = \App\Models\Paroki::where('nama_paroki', $pengaturan->nama_paroki)
                             ->orWhere('nama_paroki', 'like', '%' . $pengaturan->nama_paroki . '%')
@@ -198,6 +202,8 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error'   => fn () => $request->session()->get('error'),
+                'warning' => fn () => $request->session()->get('warning'),
+                'info'    => fn () => $request->session()->get('info'),
                 'status'  => fn () => $request->session()->get('status'),
             ],
             'app' => [

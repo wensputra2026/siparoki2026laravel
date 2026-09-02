@@ -1,0 +1,122 @@
+[
+    {
+        "id": 1,
+        "kode": "GMIT",
+        "nama_gereja": "Gereja Masehi Injili di Timor",
+        "singkatan": "GMIT",
+        "keterangan": null,
+        "status": 1,
+        "urutan": 1,
+        "deleted_at": null,
+        "created_at": "2026-07-03 10:58:26",
+        "updated_at": "2026-07-03 10:58:26"
+    },
+    {
+        "id": 2,
+        "kode": "GKI",
+        "nama_gereja": "Gereja Kristen Indonesia",
+        "singkatan": "GKI",
+        "keterangan": null,
+        "status": 1,
+        "urutan": 2,
+        "deleted_at": null,
+        "created_at": "2026-07-03 10:58:26",
+        "updated_at": "2026-07-03 10:58:26"
+    },
+    {
+        "id": 3,
+        "kode": "GPM",
+        "nama_gereja": "Gereja Protestan Maluku",
+        "singkatan": "GPM",
+        "keterangan": null,
+        "status": 1,
+        "urutan": 3,
+        "deleted_at": null,
+        "created_at": "2026-07-03 10:58:26",
+        "updated_at": "2026-07-03 10:58:26"
+    },
+    {
+        "id": 4,
+        "kode": "HKBP",
+        "nama_gereja": "Huria Kristen Batak Protestan",
+        "singkatan": "HKBP",
+        "keterangan": null,
+        "status": 1,
+        "urutan": 4,
+        "deleted_at": null,
+        "created_at": "2026-07-03 10:58:26",
+        "updated_at": "2026-07-03 10:58:26"
+    },
+    {
+        "id": 5,
+        "kode": "BNKP",
+        "nama_gereja": "Banua Niha Keriso Protestan",
+        "singkatan": "BNKP",
+        "keterangan": null,
+        "status": 1,
+        "urutan": 5,
+        "deleted_at": null,
+        "created_at": "2026-07-03 10:58:26",
+        "updated_at": "2026-07-03 10:58:26"
+    },
+    {
+        "id": 6,
+        "kode": "GPIB",
+        "nama_gereja": "Gereja Protestan di Indonesia bagian Barat",
+        "singkatan": "GPIB",
+        "keterangan": null,
+        "status": 1,
+        "urutan": 6,
+        "deleted_at": null,
+        "created_at": "2026-07-03 10:58:26",
+        "updated_at": "2026-07-03 10:58:26"
+    },
+    {
+        "id": 7,
+        "kode": "GKS",
+        "nama_gereja": "Gereja Kristen Sumba",
+        "singkatan": "GKS",
+        "keterangan": null,
+        "status": 1,
+        "urutan": 7,
+        "deleted_at": null,
+        "created_at": "2026-07-03 10:58:26",
+        "updated_at": "2026-07-03 10:58:26"
+    },
+    {
+        "id": 8,
+        "kode": "GKE",
+        "nama_gereja": "Gereja Kalimantan Evangelis",
+        "singkatan": "GKE",
+        "keterangan": null,
+        "status": 1,
+        "urutan": 8,
+        "deleted_at": null,
+        "created_at": "2026-07-03 10:58:26",
+        "updated_at": "2026-07-03 10:58:26"
+    },
+    {
+        "id": 9,
+        "kode": "HKI",
+        "nama_gereja": "Huria Kristen Indonesia",
+        "singkatan": "HKI",
+        "keterangan": null,
+        "status": 1,
+        "urutan": 9,
+        "deleted_at": null,
+        "created_at": "2026-07-03 10:58:26",
+        "updated_at": "2026-07-03 10:58:26"
+    },
+    {
+        "id": 10,
+        "kode": "LAINNYA",
+        "nama_gereja": "Gereja Protestan Lainnya",
+        "singkatan": "",
+        "keterangan": null,
+        "status": 1,
+        "urutan": 99,
+        "deleted_at": null,
+        "created_at": "2026-07-03 10:58:26",
+        "updated_at": "2026-07-03 10:58:26"
+    }
+]

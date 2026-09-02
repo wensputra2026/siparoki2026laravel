@@ -58,7 +58,7 @@ class MasterReferensiController extends Controller
     ];
 
     private const LONG_TEXT = [
-        'keterangan', 'alamat', 'deskripsi', 'maps_embed', 'logo', 'foto', 'delete_reason',
+        'keterangan', 'alamat', 'deskripsi', 'maps_embed', 'delete_reason', 'biografi_singkat', 'catatan_pelayanan', 'riwayat_tambahan',
     ];
 
     private function typeConfig(string $slug): ?array
@@ -247,6 +247,12 @@ class MasterReferensiController extends Controller
             if ($slug === 'pastor' || $slug === 'master_pastor') {
                 $arr['nama_pastor'] = \App\Models\MasterPastor::formatNama((object) $arr);
             }
+            if (!empty($arr['foto'])) {
+                $rawFoto = $arr['foto'];
+                if (!str_starts_with($rawFoto, 'http://') && !str_starts_with($rawFoto, 'https://') && !str_starts_with($rawFoto, '/')) {
+                    $arr['foto'] = '/' . $rawFoto;
+                }
+            }
             $arr['_pk'] = $arr[$pk];
             return $arr;
         });
@@ -277,7 +283,10 @@ class MasterReferensiController extends Controller
         if (in_array('updated_at', $cols, true) && !isset($data['updated_at'])) {
             $data['updated_at'] = now();
         }
-        DB::table($table)->insert($data);
+        $insertedId = DB::table($table)->insertGetId($data);
+        if ($slug === 'pastor' || $slug === 'master_pastor') {
+            $this->syncActivePastorPhoto((int) $insertedId, $data['foto'] ?? null);
+        }
         $this->clearFastAccessCache();
 
         return redirect()->back()->with('success', 'Data ' . $cfg['label'] . ' berhasil ditambahkan.');
@@ -297,6 +306,9 @@ class MasterReferensiController extends Controller
         }
 
         DB::table($table)->where($pk, $id)->update($data);
+        if ($slug === 'pastor' || $slug === 'master_pastor') {
+            $this->syncActivePastorPhoto((int) $id, $data['foto'] ?? null);
+        }
         $this->clearFastAccessCache();
 
         return redirect()->back()->with('success', 'Data ' . $cfg['label'] . ' berhasil diperbarui.');
@@ -615,11 +627,14 @@ class MasterReferensiController extends Controller
     private function buildTableColumns(string $table, array $columns): array
     {
         $out = [];
+        if (in_array('foto', $columns, true) && ($table === 'master_pastor' || $table === 'master_uskup')) {
+            $out[] = ['name' => 'foto', 'label' => 'Foto'];
+        }
         foreach ($columns as $col) {
             if (in_array($col, self::META_COLUMNS, true)) {
                 continue;
             }
-            if ($col === 'id' || $col === 'status') {
+            if ($col === 'id' || $col === 'status' || $col === 'foto') {
                 continue;
             }
             // Skip redundant text column when relational FK exists or when already combined in nama_pastor
@@ -646,6 +661,38 @@ class MasterReferensiController extends Controller
             $out[] = ['name' => $col, 'label' => $this->label($col)];
         }
         return $out;
+    }
+
+    private function syncActivePastorPhoto(int $pastorId, ?string $photoPath = null): void
+    {
+        if (empty($photoPath) && \Illuminate\Support\Facades\Schema::hasTable('master_pastor')) {
+            $photoPath = DB::table('master_pastor')->where('id', $pastorId)->value('foto');
+        }
+        if (empty($photoPath)) return;
+
+        $pastor = DB::table('master_pastor')->where('id', $pastorId)->first();
+        if (!$pastor) return;
+
+        $isPastorParoki = str_contains(strtolower($pastor->jabatan ?? ''), 'pastor paroki') || str_contains(strtolower((string)($pastor->status ?? '')), 'aktif') || (string)$pastor->status === '1';
+
+        if ($isPastorParoki) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('profil_paroki')) {
+                DB::table('profil_paroki')->update(['foto_pastor' => $photoPath]);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('paroki') && !empty($pastor->paroki_id)) {
+                DB::table('paroki')->where('id_paroki', $pastor->paroki_id)->update(['foto_pastor' => $photoPath]);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_pastor_paroki')) {
+                DB::table('riwayat_pastor_paroki')
+                    ->where(function($q) use ($pastor) {
+                        $q->where('pastor_id', $pastor->id)
+                          ->orWhere('nama_pastor', 'like', '%' . $pastor->nama_pastor . '%')
+                          ->orWhere('status', 'like', '%aktif%')
+                          ->orWhere('periode_selesai', 'Sekarang');
+                    })
+                    ->update(['foto' => $photoPath]);
+            }
+        }
     }
 
     private function optionsFor(string $relTable): array

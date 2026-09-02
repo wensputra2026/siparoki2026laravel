@@ -34,6 +34,7 @@ const {
     showToast,
     toastMessage,
     toastType,
+    toastIsPersistent,
     showLogoutModal,
     confirmLogout,
     page,
@@ -52,6 +53,7 @@ const {
             :show="showToast"
             :message="toastMessage"
             :type="toastType"
+            :persistent="toastIsPersistent"
             @close="showToast = false"
         />
 

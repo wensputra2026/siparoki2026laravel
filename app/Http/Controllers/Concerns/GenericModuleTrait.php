@@ -799,6 +799,9 @@ trait GenericModuleTrait
         if ($slug === 'iuran') {
             $data = $this->normalizeIuranPayload($data);
         }
+        if ($slug === 'arsip-digital' || $slug === 'arsip_digital') {
+            $data = $this->normalizeArsipDigitalPayload($data, $request);
+        }
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
         }
@@ -1125,6 +1128,9 @@ trait GenericModuleTrait
         }
         if ($slug === 'iuran') {
             $data = $this->normalizeIuranPayload($data);
+        }
+        if ($slug === 'arsip-digital' || $slug === 'arsip_digital') {
+            $data = $this->normalizeArsipDigitalPayload($data, $request, $item);
         }
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
@@ -1731,13 +1737,14 @@ trait GenericModuleTrait
             $items = collect($allowedItems);
         }
 
-        // Integrity check for KK & Umat bulk delete
-        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat'], true)) {
+        $protectedItems = [];
+        // Integrity check for KK, Umat, KUB, Lingkungan, Wilayah, Kapela bulk delete
+        if (in_array($slug, ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'kub', 'lingkungan', 'wilayah', 'kapela', 'pastor', 'master_pastor', 'master-pastor'], true)) {
             $allowedItems = [];
             foreach ($items as $it) {
                 $r = $this->getDeleteRestrictionMessage($slug, $it);
                 if ($r !== null) {
-                    $protectedCats[] = $r;
+                    $protectedItems[] = $r;
                 } else {
                     $allowedItems[] = $it;
                 }
@@ -1754,12 +1761,25 @@ trait GenericModuleTrait
 
         $this->clearFastAccessCache();
 
-        if (!empty($protectedCats)) {
-            $names = implode(', ', $protectedCats);
-            return back()->with('success', "Sebanyak {$deletedCount} kategori berhasil dihapus. Kategori {$names} dilewati karena masih memiliki konten aktif.");
+        $itemTitle = $config['title'] ?? $slug;
+
+        if (!empty($protectedItems)) {
+            $details = implode(' ', $protectedItems);
+            if ($deletedCount === 0) {
+                return back()->with('warning', "Sebanyak 0 data {$itemTitle} dihapus. Data tidak dapat dihapus karena masih terhubung dengan data turunan aktif: {$details}");
+            }
+            return back()->with('warning', "Sebanyak {$deletedCount} data {$itemTitle} berhasil dihapus. Beberapa data dilewati karena masih memiliki relasi data turunan aktif: {$details}");
         }
 
-        return back()->with('success', "Sebanyak {$deletedCount} data " . ($config['title'] ?? $slug) . ' berhasil dihapus.');
+        if (!empty($protectedCats)) {
+            $names = implode(', ', $protectedCats);
+            if ($deletedCount === 0) {
+                return back()->with('warning', "Penghapusan kategori dibatalkan. Kategori {$names} dilewati karena masih memiliki konten aktif.");
+            }
+            return back()->with('warning', "Sebanyak {$deletedCount} kategori berhasil dihapus. Kategori {$names} dilewati karena masih memiliki konten aktif.");
+        }
+
+        return back()->with('success', "Sebanyak {$deletedCount} data {$itemTitle} berhasil dihapus.");
     }
 
 
@@ -2501,6 +2521,20 @@ trait GenericModuleTrait
             'Penghasilan' => 'Rp 1.000.000 - Rp 3.000.000',
             'Status KK' => 'Aktif',
             'Status Verifikasi' => 'Terverifikasi',
+            'Nama Lengkap & Baptis' => 'Petrus Kanisius Tefa',
+            'Nama Lengkap' => 'Petrus Kanisius Tefa',
+            'Nama Baptis' => 'Petrus Kanisius',
+            'NIK' => '5302011204820002',
+            'No KK' => 'KK-BENLUTU-001-2026',
+            'L/P' => 'L',
+            'Jenis Kelamin' => 'Laki-Laki',
+            'Tempat Lahir' => 'Benlutu',
+            'Tanggal Lahir' => '1982-04-12',
+            'Kedudukan' => 'Kepala Keluarga',
+            'Hubungan Keluarga' => 'Kepala Keluarga',
+            'Status Perkawinan' => 'Menikah Katolik',
+            'Status Menikah' => 'Menikah Katolik',
+            'Status Umat' => 'Aktif',
         ];
 
         for ($i = 1; $i <= 2; $i++) {
@@ -2941,19 +2975,34 @@ trait GenericModuleTrait
             'no_kk_sipil' => ['no_kk_dukcapil'],
             'no_kk_dukcapil' => ['no_kk_dukcapil'],
             'nomor_kk_dukcapil' => ['no_kk_dukcapil'],
-            'nik' => ['nik_pemilik'],
-            'nik_kepala_keluarga' => ['nik_pemilik'],
-            'nik_pemilik' => ['nik_pemilik'],
-            'kepala_keluarga' => ['nama_lahir_pemilik', 'nama_baptis_pemilik'],
-            'nama_lengkap_kepala_keluarga' => ['nama_lahir_pemilik', 'nama_baptis_pemilik'],
-            'nama_kepala_keluarga' => ['nama_lahir_pemilik', 'nama_baptis_pemilik'],
-            'nama_baptis_kepala_keluarga' => ['nama_baptis_pemilik'],
-            'nama_lahir_kepala_keluarga' => ['nama_lahir_pemilik'],
-            'nama_baptis_pemilik' => ['nama_baptis_pemilik'],
-            'nama_lahir_pemilik' => ['nama_lahir_pemilik'],
+            'nik' => ['nik', 'nik_pemilik'],
+            'nik_kepala_keluarga' => ['nik_pemilik', 'nik'],
+            'nik_pemilik' => ['nik_pemilik', 'nik'],
+            'nama_lengkap_baptis' => ['nama_lengkap', 'nama_baptis_pemilik'],
+            'nama_lengkap_dan_baptis' => ['nama_lengkap', 'nama_baptis_pemilik'],
+            'nama_lengkap' => ['nama_lengkap', 'nama_lahir_pemilik', 'nama_pastor', 'nama'],
+            'nama_baptis' => ['nama_baptis', 'nama_baptis_pemilik'],
+            'nama_lahir' => ['nama_lahir', 'nama_lahir_pemilik'],
+            'l_p' => ['jenis_kelamin'],
+            'jenis_kelamin' => ['jenis_kelamin'],
+            'tempat_lahir' => ['tempat_lahir'],
+            'tanggal_lahir' => ['tanggal_lahir'],
+            'kedudukan' => ['hubungan_keluarga'],
+            'hubungan_keluarga' => ['hubungan_keluarga'],
+            'status_perkawinan' => ['status_menikah', 'status_perkawinan'],
+            'status_pernikahan' => ['status_menikah', 'status_perkawinan'],
+            'status_menikah' => ['status_menikah', 'status_perkawinan'],
+            'status_umat' => ['status_umat', 'status_aktif', 'status'],
+            'kepala_keluarga' => ['nama_lahir_pemilik', 'nama_baptis_pemilik', 'nama_lengkap'],
+            'nama_lengkap_kepala_keluarga' => ['nama_lahir_pemilik', 'nama_baptis_pemilik', 'nama_lengkap'],
+            'nama_kepala_keluarga' => ['nama_lahir_pemilik', 'nama_baptis_pemilik', 'nama_lengkap'],
+            'nama_baptis_kepala_keluarga' => ['nama_baptis_pemilik', 'nama_baptis'],
+            'nama_lahir_kepala_keluarga' => ['nama_lahir_pemilik', 'nama_lahir'],
+            'nama_baptis_pemilik' => ['nama_baptis_pemilik', 'nama_baptis'],
+            'nama_lahir_pemilik' => ['nama_lahir_pemilik', 'nama_lahir'],
             'nama_pasangan' => ['nama_pasangan'],
-            'alamat_domisili' => ['alamat_sekarang'],
-            'alamat_sekarang' => ['alamat_sekarang'],
+            'alamat_domisili' => ['alamat_sekarang', 'alamat'],
+            'alamat_sekarang' => ['alamat_sekarang', 'alamat'],
             'rt' => ['rt'],
             'rw' => ['rw'],
             'hp' => ['handphone'],
@@ -3328,6 +3377,41 @@ trait GenericModuleTrait
         if (empty($data['paroki_id']) && Schema::hasColumn('direktori_misdinar', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
         }
+        return $data;
+    }
+
+    protected function normalizeArsipDigitalPayload(array $data, Request $request, $existingItem = null): array
+    {
+        if (isset($data['nama_dokumen']) && !isset($data['judul'])) {
+            $data['judul'] = $data['nama_dokumen'];
+        }
+        if (isset($data['kategori']) && !isset($data['kategori_arsip'])) {
+            $data['kategori_arsip'] = $data['kategori'];
+        }
+        if (isset($data['tgl_arsip']) && !isset($data['tanggal_arsip'])) {
+            $data['tanggal_arsip'] = $data['tgl_arsip'];
+        }
+
+        // Handle file upload for arsip
+        if ($request->hasFile('file_path') || $request->hasFile('file') || $request->hasFile('lampiran') || $request->hasFile('dokumen')) {
+            $file = $request->file('file_path') ?: ($request->file('file') ?: ($request->file('lampiran') ?: $request->file('dokumen')));
+            $destination = public_path('assets/uploads/arsip');
+            if (!file_exists($destination)) {
+                mkdir($destination, 0755, true);
+            }
+            $ext = $file->getClientOriginalExtension() ?: 'pdf';
+            $safeFilename = 'arsip_' . time() . '_' . Str::random(8) . '.' . $ext;
+            $file->move($destination, $safeFilename);
+
+            $data['file_path'] = 'assets/uploads/arsip/' . $safeFilename;
+            $data['file_type'] = strtolower($ext);
+            $data['file_size'] = @filesize($destination . '/' . $safeFilename) ?: $file->getSize();
+        }
+
+        if (!isset($data['paroki_id']) || empty($data['paroki_id'])) {
+            $data['paroki_id'] = $this->defaultParokiIdFromProfile();
+        }
+
         return $data;
     }
 
