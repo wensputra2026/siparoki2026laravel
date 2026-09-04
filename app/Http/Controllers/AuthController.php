@@ -177,6 +177,7 @@ class AuthController extends Controller
             'error_message' => $kickedMsg ?: session('error'),
             'showCaptcha' => $showCaptcha,
             'captchaQuestion' => $captchaQuestion,
+            'errors' => session('errors') ?? new \Illuminate\Support\ViewErrorBag(),
         ]);
     }
 

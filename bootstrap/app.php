@@ -3,6 +3,13 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+// Auto-clear stale bootstrap cache files on shared hosting / FTP deploys
+foreach (['routes-v7.php', 'config.php'] as $cacheFile) {
+    $targetPath = __DIR__ . '/cache/' . $cacheFile;
+    if (file_exists($targetPath)) {
+        @unlink($targetPath);
+    }
+}
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(

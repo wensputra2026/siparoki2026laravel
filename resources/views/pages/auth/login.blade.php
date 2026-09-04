@@ -98,7 +98,7 @@
                 </div>
             @endif
 
-            @if ($errors->any())
+            @if (isset($errors) && $errors->any())
                 <div class="mb-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-xs text-red-600 dark:text-red-400 space-y-1">
                     @foreach ($errors->all() as $error)
                         <p>{{ $error }}</p>
@@ -230,7 +230,7 @@
                         btnRefreshCaptcha.addEventListener('click', function(e) {
                             e.preventDefault();
                             if (iconRefreshCaptcha) iconRefreshCaptcha.classList.add('fa-spin');
-                            fetch('{{ route('captcha.refresh') }}')
+                            fetch('/captcha/refresh')
                                 .then(res => res.json())
                                 .then(data => {
                                     if (data && data.question) {
