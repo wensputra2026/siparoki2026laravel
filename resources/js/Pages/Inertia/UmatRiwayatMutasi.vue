@@ -28,10 +28,10 @@ const formatDate = (d) => {
 </script>
 
 <template>
-  <AppLayout :title="`Riwayat Mutasi – ${umatItem.nama_lengkap}`">
+  <AppLayout :title="`Riwayat Mutasi – ${umatItem.nama_lengkap}`" :fullWidth="true">
     <Head :title="`Riwayat Mutasi: ${umatItem.nama_lengkap} - SIPAROKI`" />
 
-    <div class="max-w-5xl mx-auto py-4 sm:py-6 px-4 space-y-5">
+    <div class="w-full space-y-4 pb-6">
       <!-- Breadcrumb & Back -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link

@@ -68,9 +68,9 @@ const submit = () => {
 </script>
 
 <template>
-<AppLayout :title="'Tambah Riwayat Mutasi Umat'">
+<AppLayout :title="'Tambah Riwayat Mutasi Umat'" :fullWidth="true">
   <Head :title="'Tambah Riwayat Mutasi Umat & KUB'" />
-  <div class="max-w-3xl mx-auto py-6 px-4">
+  <div class="w-full space-y-4 pb-6">
     <div class="bg-white rounded-xl shadow p-6">
       <h1 class="text-lg font-bold text-slate-800">Form Tambah Riwayat Mutasi Umat &amp; KUB</h1>
       <p class="text-sm text-slate-500 mb-4">{{ namaParoki }} — pilihan umat, KUB, dan wilayah diambil dari database.</p>

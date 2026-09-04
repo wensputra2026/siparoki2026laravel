@@ -23,7 +23,23 @@ class MutasiUmatController extends Controller
 
     protected function currentParoki(): ?Paroki
     {
-        return Paroki::orderBy('id_paroki')->first();
+        $profileParokiId = \Illuminate\Support\Facades\Schema::hasTable('profil_paroki')
+            ? DB::table('profil_paroki')->whereNotNull('paroki_id')->value('paroki_id')
+            : null;
+
+        if ($profileParokiId) {
+            $p = Paroki::find($profileParokiId);
+            if ($p) return $p;
+        }
+
+        $sessionParokiId = session()->get('default_paroki_id');
+        if ($sessionParokiId) {
+            $p = Paroki::find($sessionParokiId);
+            if ($p) return $p;
+        }
+
+        return Paroki::where('nama_paroki', 'like', '%Benlutu%')->first()
+            ?? Paroki::orderBy('id_paroki')->first();
     }
 
     /**
