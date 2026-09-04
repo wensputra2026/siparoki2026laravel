@@ -84,6 +84,13 @@ Route::get('/masuk', [\App\Http\Controllers\AuthController::class, 'showLogin'])
 Route::get('/admin/login', fn () => redirect('/login'))->name('admin.login');
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'processLogin'])->name('login.process')->middleware('throttle:10,1');
 Route::get('/captcha/refresh', [\App\Http\Controllers\AuthController::class, 'refreshCaptcha'])->name('captcha.refresh');
+Route::get('/clear-cache', function () {
+    \Illuminate\Support\Facades\Artisan::call('view:clear');
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    return response('Cache cleared successfully!');
+});
 
 Route::get('/register', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('register');
 Route::get('/daftar', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('daftar');
