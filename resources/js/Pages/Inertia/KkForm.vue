@@ -7,7 +7,10 @@ import { triggerToast } from '@/composables/useRoleMenu';
 
 const page = usePage();
 const isKubRole = computed(() => {
-    return props.prefix === 'kub' || String(props.role).toLowerCase().includes('kub');
+    return props.prefix === 'kub'
+        || String(props.role || '').toLowerCase().includes('kub')
+        || String(page.props.auth?.user?.role || '').toLowerCase().includes('kub')
+        || String(page.props.auth?.user?.role_slug || '').toLowerCase().includes('kub');
 });
 
 const props = defineProps({
@@ -21,6 +24,12 @@ const props = defineProps({
     nextKkNumber: { type: String, default: '001' },
     namaParoki: { type: String, default: 'Paroki St. Vinsensius a Paulo Benlutu' },
     namaKeuskupan: { type: String, default: 'Keuskupan Agung Kupang' },
+    userKubId: { type: [Number, String], default: null },
+    userWilayahId: { type: [Number, String], default: null },
+    userKapelaId: { type: [Number, String], default: null },
+    defaultKubId: { type: [Number, String], default: null },
+    defaultWilayahId: { type: [Number, String], default: null },
+    defaultKapelaId: { type: [Number, String], default: null },
     wilayahList: { type: Array, default: () => [] },
     lingkunganList: { type: Array, default: () => [] },
     kubList: { type: Array, default: () => [] },
@@ -209,6 +218,37 @@ const initialKabupatenId = props.civilRegion?.kabupaten_id || props.kkItem?.kabu
 const initialKecamatanId = props.civilRegion?.kecamatan_id || props.kkItem?.kecamatan_id || initialKecamatan?.id_kecamatan || '';
 const initialDesaId = props.civilRegion?.desa_id || props.kkItem?.desa_id || initialDesa?.id_desa || '';
 
+const userKubId = computed(() => {
+    return props.userKubId || props.defaultKubId || page.props.auth?.user?.kub_id || null;
+});
+
+const userWilayahId = computed(() => {
+    return props.userWilayahId || props.defaultWilayahId || page.props.auth?.user?.wilayah_id || null;
+});
+
+const userKapelaId = computed(() => {
+    return props.userKapelaId || props.defaultKapelaId || page.props.auth?.user?.kapela_id || null;
+});
+
+// Resolve initial KUB ID
+const resolvedInitialKubId = props.kkItem?.kub_id
+    || (isKubRole.value ? userKubId.value : '')
+    || '';
+
+// Find initial KUB object immediately from props.kubList
+const initialKubObj = (props.kubList || []).find(k => String(k.id) === String(resolvedInitialKubId)) || null;
+
+// Determine initial wilayah and kapela: mutually exclusive based on KUB assignment
+const resolvedInitialWilayahId = props.kkItem?.wilayah_id
+    || (initialKubObj ? (initialKubObj.kapela_id ? '' : (initialKubObj.wilayah_id || '')) : '')
+    || (isKubRole.value ? (userKapelaId.value ? '' : (userWilayahId.value || '')) : '')
+    || '';
+
+const resolvedInitialKapelaId = props.kkItem?.kapela_id
+    || (initialKubObj ? (initialKubObj.wilayah_id ? '' : (initialKubObj.kapela_id || '')) : '')
+    || (isKubRole.value ? (userWilayahId.value ? '' : (userKapelaId.value || '')) : '')
+    || '';
+
 const form = useForm({
     no_kk_kw: props.kkItem?.no_kk_kw || props.defaultNoKk || '',
     no_kk_dukcapil: props.kkItem?.no_kk_dukcapil || '',
@@ -216,10 +256,10 @@ const form = useForm({
     nama_baptis_pemilik: props.kkItem?.nama_baptis_pemilik || '',
     nama_lahir_pemilik: props.kkItem?.nama_lahir_pemilik || '',
     nama_pasangan: props.kkItem?.nama_pasangan || '',
-    wilayah_id: props.kkItem?.wilayah_id || '',
+    wilayah_id: resolvedInitialWilayahId,
     lingkungan_id: props.kkItem?.lingkungan_id || '',
-    kub_id: props.kkItem?.kub_id || '',
-    kapela_id: props.kkItem?.kapela_id || '',
+    kub_id: resolvedInitialKubId,
+    kapela_id: resolvedInitialKapelaId,
     paroki_id: props.kkItem?.paroki_id || '',
     gereja_paroki: props.kkItem?.gereja_paroki || 'Paroki St. Vinsensius a Paulo Benlutu',
     lokasi_gereja: props.kkItem?.lokasi_gereja || '',
@@ -245,16 +285,76 @@ const form = useForm({
     penghasilan: props.kkItem?.penghasilan || '',
     status_kk: props.kkItem?.status_kk || 'Aktif',
     status_verifikasi: props.kkItem?.status_verifikasi || 'Terverifikasi',
-    anggota: Array.isArray(props.kkItem?.anggota) ? props.kkItem.anggota.map(a => ({ ...a })) : [],
+    anggota: Array.isArray(props.kkItem?.anggota)
+        ? props.kkItem.anggota.map(a => ({
+            ...a,
+            tanggal_lahir: a.tanggal_lahir ? (typeof a.tanggal_lahir === 'string' && a.tanggal_lahir.includes('T') ? a.tanggal_lahir.split('T')[0] : String(a.tanggal_lahir).substring(0, 10)) : '',
+            tgl_baptis: a.tgl_baptis ? (typeof a.tgl_baptis === 'string' && a.tgl_baptis.includes('T') ? a.tgl_baptis.split('T')[0] : String(a.tgl_baptis).substring(0, 10)) : '',
+            tgl_komuni_1: a.tgl_komuni_1 ? (typeof a.tgl_komuni_1 === 'string' && a.tgl_komuni_1.includes('T') ? a.tgl_komuni_1.split('T')[0] : String(a.tgl_komuni_1).substring(0, 10)) : '',
+            tgl_krisma: a.tgl_krisma ? (typeof a.tgl_krisma === 'string' && a.tgl_krisma.includes('T') ? a.tgl_krisma.split('T')[0] : String(a.tgl_krisma).substring(0, 10)) : '',
+            tgl_perkawinan: a.tgl_perkawinan ? (typeof a.tgl_perkawinan === 'string' && a.tgl_perkawinan.includes('T') ? a.tgl_perkawinan.split('T')[0] : String(a.tgl_perkawinan).substring(0, 10)) : '',
+            tgl_tahbisan_kaul: a.tgl_tahbisan_kaul ? (typeof a.tgl_tahbisan_kaul === 'string' && a.tgl_tahbisan_kaul.includes('T') ? a.tgl_tahbisan_kaul.split('T')[0] : String(a.tgl_tahbisan_kaul).substring(0, 10)) : '',
+        }))
+        : [],
 });
 
 const localDesaList = ref([...(props.desaList || [])]);
 let desaRequestSeq = 0;
 
-// Cascading KUB options based on Wilayah
+// Auto-sync pastoral hierarchy (Wilayah & Kapela) from KUB
+const syncPastoralHierarchyFromKub = (targetKubId) => {
+    if (!targetKubId) return;
+    const matched = (props.kubList || []).find(k => String(k.id) === String(targetKubId));
+    if (matched) {
+        form.kub_id = matched.id;
+        if (matched.kapela_id) {
+            form.kapela_id = matched.kapela_id;
+            form.wilayah_id = '';
+        } else if (matched.wilayah_id) {
+            form.wilayah_id = matched.wilayah_id;
+            form.kapela_id = '';
+        }
+    } else if (isKubRole.value) {
+        if (userKapelaId.value) {
+            form.kapela_id = userKapelaId.value;
+            form.wilayah_id = '';
+        } else if (userWilayahId.value) {
+            form.wilayah_id = userWilayahId.value;
+            form.kapela_id = '';
+        }
+    }
+};
+
+// Cascading KUB options based on Stasi/Kapela or Wilayah
 const filteredKubList = computed(() => {
-    if (!form.wilayah_id) return props.kubList;
-    return props.kubList.filter(k => String(k.wilayah_id) === String(form.wilayah_id));
+    if (isKubRole.value) return props.kubList;
+    if (form.kapela_id) {
+        return props.kubList.filter(k => String(k.kapela_id) === String(form.kapela_id));
+    }
+    if (form.wilayah_id) {
+        return props.kubList.filter(k => String(k.wilayah_id) === String(form.wilayah_id));
+    }
+    return props.kubList;
+});
+
+const kapelaPlaceholder = computed(() => {
+    if (isKubRole.value) {
+        return form.kapela_id ? '-- Terkunci KUB --' : 'Pusat Paroki (Wilayah Pusat)';
+    }
+    if (form.wilayah_id) {
+        return 'Pusat Paroki (Wilayah Dipilih)';
+    }
+    return '-- Pilih Stasi / Kapela --';
+});
+
+const wilayahPlaceholder = computed(() => {
+    if (isKubRole.value) {
+        return form.kapela_id ? '-- Stasi / Luar Pusat Paroki --' : '-- Terkunci KUB --';
+    }
+    if (form.kapela_id) {
+        return '-- Nonaktif (Stasi / Kapela Dipilih) --';
+    }
+    return '-- Pilih Wilayah Pastoral --';
 });
 
 const filteredKabupatenList = computed(() => {
@@ -326,32 +426,26 @@ const generateNoKkParoki = (force = false) => {
 };
 
 onMounted(() => {
-    if (isKubRole.value && !props.isEdit) {
-        const kubId = page.props.auth?.user?.kub_id;
-        const matchedKub = (props.kubList || []).find(k => String(k.id) === String(kubId)) || (props.kubList || [])[0];
-        if (matchedKub) {
-            form.kub_id = matchedKub.id;
-            if (matchedKub.wilayah_id) form.wilayah_id = matchedKub.wilayah_id;
-            if (matchedKub.kapela_id) form.kapela_id = matchedKub.kapela_id;
+    if (isKubRole.value) {
+        const targetId = userKubId.value || form.kub_id;
+        if (targetId) {
+            syncPastoralHierarchyFromKub(targetId);
         }
+    } else if (form.kub_id && (!form.wilayah_id && !form.kapela_id)) {
+        syncPastoralHierarchyFromKub(form.kub_id);
     }
+
     if (!props.isEdit && !form.no_kk_kw) {
         generateNoKkParoki(true);
     }
 });
 
-// Mutual exclusion: Memilih Stasi menonaktifkan Wilayah, dan sebaliknya
+// Mutual exclusion: Memilih Stasi menonaktifkan Wilayah, dan sebaliknya (hanya jika bukan role KUB)
 watch(() => form.kapela_id, (newVal) => {
-    if (newVal) {
+    if (newVal && !isKubRole.value) {
         form.wilayah_id = '';
     }
-});
-
-watch(() => form.wilayah_id, (newVal) => {
-    if (newVal) {
-        form.kapela_id = '';
-    }
-    if (newVal && form.kub_id) {
+    if (newVal && form.kub_id && !isKubRole.value) {
         const isValid = filteredKubList.value.some(k => String(k.id) === String(form.kub_id));
         if (!isValid) form.kub_id = '';
     }
@@ -360,7 +454,23 @@ watch(() => form.wilayah_id, (newVal) => {
     }
 });
 
-watch(() => form.kub_id, () => {
+watch(() => form.wilayah_id, (newVal) => {
+    if (newVal && !isKubRole.value) {
+        form.kapela_id = '';
+    }
+    if (newVal && form.kub_id && !isKubRole.value) {
+        const isValid = filteredKubList.value.some(k => String(k.id) === String(form.kub_id));
+        if (!isValid) form.kub_id = '';
+    }
+    if (!props.isEdit || !form.no_kk_kw) {
+        generateNoKkParoki(false);
+    }
+});
+
+watch(() => form.kub_id, (newKubId) => {
+    if (newKubId) {
+        syncPastoralHierarchyFromKub(newKubId);
+    }
     if (!props.isEdit || !form.no_kk_kw) {
         generateNoKkParoki(false);
     }
@@ -460,6 +570,13 @@ const removeAnggota = (index) => {
 };
 
 const submitForm = () => {
+    if (isKubRole.value) {
+        const targetKub = userKubId.value || form.kub_id;
+        if (targetKub) {
+            syncPastoralHierarchyFromKub(targetKub);
+        }
+    }
+
     if (!form.no_kk_kw) {
         activeTab.value = 'identitas';
         triggerToast('Nomor KK Paroki wajib diisi.', 'error');
@@ -474,6 +591,17 @@ const submitForm = () => {
         activeTab.value = 'domisili';
         triggerToast('Alamat domisili lengkap wajib diisi.', 'error');
         return;
+    }
+
+    // Clean member dates before sending
+    if (Array.isArray(form.anggota)) {
+        form.anggota.forEach(a => {
+            ['tanggal_lahir', 'tgl_baptis', 'tgl_komuni_1', 'tgl_krisma', 'tgl_perkawinan', 'tgl_tahbisan_kaul'].forEach(df => {
+                if (a[df] === '' || a[df] === 'null' || a[df] === 'undefined') {
+                    a[df] = null;
+                }
+            });
+        });
     }
 
     if (props.isEdit && props.kkItem?.id) {
@@ -598,16 +726,17 @@ const submitForm = () => {
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
                                 <span>Stasi / Kapela</span>
-                                <span v-if="isKubRole" class="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">Terkunci KUB</span>
-                                <span v-else-if="form.wilayah_id" class="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">Nonaktif</span>
+                                <span v-if="isKubRole" class="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">{{ form.kapela_id ? 'Terkunci KUB' : 'Pusat Paroki' }}</span>
+                                <span v-else-if="form.wilayah_id" class="text-[10px] text-blue-600 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">Pusat Paroki</span>
                             </label>
                             <SearchableSelect
                                 v-model="form.kapela_id"
                                 :options="kapelaList"
                                 :disabled="isKubRole || !!form.wilayah_id"
+                                :clearable="!isKubRole && !form.wilayah_id"
                                 valueKey="id"
                                 labelKey="nama_kapela"
-                                :placeholder="isKubRole ? (form.kapela_id ? '-- Terkunci KUB --' : 'Pusat Paroki') : (form.wilayah_id ? '-- Nonaktif (Wilayah Dipilih) --' : '-- Pilih Stasi / Kapela --')"
+                                :placeholder="kapelaPlaceholder"
                                 searchPlaceholder="Cari stasi / kapela..."
                                 icon="fa-solid fa-church"
                                 iconColor="text-blue-600"
@@ -618,16 +747,17 @@ const submitForm = () => {
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
                                 <span>Wilayah Pastoral</span>
-                                <span v-if="isKubRole" class="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">Terkunci KUB</span>
-                                <span v-else-if="form.kapela_id" class="text-[10px] text-blue-600 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">Nonaktif</span>
+                                <span v-if="isKubRole" class="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">{{ form.wilayah_id ? 'Terkunci KUB' : 'Nonaktif (Stasi)' }}</span>
+                                <span v-else-if="form.kapela_id" class="text-[10px] text-blue-600 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">Nonaktif (Stasi)</span>
                             </label>
                             <SearchableSelect
                                 v-model="form.wilayah_id"
                                 :options="wilayahList"
                                 :disabled="isKubRole || !!form.kapela_id"
+                                :clearable="!isKubRole && !form.kapela_id"
                                 valueKey="id"
                                 labelKey="nama_wilayah"
-                                :placeholder="isKubRole ? '-- Terkunci KUB --' : (form.kapela_id ? '-- Nonaktif (Stasi Dipilih) --' : '-- Pilih Wilayah Pastoral --')"
+                                :placeholder="wilayahPlaceholder"
                                 searchPlaceholder="Cari wilayah pastoral..."
                                 icon="fa-solid fa-map"
                                 iconColor="text-amber-600"
@@ -645,6 +775,7 @@ const submitForm = () => {
                                 v-model="form.kub_id"
                                 :options="filteredKubList"
                                 :disabled="isKubRole"
+                                :clearable="!isKubRole"
                                 valueKey="id"
                                 labelKey="nama_kub"
                                 placeholder="-- Pilih KUB / KBG --"

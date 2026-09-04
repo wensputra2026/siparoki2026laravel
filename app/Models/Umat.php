@@ -84,7 +84,12 @@ class Umat extends Model
     protected function casts(): array
     {
         return [
-            'tanggal_lahir' => 'date',
+            'tanggal_lahir' => 'date:Y-m-d',
+            'tgl_baptis' => 'date:Y-m-d',
+            'tgl_komuni_1' => 'date:Y-m-d',
+            'tgl_krisma' => 'date:Y-m-d',
+            'tgl_perkawinan' => 'date:Y-m-d',
+            'tgl_tahbisan_kaul' => 'date:Y-m-d',
             'status_aktif' => 'boolean',
             'is_deleted' => 'boolean',
         ];

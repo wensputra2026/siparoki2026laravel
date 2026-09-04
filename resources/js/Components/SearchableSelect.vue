@@ -250,7 +250,7 @@ onBeforeUnmount(() => {
             <div class="flex items-center gap-1 shrink-0">
                 <!-- Clear Button -->
                 <span
-                    v-if="clearable && selectedOption"
+                    v-if="clearable && !disabled && selectedOption"
                     @click="clearSelection"
                     class="text-slate-400 hover:text-rose-600 transition p-0.5 rounded-md hover:bg-slate-100 cursor-pointer"
                     title="Hapus pilihan"
