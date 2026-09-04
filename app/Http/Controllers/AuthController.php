@@ -157,13 +157,17 @@ class AuthController extends Controller
         $captchaData = $this->generateSimpleCaptcha();
         $captchaQuestion = $captchaData['question'];
 
-        return view('pages.auth.login', [
-            'status' => session('status'),
-            'error_message' => $kickedMsg ?: session('error'),
-            'showCaptcha' => $showCaptcha,
-            'captchaQuestion' => $captchaQuestion,
-            'errors' => session('errors') ?? new \Illuminate\Support\ViewErrorBag(),
-        ]);
+        return response()
+            ->view('pages.auth.login', [
+                'status' => session('status'),
+                'error_message' => $kickedMsg ?: session('error'),
+                'showCaptcha' => $showCaptcha,
+                'captchaQuestion' => $captchaQuestion,
+                'errors' => session('errors') ?? new \Illuminate\Support\ViewErrorBag(),
+            ])
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     /**
