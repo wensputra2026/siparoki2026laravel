@@ -8,12 +8,12 @@
     <!-- Favicon Resmi Profil Paroki -->
     @php
         $keuskupanLogoUrl = !empty($keuskupanLogo)
-            ? (\Illuminate\Support\Str::startsWith($keuskupanLogo, ['http://', 'https://']) ? $keuskupanLogo : asset($keuskupanLogo))
-            : asset('uploads/keuskupan/logo_keuskupan_kupang.svg');
+            ? (\Illuminate\Support\Str::startsWith($keuskupanLogo, ['http://', 'https://']) ? $keuskupanLogo : asset(ltrim($keuskupanLogo, '/')))
+            : asset('uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png');
 
         $parokiLogoUrl = !empty($parokiLogo)
-            ? (\Illuminate\Support\Str::startsWith($parokiLogo, ['http://', 'https://']) ? $parokiLogo : asset($parokiLogo))
-            : asset('assets/uploads/profil/logo_paroki_1787370466.jpeg');
+            ? (\Illuminate\Support\Str::startsWith($parokiLogo, ['http://', 'https://']) ? $parokiLogo : asset(ltrim($parokiLogo, '/')))
+            : asset('uploads/paroki/1787494152_6a8aff08b47a5.webp');
     @endphp
     <link rel="icon" type="image/jpeg" href="{{ $parokiLogoUrl }}">
     <link rel="shortcut icon" type="image/jpeg" href="{{ $parokiLogoUrl }}">

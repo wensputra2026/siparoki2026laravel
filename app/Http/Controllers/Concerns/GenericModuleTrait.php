@@ -2253,11 +2253,11 @@ trait GenericModuleTrait
             $defaultParokiId = $this->defaultParokiIdFromProfile();
             $paroki = Paroki::with('keuskupan')->find($defaultParokiId)
                 ?? Paroki::with('keuskupan')->first();
-            $keuskupan = $paroki?->keuskupan ?? \App\Models\Keuskupan::first();
+            $keuskupan = $paroki?->keuskupan ?? \App\Models\Keuskupan::find(5) ?? \App\Models\Keuskupan::first();
             $profilParoki = \App\Models\ProfilParoki::first();
 
-            $keuskupanLogo = $keuskupan?->logo ?: '/uploads/keuskupan/logo_keuskupan_kupang.svg';
-            $parokiLogo = $paroki?->logo ?: '/assets/uploads/profil/logo_paroki_1787370466.jpeg';
+            $keuskupanLogo = $keuskupan?->logo ?: '/uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png';
+            $parokiLogo = $paroki?->logo ?: ($profilParoki?->logo ?: '/uploads/paroki/1787494152_6a8aff08b47a5.webp');
 
             $summaryLabel = in_array($slug, ['umat', 'data-umat'], true) ? 'Total Jiwa / Umat' : (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true) ? 'Total Kepala Keluarga' : 'Total Data');
 

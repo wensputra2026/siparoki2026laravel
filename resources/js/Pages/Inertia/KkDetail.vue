@@ -43,6 +43,38 @@ const calculateAge = (d) => {
     }
 };
 const isReadOnlyRole = computed(() => false);
+
+const formatLogoUrl = (url, fallback) => {
+    if (!url) return fallback;
+    if (typeof url === 'string') {
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        const clean = url.replace(/^\/+/, '');
+        return `/${clean}`;
+    }
+    return fallback;
+};
+
+const keuskupanLogoUrl = computed(() => {
+    const raw = props.keuskupan?.logo || props.keuskupan?.logo_url;
+    return formatLogoUrl(raw, '/uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png');
+});
+
+const parokiLogoUrl = computed(() => {
+    const raw = props.paroki?.logo || props.paroki?.logo_url;
+    return formatLogoUrl(raw, '/uploads/paroki/1787494152_6a8aff08b47a5.webp');
+});
+
+const keuskupanNama = computed(() => {
+    return props.keuskupan?.nama_keuskupan || 'KEUSKUPAN AGUNG KUPANG';
+});
+
+const parokiNama = computed(() => {
+    return props.paroki?.nama_paroki || 'PAROKI ST. VINSENSIUS A PAULO BENLUTU';
+});
+
+const parokiAlamat = computed(() => {
+    return props.paroki?.alamat || 'Jl. Timor Raya, Desa Benlutu, Kec. Batu Putih, Kab. Timor Tengah Selatan, NTT';
+});
 </script>
 
 <template>
@@ -118,19 +150,34 @@ const isReadOnlyRole = computed(() => false);
 
             <!-- Kartu Keluarga Document View -->
             <div class="rounded-2xl bg-white border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
-                <!-- Kop Resmi -->
+                <!-- Kop Resmi Gerejawi: Kiri Logo Keuskupan, Kanan Logo Paroki -->
                 <div class="border-b-2 border-slate-900 pb-4 text-center relative">
-                    <div class="flex items-center justify-between">
-                        <div class="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center p-1">
-                            <img src="/assets/uploads/profil/logo_paroki_1787370466.jpeg" alt="Logo Paroki" class="w-full h-full object-contain rounded-full">
+                    <div class="flex items-center justify-between gap-4">
+                        <!-- Logo Keuskupan (Sebelah Kiri) -->
+                        <div class="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
+                            <img
+                                :src="keuskupanLogoUrl"
+                                :alt="keuskupanNama"
+                                class="w-full h-full object-contain rounded-full"
+                                @error="(e) => { e.target.src = '/uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png'; }"
+                            >
                         </div>
-                        <div class="flex-1 px-4">
-                            <h3 class="text-xs font-black tracking-widest text-slate-700 uppercase">KEUSKUPAN AGUNG KUPANG</h3>
-                            <h2 class="text-lg font-black tracking-wider text-slate-900 uppercase mt-0.5">PAROKI ST. VINSENSIUS A PAULO BENLUTU</h2>
-                            <p class="text-[11px] text-slate-500 mt-0.5">Jl. Timor Raya, Desa Benlutu, Kec. Batu Putih, Kab. Timor Tengah Selatan, NTT</p>
+
+                        <!-- Teks Kop Surat Resmi (Tengah) -->
+                        <div class="flex-1 px-2 text-center">
+                            <h3 class="text-xs font-black tracking-widest text-slate-700 uppercase">{{ keuskupanNama }}</h3>
+                            <h2 class="text-lg font-black tracking-wider text-slate-900 uppercase mt-0.5">{{ parokiNama }}</h2>
+                            <p class="text-[11px] text-slate-500 mt-0.5">{{ parokiAlamat }}</p>
                         </div>
-                        <div class="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl text-slate-900">
-                            ✟
+
+                        <!-- Logo Paroki (Sebelah Kanan) -->
+                        <div class="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center p-1 overflow-hidden shrink-0 shadow-2xs">
+                            <img
+                                :src="parokiLogoUrl"
+                                :alt="parokiNama"
+                                class="w-full h-full object-contain rounded-full"
+                                @error="(e) => { e.target.src = '/uploads/paroki/1787494152_6a8aff08b47a5.webp'; }"
+                            >
                         </div>
                     </div>
                 </div>
