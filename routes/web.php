@@ -83,6 +83,7 @@ Route::get('/login', [\App\Http\Controllers\AuthController::class, 'showLogin'])
 Route::get('/masuk', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('masuk');
 Route::get('/admin/login', fn () => redirect('/login'))->name('admin.login');
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'processLogin'])->name('login.process')->middleware('throttle:10,1');
+Route::get('/captcha/refresh', [\App\Http\Controllers\AuthController::class, 'refreshCaptcha'])->name('captcha.refresh');
 
 Route::get('/register', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('register');
 Route::get('/daftar', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('daftar');

@@ -48,6 +48,91 @@ class AuthController extends Controller
     }
 
     /**
+     * Check if CAPTCHA is required for login.
+     */
+    protected function isCaptchaRequired(Request $request): bool
+    {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('security_settings')) {
+                return false;
+            }
+
+            $settings = DB::table('security_settings')
+                ->whereIn('setting_key', ['captcha_enabled', 'captcha_required_backend_login', 'captcha_show_after_failed_attempts', 'captcha_provider'])
+                ->pluck('setting_value', 'setting_key')
+                ->toArray();
+
+            $enabled = ($settings['captcha_enabled'] ?? '1') === '1';
+            if (!$enabled) {
+                return false;
+            }
+
+            $reqBackend = ($settings['captcha_required_backend_login'] ?? '1') === '1';
+            if (!$reqBackend) {
+                return false;
+            }
+
+            $threshold = (int) ($settings['captcha_show_after_failed_attempts'] ?? 0);
+            if ($threshold <= 0) {
+                return true; // Always required if threshold is 0
+            }
+
+            // Check session failed attempts or recent failed logs from this IP
+            $sessionFails = (int) session('login_failed_attempts', 0);
+            if ($sessionFails >= $threshold) {
+                return true;
+            }
+
+            $ip = $request->ip();
+            if (\Illuminate\Support\Facades\Schema::hasTable('security_logs')) {
+                $recentFails = DB::table('security_logs')
+                    ->where('ip_address', $ip)
+                    ->where('status', 'FAILED')
+                    ->where('created_at', '>=', now()->subMinutes(15))
+                    ->count();
+
+                if ($recentFails >= $threshold) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Generate simple math CAPTCHA challenge and store answer in session.
+     */
+    protected function generateSimpleCaptcha(): array
+    {
+        $n1 = rand(1, 10);
+        $n2 = rand(1, 9);
+        $question = "{$n1} + {$n2} = ?";
+        $answer = (string) ($n1 + $n2);
+
+        session(['simple_captcha_answer' => $answer]);
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+        ];
+    }
+
+    /**
+     * Endpoint to refresh CAPTCHA challenge via AJAX.
+     */
+    public function refreshCaptcha(Request $request)
+    {
+        $captcha = $this->generateSimpleCaptcha();
+        return response()->json([
+            'success' => true,
+            'question' => $captcha['question'],
+        ]);
+    }
+
+    /**
      * Show login page.
      */
     public function showLogin(Request $request)
@@ -80,9 +165,18 @@ class AuthController extends Controller
             $kickedMsg = 'Sesi Anda telah dihentikan otomatis karena Super Admin sedang mengaktifkan Mode Pemeliharaan Panel Petugas & Umat.';
         }
 
+        $showCaptcha = $this->isCaptchaRequired($request);
+        $captchaQuestion = null;
+        if ($showCaptcha) {
+            $captchaData = $this->generateSimpleCaptcha();
+            $captchaQuestion = $captchaData['question'];
+        }
+
         return view('pages.auth.login', [
             'status' => session('status'),
             'error_message' => $kickedMsg ?: session('error'),
+            'showCaptcha' => $showCaptcha,
+            'captchaQuestion' => $captchaQuestion,
         ]);
     }
 
@@ -120,6 +214,23 @@ class AuthController extends Controller
             'password.required' => 'Kata sandi wajib diisi.',
         ]);
 
+        // 2. Validate CAPTCHA if required
+        if ($this->isCaptchaRequired($request)) {
+            $captchaInput = trim((string) $request->input('captcha', ''));
+            $expectedAnswer = (string) session('simple_captcha_answer', '');
+
+            if ($captchaInput === '' || $captchaInput !== $expectedAnswer) {
+                $sessionFails = (int) session('login_failed_attempts', 0);
+                session(['login_failed_attempts' => $sessionFails + 1]);
+
+                $this->generateSimpleCaptcha();
+
+                return back()->withErrors([
+                    'captcha' => 'Hasil verifikasi keamanan (CAPTCHA) tidak sesuai. Silakan hitung kembali.',
+                ])->onlyInput('login');
+            }
+        }
+
         $login = $request->input('login');
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
         $remember = $request->boolean('remember');
@@ -127,6 +238,9 @@ class AuthController extends Controller
         if (Auth::attempt([$field => $login, 'password' => $request->password], $remember) ||
             ($field === 'email' && Auth::attempt(['username' => $login, 'password' => $request->password], $remember))) {
             $request->session()->regenerate();
+
+            // Clear CAPTCHA and fail tracking on successful login
+            session()->forget(['simple_captcha_answer', 'login_failed_attempts']);
 
             $user = Auth::user();
 
@@ -215,6 +329,10 @@ class AuthController extends Controller
                 }
             }
         } catch (\Throwable $e) {}
+
+        // Track session failed attempts for adaptive CAPTCHA
+        $sessionFails = (int) session('login_failed_attempts', 0);
+        session(['login_failed_attempts' => $sessionFails + 1]);
 
         return back()->withErrors([
             'login' => 'Email, Username, atau Kata Sandi yang Anda masukkan salah.',
