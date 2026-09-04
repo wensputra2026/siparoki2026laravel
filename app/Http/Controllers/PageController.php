@@ -268,8 +268,8 @@ class PageController extends Controller
                         ->where(function($q) {
                             $q->where('status', 'like', '%aktif%')
                               ->orWhere('status_pelayanan', 'like', '%aktif%')
-                              ->orWhere('periode_selesai', 'Sekarang')
-                              ->orWhere('tahun_selesai', 'Sekarang');
+                              ->orWhere('tahun_selesai', 'Sekarang')
+                              ->orWhereNull('periode_selesai');
                         })
                         ->whereNotNull('foto')
                         ->where('foto', '!=', '');

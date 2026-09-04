@@ -676,21 +676,37 @@ class MasterReferensiController extends Controller
         $isPastorParoki = str_contains(strtolower($pastor->jabatan ?? ''), 'pastor paroki') || str_contains(strtolower((string)($pastor->status ?? '')), 'aktif') || (string)$pastor->status === '1';
 
         if ($isPastorParoki) {
-            if (\Illuminate\Support\Facades\Schema::hasTable('profil_paroki')) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('profil_paroki') && \Illuminate\Support\Facades\Schema::hasColumn('profil_paroki', 'foto_pastor')) {
                 DB::table('profil_paroki')->update(['foto_pastor' => $photoPath]);
             }
-            if (\Illuminate\Support\Facades\Schema::hasTable('paroki') && !empty($pastor->paroki_id)) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('paroki') && !empty($pastor->paroki_id) && \Illuminate\Support\Facades\Schema::hasColumn('paroki', 'foto_pastor')) {
                 DB::table('paroki')->where('id_paroki', $pastor->paroki_id)->update(['foto_pastor' => $photoPath]);
             }
-            if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_pastor_paroki')) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_pastor_paroki') && \Illuminate\Support\Facades\Schema::hasColumn('riwayat_pastor_paroki', 'foto')) {
                 DB::table('riwayat_pastor_paroki')
                     ->where(function($q) use ($pastor) {
                         $q->where('pastor_id', $pastor->id)
                           ->orWhere('nama_pastor', 'like', '%' . $pastor->nama_pastor . '%')
                           ->orWhere('status', 'like', '%aktif%')
-                          ->orWhere('periode_selesai', 'Sekarang');
+                          ->orWhere('status_pelayanan', 'like', '%aktif%')
+                          ->orWhere('tahun_selesai', 'Sekarang')
+                          ->orWhereNull('periode_selesai');
                     })
                     ->update(['foto' => $photoPath]);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('sambutan_pastor')) {
+                $sambutanCols = \Illuminate\Support\Facades\Schema::getColumnListing('sambutan_pastor');
+                $sambutanData = [];
+                if (in_array('foto_pastor', $sambutanCols, true)) $sambutanData['foto_pastor'] = $photoPath;
+                if (in_array('foto', $sambutanCols, true)) $sambutanData['foto'] = $photoPath;
+                if (!empty($sambutanData)) {
+                    DB::table('sambutan_pastor')
+                        ->where(function($q) use ($pastor) {
+                            if (!empty($pastor->id)) $q->where('pastor_id', $pastor->id);
+                            if (!empty($pastor->nama_pastor)) $q->orWhere('nama_pastor', 'like', '%' . $pastor->nama_pastor . '%');
+                        })
+                        ->update($sambutanData);
+                }
             }
         }
     }

@@ -71,6 +71,9 @@ class PengaturanAplikasi extends Model
                     if (!\Illuminate\Support\Facades\Schema::hasColumn('profil_paroki', 'pelindung')) {
                         $table->string('pelindung', 150)->nullable();
                     }
+                    if (!\Illuminate\Support\Facades\Schema::hasColumn('profil_paroki', 'foto_pastor')) {
+                        $table->string('foto_pastor', 255)->nullable();
+                    }
                 });
             }
         } catch (\Throwable $e) {

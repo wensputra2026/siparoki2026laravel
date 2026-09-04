@@ -27,9 +27,28 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->respond(function ($response, \Throwable $exception, \Illuminate\Http\Request $request) {
+            if ($exception instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException && $request->isMethod('GET')) {
+                $path = trim($request->path(), '/');
+                if (str_contains($path, 'update')) {
+                    $editPath = preg_replace('#/update(?:/([^/]+))?$#', '/edit/$1', $path);
+                    if ($editPath === $path) {
+                        $editPath = preg_replace('#/([^/]+)/update$#', '/edit/$1', $path);
+                    }
+                    if ($editPath !== $path) {
+                        return redirect('/' . trim($editPath, '/'));
+                    }
+                } elseif (str_contains($path, 'store')) {
+                    $createPath = preg_replace('#/store$#', '/create', $path);
+                    if ($createPath !== $path) {
+                        return redirect('/' . trim($createPath, '/'));
+                    }
+                }
+                return redirect()->back();
+            }
+
             $statusCode = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 500;
 
-            if (in_array($statusCode, [500, 503, 404, 403, 419, 429], true)) {
+            if (in_array($statusCode, [405, 500, 503, 404, 403, 419, 429], true)) {
                 if ($request->header('X-Inertia')) {
                     return \Inertia\Inertia::render('Errors/Error', [
                         'status' => $statusCode,

@@ -19,6 +19,7 @@ class Paroki extends Model
         'status_paroki',
         'tanggal_berdiri',
         'nama_pastor_paroki_aktif',
+        'foto_pastor',
         'nama_pastor_rekan',
         'alamat',
         'provinsi_id',
