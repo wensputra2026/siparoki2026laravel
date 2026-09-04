@@ -1,4 +1,7 @@
 DirectoryIndex index.php
+<IfModule mod_expires.c>
+    ExpiresActive Off
+</IfModule>
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule ^$ public/index.php [L]
