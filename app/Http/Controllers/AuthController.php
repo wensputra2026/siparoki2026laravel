@@ -12,11 +12,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Concerns\SecurityModuleTrait;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AuthController extends Controller
 {
+    use SecurityModuleTrait;
     /**
      * Helper to redirect authenticated user to their role dashboard.
      */
@@ -53,52 +55,34 @@ class AuthController extends Controller
     protected function isCaptchaRequired(Request $request): bool
     {
         try {
-            if (!\Illuminate\Support\Facades\Schema::hasTable('security_settings')) {
-                return false;
-            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('security_settings')) {
+                $settings = DB::table('security_settings')
+                    ->whereIn('setting_key', ['captcha_enabled', 'captcha_required_backend_login', 'captcha_show_after_failed_attempts'])
+                    ->pluck('setting_value', 'setting_key')
+                    ->toArray();
 
-            $settings = DB::table('security_settings')
-                ->whereIn('setting_key', ['captcha_enabled', 'captcha_required_backend_login', 'captcha_show_after_failed_attempts', 'captcha_provider'])
-                ->pluck('setting_value', 'setting_key')
-                ->toArray();
+                // If explicitly disabled by admin in Security Center, return false
+                if (isset($settings['captcha_enabled']) && $settings['captcha_enabled'] === '0') {
+                    return false;
+                }
 
-            $enabled = ($settings['captcha_enabled'] ?? '1') === '1';
-            if (!$enabled) {
-                return false;
-            }
+                if (isset($settings['captcha_required_backend_login']) && $settings['captcha_required_backend_login'] === '0') {
+                    return false;
+                }
 
-            $reqBackend = ($settings['captcha_required_backend_login'] ?? '1') === '1';
-            if (!$reqBackend) {
-                return false;
-            }
-
-            $threshold = (int) ($settings['captcha_show_after_failed_attempts'] ?? 0);
-            if ($threshold <= 0) {
-                return true; // Always required if threshold is 0
-            }
-
-            // Check session failed attempts or recent failed logs from this IP
-            $sessionFails = (int) session('login_failed_attempts', 0);
-            if ($sessionFails >= $threshold) {
-                return true;
-            }
-
-            $ip = $request->ip();
-            if (\Illuminate\Support\Facades\Schema::hasTable('security_logs')) {
-                $recentFails = DB::table('security_logs')
-                    ->where('ip_address', $ip)
-                    ->where('status', 'FAILED')
-                    ->where('created_at', '>=', now()->subMinutes(15))
-                    ->count();
-
-                if ($recentFails >= $threshold) {
-                    return true;
+                $threshold = (int) ($settings['captcha_show_after_failed_attempts'] ?? 0);
+                if ($threshold > 0) {
+                    $sessionFails = (int) session('login_failed_attempts', 0);
+                    if ($sessionFails < $threshold) {
+                        return false;
+                    }
                 }
             }
 
-            return false;
+            // Active by default
+            return true;
         } catch (\Throwable $e) {
-            return false;
+            return true;
         }
     }
 
@@ -165,12 +149,13 @@ class AuthController extends Controller
             $kickedMsg = 'Sesi Anda telah dihentikan otomatis karena Super Admin sedang mengaktifkan Mode Pemeliharaan Panel Petugas & Umat.';
         }
 
+        try {
+            $this->ensureSecurityTables();
+        } catch (\Throwable $e) {}
+
         $showCaptcha = $this->isCaptchaRequired($request);
-        $captchaQuestion = null;
-        if ($showCaptcha) {
-            $captchaData = $this->generateSimpleCaptcha();
-            $captchaQuestion = $captchaData['question'];
-        }
+        $captchaData = $this->generateSimpleCaptcha();
+        $captchaQuestion = $captchaData['question'];
 
         return view('pages.auth.login', [
             'status' => session('status'),

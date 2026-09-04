@@ -139,7 +139,7 @@
                     </div>
                 </div>
 
-                @if (!empty($showCaptcha))
+                @if (!isset($showCaptcha) || !empty($showCaptcha))
                 <!-- Simple Math CAPTCHA -->
                 <div class="rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-[#263a55] p-3.5 space-y-2.5 shadow-2xs">
                     <div class="flex items-center justify-between">
@@ -154,7 +154,7 @@
                     <div class="flex items-center gap-2">
                         <!-- Tantangan Penjumlahan -->
                         <div class="flex-1 flex items-center justify-center py-2 px-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono font-bold text-sm tracking-wider select-none shadow-inner">
-                            <span id="captcha-question">{{ $captchaQuestion ?? '?' }}</span>
+                            <span id="captcha-question">{{ !empty($captchaQuestion) ? $captchaQuestion : '4 + 5 = ?' }}</span>
                         </div>
 
                         <!-- Tombol Reload Tantangan -->
