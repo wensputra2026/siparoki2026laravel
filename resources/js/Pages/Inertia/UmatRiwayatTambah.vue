@@ -56,9 +56,11 @@ watch(() => form.value.umat_id, (id) => {
     if (id) fillAsalFromUmat(id);
 });
 
+const basePrefix = computed(() => `/${props.prefix}`);
+
 const submit = () => {
     isSubmitting.value = true;
-    router.post(route(`panel.${props.prefix}.riwayat-mutasi.store`), form.value, {
+    router.post(`${basePrefix.value}/riwayat-mutasi/tambah`, form.value, {
         preserveScroll: true,
         onFinish: () => (isSubmitting.value = false),
     });
@@ -125,7 +127,7 @@ const submit = () => {
             class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold disabled:opacity-50">
             {{ isSubmitting ? 'Menyimpan…' : 'Simpan Riwayat' }}
           </button>
-          <Link :href="route(`panel.${prefix}.umat`)" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-semibold">
+          <Link :href="`${basePrefix}/umat`" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-semibold">
             Batal
           </Link>
         </div>

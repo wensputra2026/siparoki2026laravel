@@ -310,7 +310,7 @@ const submitForm = () => {
                         </Link>
                         <Link
                             v-if="isEdit && umatItem?.id"
-                            :href="route(`panel.${prefix}.umat.mutasi`, [umatItem.id])"
+                            :href="`/${prefix}/umat/${umatItem.id}/mutasi`"
                             class="px-4 py-2.5 rounded-2xl bg-emerald-500/90 hover:bg-emerald-500 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2"
                         >
                             <i class="fa-solid fa-arrows-rotate"></i>
@@ -318,7 +318,7 @@ const submitForm = () => {
                         </Link>
                         <Link
                             v-if="isEdit && umatItem?.id"
-                            :href="route(`panel.${prefix}.umat.pisah`, [umatItem.id])"
+                            :href="`/${prefix}/umat/${umatItem.id}/pisah-kk`"
                             class="px-4 py-2.5 rounded-2xl bg-sky-500/90 hover:bg-sky-500 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2"
                         >
                             <i class="fa-solid fa-ring"></i>
@@ -326,7 +326,7 @@ const submitForm = () => {
                         </Link>
                         <Link
                             v-if="isEdit && umatItem?.id"
-                            :href="route(`panel.${prefix}.umat.riwayat`, [umatItem.id])"
+                            :href="`/${prefix}/umat/${umatItem.id}/riwayat`"
                             class="px-4 py-2.5 rounded-2xl bg-fuchsia-600/90 hover:bg-fuchsia-600 backdrop-blur-md text-white text-xs font-bold border border-white/30 shadow-sm transition flex items-center gap-2"
                         >
                             <i class="fa-solid fa-clock-rotate-left"></i>
