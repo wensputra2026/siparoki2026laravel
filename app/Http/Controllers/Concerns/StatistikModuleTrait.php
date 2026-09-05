@@ -339,7 +339,7 @@ trait StatistikModuleTrait
                 if ($item['count'] > 0) {
                     $rows->push([
                         $cat['label'],
-                        $item['nama'] . ' (' . $item['kode'] . ')',
+                        $item['nama'],
                         $item['count'],
                         $item['percentage'] . '%',
                         "Data {$cat['entity_label']} terdaftar",

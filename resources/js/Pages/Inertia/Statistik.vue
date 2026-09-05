@@ -617,7 +617,6 @@ const printDemografi = () => {
                         <thead class="bg-slate-50/90 text-slate-600 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
                             <tr>
                                 <th class="py-3 px-3.5 text-center w-12">No.</th>
-                                <th class="py-3 px-3.5 w-32">Kode Referensi</th>
                                 <th class="py-3 px-3.5">Nama Item Referensi</th>
                                 <th class="py-3 px-3.5 text-right w-32">Jumlah ({{ activeRefCategory.unit }})</th>
                                 <th class="py-3 px-3.5 text-right w-24">Persentase</th>
@@ -633,11 +632,6 @@ const printDemografi = () => {
                             >
                                 <td class="py-3 px-3.5 text-center font-bold text-slate-400">
                                     {{ idx + 1 }}
-                                </td>
-                                <td class="py-3 px-3.5 font-mono text-[11px] font-bold text-slate-600">
-                                    <span class="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200/70 text-slate-700">
-                                        {{ item.kode || '-' }}
-                                    </span>
                                 </td>
                                 <td class="py-3 px-3.5 font-bold text-slate-900">
                                     <div class="flex items-center gap-2">
@@ -687,7 +681,7 @@ const printDemografi = () => {
                                 </td>
                             </tr>
                             <tr v-if="filteredRefItems.length === 0">
-                                <td colspan="7" class="py-10 text-center">
+                                <td colspan="6" class="py-10 text-center">
                                     <div class="flex flex-col items-center justify-center gap-2">
                                         <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-base">
                                             <i class="fa-solid fa-magnifying-glass"></i>
