@@ -287,7 +287,6 @@ $rolePrefixes = [
     'kub' => 'Ketua KUB',
     'bendahara' => 'Bendahara',
     'penulis' => 'Penulis',
-    'umat' => 'Umat',
 ];
 
 $legacyModuleAliases = [

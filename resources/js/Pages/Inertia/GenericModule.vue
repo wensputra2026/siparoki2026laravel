@@ -2459,6 +2459,14 @@ const showRoleFilter = computed(() => {
     return ['user', 'users'].includes(props.moduleKey);
 });
 
+const sanitizedRoleList = computed(() => {
+    return (props.roleList || []).filter(r => {
+        const slug = String(r.slug || '').toLowerCase();
+        const name = String(r.nama_role || r.name || '').toLowerCase();
+        return !slug.includes('umat') && !name.includes('umat');
+    });
+});
+
 const showWilayahFilter = computed(() => {
     return ['wilayah', 'kapela', 'stasi', 'kub', 'umat', 'data-umat', 'kk-katolik', 'kk', 'keluarga', 'user', 'users', 'iuran', 'sakramen', 'buku-sakramen'].includes(props.moduleKey);
 });
@@ -2718,7 +2726,7 @@ const showKubFilter = computed(() => {
                     <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Filter Level</label>
                     <SearchableSelect
                         v-model="roleFilter"
-                        :options="roleList"
+                        :options="sanitizedRoleList"
                         valueKey="id"
                         labelKey="nama_role"
                         placeholder="Semua Level"
@@ -6807,7 +6815,7 @@ const showKubFilter = computed(() => {
                                             <label class="block text-[11px] font-bold text-slate-700 mb-1">Peran / Role *</label>
                                             <SearchableSelect
                                                 v-model="formData.role_id"
-                                                :options="roleList"
+                                                :options="sanitizedRoleList"
                                                 valueKey="id"
                                                 labelKey="nama_role"
                                                 placeholder="-- Pilih Peran / Role --"

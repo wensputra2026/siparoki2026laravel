@@ -531,8 +531,12 @@ trait GenericModuleTrait
             : null;
 
         $roleList = $slug === 'user'
-            ? \Illuminate\Support\Facades\Cache::remember('ref_role_list_v1', 3600, function() {
-                return \App\Models\Role::where('status', 1)->orderBy('nama_role')->get(['id', 'nama_role', 'slug']);
+            ? \Illuminate\Support\Facades\Cache::remember('ref_role_list_v3', 3600, function() {
+                return \App\Models\Role::where('status', 1)
+                    ->whereNotIn('slug', ['umat'])
+                    ->where('nama_role', 'not like', '%umat%')
+                    ->orderBy('nama_role')
+                    ->get(['id', 'nama_role', 'slug']);
             })
             : [];
 

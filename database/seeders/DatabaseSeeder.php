@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Seed Roles
+        // 1. Seed Roles (Level Umat ditiadakan, umat dilayani via cek NIK mandiri)
         $roles = [
             ['id' => 1, 'nama_role' => 'Super Admin', 'slug' => 'super_admin', 'deskripsi' => 'Administrator Utama Sistem Informasi Paroki (Akses Penuh)', 'level_akses' => 1],
             ['id' => 2, 'nama_role' => 'Admin Paroki', 'slug' => 'admin_paroki', 'deskripsi' => 'Sekretariat & Tata Usaha Kantor Paroki', 'level_akses' => 2],
@@ -26,16 +26,19 @@ class DatabaseSeeder extends Seeder
             ['id' => 4, 'nama_role' => 'Admin Wilayah', 'slug' => 'admin_wilayah', 'deskripsi' => 'Koordinator & Pengurus Wilayah Rohani', 'level_akses' => 4],
             ['id' => 5, 'nama_role' => 'Admin Kapela / Stasi', 'slug' => 'admin_kapela', 'deskripsi' => 'Pengurus Stasi / Kapela Lingkungan', 'level_akses' => 5],
             ['id' => 6, 'nama_role' => 'Ketua KUB', 'slug' => 'ketua_kub', 'deskripsi' => 'Ketua & Pengurus Komunitas Umat Basis (KUB)', 'level_akses' => 6],
-            ['id' => 7, 'nama_role' => 'Umat', 'slug' => 'umat', 'deskripsi' => 'Warga Jemaat / Umat Paroki', 'level_akses' => 7],
             ['id' => 8, 'nama_role' => 'Penulis', 'slug' => 'penulis', 'deskripsi' => 'Kontributor Berita, Renungan, Warta & Artikel Paroki', 'level_akses' => 8],
             ['id' => 9, 'nama_role' => 'Bendahara', 'slug' => 'bendahara', 'deskripsi' => 'Pengelola Keuangan, Iuran & Kolekte Paroki', 'level_akses' => 9],
         ];
 
         if (Schema::hasTable('roles')) {
-            // Bersihkan duplikat role superadmin 62 jika ada
+            // Bersihkan duplikat role superadmin 62 dan role umat jika ada
             if (DB::table('roles')->where('id', 62)->exists()) {
                 DB::table('users')->where('role_id', 62)->update(['role_id' => 1]);
                 DB::table('roles')->where('id', 62)->delete();
+            }
+            if (DB::table('roles')->where('id', 7)->orWhere('slug', 'umat')->exists()) {
+                DB::table('users')->where('role_id', 7)->delete();
+                DB::table('roles')->where('id', 7)->orWhere('slug', 'umat')->delete();
             }
 
             foreach ($roles as $r) {
