@@ -41,12 +41,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
+            '/',
             'midtrans/*',
             'api/midtrans/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->respond(function ($response, \Throwable $exception, \Illuminate\Http\Request $request) {
+            if ($exception instanceof \Illuminate\Session\TokenMismatchException) {
+                if ($request->is('/')) {
+                    return redirect('/');
+                }
+                return redirect()->back()->with('warning', 'Sesi Anda telah diperbarui, silakan coba kembali.');
+            }
+
             if ($exception instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
                 if ($request->isMethod('GET')) {
                     $path = trim($request->path(), '/');
