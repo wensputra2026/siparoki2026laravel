@@ -242,7 +242,51 @@ trait PastorModuleTrait
             $cleanData['created_by'] = auth()->id();
         }
 
+        // Standardize status
+        if (isset($cleanData['status'])) {
+            if ($cleanData['status'] === '1' || $cleanData['status'] === 1) $cleanData['status'] = 'Aktif';
+            if ($cleanData['status'] === '0' || $cleanData['status'] === 0) $cleanData['status'] = 'Nonaktif';
+        }
+
+        // Auto-fill paroki_tugas & keuskupan if ID is supplied
+        if (!empty($cleanData['paroki_id']) && empty($cleanData['paroki_tugas']) && \Illuminate\Support\Facades\Schema::hasTable('paroki')) {
+            $pModel = \Illuminate\Support\Facades\DB::table('paroki')->where('id_paroki', $cleanData['paroki_id'])->first();
+            if ($pModel) $cleanData['paroki_tugas'] = $pModel->nama_paroki;
+        }
+        if (!empty($cleanData['keuskupan_id']) && empty($cleanData['keuskupan']) && \Illuminate\Support\Facades\Schema::hasTable('keuskupan')) {
+            $kModel = \Illuminate\Support\Facades\DB::table('keuskupan')->where('id_keuskupan', $cleanData['keuskupan_id'])->first();
+            if ($kModel) $cleanData['keuskupan'] = $kModel->nama_keuskupan;
+        }
+
         $created = \App\Models\MasterPastor::create($cleanData);
+
+        // Otomatis sinkronkan nama Pastor Paroki ke paroki, profil, dan sambutan jika jabatannya Pastor Paroki
+        if (str_contains(strtolower($created->jabatan ?? ''), 'pastor paroki')) {
+            $formattedName = \App\Models\MasterPastor::formatNama($created);
+            $photoPath = $created->foto;
+            if (\Illuminate\Support\Facades\Schema::hasTable('paroki') && !empty($created->paroki_id)) {
+                $pUpdate = ['nama_pastor_paroki_aktif' => $formattedName];
+                if (!empty($photoPath) && \Illuminate\Support\Facades\Schema::hasColumn('paroki', 'foto_pastor')) {
+                    $pUpdate['foto_pastor'] = $photoPath;
+                }
+                \Illuminate\Support\Facades\DB::table('paroki')->where('id_paroki', $created->paroki_id)->update($pUpdate);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('profil_paroki')) {
+                $profUpdate = ['pastor_paroki' => $formattedName];
+                if (!empty($photoPath) && \Illuminate\Support\Facades\Schema::hasColumn('profil_paroki', 'foto_pastor')) {
+                    $profUpdate['foto_pastor'] = $photoPath;
+                }
+                \Illuminate\Support\Facades\DB::table('profil_paroki')->update($profUpdate);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('sambutan_pastor')) {
+                $sambCols = \Illuminate\Support\Facades\Schema::getColumnListing('sambutan_pastor');
+                $sambUpdate = ['nama_pastor' => $formattedName];
+                if (!empty($photoPath) && in_array('foto_pastor', $sambCols, true)) $sambUpdate['foto_pastor'] = $photoPath;
+                if (!empty($photoPath) && in_array('foto', $sambCols, true)) $sambUpdate['foto'] = $photoPath;
+                \Illuminate\Support\Facades\DB::table('sambutan_pastor')->update($sambUpdate);
+            }
+        }
+
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $redirectUrl = str_contains($request->header('referer', ''), 'master-referensi') || str_contains($request->path(), 'master-referensi')
             ? '/admin/master-referensi/pastor'
@@ -300,9 +344,29 @@ trait PastorModuleTrait
             $cleanData['updated_by'] = auth()->id();
         }
 
+        // Standardize status
+        if (isset($cleanData['status'])) {
+            if ($cleanData['status'] === '1' || $cleanData['status'] === 1) $cleanData['status'] = 'Aktif';
+            if ($cleanData['status'] === '0' || $cleanData['status'] === 0) $cleanData['status'] = 'Nonaktif';
+        }
+
+        // Auto-fill paroki_tugas & keuskupan if ID is supplied
+        if (!empty($cleanData['paroki_id']) && empty($cleanData['paroki_tugas']) && \Illuminate\Support\Facades\Schema::hasTable('paroki')) {
+            $pModel = \Illuminate\Support\Facades\DB::table('paroki')->where('id_paroki', $cleanData['paroki_id'])->first();
+            if ($pModel) $cleanData['paroki_tugas'] = $pModel->nama_paroki;
+        }
+        if (!empty($cleanData['keuskupan_id']) && empty($cleanData['keuskupan']) && \Illuminate\Support\Facades\Schema::hasTable('keuskupan')) {
+            $kModel = \Illuminate\Support\Facades\DB::table('keuskupan')->where('id_keuskupan', $cleanData['keuskupan_id'])->first();
+            if ($kModel) $cleanData['keuskupan'] = $kModel->nama_keuskupan;
+        }
+
         $pastor->update($cleanData);
-        if (!empty($cleanData['foto']) || !empty($pastor->foto)) {
-            $photoPath = $cleanData['foto'] ?? $pastor->foto;
+        $pastor->refresh();
+
+        $photoPath = !empty($cleanData['foto']) ? $cleanData['foto'] : $pastor->foto;
+
+        // Sync photo to other tables if photo exists
+        if (!empty($photoPath)) {
             $isPastorParoki = str_contains(strtolower($pastor->jabatan ?? ''), 'pastor paroki') || str_contains(strtolower((string)($pastor->status ?? '')), 'aktif') || (string)$pastor->status === '1';
             if ($isPastorParoki) {
                 if (\Illuminate\Support\Facades\Schema::hasTable('profil_paroki') && \Illuminate\Support\Facades\Schema::hasColumn('profil_paroki', 'foto_pastor')) {
@@ -337,6 +401,32 @@ trait PastorModuleTrait
                             ->update($sambutanData);
                     }
                 }
+            }
+        }
+
+        // Otomatis sinkronkan nama & foto Pastor Paroki ke paroki, profil, dan sambutan jika jabatannya Pastor Paroki (ALWAYS RUN)
+        if (str_contains(strtolower($pastor->jabatan ?? ''), 'pastor paroki')) {
+            $formattedName = \App\Models\MasterPastor::formatNama($pastor);
+            if (\Illuminate\Support\Facades\Schema::hasTable('paroki') && !empty($pastor->paroki_id)) {
+                $parokiUpdate = ['nama_pastor_paroki_aktif' => $formattedName];
+                if (!empty($photoPath) && \Illuminate\Support\Facades\Schema::hasColumn('paroki', 'foto_pastor')) {
+                    $parokiUpdate['foto_pastor'] = $photoPath;
+                }
+                \Illuminate\Support\Facades\DB::table('paroki')->where('id_paroki', $pastor->paroki_id)->update($parokiUpdate);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('profil_paroki')) {
+                $profilUpdate = ['pastor_paroki' => $formattedName];
+                if (!empty($photoPath) && \Illuminate\Support\Facades\Schema::hasColumn('profil_paroki', 'foto_pastor')) {
+                    $profilUpdate['foto_pastor'] = $photoPath;
+                }
+                \Illuminate\Support\Facades\DB::table('profil_paroki')->update($profilUpdate);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('sambutan_pastor')) {
+                $sambCols = \Illuminate\Support\Facades\Schema::getColumnListing('sambutan_pastor');
+                $sambUpdate = ['nama_pastor' => $formattedName];
+                if (!empty($photoPath) && in_array('foto_pastor', $sambCols, true)) $sambUpdate['foto_pastor'] = $photoPath;
+                if (!empty($photoPath) && in_array('foto', $sambCols, true)) $sambUpdate['foto'] = $photoPath;
+                \Illuminate\Support\Facades\DB::table('sambutan_pastor')->update($sambUpdate);
             }
         }
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';

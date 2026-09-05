@@ -73,7 +73,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-B6ptoZD-.css",
+    "file": "assets/app-I71hs4pC.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -260,7 +260,7 @@
     ]
   },
   "resources/js/Pages/Inertia/PastorForm.vue": {
-    "file": "assets/PastorForm-BzzFmywq.js",
+    "file": "assets/PastorForm-COECbNTQ.js",
     "name": "PastorForm",
     "src": "resources/js/Pages/Inertia/PastorForm.vue",
     "isDynamicEntry": true,
@@ -300,7 +300,7 @@
     ]
   },
   "resources/js/Pages/Inertia/ProfilParoki.vue": {
-    "file": "assets/ProfilParoki-BLCIi4Yd.js",
+    "file": "assets/ProfilParoki-CDJB9dw9.js",
     "name": "ProfilParoki",
     "src": "resources/js/Pages/Inertia/ProfilParoki.vue",
     "isDynamicEntry": true,
@@ -479,7 +479,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BK_X8k9n.js",
+    "file": "assets/app-Bu6Q856s.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

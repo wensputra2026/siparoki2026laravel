@@ -61,17 +61,21 @@ const selectParokiItem = (p) => {
 
 // Filter pastors assigned to this paroki from master_pastor
 const pastorsBertugas = computed(() => {
-    const parokiName = props.paroki?.nama_paroki || 'Benlutu';
-    const list = (props.pastors || []).filter((p) => {
-        const pTugas = p.paroki_tugas || p.paroki || '';
-        return (
-            pTugas.toLowerCase().includes('benlutu') ||
-            pTugas.toLowerCase().includes(parokiName.toLowerCase()) ||
-            p.tampil_frontend === 'Ya' ||
-            (p.nama_pastor && (p.nama_pastor.toLowerCase().includes('herman') || p.nama_pastor.toLowerCase().includes('patrisius')))
-        );
+    const curParokiId = props.paroki?.id_paroki;
+    const curParokiName = (props.paroki?.nama_paroki || '').trim().toLowerCase();
+
+    return (props.pastors || []).filter((p) => {
+        // 1. Check exact paroki_id match
+        if (curParokiId && p.paroki_id && String(p.paroki_id) === String(curParokiId)) {
+            return true;
+        }
+        // 2. Check paroki_tugas string match
+        const pTugas = (p.paroki_tugas || p.paroki || '').trim().toLowerCase();
+        if (curParokiName && pTugas && (pTugas.includes(curParokiName) || curParokiName.includes(pTugas))) {
+            return true;
+        }
+        return false;
     });
-    return list;
 });
 
 const handleDropdownClickOutside = (e) => {
@@ -484,10 +488,10 @@ const saveParoki = () => {
                                                             : 'bg-blue-100 text-blue-800 border border-blue-200'
                                                     ]"
                                                 >
-                                                    {{ p.jabatan || 'Pastor' }}
+                                                    {{ p.jabatan || 'Pastor Rekan' }}
                                                 </span>
                                                 <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
-                                                    {{ p.status || 'Aktif' }}
+                                                    {{ p.status === '1' || p.status === 1 || p.status === 'Aktif' ? 'Aktif' : (p.status === '0' || p.status === 0 || p.status === 'Nonaktif' ? 'Nonaktif' : (p.status || 'Aktif')) }}
                                                 </span>
                                             </div>
                                             <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
