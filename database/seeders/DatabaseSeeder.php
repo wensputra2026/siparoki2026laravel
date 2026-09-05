@@ -76,18 +76,29 @@ class DatabaseSeeder extends Seeder
         }
 
         // 3. Seed Default Profil Paroki & Pengaturan Aplikasi
-        $benlutuParoki = null;
+        $targetParokiId = env('PAROKI_ID', null);
+        $targetNamaParoki = env('NAMA_PAROKI', null);
+
+        $selectedParoki = null;
         if (Schema::hasTable('paroki')) {
-            $benlutuParoki = DB::table('paroki')->where('id_paroki', 380)->first()
-                ?? DB::table('paroki')->where('nama_paroki', 'like', '%Benlutu%')->first();
+            if ($targetParokiId) {
+                $selectedParoki = DB::table('paroki')->where('id_paroki', $targetParokiId)->first();
+            } elseif ($targetNamaParoki) {
+                $selectedParoki = DB::table('paroki')->where('nama_paroki', 'like', "%{$targetNamaParoki}%")->first();
+            }
+            if (!$selectedParoki) {
+                $selectedParoki = DB::table('paroki')->where('id_paroki', 380)->first()
+                    ?? DB::table('paroki')->where('nama_paroki', 'like', '%Benlutu%')->first()
+                    ?? DB::table('paroki')->first();
+            }
         }
 
-        $namaParoki = $benlutuParoki?->nama_paroki ?? 'St. Vinsensius a Paulo - Benlutu';
-        $parokiId = $benlutuParoki?->id_paroki ?? 380;
-        $keuskupanId = $benlutuParoki?->keuskupan_id ?? 5;
-        $dekenatId = $benlutuParoki?->dekenat_id ?? 14;
-        $alamatParoki = $benlutuParoki?->alamat ?: 'Benlutu, Kec. Batu Putih, Kab. Timor Tengah Selatan, NTT';
-        $pastorParoki = $benlutuParoki?->nama_pastor_paroki_aktif ?? 'RD. Herman Hilers Penga';
+        $namaParoki = $selectedParoki?->nama_paroki ?? 'St. Vinsensius a Paulo - Benlutu';
+        $parokiId = $selectedParoki?->id_paroki ?? 380;
+        $keuskupanId = $selectedParoki?->keuskupan_id ?? 5;
+        $dekenatId = $selectedParoki?->dekenat_id ?? 14;
+        $alamatParoki = $selectedParoki?->alamat ?: 'Benlutu, Kec. Batu Putih, Kab. Timor Tengah Selatan, NTT';
+        $pastorParoki = $selectedParoki?->nama_pastor_paroki_aktif ?? 'RD. Herman Hilers Penga';
 
         if (Schema::hasTable('profil_paroki')) {
             $parokiData = [
@@ -203,58 +214,61 @@ class DatabaseSeeder extends Seeder
             $this->call(JenisIuranSeeder::class);
         }
 
-        // 9. Pastikan tabel teritori pastoral spesifik paroki (wilayah, kapela, kub) serta data jemaat lokal bersih saat instal awal
-        $localTables = [
-            'umat',
-            'kk_katolik',
-            'kub',
-            'kubs',
-            'wilayah',
-            'wilayahs',
-            'kapela',
-            'stasi_kapela',
-            'master_kapela',
-            'lingkungan',
-            'riwayat_mutasi_umat',
-            'sakramen_umat',
-            'sakramen_verifikasi',
-            'pengajuan_sakramen',
-            'iuran',
-            'transaksi_pembayaran',
-            'kas_rekening',
-            'keuangan',
-            'kolekte',
-            'konten',
-            'artikel',
-            'galeri',
-            'galeri_album',
-            'galeri_item',
-            'kegiatan',
-            'pengumuman',
-            'rapat',
-            'rapat_peserta',
-            'arsip_digital',
-            'chat_pesan',
-            'aset',
-            'aset_maintenance',
-            'intensi_misa',
-            'misa_kapela',
-            'misa_pastor',
-            'jadwal_misa',
-            'jadwal_petugas_liturgi',
-            'log_aktivitas',
-            'login_activity',
-            'login_attempts',
-            'security_logs',
-        ];
-        foreach ($localTables as $lt) {
-            if (Schema::hasTable($lt)) {
-                try {
-                    DB::table($lt)->truncate();
-                } catch (\Throwable $e) {
+        // 9. Pastikan tabel teritori pastoral spesifik paroki (wilayah, kapela, kub) serta data jemaat lokal bersih HANYA saat instal awal (jika belum ada data umat)
+        $hasExistingUmat = Schema::hasTable('umat') && DB::table('umat')->count() > 0;
+        if (!$hasExistingUmat) {
+            $localTables = [
+                'umat',
+                'kk_katolik',
+                'kub',
+                'kubs',
+                'wilayah',
+                'wilayahs',
+                'kapela',
+                'stasi_kapela',
+                'master_kapela',
+                'lingkungan',
+                'riwayat_mutasi_umat',
+                'sakramen_umat',
+                'sakramen_verifikasi',
+                'pengajuan_sakramen',
+                'iuran',
+                'transaksi_pembayaran',
+                'kas_rekening',
+                'keuangan',
+                'kolekte',
+                'konten',
+                'artikel',
+                'galeri',
+                'galeri_album',
+                'galeri_item',
+                'kegiatan',
+                'pengumuman',
+                'rapat',
+                'rapat_peserta',
+                'arsip_digital',
+                'chat_pesan',
+                'aset',
+                'aset_maintenance',
+                'intensi_misa',
+                'misa_kapela',
+                'misa_pastor',
+                'jadwal_misa',
+                'jadwal_petugas_liturgi',
+                'log_aktivitas',
+                'login_activity',
+                'login_attempts',
+                'security_logs',
+            ];
+            foreach ($localTables as $lt) {
+                if (Schema::hasTable($lt)) {
                     try {
-                        DB::table($lt)->delete();
-                    } catch (\Throwable $ex) {}
+                        DB::table($lt)->truncate();
+                    } catch (\Throwable $e) {
+                        try {
+                            DB::table($lt)->delete();
+                        } catch (\Throwable $ex) {}
+                    }
                 }
             }
         }
