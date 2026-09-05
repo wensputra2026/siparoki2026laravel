@@ -36,21 +36,29 @@ return new class extends Migration
             return;
         }
 
-        Schema::table($table, function (Blueprint $t) use ($table, $columns) {
-            foreach ($columns as $column) {
-                if (!Schema::hasColumn($table, $column)) {
-                    continue;
-                }
-                try {
-                    if (method_exists(Schema::class, 'hasIndex') && Schema::hasIndex($table, $column)) {
-                        continue;
-                    }
-                    $t->index($column);
-                } catch (\Throwable $e) {
-                    // Index sudah ada atau tidak didukung — abaikan.
-                }
+        try {
+            $existingIndexes = collect(DB::select("SHOW INDEX FROM `{$table}`"))->pluck('Key_name')->toArray();
+        } catch (\Throwable $e) {
+            $existingIndexes = [];
+        }
+
+        foreach ($columns as $column) {
+            if (!Schema::hasColumn($table, $column)) {
+                continue;
             }
-        });
+            $indexName = "{$table}_{$column}_index";
+            if (in_array($indexName, $existingIndexes, true) || in_array($column, $existingIndexes, true)) {
+                continue;
+            }
+
+            try {
+                Schema::table($table, function (Blueprint $t) use ($column) {
+                    $t->index($column);
+                });
+            } catch (\Throwable $e) {
+                // Index sudah ada atau tidak didukung — abaikan.
+            }
+        }
     }
 
     private function dropIndex(string $table, array $columns): void
