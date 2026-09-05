@@ -73,7 +73,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-CanGOP8n.css",
+    "file": "assets/app-v_VH-3mL.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -367,13 +367,14 @@
     ]
   },
   "resources/js/Pages/Inertia/Statistik.vue": {
-    "file": "assets/Statistik-BnwL2cPm.js",
+    "file": "assets/Statistik-DM5Q6-lx.js",
     "name": "Statistik",
     "src": "resources/js/Pages/Inertia/Statistik.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-vue-DKPcl_V5.js",
       "_AppLayout-sdOmBttO.js",
+      "_avatar-Cj77F2dp.js",
       "_vendor-DX-d4_2r.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "_SearchableSelect-BcRondBQ.js"
@@ -478,7 +479,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CdeLPxl5.js",
+    "file": "assets/app-OoKp9Rx5.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

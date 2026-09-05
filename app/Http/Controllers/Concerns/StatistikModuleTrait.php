@@ -227,6 +227,57 @@ trait StatistikModuleTrait
             $pekerjaanStats = $dynamicPekerjaan;
         }
 
+        // Data Pastor Aktif di Paroki ini
+        $defaultParokiId = $this->defaultParokiIdFromProfile();
+        $pastorQuery = \Illuminate\Support\Facades\DB::table('master_pastor')
+            ->where(function ($q) use ($defaultParokiId) {
+                if ($defaultParokiId) {
+                    $q->where('paroki_id', $defaultParokiId)
+                      ->orWhere('paroki_tugas', 'like', '%Benlutu%')
+                      ->orWhereNull('paroki_id');
+                }
+            })
+            ->where('status', 'like', '%Aktif%')
+            ->orderByRaw("CASE WHEN jabatan LIKE '%Pastor Paroki%' THEN 1 WHEN jabatan LIKE '%Pastor Rekan%' THEN 2 ELSE 3 END");
+
+        $pastors = $pastorQuery->get(['id', 'nama_pastor', 'gelar_depan', 'gelar_belakang', 'jabatan', 'jenis_imam', 'ordo_kongregasi', 'paroki_tugas', 'foto', 'status'])->all();
+        $totalPastor = count($pastors);
+
+        // Biarawan / Biarawati / Frater / Suster / Novis dari data Umat
+        $biarawanQuery = (clone $umatQuery)
+            ->whereNotNull('status_panggilan')
+            ->where('status_panggilan', '!=', '')
+            ->where('status_panggilan', '!=', 'Awam');
+
+        $biarawanList = $biarawanQuery->get([
+            'id',
+            'uuid',
+            'nama_lengkap',
+            'jenis_kelamin',
+            'status_panggilan',
+            'nama_ordo_kongregasi',
+            'tahap_panggilan',
+            'tempat_tugas_biara',
+            'tanggal_lahir',
+            'foto'
+        ])->all();
+        $totalBiarawan = count($biarawanList);
+
+        // Breakdown Status Panggilan Umat
+        $panggilanBreakdown = (clone $umatQuery)
+            ->select('status_panggilan', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('status_panggilan')
+            ->get()
+            ->map(function ($row) use ($totalUmat) {
+                $status = $row->status_panggilan ?: 'Awam (Belum Terklasifikasi)';
+                return [
+                    'status' => $status,
+                    'count' => (int) $row->count,
+                    'percentage' => $totalUmat > 0 ? round(($row->count / $totalUmat) * 100, 1) : 0,
+                ];
+            })
+            ->all();
+
         return Inertia::render('Inertia/Statistik', [
             'role' => $resolvedRole,
             'prefix' => $firstSegment,
@@ -238,6 +289,8 @@ trait StatistikModuleTrait
                 'totalKUB' => $totalKub,
                 'totalWilayah' => $totalWilayah,
                 'totalKapela' => $totalKapela,
+                'totalPastor' => $totalPastor,
+                'totalBiarawan' => $totalBiarawan,
             ],
             'genderStats' => [
                 'pria' => $pria,
@@ -248,6 +301,13 @@ trait StatistikModuleTrait
             'sakramenStats' => $sakramenStats,
             'wilayahStats' => $wilayahStats,
             'pekerjaanStats' => $pekerjaanStats,
+            'pastorStats' => [
+                'totalPastor' => $totalPastor,
+                'pastors' => $pastors,
+                'totalBiarawan' => $totalBiarawan,
+                'biarawan' => $biarawanList,
+                'panggilanBreakdown' => $panggilanBreakdown,
+            ],
             'masterReferensiStats' => $masterReferensiStats,
         ]);
     }
