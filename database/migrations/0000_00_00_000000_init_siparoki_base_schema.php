@@ -70,12 +70,6 @@ return new class extends Migration
                     continue;
                 }
 
-                // JANGAN timpa / hapus tabel 'migrations' bawaan Laravel
-                if (stripos($trimmed, '`migrations`') !== false && 
-                    (stripos($trimmed, 'DROP TABLE') !== false || stripos($trimmed, 'CREATE TABLE') !== false || stripos($trimmed, 'INSERT INTO') !== false)) {
-                    continue;
-                }
-
                 $buffer .= $line;
 
                 // Eksekusi setiap ~256KB untuk efisiensi tinggi tanpa membebani memori
@@ -83,7 +77,16 @@ return new class extends Migration
                     try {
                         $pdo->exec($buffer);
                     } catch (\Throwable $e) {
-                        // Abaikan error non-kritis duplicate/drop
+                        // Fallback statement-by-statement agar tabel lain tidak terlewat jika ada error parsial
+                        $statements = preg_split('/;\s*[\r\n]+/', $buffer);
+                        foreach ($statements as $stmt) {
+                            $s = trim($stmt);
+                            if (!empty($s)) {
+                                try {
+                                    $pdo->exec($s);
+                                } catch (\Throwable $se) {}
+                            }
+                        }
                     }
                     $buffer = '';
                 }
@@ -93,7 +96,15 @@ return new class extends Migration
                 try {
                     $pdo->exec($buffer);
                 } catch (\Throwable $e) {
-                    // Abaikan error non-kritis
+                    $statements = preg_split('/;\s*[\r\n]+/', $buffer);
+                    foreach ($statements as $stmt) {
+                        $s = trim($stmt);
+                        if (!empty($s)) {
+                            try {
+                                $pdo->exec($s);
+                            } catch (\Throwable $se) {}
+                        }
+                    }
                 }
             }
 

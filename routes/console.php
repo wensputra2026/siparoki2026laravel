@@ -72,18 +72,22 @@ Artisan::command('siparoki:setup {--force : Paksa timpa database yang ada}', fun
                     continue;
                 }
 
-                // Jangan timpa tabel migrations bawaan Laravel
-                if (stripos($trimmed, '`migrations`') !== false && 
-                    (stripos($trimmed, 'DROP TABLE') !== false || stripos($trimmed, 'CREATE TABLE') !== false || stripos($trimmed, 'INSERT INTO') !== false)) {
-                    continue;
-                }
-
                 $buffer .= $line;
                 if (strlen($buffer) > 262144 && str_ends_with(rtrim($trimmed), ';')) {
                     try {
                         $pdo->exec($buffer);
                         $executedChunks++;
-                    } catch (\Throwable $e) {}
+                    } catch (\Throwable $e) {
+                        $statements = preg_split('/;\s*[\r\n]+/', $buffer);
+                        foreach ($statements as $stmt) {
+                            $s = trim($stmt);
+                            if (!empty($s)) {
+                                try {
+                                    $pdo->exec($s);
+                                } catch (\Throwable $se) {}
+                            }
+                        }
+                    }
                     $buffer = '';
                 }
             }
@@ -92,7 +96,17 @@ Artisan::command('siparoki:setup {--force : Paksa timpa database yang ada}', fun
                 try {
                     $pdo->exec($buffer);
                     $executedChunks++;
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                    $statements = preg_split('/;\s*[\r\n]+/', $buffer);
+                    foreach ($statements as $stmt) {
+                        $s = trim($stmt);
+                        if (!empty($s)) {
+                            try {
+                                $pdo->exec($s);
+                            } catch (\Throwable $se) {}
+                        }
+                    }
+                }
             }
 
             fclose($handle);

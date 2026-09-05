@@ -95323,53 +95323,6 @@ INSERT INTO `metode_pembayaran` VALUES ('1', 'Bank BRI', '0123-01-000456-50-8', 
 ('3', 'QRIS Resmi Paroki (Semua E-Wallet & Bank)', 'NMID: ID1020304050607', 'PAROKI BENLUTU QRIS', NULL, NULL, 'QRIS', '3', 'Aktif', 'Scan QRIS menggunakan BCA Mobile, Mandiri Livin, GoPay, OVO, Dana, ShopeePay, LinkAja, dll.', '2026-08-25 03:44:49', '2026-08-25 03:44:49');
 
 -- -----------------------------------------------------
--- Table structure for `migrations`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `migrations`;
-CREATE TABLE `migrations` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `batch` int NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO `migrations` VALUES ('1', '2026_08_24_031344_add_download_count_to_arsip_digital_table', '1'),
-('2', '2026_08_24_123000_create_pesan_kontak_table', '2'),
-('3', '0001_01_01_000000_create_users_table', '3'),
-('4', '0001_01_01_000001_create_cache_table', '3'),
-('5', '0001_01_01_000002_create_jobs_table', '3'),
-('6', '2026_01_01_000001_create_kategori_konten_table', '3'),
-('7', '2026_08_24_144230_create_personal_access_tokens_table', '4'),
-('8', '2026_08_25_160000_create_komentar_artikel_table', '5'),
-('9', '2026_08_25_170000_create_finance_and_asset_suite_tables', '5'),
-('10', '2026_08_26_000000_add_scope_indexes', '6'),
-('11', '2026_08_26_000001_create_defunctorum_table', '6'),
-('12', '2026_08_26_000002_create_jadwal_petugas_liturgi_table', '6'),
-('13', '2026_08_26_000003_create_sambutan_pastor_table', '6'),
-('14', '2026_08_26_000003_fix_kolekte_table_columns', '7'),
-('15', '2026_08_26_000004_alter_jadwal_petugas_liturgi_nullable', '8'),
-('16', '2026_08_26_000004_ensure_all_tables_timestamps', '9'),
-('17', '2026_08_26_000005_standardize_all_table_timestamps', '10'),
-('18', '2026_08_26_000006_add_master_pastor_form_columns', '11'),
-('19', '2026_08_26_000006_fix_master_pastor_and_kuasi_paroki', '12'),
-('20', '2026_08_26_000007_sync_default_pastor_paroki', '13'),
-('21', '2026_08_26_000008_widen_umat_and_kk_enum_columns', '14'),
-('22', '2026_08_26_000009_make_umat_kk_id_nullable', '15'),
-('23', '2026_08_28_100000_ensure_slug_on_kapela_and_stasi_table', '16'),
-('24', '2026_08_29_000001_add_is_deleted_and_sedang_bertugas_to_master_pastor', '17'),
-('25', '2026_08_29_000001_add_territorial_columns_to_umat_table', '17'),
-('26', '2026_08_29_000002_sync_paroki_keuskupan_and_dekenat_relationships', '17'),
-('27', '2026_08_29_213707_add_dekenat_and_paroki_to_master_pastor', '17'),
-('28', '2026_08_29_230000_create_notifikasi_sistem_table', '17'),
-('29', '2026_08_29_233000_add_kapela_to_riwayat_mutasi_umat_table', '17'),
-('30', '2026_08_29_234500_create_chat_pesan_table', '17'),
-('31', '2026_08_29_235500_add_fitur_chat_aktif_to_pengaturan_aplikasi_table', '17'),
-('32', '2026_08_30_000500_add_maintenance_message_backend_to_pengaturan_aplikasi_table', '17'),
-('33', '2026_09_02_185600_create_hierarki_gereja_dan_sipil_tables', '17'),
-('34', '2026_09_04_000001_add_foto_pastor_to_profil_paroki_and_paroki_table', '17'),
-('35', '2026_09_05_083500_add_uuid_to_core_tables', '18');
-
--- -----------------------------------------------------
 -- Table structure for `misa_kapela`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `misa_kapela`;
@@ -96295,7 +96248,7 @@ CREATE TABLE `pengaturan_aplikasi` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Default Application Setup (Uncompleted so new parish enters setup wizard)
-INSERT INTO `pengaturan_aplikasi` (`id`, `nama_aplikasi`, `is_setup_completed`, `created_at`, `updated_at`) VALUES (1, 'SIPAROKI 2026', 0, NOW(), NOW());
+INSERT INTO `pengaturan_aplikasi` (`id_pengaturan`, `nama_aplikasi`, `is_setup_completed`, `created_at`, `updated_at`) VALUES (1, 'SIPAROKI 2026', 0, NOW(), NOW());
 
 -- -----------------------------------------------------
 -- Table structure for `pengaturan_midtrans`
@@ -97883,7 +97836,7 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Default Superadmin User (Password: password)
-INSERT INTO `users` (`id`, `uuid`, `username`, `name`, `email`, `password`, `role_id`, `is_active`, `created_at`, `updated_at`) VALUES (1, '9c4b7871-3333-4444-9999-000000000001', 'superadmin', 'Super Administrator', 'superadmin@paroki.org', '$2y$12$e82Y9j5f9gYJ5eR4bW6gZeB7O8.17XbYQ0a7gN4B8g8W1Z3R4E6Kq', 1, 1, NOW(), NOW());
+INSERT INTO `users` (`id`, `uuid`, `username`, `nama_lengkap`, `email`, `password`, `role_id`, `status`, `created_at`, `updated_at`) VALUES (1, '9c4b7871-3333-4444-9999-000000000001', 'superadmin', 'Super Administrator', 'superadmin@paroki.org', '$2y$12$e82Y9j5f9gYJ5eR4bW6gZeB7O8.17XbYQ0a7gN4B8g8W1Z3R4E6Kq', 1, 1, NOW(), NOW());
 
 -- -----------------------------------------------------
 -- Table structure for `uskup`
