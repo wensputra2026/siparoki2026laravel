@@ -285,31 +285,92 @@ trait KkModuleTrait
             })
             ->first();
 
+        $namaPastorRekan = $profilParoki?->pastor_rekan ?: null;
+
+        // Jabatan Pastor aktif
+        $cleanPastorName = trim(preg_replace('/^(RD\.|Pr\.|RP\.|P\.)\s*/i', '', $namaPastorParoki));
+        $pastorRecord = \Illuminate\Support\Facades\DB::table('master_pastor')
+            ->where(function ($q) use ($namaPastorParoki, $cleanPastorName) {
+                $q->where('nama_pastor', $namaPastorParoki)
+                  ->orWhere('nama_pastor', 'like', '%' . $cleanPastorName . '%');
+            })
+            ->first()
+            ?? \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')
+            ->where(function ($q) use ($namaPastorParoki, $cleanPastorName) {
+                $q->where('nama_pastor', $namaPastorParoki)
+                  ->orWhere('nama_pastor', 'like', '%' . $cleanPastorName . '%');
+            })
+            ->first();
+
         $jabatanPastor = $pastorRecord?->jabatan ?: 'Pastor Paroki';
 
-        // Daftar Pastor di Paroki untuk opsi penandatangan (misal jika Pastor Paroki berhalangan dan diganti Pastor Rekan)
-        $daftarPastor = \Illuminate\Support\Facades\DB::table('master_pastor')
-            ->where('status', 'aktif')
-            ->where(function ($q) use ($paroki, $defaultParokiId) {
-                if ($defaultParokiId) {
-                    $q->where('paroki_id', $defaultParokiId)
-                      ->orWhere('paroki_tugas', 'like', '%Benlutu%')
-                      ->orWhereNull('paroki_tugas')
-                      ->orWhere('paroki_tugas', '');
-                } else {
-                    $q->where('paroki_tugas', 'like', '%Benlutu%')
-                      ->orWhereNull('paroki_tugas')
-                      ->orWhere('paroki_tugas', '');
-                }
+        // Daftar Pastor resmi yang bertugas di Paroki ini (sesuai Profil Paroki & Master Pastor terkait)
+        $pastorsInDb = \App\Models\MasterPastor::where(function ($q) {
+                $q->whereNull('status')
+                  ->orWhere('status', 'like', '%aktif%')
+                  ->orWhere('status', 1)
+                  ->orWhere('status', '1');
             })
-            ->orderByRaw("CASE WHEN jabatan LIKE '%Pastor Paroki%' THEN 1 ELSE 2 END")
+            ->where(function ($q) use ($defaultParokiId, $paroki) {
+                if ($defaultParokiId) {
+                    $q->where('paroki_id', $defaultParokiId);
+                }
+                $namaParokiClean = preg_replace('/^Paroki\s+/i', '', $paroki?->nama_paroki ?? 'Benlutu');
+                $q->orWhere('paroki_tugas', 'like', '%' . $namaParokiClean . '%');
+            })
             ->get();
+
+        $daftarPastor = collect();
+
+        // 1. Tambah Pastor Paroki dari Profil Paroki Default
+        if ($namaPastorParoki) {
+            $dbMatch = $pastorsInDb->first(function ($p) use ($namaPastorParoki) {
+                return stripos($p->nama_pastor, trim(preg_replace('/^(RD\.|RP\.|Pr\.|P\.)\s*/i', '', $namaPastorParoki))) !== false;
+            });
+            $formattedName = $dbMatch ? \App\Models\MasterPastor::formatNama($dbMatch) : $namaPastorParoki;
+            $daftarPastor->push((object)[
+                'id' => $dbMatch?->id ?? 1,
+                'nama_pastor' => $formattedName,
+                'jabatan' => 'Pastor Paroki',
+            ]);
+        }
+
+        // 2. Tambah Pastor Rekan dari Profil Paroki Default
+        if ($namaPastorRekan) {
+            $dbMatch = $pastorsInDb->first(function ($p) use ($namaPastorRekan) {
+                return stripos($p->nama_pastor, trim(preg_replace('/^(RD\.|RP\.|Pr\.|P\.)\s*/i', '', $namaPastorRekan))) !== false;
+            });
+            $formattedName = $dbMatch ? \App\Models\MasterPastor::formatNama($dbMatch) : $namaPastorRekan;
+            if (!$daftarPastor->contains(fn($it) => stripos($it->nama_pastor, $formattedName) !== false)) {
+                $daftarPastor->push((object)[
+                    'id' => $dbMatch?->id ?? 2,
+                    'nama_pastor' => $formattedName,
+                    'jabatan' => 'Pastor Rekan',
+                ]);
+            }
+        }
+
+        // 3. Tambahkan pastor lain yang secara sah terdaftar bertugas di paroki ini (paroki_id = defaultParokiId)
+        foreach ($pastorsInDb as $p) {
+            $formatted = \App\Models\MasterPastor::formatNama($p);
+            $cleanP = trim(preg_replace('/^(RD\.|RP\.|Pr\.|P\.)\s*/i', '', $p->nama_pastor));
+            $alreadyExists = $daftarPastor->contains(function ($it) use ($cleanP, $formatted) {
+                return stripos($it->nama_pastor, $cleanP) !== false || stripos($it->nama_pastor, $formatted) !== false;
+            });
+            if (!$alreadyExists) {
+                $daftarPastor->push((object)[
+                    'id' => $p->id,
+                    'nama_pastor' => $formatted,
+                    'jabatan' => $p->jabatan ?: 'Pastor Rekan',
+                ]);
+            }
+        }
 
         // Dukungan parameter URL jika admin ingin langsung memilih Pastor tertentu via URL
         if ($request->filled('pastor_id')) {
             $pReq = $daftarPastor->firstWhere('id', (int) $request->query('pastor_id'));
             if ($pReq) {
-                $namaPastorParoki = trim(($pReq->gelar_depan ? $pReq->gelar_depan . ' ' : '') . $pReq->nama_pastor . ($pReq->gelar_belakang ? ', ' . $pReq->gelar_belakang : ''));
+                $namaPastorParoki = $pReq->nama_pastor;
                 $jabatanPastor = $pReq->jabatan ?: 'Pastor Rekan';
             }
         } elseif ($request->filled('pastor')) {
@@ -318,7 +379,7 @@ trait KkModuleTrait
                 return stripos($p->nama_pastor, $pSearch) !== false;
             });
             if ($pReq) {
-                $namaPastorParoki = trim(($pReq->gelar_depan ? $pReq->gelar_depan . ' ' : '') . $pReq->nama_pastor . ($pReq->gelar_belakang ? ', ' . $pReq->gelar_belakang : ''));
+                $namaPastorParoki = $pReq->nama_pastor;
                 $jabatanPastor = $pReq->jabatan ?: 'Pastor Rekan';
             }
         }

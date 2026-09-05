@@ -228,9 +228,9 @@
                     @if(isset($daftarPastor) && count($daftarPastor) > 0)
                         @foreach($daftarPastor as $p)
                             @php
-                                $fullName = trim(($p->gelar_depan ? $p->gelar_depan . ' ' : '') . $p->nama_pastor . ($p->gelar_belakang ? ', ' . $p->gelar_belakang : ''));
+                                $fullName = $p->nama_pastor;
                                 $jabatan = $p->jabatan ?: 'Pastor';
-                                $isCurrent = (str_contains($namaPastorParoki, $p->nama_pastor) || str_contains($fullName, $cleanPastorName ?? 'Herman'));
+                                $isCurrent = ($fullName === $namaPastorParoki || str_contains($namaPastorParoki, $fullName) || str_contains($fullName, $namaPastorParoki) || str_contains($fullName, $cleanPastorName ?? 'Herman'));
                                 if ($isCurrent && !$selectedFound) {
                                     $selectedFound = true;
                                     $isSelected = true;
