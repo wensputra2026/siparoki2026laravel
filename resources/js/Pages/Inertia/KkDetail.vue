@@ -62,7 +62,7 @@ const formatLogoUrl = (url, fallback) => {
 
 const keuskupanLogoUrl = computed(() => {
     const raw = props.keuskupan?.logo || props.keuskupan?.logo_url;
-    return formatLogoUrl(raw, '/uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png');
+    return formatLogoUrl(raw, '/images/logo-keuskupan.png');
 });
 
 const parokiLogoUrl = computed(() => {
@@ -173,7 +173,7 @@ const parokiAlamat = computed(() => {
                                 :src="keuskupanLogoUrl"
                                 :alt="keuskupanNama"
                                 class="w-full h-full object-contain rounded-full"
-                                @error="(e) => { e.target.src = '/uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png'; }"
+                                @error="(e) => { e.target.src = '/images/logo-keuskupan.png'; }"
                             >
                         </div>
 

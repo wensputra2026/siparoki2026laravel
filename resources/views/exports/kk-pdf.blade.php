@@ -9,7 +9,7 @@
     @php
         $keuskupanLogoUrl = !empty($keuskupanLogo)
             ? (\Illuminate\Support\Str::startsWith($keuskupanLogo, ['http://', 'https://']) ? $keuskupanLogo : asset(ltrim($keuskupanLogo, '/')))
-            : asset('uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png');
+            : asset('images/logo-keuskupan.png');
 
         $parokiLogoUrl = !empty($parokiLogo)
             ? (\Illuminate\Support\Str::startsWith($parokiLogo, ['http://', 'https://']) ? $parokiLogo : asset(ltrim($parokiLogo, '/')))

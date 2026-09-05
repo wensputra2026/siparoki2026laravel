@@ -17,7 +17,7 @@
         };
 
         $parokiLogoUrl = $formatLogo($rawParokiLogo, 'uploads/paroki/1787494152_6a8aff08b47a5.webp');
-        $keuskupanLogoUrl = $formatLogo($rawKeuskupanLogo, 'uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png');
+        $keuskupanLogoUrl = $formatLogo($rawKeuskupanLogo, 'images/logo-keuskupan.png');
     @endphp
 
     <link rel="icon" type="image/jpeg" href="{{ $parokiLogoUrl }}">

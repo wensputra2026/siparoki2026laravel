@@ -2334,7 +2334,7 @@ trait GenericModuleTrait
             $keuskupan = $paroki?->keuskupan ?? \App\Models\Keuskupan::find(5) ?? \App\Models\Keuskupan::first();
             $profilParoki = \App\Models\ProfilParoki::first();
 
-            $keuskupanLogo = $keuskupan?->logo ?: '/uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png';
+            $keuskupanLogo = $keuskupan?->logo ?: '/images/logo-keuskupan.png';
             $parokiLogo = $paroki?->logo ?: ($profilParoki?->logo ?: '/uploads/paroki/1787494152_6a8aff08b47a5.webp');
 
             $summaryLabel = in_array($slug, ['umat', 'data-umat'], true) ? 'Total Jiwa / Umat' : (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true) ? 'Total Kepala Keluarga' : 'Total Data');
