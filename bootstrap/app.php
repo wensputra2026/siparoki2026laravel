@@ -47,23 +47,25 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->respond(function ($response, \Throwable $exception, \Illuminate\Http\Request $request) {
-            if ($exception instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException && $request->isMethod('GET')) {
-                $path = trim($request->path(), '/');
-                if (str_contains($path, 'update')) {
-                    $editPath = preg_replace('#/update(?:/([^/]+))?$#', '/edit/$1', $path);
-                    if ($editPath === $path) {
-                        $editPath = preg_replace('#/([^/]+)/update$#', '/edit/$1', $path);
-                    }
-                    if ($editPath !== $path) {
-                        return redirect('/' . trim($editPath, '/'));
-                    }
-                } elseif (str_contains($path, 'store')) {
-                    $createPath = preg_replace('#/store$#', '/create', $path);
-                    if ($createPath !== $path) {
-                        return redirect('/' . trim($createPath, '/'));
+            if ($exception instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
+                if ($request->isMethod('GET')) {
+                    $path = trim($request->path(), '/');
+                    if (str_contains($path, 'update')) {
+                        $editPath = preg_replace('#/update(?:/([^/]+))?$#', '/edit/$1', $path);
+                        if ($editPath === $path) {
+                            $editPath = preg_replace('#/([^/]+)/update$#', '/edit/$1', $path);
+                        }
+                        if ($editPath !== $path) {
+                            return redirect('/' . trim($editPath, '/'));
+                        }
+                    } elseif (str_contains($path, 'store')) {
+                        $createPath = preg_replace('#/store$#', '/create', $path);
+                        if ($createPath !== $path) {
+                            return redirect('/' . trim($createPath, '/'));
+                        }
                     }
                 }
-                return redirect()->back();
+                return redirect('/');
             }
 
             $statusCode = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 500;

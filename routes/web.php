@@ -20,8 +20,13 @@ Route::prefix('api/wilayah')->group(function () {
     Route::get('/desa/{kecamatanKode}', [\App\Http\Controllers\WilayahDropdownController::class, 'getDesa'])->name('api.wilayah.desa');
 });
 
-// Beranda
-Route::get('/', [PageController::class, 'beranda'])->name('beranda');
+// Beranda (Mendukung GET, HEAD, dan graceful fallback POST agar tidak terjadi 405 Method Not Allowed)
+Route::match(['get', 'post', 'head'], '/', function (\Illuminate\Http\Request $request) {
+    if ($request->isMethod('post')) {
+        return redirect('/');
+    }
+    return app(PageController::class)->beranda($request);
+})->name('beranda');
 
 // Profil Dropdown
 Route::get('/profil', [PageController::class, 'profil'])->name('profil');
