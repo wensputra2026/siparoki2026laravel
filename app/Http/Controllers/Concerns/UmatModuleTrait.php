@@ -689,6 +689,23 @@ trait UmatModuleTrait
             ?: ($paroki?->pastor_paroki
             ?: 'RD. Herman Hilers Penga'));
 
+        // Jabatan Pastor aktif
+        $cleanPastorName = trim(preg_replace('/^(RD\.|Pr\.|RP\.|P\.)\s*/i', '', $namaPastorParoki));
+        $pastorRecord = \Illuminate\Support\Facades\DB::table('master_pastor')
+            ->where(function ($q) use ($namaPastorParoki, $cleanPastorName) {
+                $q->where('nama_pastor', $namaPastorParoki)
+                  ->orWhere('nama_pastor', 'like', '%' . $cleanPastorName . '%');
+            })
+            ->first()
+            ?? \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')
+            ->where(function ($q) use ($namaPastorParoki, $cleanPastorName) {
+                $q->where('nama_pastor', $namaPastorParoki)
+                  ->orWhere('nama_pastor', 'like', '%' . $cleanPastorName . '%');
+            })
+            ->first();
+
+        $jabatanPastor = $pastorRecord?->jabatan ?: 'Pastor Paroki';
+
         // Resolusi KUB & Ketua KUB dari Umat / Kartu Keluarga
         $kub = $umat->kub ?: ($umat->kk ? $umat->kk->kub : null);
         if (!$kub && !empty($umat->kub_id)) {
@@ -721,6 +738,7 @@ trait UmatModuleTrait
             'namaKetuaKub' => $namaKetuaKub,
             'namaKub' => $namaKub,
             'namaPastorParoki' => $namaPastorParoki,
+            'jabatanPastor' => $jabatanPastor,
             'paroki' => $paroki,
             'keuskupan' => $keuskupan,
             'profilParoki' => $profilParoki,

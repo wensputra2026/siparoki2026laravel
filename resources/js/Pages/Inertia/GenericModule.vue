@@ -4361,7 +4361,7 @@ const showKubFilter = computed(() => {
                                         <i class="fa-solid fa-house-chimney-user text-indigo-600"></i> Jumlah KK Terdata
                                     </span>
                                     <span class="font-bold text-slate-900">
-                                        {{ selectedItem.jumlah_kk || (selectedItem.kks ? selectedItem.kks.length : '—') }} KK
+                                        {{ (selectedItem.jumlah_kk !== undefined && selectedItem.jumlah_kk !== null) ? selectedItem.jumlah_kk : (selectedItem.kks ? selectedItem.kks.length : 0) }} KK
                                     </span>
                                 </div>
 

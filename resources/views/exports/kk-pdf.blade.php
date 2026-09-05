@@ -429,7 +429,7 @@
             <div><strong>Pastor Paroki / Sekretariat</strong></div>
             <div class="ttd-space"></div>
             <div class="ttd-name">({{ $profilParoki->pastor_paroki ?? ($paroki->nama_pastor_paroki_aktif ?? ($profil->pastor_paroki ?? ($namaPastor ?? 'RD. Herman Hilers Penga'))) }})</div>
-            <div style="font-size: 9px; margin-top: 2px;">{{ $paroki->nama_paroki ?? 'Pastor Paroki St. Vinsensius a Paulo' }}</div>
+            <div style="font-size: 9px; margin-top: 2px;">{{ $jabatanPastor ?? 'Pastor Paroki' }}</div>
         </div>
     </div>
 

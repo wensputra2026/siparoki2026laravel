@@ -28,6 +28,31 @@ class Kub extends Model
         'is_deleted',
     ];
 
+    protected $appends = [
+        'jumlah_kk',
+    ];
+
+    public function getJumlahKkAttribute(): int
+    {
+        if (array_key_exists('jumlah_kk', $this->attributes)) {
+            return (int) $this->attributes['jumlah_kk'];
+        }
+        if ($this->relationLoaded('kks')) {
+            return $this->kks->count();
+        }
+        return $this->kks()->count();
+    }
+
+    public function kks()
+    {
+        return $this->hasMany(KkKatolik::class, 'kub_id');
+    }
+
+    public function umats()
+    {
+        return $this->hasMany(Umat::class, 'kub_id');
+    }
+
     public function lingkungan()
     {
         return $this->belongsTo(Lingkungan::class, 'lingkungan_id');

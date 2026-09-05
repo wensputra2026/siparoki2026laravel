@@ -518,7 +518,7 @@
             <div style="margin-top: 2px;">Pastor Paroki / Sekretariat,</div>
             <div class="ttd-space"></div>
             <div class="ttd-name">{{ $namaPastorParoki }}</div>
-            <div style="font-size: 9.5px; color: #475569;">{{ $paroki->nama_paroki ?? 'Paroki St. Vinsensius a Paulo Benlutu' }}</div>
+            <div style="font-size: 9.5px; color: #475569;">{{ $jabatanPastor ?? 'Pastor Paroki' }}</div>
         </div>
     </div>
 

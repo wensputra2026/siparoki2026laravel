@@ -101,7 +101,7 @@ trait GenericModuleTrait
         } elseif ($slug === 'wilayah') {
             $query->with(['paroki', 'kubs']);
         } elseif ($slug === 'kub') {
-            $query->with(['wilayah', 'kapela', 'paroki']);
+            $query->with(['wilayah', 'kapela', 'paroki'])->withCount(['kks as jumlah_kk']);
         } elseif ($slug === 'provinsi') {
             $query->with(['kabupatens']);
         } elseif ($slug === 'kabupaten') {

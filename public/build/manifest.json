@@ -172,7 +172,7 @@
     ]
   },
   "resources/js/Pages/Inertia/GenericModule.vue": {
-    "file": "assets/GenericModule-CNRBT8il.js",
+    "file": "assets/GenericModule-DKSSELsS.js",
     "name": "GenericModule",
     "src": "resources/js/Pages/Inertia/GenericModule.vue",
     "isDynamicEntry": true,
@@ -478,7 +478,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CQZYDJsi.js",
+    "file": "assets/app-CdeLPxl5.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

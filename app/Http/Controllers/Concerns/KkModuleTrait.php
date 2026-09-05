@@ -265,6 +265,28 @@ trait KkModuleTrait
             ?? \App\Models\Keuskupan::first();
         $profilParoki = \App\Models\ProfilParoki::first();
 
+        // Nama & Jabatan Pastor Paroki aktif
+        $namaPastorParoki = $profilParoki?->pastor_paroki
+            ?: ($paroki?->nama_pastor_paroki_aktif
+            ?: ($paroki?->pastor_paroki
+            ?: 'RD. Herman Hilers Penga'));
+
+        $cleanPastorName = trim(preg_replace('/^(RD\.|Pr\.|RP\.|P\.)\s*/i', '', $namaPastorParoki));
+        $pastorRecord = \Illuminate\Support\Facades\DB::table('master_pastor')
+            ->where(function ($q) use ($namaPastorParoki, $cleanPastorName) {
+                $q->where('nama_pastor', $namaPastorParoki)
+                  ->orWhere('nama_pastor', 'like', '%' . $cleanPastorName . '%');
+            })
+            ->first()
+            ?? \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')
+            ->where(function ($q) use ($namaPastorParoki, $cleanPastorName) {
+                $q->where('nama_pastor', $namaPastorParoki)
+                  ->orWhere('nama_pastor', 'like', '%' . $cleanPastorName . '%');
+            })
+            ->first();
+
+        $jabatanPastor = $pastorRecord?->jabatan ?: 'Pastor Paroki';
+
         $keuskupanLogo = $keuskupan?->logo ?: '/uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png';
         $parokiLogo = $paroki?->logo ?: ($profilParoki?->logo ?: '/uploads/paroki/1787494152_6a8aff08b47a5.webp');
 
@@ -273,6 +295,8 @@ trait KkModuleTrait
             'paroki' => $paroki,
             'keuskupan' => $keuskupan,
             'profilParoki' => $profilParoki,
+            'namaPastorParoki' => $namaPastorParoki,
+            'jabatanPastor' => $jabatanPastor,
             'keuskupanLogo' => $keuskupanLogo,
             'parokiLogo' => $parokiLogo,
             'printedAt' => now()->format('d/m/Y H:i'),
