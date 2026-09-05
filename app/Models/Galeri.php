@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\HasIndirectId;
+use App\Models\Concerns\HasUuid;
 
 class Galeri extends Model
 {
-    use HasIndirectId;
+    use HasIndirectId, HasUuid;
 
     protected $table = 'galeri';
 
     protected $fillable = [
+        'uuid',
         'judul',
         'slug',
         'deskripsi',

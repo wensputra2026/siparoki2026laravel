@@ -180,8 +180,7 @@ trait UserModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $decodedId = decode_id($id) ?: $id;
-        $roleItem = \App\Models\Role::where('id', $decodedId)
+        $roleItem = \App\Models\Role::whereUuidOrId($id)
             ->orWhere('slug', $id)
             ->first();
 

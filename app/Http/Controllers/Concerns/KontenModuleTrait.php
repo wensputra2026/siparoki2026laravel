@@ -35,9 +35,8 @@ trait KontenModuleTrait
 
     public function editKonten(Request $request, $id): Response
     {
-        $decodedId = decode_id($id) ?: $id;
         $item = \App\Models\Konten::query()
-            ->where('id', $decodedId)
+            ->whereUuidOrId($id)
             ->orWhere('slug', $id)
             ->first();
 
@@ -54,9 +53,8 @@ trait KontenModuleTrait
 
     public function previewKonten(Request $request, $id): Response
     {
-        $decodedId = decode_id($id) ?: $id;
         $item = \App\Models\Konten::query()
-            ->where('id', $decodedId)
+            ->whereUuidOrId($id)
             ->orWhere('slug', $id)
             ->first();
 

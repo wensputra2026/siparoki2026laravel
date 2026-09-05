@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\HasIndirectId;
+use App\Models\Concerns\HasUuid;
 
 class Umat extends Model
 {
-    use HasIndirectId;
+    use HasIndirectId, HasUuid;
 
     protected $table = 'umat';
 
     protected $fillable = [
+        'uuid',
         'niu',
         'kk_id',
         'no_urut_anggota',

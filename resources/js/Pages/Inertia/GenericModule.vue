@@ -1990,6 +1990,7 @@ onMounted(() => {
 
 const resolveEntityId = (item) => {
     if (!item) return '';
+    if (item.uuid) return item.uuid;
     if (item.id !== undefined && item.id !== null && item.id !== '') return item.id;
     if (item.id_desa !== undefined && item.id_desa !== null && item.id_desa !== '') return item.id_desa;
     if (item.id_kecamatan !== undefined && item.id_kecamatan !== null && item.id_kecamatan !== '') return item.id_kecamatan;
@@ -3045,7 +3046,7 @@ const showKubFilter = computed(() => {
                                     <!-- 1. Detail / Preview Button (Exactly ONE view icon per row) -->
                                     <Link
                                         v-if="moduleKey === 'konten'"
-                                        :href="`${basePrefix}/konten/${item.id || item.slug}/preview`"
+                                        :href="`${basePrefix}/konten/${item.uuid || item.id || item.slug}/preview`"
                                         title="Preview Konten"
                                         class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                     >
@@ -3053,7 +3054,7 @@ const showKubFilter = computed(() => {
                                     </Link>
                                     <Link
                                         v-else-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey)"
-                                        :href="`${basePrefix}/kk-katolik/${item.id || item.no_kk_kw}/view`"
+                                        :href="`${basePrefix}/kk-katolik/${item.uuid || item.id || item.no_kk_kw}/view`"
                                         title="Lihat Detail Kartu Keluarga"
                                         class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                     >
@@ -3072,7 +3073,7 @@ const showKubFilter = computed(() => {
                                     <!-- 2. Cetak Button (Only for KK, and only for non-read-only roles) -->
                                     <a
                                         v-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) && !isUmatReadOnlyRole"
-                                        :href="`${basePrefix}/kk-katolik/${item.id || item.no_kk_kw}/cetak`"
+                                        :href="`${basePrefix}/kk-katolik/${item.uuid || item.id || item.no_kk_kw}/cetak`"
                                         target="_blank"
                                         title="Cetak Kartu Keluarga (PDF / Print)"
                                         class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
@@ -3083,7 +3084,7 @@ const showKubFilter = computed(() => {
                                     <template v-if="['umat', 'data-umat'].includes(moduleKey)">
                                         <Link
                                             v-if="!isUmatReadOnlyRole"
-                                            :href="`${basePrefix}/umat/${item.id}/mutasi`"
+                                            :href="`${basePrefix}/umat/${item.uuid || item.id}/mutasi`"
                                             title="Mutasi / Pindah KUB"
                                             class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-teal-50 hover:text-teal-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         >
@@ -3091,14 +3092,14 @@ const showKubFilter = computed(() => {
                                         </Link>
                                         <Link
                                             v-if="!isUmatReadOnlyRole"
-                                            :href="`${basePrefix}/umat/${item.id}/pisah-kk`"
+                                            :href="`${basePrefix}/umat/${item.uuid || item.id}/pisah-kk`"
                                             title="Pisah KK (Menikah / Bentuk Keluarga Baru)"
                                             class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-purple-50 hover:text-purple-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         >
                                             <i class="fa-solid fa-people-roof text-xs"></i>
                                         </Link>
                                         <Link
-                                            :href="`${basePrefix}/umat/${item.id}/riwayat`"
+                                            :href="`${basePrefix}/umat/${item.uuid || item.id}/riwayat`"
                                             title="Riwayat Mutasi & Pergerakan Umat"
                                             class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         >
@@ -3110,7 +3111,7 @@ const showKubFilter = computed(() => {
                                     <template v-if="!isUmatReadOnlyRole">
                                         <Link
                                             v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
-                                            :href="moduleKey === 'konten' ? `${basePrefix}/konten/${item.id || item.slug}/edit` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/${moduleKey}/${item.id || item.slug || item.no_kk_kw}/edit` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/${item.id}/edit` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/${item.id}/edit` : `${basePrefix}/role/${item.id || item.id_role || item.slug}/edit`)))"
+                                            :href="moduleKey === 'konten' ? `${basePrefix}/konten/${item.uuid || item.id || item.slug}/edit` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/${moduleKey}/${item.uuid || item.id || item.slug || item.no_kk_kw}/edit` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/${item.uuid || item.id}/edit` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/${item.uuid || item.id}/edit` : `${basePrefix}/role/${item.uuid || item.id || item.id_role || item.slug}/edit`)))"
                                             title="Ubah Data"
                                             class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         >

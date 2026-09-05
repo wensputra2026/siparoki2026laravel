@@ -155,7 +155,7 @@
     ]
   },
   "resources/js/Pages/Inertia/GenericModule.vue": {
-    "file": "assets/GenericModule-CV2G1jiS.js",
+    "file": "assets/GenericModule-Bd92NOIJ.js",
     "name": "GenericModule",
     "src": "resources/js/Pages/Inertia/GenericModule.vue",
     "isDynamicEntry": true,
@@ -169,7 +169,7 @@
     ]
   },
   "resources/js/Pages/Inertia/KkDetail.vue": {
-    "file": "assets/KkDetail-Dw1EeC1I.js",
+    "file": "assets/KkDetail-CUCkPTdg.js",
     "name": "KkDetail",
     "src": "resources/js/Pages/Inertia/KkDetail.vue",
     "isDynamicEntry": true,
@@ -181,7 +181,7 @@
     ]
   },
   "resources/js/Pages/Inertia/KkForm.vue": {
-    "file": "assets/KkForm-B6Uixq2p.js",
+    "file": "assets/KkForm-BFobwdes.js",
     "name": "KkForm",
     "src": "resources/js/Pages/Inertia/KkForm.vue",
     "isDynamicEntry": true,
@@ -346,7 +346,7 @@
     ]
   },
   "resources/js/Pages/Inertia/UmatForm.vue": {
-    "file": "assets/UmatForm-BX09PXN5.js",
+    "file": "assets/UmatForm-BzPIMsXo.js",
     "name": "UmatForm",
     "src": "resources/js/Pages/Inertia/UmatForm.vue",
     "isDynamicEntry": true,
@@ -436,7 +436,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app--FJ1cHr3.js",
+    "file": "assets/app-IeXxj_in.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

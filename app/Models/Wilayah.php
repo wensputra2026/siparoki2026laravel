@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasUuid;
+
 class Wilayah extends Model
 {
+    use HasUuid;
 
     protected $table = 'wilayah';
 
     protected $fillable = [
+        'uuid',
         'paroki_id',
         'kode_wilayah',
         'nama_wilayah',

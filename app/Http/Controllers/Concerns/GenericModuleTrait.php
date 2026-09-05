@@ -1031,8 +1031,14 @@ trait GenericModuleTrait
 
         $decodedId = decode_id($id) ?: $id;
 
-        // Try by the model's declared primary key first
-        $item = $modelClass::where($pk, $decodedId)->first();
+        // Try by UUID or model's declared primary key first
+        $item = null;
+        if (method_exists($modelClass, 'scopeWhereUuidOrId')) {
+            $item = $modelClass::whereUuidOrId($id)->first();
+        }
+        if (!$item) {
+            $item = $modelClass::where($pk, $decodedId)->first();
+        }
 
         // Fallback: try common primary key patterns
         if (!$item) {
@@ -1564,7 +1570,13 @@ trait GenericModuleTrait
         $modelInstance = new $modelClass;
         $pk = $modelInstance->getKeyName();
         $decodedId = decode_id($id) ?: $id;
-        $item = $modelClass::where($pk, $decodedId)->first();
+        $item = null;
+        if (method_exists($modelClass, 'scopeWhereUuidOrId')) {
+            $item = $modelClass::whereUuidOrId($id)->first();
+        }
+        if (!$item) {
+            $item = $modelClass::where($pk, $decodedId)->first();
+        }
         if (!$item && is_numeric($decodedId)) {
             $item = $modelClass::find($decodedId);
         }
@@ -1686,7 +1698,12 @@ trait GenericModuleTrait
             $decodedIds = array_values(array_filter($decodedIds, fn ($id) => (int)$id !== (int)auth()->id()));
         }
 
-        $items = $modelClass::whereIn($pk, $decodedIds)->get();
+        $items = $modelClass::where(function ($q) use ($pk, $decodedIds, $ids, $modelInstance) {
+            $q->whereIn($pk, $decodedIds);
+            if (\Illuminate\Support\Facades\Schema::hasColumn($modelInstance->getTable(), 'uuid')) {
+                $q->orWhereIn('uuid', $ids);
+            }
+        })->get();
         if ($items->isEmpty() && in_array('slug', \Illuminate\Support\Facades\Schema::getColumnListing($modelInstance->getTable()))) {
             $items = $modelClass::whereIn('slug', $ids)->get();
         }

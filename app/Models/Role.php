@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\HasIndirectId;
+use App\Models\Concerns\HasUuid;
 
 class Role extends Model
 {
-    use HasIndirectId;
+    use HasIndirectId, HasUuid;
 
     protected $table = 'roles';
 
     protected $fillable = [
+        'uuid',
         'nama_role',
         'slug',
         'deskripsi',

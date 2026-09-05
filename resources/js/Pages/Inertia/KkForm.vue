@@ -604,8 +604,8 @@ const submitForm = () => {
         });
     }
 
-    if (props.isEdit && props.kkItem?.id) {
-        form.put(`${basePrefix.value}/kk-katolik/${props.kkItem.id}`);
+    if (props.isEdit && (props.kkItem?.uuid || props.kkItem?.id)) {
+        form.put(`${basePrefix.value}/kk-katolik/${props.kkItem.uuid || props.kkItem.id}`);
     } else {
         form.post(`${basePrefix.value}/kk-katolik`);
     }

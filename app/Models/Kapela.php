@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasUuid;
+
 class Kapela extends Model
 {
+    use HasUuid;
 
     protected $table = 'kapela';
 
     protected $fillable = [
+        'uuid',
         'paroki_id',
         'kode_kapela',
         'nama_kapela',

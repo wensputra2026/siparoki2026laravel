@@ -451,8 +451,7 @@ trait UmatModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $decodedId = decode_id($id) ?: $id;
-        $umatItem = \App\Models\Umat::findOrFail($decodedId);
+        $umatItem = \App\Models\Umat::findByUuidOrIdOrFail($id);
         $umatItem->hashid = encode_id($umatItem->id);
         $umatItem->iid = $umatItem->hashid;
 
@@ -516,8 +515,7 @@ trait UmatModuleTrait
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
 
-        $decodedId = decode_id($id) ?: $id;
-        $umat = \App\Models\Umat::findOrFail($decodedId);
+        $umat = \App\Models\Umat::findByUuidOrIdOrFail($id);
         $data = $request->all();
         $validColumns = $this->schemaColumns('umat');
         $cleanData = [];

@@ -127,8 +127,7 @@ trait PastorModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $decodedId = decode_id($id) ?: $id;
-        $pastorItem = \App\Models\MasterPastor::findOrFail($decodedId);
+        $pastorItem = \App\Models\MasterPastor::findByUuidOrIdOrFail($id);
         $pastorItem->hashid = encode_id($pastorItem->id);
         $pastorItem->iid = $pastorItem->hashid;
 
@@ -257,8 +256,7 @@ trait PastorModuleTrait
 
     public function updatePastor(Request $request, $id)
     {
-        $decodedId = decode_id($id) ?: $id;
-        $pastor = \App\Models\MasterPastor::findOrFail($decodedId);
+        $pastor = \App\Models\MasterPastor::findByUuidOrIdOrFail($id);
         $data = $request->all();
 
         // Ensure schema columns exist for advanced pastor fields

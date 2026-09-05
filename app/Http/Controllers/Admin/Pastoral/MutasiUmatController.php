@@ -47,7 +47,7 @@ class MutasiUmatController extends Controller
      */
     public function showMutasi(Request $request, $id)
     {
-        $umat = Umat::with('kk.kub', 'kk.wilayah', 'kk.kapela')->findOrFail($id);
+        $umat = Umat::with('kk.kub', 'kk.wilayah', 'kk.kapela')->whereUuidOrId($id)->firstOrFail();
         $kkAsal = $umat->kk;
         $kubAsal = $kkAsal?->kub;
 
@@ -81,14 +81,14 @@ class MutasiUmatController extends Controller
             'tgl_mutasi' => 'nullable|date',
         ]);
 
-        $umat = Umat::with('kk.kub', 'kk.wilayah', 'kk.kapela')->findOrFail($id);
+        $umat = Umat::with('kk.kub', 'kk.wilayah', 'kk.kapela')->whereUuidOrId($id)->firstOrFail();
         $kkLama = $umat->kk;
         $kubAsal = $kkLama?->kub;
         $kkBaru = KkKatolik::with('kub', 'wilayah', 'kapela')->findOrFail($data['kk_tujuan_id']);
         $kubTujuan = $kkBaru->kub;
 
         if ($kubAsal && $kubTujuan && (int) $kubAsal->id === (int) $kubTujuan->id) {
-            return redirect()->back()->with('error', 'KUB tujuan sama dengan KUB saat ini. Pilih KUB yang berbeda.');
+            return back()->withErrors(['kk_tujuan_id' => 'KUB asal dan KUB tujuan sama. Tidak perlu mutasi antar KUB.']);
         }
 
         DB::transaction(function () use ($umat, $kkLama, $kkBaru, $kubAsal, $kubTujuan, $data, $request) {
@@ -120,7 +120,7 @@ class MutasiUmatController extends Controller
         });
 
         $prefix = $this->resolvePrefix($request);
-        return redirect()->route("panel.{$prefix}.umat.riwayat", [$id])
+        return redirect()->route("panel.{$prefix}.umat.riwayat", [$umat->uuid ?: $umat->id])
             ->with('success', "Mutasi umat ke KUB {$kubTujuan?->nama_kub} berhasil dicatat. Riwayat tersimpan.");
     }
 
@@ -129,7 +129,7 @@ class MutasiUmatController extends Controller
      */
     public function showPisah(Request $request, $id)
     {
-        $umat = Umat::with('kk.kub', 'kk.wilayah', 'kk.kapela')->findOrFail($id);
+        $umat = Umat::with('kk.kub', 'kk.wilayah', 'kk.kapela')->whereUuidOrId($id)->firstOrFail();
         $kkAsal = $umat->kk;
         $kubAsal = $kkAsal?->kub;
 
@@ -164,7 +164,7 @@ class MutasiUmatController extends Controller
             'alasan' => 'nullable|string|max:500',
         ]);
 
-        $umat = Umat::with('kk.kub', 'kk.wilayah', 'kk.kapela')->findOrFail($id);
+        $umat = Umat::with('kk.kub', 'kk.wilayah', 'kk.kapela')->whereUuidOrId($id)->firstOrFail();
         $kkLama = $umat->kk;
         $kubAsal = $kkLama?->kub;
         $kubTujuan = Kub::with('wilayah', 'kapela')->findOrFail($data['kub_tujuan_id']);
@@ -204,12 +204,12 @@ class MutasiUmatController extends Controller
                 'jenis_mutasi' => 'Pisah KK (Menikah)',
                 'kk_id' => $kkBaru->id,
                 'kub_asal_id' => $kubAsal?->id,
-                'kub_tujuan_id' => $kubTujuan->id,
+                'kub_tujuan_id' => $kubTujuan?->id,
                 'wilayah_asal_id' => $kkLama?->wilayah_id,
-                'wilayah_tujuan_id' => $kubTujuan->wilayah_id,
+                'wilayah_tujuan_id' => $kkBaru->wilayah_id,
                 'paroki_asal_id' => $kubAsal?->paroki_id,
-                'paroki_tujuan_id' => $kubTujuan->paroki_id,
-                'alasan' => $data['alasan'] ?? 'Pisah KK akibat perkawinan',
+                'paroki_tujuan_id' => $kubTujuan?->paroki_id,
+                'alasan' => $data['alasan'] ?? 'Menikah & Membentuk Keluarga Baru',
                 'tgl_mutasi' => $data['tgl_perkawinan'] ?? now(),
                 'created_by' => Auth::id(),
                 'created_at' => now(),
@@ -218,8 +218,8 @@ class MutasiUmatController extends Controller
         });
 
         $prefix = $this->resolvePrefix($request);
-        return redirect()->route("panel.{$prefix}.umat.riwayat", [$id])
-            ->with('success', "Pisah KK berhasil. KK baru (No. {$data['no_kk_kw']}) dibentuk di KUB {$kubTujuan->nama_kub}. Riwayat tersimpan.");
+        return redirect()->route("panel.{$prefix}.umat.riwayat", [$umat->uuid ?: $umat->id])
+            ->with('success', "Pisah KK berhasil. Keluarga baru ({$kkBaru?->nama_lahir_pemilik}) telah dibuat di KUB {$kubTujuan?->nama_kub}.");
     }
 
     /**
@@ -227,14 +227,14 @@ class MutasiUmatController extends Controller
      */
     public function showRiwayat(Request $request, $id)
     {
-        $umat = Umat::findOrFail($id);
+        $umat = Umat::whereUuidOrId($id)->firstOrFail();
         $prefix = $this->resolvePrefix($request);
 
         $riwayat = DB::table('riwayat_mutasi_umat as r')
             ->leftJoin('kub as ka', 'ka.id', '=', 'r.kub_asal_id')
             ->leftJoin('kub as kt', 'kt.id', '=', 'r.kub_tujuan_id')
             ->leftJoin('kk_katolik as kk', 'kk.id', '=', 'r.kk_id')
-            ->where('r.umat_id', $id)
+            ->where('r.umat_id', $umat->id)
             ->orderByDesc('r.id')
             ->select(
                 'r.id',

@@ -664,6 +664,9 @@ class PageController extends Controller
                 $query = DB::table('stasi_kapela')
                     ->where(function($q) use ($id, $decodedId) {
                         $q->where('slug', $id);
+                        if (\Illuminate\Support\Str::isUuid($id)) {
+                            $q->orWhere('uuid', $id);
+                        }
                         if ($decodedId) {
                             $q->orWhere('id_stasi_kapela', $decodedId)->orWhere('id', $decodedId);
                         }
@@ -701,6 +704,9 @@ class PageController extends Controller
                 $kapela = DB::table('kapela')
                     ->where(function($q) use ($id, $decodedId) {
                         $q->where('slug', $id);
+                        if (\Illuminate\Support\Str::isUuid($id)) {
+                            $q->orWhere('uuid', $id);
+                        }
                         if ($decodedId) {
                             $q->orWhere('id', $decodedId);
                         }

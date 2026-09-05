@@ -3,11 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasUuid;
 
 class Kub extends Model
 {
+    use HasUuid;
+
     protected $table = 'kub';
     protected $fillable = [
+        'uuid',
         'paroki_id',
         'wilayah_id',
         'kapela_id',

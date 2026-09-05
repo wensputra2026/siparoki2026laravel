@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\HasIndirectId;
+use App\Models\Concerns\HasUuid;
 
 class KkKatolik extends Model
 {
-    use HasIndirectId;
+    use HasIndirectId, HasUuid;
 
     protected $table = 'kk_katolik';
 
     protected $fillable = [
+        'uuid',
         'no_kk_kw',
         'no_kk_dukcapil',
         'nik_pemilik',

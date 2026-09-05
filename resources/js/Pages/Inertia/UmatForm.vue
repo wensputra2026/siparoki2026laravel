@@ -264,7 +264,7 @@ const submitForm = () => {
 
     isSubmitting.value = true;
     const targetUrl = props.isEdit
-        ? `/${props.prefix}/umat/${props.umatItem.id}/update`
+        ? `/${props.prefix}/umat/${props.umatItem.uuid || props.umatItem.id}/update`
         : `/${props.prefix}/umat/store`;
 
     router.post(targetUrl, form.value, {

@@ -69,9 +69,8 @@ trait GaleriModuleTrait
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $decodedId = decode_id($id) ?: $id;
         $item = \App\Models\Galeri::query()
-            ->where('id', $decodedId)
+            ->whereUuidOrId($id)
             ->orWhere('slug', $id)
             ->firstOrFail();
 

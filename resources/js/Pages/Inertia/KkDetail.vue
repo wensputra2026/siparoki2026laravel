@@ -12,8 +12,8 @@ const props = defineProps({
 });
 
 const basePrefix = computed(() => `/${props.prefix}`);
-const printUrl = computed(() => `${basePrefix.value}/kk-katolik/${props.kk.id}/cetak`);
-const editUrl = computed(() => `${basePrefix.value}/kk-katolik/${props.kk.id}/edit`);
+const printUrl = computed(() => `${basePrefix.value}/kk-katolik/${props.kk.uuid || props.kk.id}/cetak`);
+const editUrl = computed(() => `${basePrefix.value}/kk-katolik/${props.kk.uuid || props.kk.id}/edit`);
 const listUrl = computed(() => `${basePrefix.value}/kk-katolik`);
 
 const formatDate = (d) => {
