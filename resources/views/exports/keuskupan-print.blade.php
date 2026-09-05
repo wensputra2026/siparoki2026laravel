@@ -400,7 +400,21 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php $lastCategory = null; @endphp
                     @forelse ($rows as $index => $row)
+                        @php
+                            $rowArr = is_array($row) ? $row : (array) $row;
+                            $currentCategory = $rowArr[0] ?? '';
+                            $isNewCategory = ($currentCategory !== $lastCategory);
+                            $lastCategory = $currentCategory;
+                        @endphp
+                        @if ($isStatistik && $isNewCategory)
+                            <tr class="category-header-row" style="background: #e2e8f0; border-top: 2px solid #94a3b8; page-break-after: avoid;">
+                                <td colspan="{{ count($headings) + 1 }}" style="font-weight: 900; font-size: 11px; text-transform: uppercase; color: #0f172a; padding: 8px 12px; letter-spacing: 0.04em; background: #e2e8f0;">
+                                    &#9656; {{ $currentCategory }}
+                                </td>
+                            </tr>
+                        @endif
                         <tr>
                             <td class="no">{{ $index + 1 }}</td>
                             @foreach ($row as $value)

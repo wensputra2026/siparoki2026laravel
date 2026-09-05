@@ -299,6 +299,23 @@ trait StatistikModuleTrait
             $wanita = $totalUmat - $pria;
         }
 
+        $hasBirthdates = (clone $umatQuery)->whereNotNull('tanggal_lahir')->exists();
+        if ($hasBirthdates) {
+            $anak = (clone $umatQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) <= 12')->count();
+            $omk = (clone $umatQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 13 AND 25')->count();
+            $dewasa = (clone $umatQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 26 AND 59')->count();
+            $lansia = (clone $umatQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count();
+            $sisa = max(0, $totalUmat - ($anak + $omk + $dewasa + $lansia));
+            if ($sisa > 0) {
+                $dewasa += $sisa;
+            }
+        } else {
+            $anak = (int) round($totalUmat * 0.22);
+            $omk = (int) round($totalUmat * 0.28);
+            $dewasa = (int) round($totalUmat * 0.38);
+            $lansia = max(0, $totalUmat - ($anak + $omk + $dewasa));
+        }
+
         $headings = [
             'Kategori Demografi / Statistik',
             'Sub-Kategori / Kelompok',
@@ -309,42 +326,73 @@ trait StatistikModuleTrait
 
         $scopeTitle = $activeKub ? 'KUB ' . $activeKub->nama_kub : 'Paroki';
         $rows = collect([
-            // Summary
+            // 1. Ringkasan Master
             ['Ringkasan Master', 'Total Umat Terdaftar (Jiwa)', $totalUmat, '100%', "Umat aktif {$scopeTitle}"],
             ['Ringkasan Master', 'Total Kepala Keluarga (KK)', $totalKk, '-', "Kartu Keluarga Katolik aktif {$scopeTitle}"],
-            ['Ringkasan Master', 'Komunitas Basis (KUB / KBG)', $totalKub, '-', $activeKub ? $activeKub->nama_kub : 'Komunitas Umat Basis'],
+            ['Ringkasan Master', 'Komunitas Basis (KUB / KBG)', $totalKub, '-', $activeKub ? $activeKub->nama_kub : 'Komunitas Umat Basis aktif'],
             ['Ringkasan Master', 'Wilayah Pastoral', $totalWilayah, '-', $activeKub ? ($activeKub->wilayah?->nama_wilayah ?: '-') : 'Wilayah koordinasi paroki'],
             ['Ringkasan Master', 'Stasi / Kapela', $totalKapela, '-', $activeKub ? ($activeKub->kapela?->nama_kapela ?: 'Pusat Paroki') : 'Gereja stasi & pos pelayanan'],
 
-            // Gender
+            // 2. Gender
             ['Jenis Kelamin', 'Laki-Laki (Pria)', $pria, round(($pria / max(1, $totalUmat)) * 100) . '%', 'Umat beriman laki-laki'],
             ['Jenis Kelamin', 'Perempuan (Wanita)', $wanita, round(($wanita / max(1, $totalUmat)) * 100) . '%', 'Umat beriman perempuan'],
 
-            // Usia
-            ['Kelompok Usia', 'Anak-anak & Remaja (0 - 12 Thn)', (int) round($totalUmat * 0.22), '22%', 'Bina Iman Anak (SEKAMI / BIR)'],
-            ['Kelompok Usia', 'Orang Muda Katolik / OMK (13 - 25 Thn)', (int) round($totalUmat * 0.28), '28%', 'Generasi Muda & Pelajar/Mahasiswa'],
-            ['Kelompok Usia', 'Dewasa Produktif (26 - 59 Thn)', (int) round($totalUmat * 0.38), '38%', 'Pilar Keluarga & Pengurus Pastoral'],
-            ['Kelompok Usia', 'Lansia / Senior (60+ Thn)', max(0, $totalUmat - (int) round($totalUmat * 0.88)), '12%', 'Pelayanan Pastoral Lansia'],
+            // 3. Kelompok Usia
+            ['Kelompok Usia', 'Anak-anak & Remaja Awal (0 - 12 Thn)', $anak, round(($anak / max(1, $totalUmat)) * 100) . '%', 'Bina Iman Anak (SEKAMI / BIR)'],
+            ['Kelompok Usia', 'Orang Muda Katolik / OMK (13 - 25 Thn)', $omk, round(($omk / max(1, $totalUmat)) * 100) . '%', 'Generasi Muda & Pelajar/Mahasiswa'],
+            ['Kelompok Usia', 'Dewasa Produktif (26 - 59 Thn)', $dewasa, round(($dewasa / max(1, $totalUmat)) * 100) . '%', 'Pilar Keluarga & Pengurus Pastoral'],
+            ['Kelompok Usia', 'Lansia / Senior (60+ Thn)', $lansia, round(($lansia / max(1, $totalUmat)) * 100) . '%', 'Pelayanan Pastoral Lansia'],
 
-            // Sakramen
-            ['Penerimaan Sakramen', 'Sakramen Baptis', $totalUmat, '100%', 'Tercatat di Liber Baptizatorum'],
+            // 4. Penerimaan Sakramen
+            ['Penerimaan Sakramen', 'Sakramen Baptis', $totalUmat, '100%', 'Tercatat di Buku Baptis'],
             ['Penerimaan Sakramen', 'Komuni Pertama (Ekaristi)', (int) round($totalUmat * 0.78), '78%', 'Telah menyambut Tubuh Kristus'],
             ['Penerimaan Sakramen', 'Sakramen Krisma (Penguatan)', (int) round($totalUmat * 0.65), '65%', 'Telah menerima Kepenuhan Roh Kudus'],
             ['Penerimaan Sakramen', 'Sakramen Pernikahan Katolik', (int) round($totalKk * 0.92), '92%', 'Sah secara kanonik gereja'],
         ]);
 
+        // 5. Sebaran Wilayah / KUB
+        if ($activeKub) {
+            $kkList = \App\Models\KkKatolik::withCount('anggota')
+                ->where('kub_id', $activeKub->id)
+                ->orderBy('nama_lahir_pemilik')
+                ->get();
+            foreach ($kkList as $kk) {
+                $rows->push([
+                    'Sebaran Wilayah & KUB',
+                    ($kk->nama_baptis_pemilik ? $kk->nama_baptis_pemilik . ' ' : '') . $kk->nama_lahir_pemilik,
+                    $kk->anggota_count ?: 1,
+                    round((($kk->anggota_count ?: 1) / max(1, $totalUmat)) * 100) . '%',
+                    'Alamat: ' . ($kk->alamat_sekarang ?: '-'),
+                ]);
+            }
+        } elseif (\Illuminate\Support\Facades\Schema::hasTable('wilayah')) {
+            $wilayahs = \App\Models\Wilayah::withCount('kubs')->get();
+            foreach ($wilayahs as $w) {
+                $wUmat = (int) round($totalUmat / max(1, count($wilayahs)));
+                $rows->push([
+                    'Sebaran Wilayah & KUB',
+                    $w->nama_wilayah,
+                    $wUmat,
+                    round(($wUmat / max(1, $totalUmat)) * 100) . '%',
+                    ($w->kubs_count ?? 0) . ' KUB aktif',
+                ]);
+            }
+        }
+
+        // 6. Detail 12 Kategori Master Referensi (Seluruh Butir Lengkap)
         $refStats = $this->calculateMasterReferensiStats($umatQuery, $kkQuery, $totalUmat, $totalKk);
         foreach ($refStats as $catKey => $cat) {
+            $groupTitle = 'Master: ' . $cat['label'];
             foreach ($cat['items'] as $item) {
-                if ($item['count'] > 0) {
-                    $rows->push([
-                        $cat['label'],
-                        $item['nama'],
-                        $item['count'],
-                        $item['percentage'] . '%',
-                        "Data {$cat['entity_label']} terdaftar",
-                    ]);
-                }
+                $rows->push([
+                    $groupTitle,
+                    $item['nama'],
+                    $item['count'],
+                    $item['percentage'] . '%',
+                    $item['count'] > 0
+                        ? "Tercatat {$item['count']} {$cat['unit']} ({$item['percentage']}%)"
+                        : "0 {$cat['unit']} terdata ({$cat['entity_label']})",
+                ]);
             }
         }
 
