@@ -172,14 +172,24 @@ const isSuperAdmin = computed(() => {
 
 const onScopeChange = (type, val) => {
     if (typeof window === 'undefined') return;
-    const currentPath = _page?.url?.split('?')[0] || window.location.pathname;
-    const url = new URL(window.location.origin + currentPath);
-    if (val) {
-        url.searchParams.set(type, val);
-    } else {
-        url.searchParams.delete(type);
-    }
-    router.visit(url.pathname + url.search, { preserveState: true, preserveScroll: true });
+    router.post('/api/set-active-scope', { scope_type: type, scope_id: val }, {
+        preserveScroll: true,
+        preserveState: false,
+        onSuccess: () => {
+            const currentPath = _page?.url?.split('?')[0] || window.location.pathname;
+            const url = new URL(window.location.origin + currentPath);
+            if (val) {
+                url.searchParams.set(type, val);
+            } else {
+                url.searchParams.delete(type);
+            }
+            router.visit(url.pathname + url.search, { preserveState: false, preserveScroll: true });
+        },
+    });
+};
+
+const leaveImpersonation = () => {
+    router.post('/impersonate/leave');
 };
 
 const resolveRoleFromPath = () => {
@@ -363,6 +373,19 @@ const init = (page) => {
         { immediate: true }
     );
 
+    watch(
+        () => page.props.activeScope,
+        (scope) => {
+            if (scope) {
+                if (scope.kub_id) selectedKubId.value = scope.kub_id;
+                if (scope.wilayah_id) selectedWilayahId.value = scope.wilayah_id;
+                if (scope.kapela_id) selectedKapelaId.value = scope.kapela_id;
+                if (scope.pastor_id) selectedPastorId.value = scope.pastor_id;
+            }
+        },
+        { immediate: true, deep: true }
+    );
+
     onMounted(() => {
         // Tunda satu frame agar transisi lebar tidak animasi saat paint pertama.
         requestAnimationFrame(() => {
@@ -424,6 +447,7 @@ export function useRoleMenu(props) {
         kubList,
         selectedKubId,
         onScopeChange,
+        leaveImpersonation,
         isSuperAdmin,
         activeRole,
         onRoleChange,

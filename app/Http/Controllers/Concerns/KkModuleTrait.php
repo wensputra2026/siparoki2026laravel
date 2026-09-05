@@ -61,10 +61,15 @@ trait KkModuleTrait
         $defaultNoKk = 'K' . $kodeKeuskupan . $kodeParoki . $nextSeq;
 
         $authUser = $request->user();
-        $userKubId = $authUser?->kub_id;
-        $userKub = $userKubId ? \App\Models\Kub::find($userKubId) : null;
-        $userWilayahId = $authUser?->wilayah_id ?: $userKub?->wilayah_id;
-        $userKapelaId = $authUser?->kapela_id ?: $userKub?->kapela_id;
+        $targetKubId = $authUser?->kub_id ?: ($firstSegment === 'kub' ? (session('simulated_kub_id') ?: $request->input('kub_id')) : null);
+        if (!$targetKubId && $firstSegment === 'kub') {
+            $targetKubId = \App\Models\User::whereNotNull('kub_id')->value('kub_id') ?: \App\Models\Kub::value('id');
+            session(['simulated_kub_id' => $targetKubId]);
+        }
+        $userKub = $targetKubId ? \App\Models\Kub::find($targetKubId) : null;
+        $userKubId = $userKub?->id;
+        $userWilayahId = $authUser?->wilayah_id ?: $userKub?->wilayah_id ?: ($firstSegment === 'wilayah' ? (session('simulated_wilayah_id') ?: $request->input('wilayah_id')) : null);
+        $userKapelaId = $authUser?->kapela_id ?: $userKub?->kapela_id ?: ($firstSegment === 'kapela' ? (session('simulated_kapela_id') ?: $request->input('kapela_id')) : null);
 
         return Inertia::render('Inertia/KkForm', [
             'role' => $resolvedRole,
@@ -136,10 +141,26 @@ trait KkModuleTrait
         $defaultNoKk = $kkItem->no_kk_kw ?: ('K' . $kodeKeuskupan . $kodeParoki . $nextSeq);
 
         $authUser = $request->user();
-        $userKubId = $authUser?->kub_id;
-        $userKub = $userKubId ? \App\Models\Kub::find($userKubId) : null;
-        $userWilayahId = $authUser?->wilayah_id ?: $userKub?->wilayah_id;
-        $userKapelaId = $authUser?->kapela_id ?: $userKub?->kapela_id;
+        $isSuperAdmin = (int)($authUser?->role_id ?? 0) === 1 || in_array(strtolower($authUser?->role?->nama_role ?? ''), ['super admin', 'superadmin'], true);
+        $targetKubId = $authUser?->kub_id ?: ($firstSegment === 'kub' ? (session('simulated_kub_id') ?: $request->input('kub_id')) : null);
+
+        // Proteksi Hak Akses Level KUB: Ketua KUB tidak boleh mengakses data KK di luar KUB-nya
+        if ($firstSegment === 'kub' || (!$isSuperAdmin && $authUser?->kub_id)) {
+            if ($targetKubId && $kkItem->kub_id && (int)$kkItem->kub_id !== (int)$targetKubId) {
+                if (!$isSuperAdmin) {
+                    return redirect("/{$firstSegment}/kk-katolik")->with('error', 'Anda tidak memiliki hak akses untuk mengedit data KK di luar KUB Anda.');
+                } else {
+                    // Jika Super Admin membuka KK tertentu dalam mode KUB, sinkronkan simulasi KUB
+                    session(['simulated_kub_id' => $kkItem->kub_id]);
+                    $targetKubId = $kkItem->kub_id;
+                }
+            }
+        }
+
+        $userKub = $targetKubId ? \App\Models\Kub::find($targetKubId) : ($kkItem->kub_id ? \App\Models\Kub::find($kkItem->kub_id) : null);
+        $userKubId = $userKub?->id ?: $kkItem->kub_id;
+        $userWilayahId = $userKub?->wilayah_id ?: $kkItem->wilayah_id;
+        $userKapelaId = $userKub?->kapela_id ?: $kkItem->kapela_id;
 
         return Inertia::render('Inertia/KkForm', [
             'role' => $resolvedRole,
@@ -346,10 +367,14 @@ trait KkModuleTrait
 
         // Auto-assign KUB & Wilayah if logged in as KUB role or if kub_id is provided
         $user = $request->user();
-        if ($user && ($user->role?->slug === 'ketua_kub' || in_array((int)$user->role_id, [6], true) || str_contains(strtolower($user->role?->nama_role ?? ''), 'kub'))) {
-            if ($user->kub_id) {
-                $userKub = \App\Models\Kub::find($user->kub_id);
-                $reqData = ['kub_id' => $user->kub_id];
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        $isKubRoleOrPrefix = $firstSegment === 'kub' || ($user && ($user->role?->slug === 'ketua_kub' || in_array((int)$user->role_id, [6], true) || str_contains(strtolower($user->role?->nama_role ?? ''), 'kub')));
+        
+        if ($isKubRoleOrPrefix) {
+            $effectiveKubId = $user?->kub_id ?: ($firstSegment === 'kub' ? (session('simulated_kub_id') ?: $request->input('kub_id')) : null);
+            if ($effectiveKubId) {
+                $userKub = \App\Models\Kub::find($effectiveKubId);
+                $reqData = ['kub_id' => $effectiveKubId];
                 if ($userKub?->kapela_id) {
                     $reqData['kapela_id'] = $userKub->kapela_id;
                     $reqData['wilayah_id'] = null;

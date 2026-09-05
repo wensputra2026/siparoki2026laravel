@@ -468,6 +468,7 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::post('/{slug}/import', [\App\Http\Controllers\InertiaPanelController::class, 'importModule'])->name("panel.{$prefix}.module.import");
         Route::post('/user/{id}/reset-password', [\App\Http\Controllers\InertiaPanelController::class, 'resetUserPassword'])->name("panel.{$prefix}.user.reset-password");
         Route::post('/user/{id}/toggle-status', [\App\Http\Controllers\InertiaPanelController::class, 'toggleUserStatus'])->name("panel.{$prefix}.user.toggle-status");
+        Route::post('/user/{id}/impersonate', [\App\Http\Controllers\InertiaPanelController::class, 'impersonateUser'])->name("panel.{$prefix}.user.impersonate");
         Route::get('/{slug}', [\App\Http\Controllers\InertiaPanelController::class, 'module'])->name("panel.{$prefix}.module");
         Route::post('/{slug}', [\App\Http\Controllers\InertiaPanelController::class, 'storeModule'])->name("panel.{$prefix}.module.store");
         Route::put('/{slug}/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updateModule'])->name("panel.{$prefix}.module.update");
@@ -727,5 +728,11 @@ Route::get('/v2/{path?}', function ($path = '') {
     $target = '/superadmin' . ($path ? '/' . $path : '');
     return redirect($target);
 })->where('path', '.*');
+
+// Impersonation & Scope Persistence
+Route::middleware('auth')->group(function () {
+    Route::post('/impersonate/leave', [\App\Http\Controllers\InertiaPanelController::class, 'leaveImpersonation'])->name('impersonate.leave');
+    Route::post('/api/set-active-scope', [\App\Http\Controllers\InertiaPanelController::class, 'setActiveScope'])->name('api.set-active-scope');
+});
 
 

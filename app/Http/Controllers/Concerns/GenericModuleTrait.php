@@ -146,11 +146,13 @@ trait GenericModuleTrait
         $isKubScope = ($firstSegment === 'kub' || str_contains($userRoleSlug, 'kub'));
         $targetKub = null;
         if ($isKubScope) {
-            $targetKubId = $request->input('kub_id') ?: $authUser?->kub_id;
+            $targetKubId = $authUser?->kub_id ?: ($request->input('kub_id') ?: session('simulated_kub_id'));
             if (!$targetKubId) {
-                $targetKubId = \App\Models\Kub::value('id');
+                // Utamakan KUB dari user Ketua KUB yang ada (mis. Emilia) atau KUB pertama
+                $targetKubId = \App\Models\User::whereNotNull('kub_id')->value('kub_id') ?: \App\Models\Kub::value('id');
             }
             if ($targetKubId) {
+                session(['simulated_kub_id' => $targetKubId]);
                 $targetKub = \App\Models\Kub::with(['wilayah', 'kapela'])->find($targetKubId);
             }
         }
@@ -158,13 +160,25 @@ trait GenericModuleTrait
         $isWilayahScope = ($firstSegment === 'wilayah' || str_contains($userRoleSlug, 'wilayah'));
         $targetWilayahId = null;
         if ($isWilayahScope) {
-            $targetWilayahId = $request->input('wilayah_id') ?: $authUser?->wilayah_id ?: \App\Models\Wilayah::value('id');
+            $targetWilayahId = $authUser?->wilayah_id ?: ($request->input('wilayah_id') ?: session('simulated_wilayah_id'));
+            if (!$targetWilayahId) {
+                $targetWilayahId = \App\Models\User::whereNotNull('wilayah_id')->value('wilayah_id') ?: \App\Models\Wilayah::value('id');
+            }
+            if ($targetWilayahId) {
+                session(['simulated_wilayah_id' => $targetWilayahId]);
+            }
         }
 
         $isKapelaScope = ($firstSegment === 'kapela' || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'));
         $targetKapelaId = null;
         if ($isKapelaScope) {
-            $targetKapelaId = $request->input('kapela_id') ?: $authUser?->kapela_id ?: \App\Models\Kapela::value('id');
+            $targetKapelaId = $authUser?->kapela_id ?: ($request->input('kapela_id') ?: session('simulated_kapela_id'));
+            if (!$targetKapelaId) {
+                $targetKapelaId = \App\Models\User::whereNotNull('kapela_id')->value('kapela_id') ?: \App\Models\Kapela::value('id');
+            }
+            if ($targetKapelaId) {
+                session(['simulated_kapela_id' => $targetKapelaId]);
+            }
         }
 
         if ($targetKub) {

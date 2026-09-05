@@ -222,4 +222,119 @@ trait UserModuleTrait
         ]);
     }
 
+    public function impersonateUser(Request $request, $id)
+    {
+        $authUser = auth()->user();
+        $isSuperAdmin = (int) ($authUser?->role_id ?? 0) === 1
+            || in_array(strtolower(preg_replace('/[^a-z]/', '', $authUser?->role?->nama_role ?? $authUser?->role?->slug ?? '')), ['superadmin', 'superadministrator'], true);
+
+        if (!$isSuperAdmin && !session()->has('impersonated_by')) {
+            return back()->with('error', 'Hanya Super Admin yang dapat menggunakan fitur login sebagai pengguna lain.');
+        }
+
+        $decodedId = decode_id($id) ?: $id;
+        $targetUser = \App\Models\User::whereUuidOrId($id)->first()
+            ?? \App\Models\User::find($decodedId)
+            ?? \App\Models\User::findOrFail($id);
+
+        if ((int) $targetUser->id === (int) $authUser->id) {
+            return back()->with('warning', 'Anda sudah menggunakan akun ini.');
+        }
+
+        // Simpan id super admin asli jika belum ada
+        if (!session()->has('impersonated_by')) {
+            session(['impersonated_by' => $authUser->id]);
+        }
+
+        // Set simulated scopes matching the target user
+        if ($targetUser->kub_id) {
+            session(['simulated_kub_id' => $targetUser->kub_id]);
+        }
+        if ($targetUser->wilayah_id) {
+            session(['simulated_wilayah_id' => $targetUser->wilayah_id]);
+        }
+        if ($targetUser->kapela_id) {
+            session(['simulated_kapela_id' => $targetUser->kapela_id]);
+        }
+
+        // Login sebagai target user
+        \Illuminate\Support\Facades\Auth::login($targetUser);
+
+        // Arahkan ke dashboard sesuai role target user
+        $slugClean = strtolower(preg_replace('/[^a-z0-9]/', '', $targetUser->role?->slug ?? $targetUser->role?->nama_role ?? ''));
+        $targetPrefix = 'superadmin';
+        if (str_contains($slugClean, 'wilayah')) {
+            $targetPrefix = 'wilayah';
+        } elseif (str_contains($slugClean, 'kapela') || str_contains($slugClean, 'stasi')) {
+            $targetPrefix = 'kapela';
+        } elseif (str_contains($slugClean, 'kub')) {
+            $targetPrefix = 'kub';
+        } elseif (str_contains($slugClean, 'pastor')) {
+            $targetPrefix = 'pastor';
+        } elseif (str_contains($slugClean, 'bendahara')) {
+            $targetPrefix = 'bendahara';
+        } elseif (str_contains($slugClean, 'penulis') || str_contains($slugClean, 'komsos')) {
+            $targetPrefix = 'penulis';
+        } elseif (str_contains($slugClean, 'umat')) {
+            $targetPrefix = 'umat';
+        } elseif (str_contains($slugClean, 'paroki') || str_contains($slugClean, 'sekretariat')) {
+            $targetPrefix = 'paroki';
+        }
+
+        $namaTampil = $targetUser->nama_lengkap ?? $targetUser->name ?? $targetUser->username;
+        return redirect("/{$targetPrefix}")->with('success', "Berhasil masuk sebagai {$namaTampil} ({$targetUser->role?->nama_role}).");
+    }
+
+    public function leaveImpersonation(Request $request)
+    {
+        if (!session()->has('impersonated_by')) {
+            return redirect('/superadmin')->with('warning', 'Tidak ada sesi simulasi akun aktif.');
+        }
+
+        $adminId = session()->pull('impersonated_by');
+        session()->forget(['simulated_kub_id', 'simulated_wilayah_id', 'simulated_kapela_id', 'simulated_pastor_id']);
+
+        $admin = \App\Models\User::find($adminId);
+        if ($admin) {
+            \Illuminate\Support\Facades\Auth::login($admin);
+        }
+
+        return redirect('/superadmin/user')->with('success', 'Berhasil kembali ke sesi Super Admin.');
+    }
+
+    public function setActiveScope(Request $request)
+    {
+        $validated = $request->validate([
+            'scope_type' => ['required', 'string', 'in:kub_id,wilayah_id,kapela_id,pastor_id'],
+            'scope_id' => ['nullable'],
+        ]);
+
+        $key = 'simulated_' . $validated['scope_type'];
+        if (empty($validated['scope_id'])) {
+            session()->forget($key);
+        } else {
+            session([$key => $validated['scope_id']]);
+            if ($validated['scope_type'] === 'kub_id') {
+                $kub = \App\Models\Kub::find($validated['scope_id']);
+                if ($kub) {
+                    if ($kub->wilayah_id) {
+                        session(['simulated_wilayah_id' => $kub->wilayah_id]);
+                    }
+                    if ($kub->kapela_id) {
+                        session(['simulated_kapela_id' => $kub->kapela_id]);
+                    }
+                }
+            }
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'active_scope' => [
+                'kub_id' => session('simulated_kub_id'),
+                'wilayah_id' => session('simulated_wilayah_id'),
+                'kapela_id' => session('simulated_kapela_id'),
+                'pastor_id' => session('simulated_pastor_id'),
+            ],
+        ]);
+    }
 }

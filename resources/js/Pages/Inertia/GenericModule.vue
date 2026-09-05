@@ -2131,6 +2131,14 @@ const toggleUserStatus = (item) => {
     });
 };
 
+const impersonateUser = (item) => {
+    if (isSelfUser(item)) return;
+    const name = item.nama_lengkap || item.name || item.username;
+    if (confirm(`Apakah Anda ingin masuk dan melihat sistem langsung sebagai ${name} (${item.role?.nama_role || 'Pengguna'})?`)) {
+        router.post(`${moduleBasePath.value}/${item.id}/impersonate`);
+    }
+};
+
 // Bulk Selection State
 const selectedIds = ref([]);
 const showBulkDeleteModal = ref(false);
@@ -3151,6 +3159,15 @@ const showKubFilter = computed(() => {
                                         ]"
                                     >
                                         <i class="fa-solid fa-toggle-on text-xs"></i>
+                                    </button>
+                                    <button
+                                        v-if="moduleKey === 'user' && isSuperAdmin && !isSelfUser(item)"
+                                        type="button"
+                                        @click="impersonateUser(item)"
+                                        :title="`Login Langsung Sebagai ${item.nama_lengkap || item.name || item.username} (Simulasi Nyata Akun)`"
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
+                                    >
+                                        <i class="fa-solid fa-right-to-bracket text-xs"></i>
                                     </button>
 
                                     <!-- Delete Button (Only visible if authorized to delete) -->

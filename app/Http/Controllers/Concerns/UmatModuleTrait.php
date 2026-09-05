@@ -416,14 +416,40 @@ trait UmatModuleTrait
             ];
         });
 
+        $authUser = auth()->user();
+        $targetKubId = $authUser?->kub_id ?: ($firstSegment === 'kub' ? (session('simulated_kub_id') ?: $request->input('kub_id')) : null);
+        if (!$targetKubId && $firstSegment === 'kub') {
+            $targetKubId = \App\Models\User::whereNotNull('kub_id')->value('kub_id') ?: \App\Models\Kub::value('id');
+            session(['simulated_kub_id' => $targetKubId]);
+        }
+        $userKub = $targetKubId ? \App\Models\Kub::find($targetKubId) : null;
+        $userKubId = $userKub?->id;
+        $userWilayahId = $authUser?->wilayah_id ?: $userKub?->wilayah_id ?: ($firstSegment === 'wilayah' ? (session('simulated_wilayah_id') ?: $request->input('wilayah_id')) : null);
+        $userKapelaId = $authUser?->kapela_id ?: $userKub?->kapela_id ?: ($firstSegment === 'kapela' ? (session('simulated_kapela_id') ?: $request->input('kapela_id')) : null);
+
+        $kkQuery = \App\Models\KkKatolik::orderBy('nama_lahir_pemilik');
+        if ($targetKubId) {
+            $kkQuery->where('kub_id', $targetKubId);
+        } elseif ($userWilayahId) {
+            $kkQuery->where('wilayah_id', $userWilayahId);
+        } elseif ($userKapelaId) {
+            $kkQuery->where('kapela_id', $userKapelaId);
+        }
+
         return Inertia::render('Inertia/UmatForm', [
             'role' => $resolvedRole,
             'prefix' => $firstSegment,
             'isEdit' => false,
             'umatItem' => null,
-            'kkList' => \App\Models\KkKatolik::orderBy('nama_lahir_pemilik')->get(['id', 'no_kk_kw', 'nama_lahir_pemilik', 'nama_baptis_pemilik', 'wilayah_id', 'kapela_id', 'kub_id']),
+            'userKubId' => $userKubId,
+            'userWilayahId' => $userWilayahId,
+            'userKapelaId' => $userKapelaId,
+            'defaultKubId' => $userKubId,
+            'defaultWilayahId' => $userWilayahId,
+            'defaultKapelaId' => $userKapelaId,
+            'kkList' => $kkQuery->get(['id', 'no_kk_kw', 'nama_lahir_pemilik', 'nama_baptis_pemilik', 'wilayah_id', 'kapela_id', 'kub_id']),
             'wilayahList' => \App\Models\Wilayah::orderBy('nama_wilayah')->get(['id', 'nama_wilayah']),
-            'kubList' => \App\Models\Kub::orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id']),
+            'kubList' => \App\Models\Kub::orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id', 'kapela_id']),
             'kapelaList' => \App\Models\Kapela::orderBy('nama_kapela')->get(['id', 'nama_kapela']),
             'parokiList' => \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'nama_paroki', 'kode_paroki']),
             'pastorList' => $pastorList,
@@ -455,6 +481,20 @@ trait UmatModuleTrait
         $umatItem->hashid = encode_id($umatItem->id);
         $umatItem->iid = $umatItem->hashid;
 
+        $authUser = auth()->user();
+        $isSuperAdmin = (int)($authUser?->role_id ?? 0) === 1 || in_array(strtolower($authUser?->role?->nama_role ?? ''), ['super admin', 'superadmin'], true);
+        $targetKubId = $authUser?->kub_id ?: ($firstSegment === 'kub' ? (session('simulated_kub_id') ?: $request->input('kub_id')) : null);
+
+        // Proteksi Hak Akses Level KUB: Ketua KUB tidak boleh mengakses data umat di luar KUB-nya
+        if ($firstSegment === 'kub' || (!$isSuperAdmin && $authUser?->kub_id)) {
+            $umatKubId = $umatItem->kub_id ?: ($umatItem->kk?->kub_id);
+            if ($targetKubId && $umatKubId && (int)$umatKubId !== (int)$targetKubId) {
+                if (!$isSuperAdmin) {
+                    return redirect("/{$firstSegment}/umat")->with('error', 'Anda tidak memiliki hak akses untuk mengedit data umat di luar KUB Anda.');
+                }
+            }
+        }
+
         $defaultParokiId = $this->defaultParokiIdFromProfile();
         $defaultParoki = Paroki::with('keuskupan')->find($defaultParokiId)
             ?? Paroki::with('keuskupan')->first();
@@ -467,14 +507,34 @@ trait UmatModuleTrait
             ];
         });
 
+        $userKub = $targetKubId ? \App\Models\Kub::find($targetKubId) : ($umatItem->kub_id ? \App\Models\Kub::find($umatItem->kub_id) : null);
+        $userKubId = $userKub?->id ?: $umatItem->kub_id;
+        $userWilayahId = $userKub?->wilayah_id ?: $umatItem->wilayah_id;
+        $userKapelaId = $userKub?->kapela_id ?: $umatItem->kapela_id;
+
+        $kkQuery = \App\Models\KkKatolik::orderBy('nama_lahir_pemilik');
+        if ($targetKubId) {
+            $kkQuery->where('kub_id', $targetKubId);
+        } elseif ($userWilayahId) {
+            $kkQuery->where('wilayah_id', $userWilayahId);
+        } elseif ($userKapelaId) {
+            $kkQuery->where('kapela_id', $userKapelaId);
+        }
+
         return Inertia::render('Inertia/UmatForm', [
             'role' => $resolvedRole,
             'prefix' => $firstSegment,
             'isEdit' => true,
             'umatItem' => $umatItem,
-            'kkList' => \App\Models\KkKatolik::orderBy('nama_lahir_pemilik')->get(['id', 'no_kk_kw', 'nama_lahir_pemilik', 'nama_baptis_pemilik', 'wilayah_id', 'kapela_id', 'kub_id']),
+            'userKubId' => $userKubId,
+            'userWilayahId' => $userWilayahId,
+            'userKapelaId' => $userKapelaId,
+            'defaultKubId' => $userKubId,
+            'defaultWilayahId' => $userWilayahId,
+            'defaultKapelaId' => $userKapelaId,
+            'kkList' => $kkQuery->get(['id', 'no_kk_kw', 'nama_lahir_pemilik', 'nama_baptis_pemilik', 'wilayah_id', 'kapela_id', 'kub_id']),
             'wilayahList' => \App\Models\Wilayah::orderBy('nama_wilayah')->get(['id', 'nama_wilayah']),
-            'kubList' => \App\Models\Kub::orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id']),
+            'kubList' => \App\Models\Kub::orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id', 'kapela_id']),
             'kapelaList' => \App\Models\Kapela::orderBy('nama_kapela')->get(['id', 'nama_kapela']),
             'parokiList' => \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'nama_paroki', 'kode_paroki']),
             'pastorList' => $pastorList,

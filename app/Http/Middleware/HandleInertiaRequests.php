@@ -234,6 +234,15 @@ class HandleInertiaRequests extends Middleware
                 'favicon'     => $logoParoki,
                 'fitur_chat_aktif' => (bool) ($pengaturanAplikasi?->fitur_chat_aktif ?? true),
             ],
+            'impersonating' => $request->session()->has('impersonated_by') ? [
+                'original_admin_id' => $request->session()->get('impersonated_by'),
+            ] : null,
+            'activeScope' => [
+                'kub_id' => $request->session()->get('simulated_kub_id') ?: $authUser?->kub_id,
+                'wilayah_id' => $request->session()->get('simulated_wilayah_id') ?: $userWilayahId,
+                'kapela_id' => $request->session()->get('simulated_kapela_id') ?: $userKapelaId,
+                'pastor_id' => $request->session()->get('simulated_pastor_id'),
+            ],
             'fitur_chat_aktif' => (bool) ($pengaturanAplikasi?->fitur_chat_aktif ?? true),
         ];
     }
