@@ -194,6 +194,39 @@ trait StatistikModuleTrait
             ['nama' => 'Pelajar & Mahasiswa', 'count' => (int) round($totalUmat * 0.13), 'percentage' => 13],
         ];
 
+        $masterReferensiStats = $this->calculateMasterReferensiStats($umatQuery, $kkQuery, $totalUmat, $totalKk);
+
+        // Populate dynamic top pekerjaan/profesi if real data exists, otherwise structured sample
+        $dynamicPekerjaan = [];
+        if (!empty($masterReferensiStats['PROFESI']['items'])) {
+            $filteredProfesi = array_filter($masterReferensiStats['PROFESI']['items'], fn($it) => $it['count'] > 0);
+            if (!empty($filteredProfesi)) {
+                foreach (array_slice($filteredProfesi, 0, 6) as $fp) {
+                    $dynamicPekerjaan[] = [
+                        'nama' => $fp['nama'],
+                        'count' => $fp['count'],
+                        'percentage' => $fp['percentage'],
+                    ];
+                }
+            }
+        }
+        if (empty($dynamicPekerjaan) && !empty($masterReferensiStats['PEKERJAAN']['items'])) {
+            $filteredPekerjaan = array_filter($masterReferensiStats['PEKERJAAN']['items'], fn($it) => $it['count'] > 0);
+            if (!empty($filteredPekerjaan)) {
+                foreach (array_slice($filteredPekerjaan, 0, 6) as $fp) {
+                    $dynamicPekerjaan[] = [
+                        'nama' => $fp['nama'],
+                        'count' => $fp['count'],
+                        'percentage' => $fp['percentage'],
+                    ];
+                }
+            }
+        }
+
+        if (!empty($dynamicPekerjaan)) {
+            $pekerjaanStats = $dynamicPekerjaan;
+        }
+
         return Inertia::render('Inertia/Statistik', [
             'role' => $resolvedRole,
             'prefix' => $firstSegment,
@@ -215,6 +248,7 @@ trait StatistikModuleTrait
             'sakramenStats' => $sakramenStats,
             'wilayahStats' => $wilayahStats,
             'pekerjaanStats' => $pekerjaanStats,
+            'masterReferensiStats' => $masterReferensiStats,
         ]);
     }
 
@@ -299,6 +333,21 @@ trait StatistikModuleTrait
             ['Penerimaan Sakramen', 'Sakramen Pernikahan Katolik', (int) round($totalKk * 0.92), '92%', 'Sah secara kanonik gereja'],
         ]);
 
+        $refStats = $this->calculateMasterReferensiStats($umatQuery, $kkQuery, $totalUmat, $totalKk);
+        foreach ($refStats as $catKey => $cat) {
+            foreach ($cat['items'] as $item) {
+                if ($item['count'] > 0) {
+                    $rows->push([
+                        $cat['label'],
+                        $item['nama'] . ' (' . $item['kode'] . ')',
+                        $item['count'],
+                        $item['percentage'] . '%',
+                        "Data {$cat['entity_label']} terdaftar",
+                    ]);
+                }
+            }
+        }
+
         $reportTitle = $activeKub
             ? "Rekapitulasi Statistik & Demografi Umat KUB {$activeKub->nama_kub}"
             : 'Rekapitulasi Statistik & Demografi Umat Paroki';
@@ -325,4 +374,262 @@ trait StatistikModuleTrait
         ]);
     }
 
+    /**
+     * Calculate detailed breakdown statistics for 12 master reference categories.
+     */
+    protected function calculateMasterReferensiStats($umatQuery, $kkQuery, int $totalUmat, int $totalKk): array
+    {
+        $targetCodes = [
+            'PROFESI' => [
+                'entity' => 'umat',
+                'label' => 'Profesi & Keahlian Khusus',
+                'icon' => 'fa-solid fa-user-doctor',
+                'color' => 'from-blue-600 to-indigo-600',
+                'light_bg' => 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300',
+                'cols' => ['profesi_id', 'profesi_keahlian', 'pekerjaan'],
+            ],
+            'PEKERJAAN' => [
+                'entity' => 'umat',
+                'label' => 'Pekerjaan Utama',
+                'icon' => 'fa-solid fa-briefcase',
+                'color' => 'from-amber-600 to-orange-600',
+                'light_bg' => 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
+                'cols' => ['pekerjaan', 'pekerjaan_id'],
+            ],
+            'PENDIDIKAN' => [
+                'entity' => 'umat',
+                'label' => 'Jenjang Pendidikan',
+                'icon' => 'fa-solid fa-graduation-cap',
+                'color' => 'from-emerald-600 to-teal-600',
+                'light_bg' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
+                'cols' => ['pendidikan', 'pendidikan_terakhir', 'pendidikan_id', 'ijazah_terakhir'],
+            ],
+            'GOLONGAN_DARAH' => [
+                'entity' => 'umat',
+                'label' => 'Golongan Darah',
+                'icon' => 'fa-solid fa-droplet',
+                'color' => 'from-rose-600 to-red-600',
+                'light_bg' => 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300',
+                'cols' => ['golongan_darah', 'golongan_darah_id'],
+            ],
+            'SUKU_ETNIS' => [
+                'entity' => 'umat',
+                'label' => 'Suku & Etnis',
+                'icon' => 'fa-solid fa-people-arrows',
+                'color' => 'from-purple-600 to-violet-600',
+                'light_bg' => 'bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300',
+                'cols' => ['suku_etnis', 'suku'],
+            ],
+            'DISABILITAS' => [
+                'entity' => 'umat',
+                'label' => 'Kebutuhan Khusus / Disabilitas',
+                'icon' => 'fa-solid fa-wheelchair',
+                'color' => 'from-teal-600 to-cyan-600',
+                'light_bg' => 'bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300',
+                'cols' => ['disabilitas', 'cacat_tubuh'],
+            ],
+            'CACAT_TUBUH' => [
+                'entity' => 'umat',
+                'label' => 'Cacat Tubuh',
+                'icon' => 'fa-solid fa-crutch',
+                'color' => 'from-pink-600 to-rose-600',
+                'light_bg' => 'bg-pink-50 text-pink-700 dark:bg-pink-950/50 dark:text-pink-300',
+                'cols' => ['cacat_tubuh', 'cacat_tubuh_id', 'disabilitas'],
+            ],
+            'DOMISILI_SEKARANG' => [
+                'entity' => 'umat',
+                'label' => 'Domisili Saat Ini',
+                'icon' => 'fa-solid fa-location-dot',
+                'color' => 'from-sky-600 to-blue-600',
+                'light_bg' => 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300',
+                'cols' => ['posisi_tinggal_sekarang', 'domisili_sekarang_id', 'status_tinggal'],
+            ],
+            'KETERAMPILAN' => [
+                'entity' => 'umat',
+                'label' => 'Keterampilan & Skill',
+                'icon' => 'fa-solid fa-screwdriver-wrench',
+                'color' => 'from-indigo-600 to-purple-600',
+                'light_bg' => 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300',
+                'cols' => ['keterampilan', 'keterampilan_id', 'talenta'],
+            ],
+            'KEL_PRASEJAHTERA' => [
+                'entity' => 'kk',
+                'label' => 'Status Ekonomi Keluarga',
+                'icon' => 'fa-solid fa-hand-holding-heart',
+                'color' => 'from-orange-600 to-amber-600',
+                'light_bg' => 'bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300',
+                'cols' => ['status_ekonomi', 'kategori_ekonomi', 'kel_prasejahtera_id'],
+            ],
+            'LOKASI_RUMAH' => [
+                'entity' => 'kk',
+                'label' => 'Lokasi / Tipe Rumah',
+                'icon' => 'fa-solid fa-house-chimney',
+                'color' => 'from-green-600 to-emerald-600',
+                'light_bg' => 'bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300',
+                'cols' => ['lokasi_rumah', 'lokasi_rumah_id', 'jenis_rumah_tinggal'],
+            ],
+            'PENGHASILAN' => [
+                'entity' => 'kk',
+                'label' => 'Penghasilan Keluarga / Bulan',
+                'icon' => 'fa-solid fa-money-bill-wave',
+                'color' => 'from-emerald-600 to-green-600',
+                'light_bg' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
+                'cols' => ['penghasilan_per_bulan', 'penghasilan_rata_kk', 'penghasilan_keluarga', 'penghasilan_id'],
+            ],
+        ];
+
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('master_referensi') || !\Illuminate\Support\Facades\Schema::hasTable('master_referensi_item')) {
+                return [];
+            }
+
+            // Pre-fetch scoped records in memory to prevent executing 100+ separate SQL queries
+            $umatRecords = (clone $umatQuery)->get();
+            $kkRecords = (clone $kkQuery)->get();
+
+            $actualTotalUmat = $umatRecords->count();
+            $actualTotalKk = $kkRecords->count();
+
+            $result = [];
+
+            foreach ($targetCodes as $code => $meta) {
+                $ref = \Illuminate\Support\Facades\DB::table('master_referensi')->where('kode_grup', $code)->first();
+                if (!$ref) continue;
+
+                $items = \Illuminate\Support\Facades\DB::table('master_referensi_item')
+                    ->where('referensi_id', $ref->id)
+                    ->whereNull('deleted_at')
+                    ->where(function($q) {
+                        $q->whereNull('status')->orWhere('status', 1)->orWhere('status', '1')->orWhere('status', 'Aktif');
+                    })
+                    ->orderBy('urutan')
+                    ->get();
+
+                $isKk = ($meta['entity'] === 'kk');
+                $records = $isKk ? $kkRecords : $umatRecords;
+                $targetTable = $isKk ? 'kk_katolik' : 'umat';
+                $totalPopulation = $isKk ? $actualTotalKk : $actualTotalUmat;
+
+                $activeCols = array_filter($meta['cols'], function($c) use ($targetTable) {
+                    return \Illuminate\Support\Facades\Schema::hasColumn($targetTable, $c);
+                });
+
+                $itemStats = [];
+                $totalMatched = 0;
+
+                foreach ($items as $item) {
+                    $itemCount = 0;
+                    $searchVal = strtolower(trim((string) $item->nilai));
+                    $searchCode = strtolower(trim((string) ($item->kode ?? '')));
+                    $itemId = (string) $item->id;
+
+                    $cSearch = trim(preg_replace('/\s+/', ' ', preg_replace('/[\/\-_,.]/', ' ', $searchVal)));
+
+                    foreach ($records as $row) {
+                        $matched = false;
+                        foreach ($activeCols as $col) {
+                            $rawVal = trim((string) ($row->$col ?? ''));
+                            if ($rawVal === '') continue;
+
+                            $rowValLower = strtolower($rawVal);
+
+                            // Exact ID or Code match
+                            if ($rawVal === $itemId || ($searchCode !== '' && $rowValLower === $searchCode)) {
+                                $matched = true;
+                                break;
+                            }
+
+                            $cRow = trim(preg_replace('/\s+/', ' ', preg_replace('/[\/\-_,.]/', ' ', $rowValLower)));
+
+                            if ($cRow === $cSearch) {
+                                $matched = true;
+                                break;
+                            }
+
+                            // Special YES/NO
+                            if ($code === 'CACAT_TUBUH') {
+                                if ($searchVal === 'ya' && !in_array($cRow, ['tidak', 'tidak ada', 'normal', '0', 'none'])) {
+                                    $matched = true;
+                                    break;
+                                }
+                                if ($searchVal === 'tidak' && in_array($cRow, ['tidak', 'tidak ada', 'normal', '0', 'none'])) {
+                                    $matched = true;
+                                    break;
+                                }
+                            }
+
+                            if ($code === 'KEL_PRASEJAHTERA') {
+                                if ($searchVal === 'ya' && (str_contains($cRow, 'prasejahtera') || $cRow === '1')) {
+                                    $matched = true;
+                                    break;
+                                }
+                                if ($searchVal === 'tidak' && (!str_contains($cRow, 'prasejahtera') || str_contains($cRow, 'sejahtera') || str_contains($cRow, 'mampu'))) {
+                                    $matched = true;
+                                    break;
+                                }
+                            }
+
+                            // Token / word match
+                            if (strlen($cSearch) >= 4) {
+                                if (in_array($cSearch, explode(' ', $cRow)) || in_array($cRow, explode(' ', $cSearch))) {
+                                    $matched = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if ($matched) {
+                            $itemCount++;
+                        }
+                    }
+
+                    $pct = $totalPopulation > 0 ? round(($itemCount / $totalPopulation) * 100, 1) : 0;
+
+                    $itemStats[] = [
+                        'id' => $item->id,
+                        'kode' => $item->kode ?: ($code . '_' . str_pad($item->urutan, 3, '0', STR_PAD_LEFT)),
+                        'nama' => $item->nilai,
+                        'urutan' => (int) ($item->urutan ?? 0),
+                        'count' => $itemCount,
+                        'percentage' => $pct,
+                    ];
+
+                    $totalMatched += $itemCount;
+                }
+
+                // Sort: items with count > 0 first, then order by urutan
+                $sortedItems = collect($itemStats)->sortBy([
+                    ['count', 'desc'],
+                    ['urutan', 'asc'],
+                ])->values()->all();
+
+                $topItem = !empty($sortedItems) ? $sortedItems[0] : null;
+
+                $result[$code] = [
+                    'code' => $code,
+                    'label' => $meta['label'],
+                    'nama_grup' => $ref->nama_grup,
+                    'entity' => $meta['entity'],
+                    'entity_label' => $isKk ? 'Kepala Keluarga (KK)' : 'Jiwa (Umat)',
+                    'unit' => $isKk ? 'KK' : 'Jiwa',
+                    'icon' => $meta['icon'],
+                    'color' => $meta['color'],
+                    'light_bg' => $meta['light_bg'],
+                    'total_items' => count($itemStats),
+                    'total_matched' => $totalMatched,
+                    'total_counted' => $totalMatched,
+                    'total_population' => $totalPopulation,
+                    'coverage_percentage' => $totalPopulation > 0 ? min(100, round(($totalMatched / $totalPopulation) * 100, 1)) : 0,
+                    'top_item' => ($topItem && $topItem['count'] > 0) ? $topItem['nama'] : '-',
+                    'top_count' => ($topItem && $topItem['count'] > 0) ? $topItem['count'] : 0,
+                    'items' => $sortedItems,
+                ];
+            }
+
+            return $result;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Error calculating master referensi stats: ' . $e->getMessage());
+            return [];
+        }
+    }
 }
