@@ -634,19 +634,80 @@ trait UmatModuleTrait
 
     public function exportUmatPdf(Request $request, string|int $id)
     {
-        $umat = \App\Models\Umat::with(['kk', 'kk.anggota', 'wilayah', 'kapela', 'kub'])->whereUuidOrId($id)->first()
-            ?? \App\Models\Umat::with(['kk', 'kk.anggota', 'wilayah', 'kapela', 'kub'])->where('nik', $id)->first()
-            ?? \App\Models\Umat::with(['kk', 'kk.anggota', 'wilayah', 'kapela', 'kub'])->find($id)
-            ?? \App\Models\Umat::with(['kk', 'kk.anggota', 'wilayah', 'kapela', 'kub'])->firstOrFail();
+        $umat = \App\Models\Umat::with([
+            'kk',
+            'kk.anggota',
+            'wilayah',
+            'kapela',
+            'kub',
+            'kk.kub',
+            'kk.wilayah',
+            'kk.kapela'
+        ])->whereUuidOrId($id)->first()
+            ?? \App\Models\Umat::with([
+                'kk',
+                'kk.anggota',
+                'wilayah',
+                'kapela',
+                'kub',
+                'kk.kub',
+                'kk.wilayah',
+                'kk.kapela'
+            ])->where('nik', $id)->first()
+            ?? \App\Models\Umat::with([
+                'kk',
+                'kk.anggota',
+                'wilayah',
+                'kapela',
+                'kub',
+                'kk.kub',
+                'kk.wilayah',
+                'kk.kapela'
+            ])->find($id)
+            ?? \App\Models\Umat::with([
+                'kk',
+                'kk.anggota',
+                'wilayah',
+                'kapela',
+                'kub',
+                'kk.kub',
+                'kk.wilayah',
+                'kk.kapela'
+            ])->firstOrFail();
 
+        // Paroki Utama (Default) dari profil_paroki / pengaturan
         $defaultParokiId = method_exists($this, 'defaultParokiIdFromProfile') ? $this->defaultParokiIdFromProfile() : null;
-        $paroki = Paroki::with('keuskupan')->find($defaultParokiId)
-            ?? Paroki::with('keuskupan')->first();
+        $paroki = Paroki::with(['keuskupan', 'dekenat'])->find($defaultParokiId)
+            ?? Paroki::with(['keuskupan', 'dekenat'])->where('nama_paroki', 'like', '%Benlutu%')->first()
+            ?? Paroki::with(['keuskupan', 'dekenat'])->first();
+
+        $profilParoki = \App\Models\ProfilParoki::first();
+
+        // Nama Pastor Paroki aktif sesuai Profil Paroki Utama (Default)
+        $namaPastorParoki = $profilParoki?->pastor_paroki
+            ?: ($paroki?->nama_pastor_paroki_aktif
+            ?: ($paroki?->pastor_paroki
+            ?: 'RD. Herman Hilers Penga'));
+
+        // Resolusi KUB & Ketua KUB dari Umat / Kartu Keluarga
+        $kub = $umat->kub ?: ($umat->kk ? $umat->kk->kub : null);
+        if (!$kub && !empty($umat->kub_id)) {
+            $kub = \App\Models\Kub::find($umat->kub_id);
+        }
+        if (!$kub && !empty($umat->kk?->kub_id)) {
+            $kub = \App\Models\Kub::find($umat->kk->kub_id);
+        }
+
+        $namaKetuaKub = $kub?->ketua_kub ?: '( .............................................. )';
+        $namaKub = $kub?->nama_kub ?: '';
+
+        // Resolusi Wilayah & Kapela
+        $wilayah = $umat->wilayah ?: ($umat->kk ? $umat->kk->wilayah : ($kub ? $kub->wilayah : null));
+        $kapela = $umat->kapela ?: ($umat->kk ? $umat->kk->kapela : ($kub ? $kub->kapela : null));
 
         $keuskupan = $paroki?->keuskupan
             ?? \App\Models\Keuskupan::find(5)
             ?? \App\Models\Keuskupan::first();
-        $profilParoki = \App\Models\ProfilParoki::first();
 
         $keuskupanLogo = $keuskupan?->logo ?: '/uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png';
         $parokiLogo = $paroki?->logo ?: ($profilParoki?->logo ?: '/uploads/paroki/1787494152_6a8aff08b47a5.webp');
@@ -654,6 +715,12 @@ trait UmatModuleTrait
         return response()->view('exports.umat-pdf', [
             'umat' => $umat,
             'kk' => $umat->kk,
+            'kub' => $kub,
+            'wilayah' => $wilayah,
+            'kapela' => $kapela,
+            'namaKetuaKub' => $namaKetuaKub,
+            'namaKub' => $namaKub,
+            'namaPastorParoki' => $namaPastorParoki,
             'paroki' => $paroki,
             'keuskupan' => $keuskupan,
             'profilParoki' => $profilParoki,

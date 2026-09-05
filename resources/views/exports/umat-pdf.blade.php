@@ -386,7 +386,7 @@
             </td>
             <td class="field-label" style="width: 140px;">Komunitas Basis (KUB)</td>
             <td class="field-colon">:</td>
-            <td class="field-val"><strong>{{ $umat->kub->nama_kub ?? ($kk->kub->nama_kub ?? '—') }}</strong></td>
+            <td class="field-val"><strong>{{ $namaKub ?: '—' }}</strong></td>
         </tr>
         <tr>
             <td class="field-label">Nama Kepala Keluarga</td>
@@ -394,7 +394,7 @@
             <td class="field-val">{{ $kk->nama_lahir_pemilik ?? ($umat->nama_pemilik_kk ?: '—') }}</td>
             <td class="field-label">Wilayah Rohani</td>
             <td class="field-colon">:</td>
-            <td class="field-val">{{ $umat->wilayah->nama_wilayah ?? ($kk->wilayah->nama_wilayah ?? '—') }}</td>
+            <td class="field-val">{{ $wilayah->nama_wilayah ?? '—' }}</td>
         </tr>
         <tr>
             <td class="field-label">Hubungan dalam Keluarga</td>
@@ -402,7 +402,7 @@
             <td class="field-val"><strong>{{ $umat->hubungan_keluarga ?: 'Anggota Keluarga' }}</strong> {{ $umat->anak_ke ? '(Anak Ke-' . $umat->anak_ke . ')' : '' }}</td>
             <td class="field-label">Stasi / Kapela</td>
             <td class="field-colon">:</td>
-            <td class="field-val">{{ $umat->kapela->nama_kapela ?? ($kk->kapela->nama_kapela ?? 'Pusat Paroki') }}</td>
+            <td class="field-val">{{ $kapela->nama_kapela ?? ($paroki->nama_paroki ?? 'Pusat Paroki') }}</td>
         </tr>
         <tr>
             <td class="field-label">Alamat Domisili</td>
@@ -509,16 +509,16 @@
             <div>Mengetahui,</div>
             <div style="margin-top: 2px;">Ketua Komunitas Umat Basis (KUB),</div>
             <div class="ttd-space"></div>
-            <div class="ttd-name">{{ $umat->kub->ketua_kub ?? ($kk->kub->ketua_kub ?? '( .............................................. )') }}</div>
-            <div style="font-size: 9.5px; color: #475569;">KUB {{ $umat->kub->nama_kub ?? ($kk->kub->nama_kub ?? '') }}</div>
+            <div class="ttd-name">{{ $namaKetuaKub }}</div>
+            <div style="font-size: 9.5px; color: #475569;">{{ !empty($namaKub) ? 'KUB ' . $namaKub : 'KUB (Komunitas Basis)' }}</div>
         </div>
 
         <div class="ttd-box">
             <div>Benlutu, {{ now()->translatedFormat('d F Y') }}</div>
             <div style="margin-top: 2px;">Pastor Paroki / Sekretariat,</div>
             <div class="ttd-space"></div>
-            <div class="ttd-name">{{ $paroki->pastor_paroki ?? 'RD. Kristianus Saku' }}</div>
-            <div style="font-size: 9.5px; color: #475569;">{{ $paroki->nama_paroki ?? 'Paroki St. Vinsensius a Paulo' }}</div>
+            <div class="ttd-name">{{ $namaPastorParoki }}</div>
+            <div style="font-size: 9.5px; color: #475569;">{{ $paroki->nama_paroki ?? 'Paroki St. Vinsensius a Paulo Benlutu' }}</div>
         </div>
     </div>
 

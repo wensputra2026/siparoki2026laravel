@@ -410,7 +410,7 @@
             <div>Mengetahui,</div>
             <div><strong>Ketua KUB / KBG</strong></div>
             <div class="ttd-space"></div>
-            <div class="ttd-name">({{ $kk->kub->ketua ?? '.........................................' }})</div>
+            <div class="ttd-name">({{ $kk->kub->ketua_kub ?? ($kk->kub->ketua ?? '.........................................') }})</div>
         </div>
         <div class="ttd-box">
             <div>Mengetahui,</div>
@@ -428,8 +428,8 @@
             <div>Benlutu, {{ now()->translatedFormat('d F Y') }}</div>
             <div><strong>Pastor Paroki / Sekretariat</strong></div>
             <div class="ttd-space"></div>
-            <div class="ttd-name">({{ $paroki->nama_pastor_paroki_aktif ?? ($profil->pastor_paroki ?? ($namaPastor ?? 'Pastor Paroki')) }})</div>
-            <div style="font-size: 9px; margin-top: 2px;">Pastor Paroki St. Vinsensius a Paulo</div>
+            <div class="ttd-name">({{ $profilParoki->pastor_paroki ?? ($paroki->nama_pastor_paroki_aktif ?? ($profil->pastor_paroki ?? ($namaPastor ?? 'RD. Herman Hilers Penga'))) }})</div>
+            <div style="font-size: 9px; margin-top: 2px;">{{ $paroki->nama_paroki ?? 'Pastor Paroki St. Vinsensius a Paulo' }}</div>
         </div>
     </div>
 
