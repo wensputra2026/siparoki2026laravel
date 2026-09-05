@@ -38,6 +38,26 @@ const selectedRefCategory = ref('PROFESI');
 const searchRefQuery = ref('');
 const onlyShowFilled = ref(false);
 
+const refViewMode = ref('both'); // 'both', 'charts', 'table'
+const chartViewType = ref('all'); // 'all', 'bars', 'donut'
+const barChartLimit = ref('top10'); // 'top10', 'all'
+const hoveredDonutIndex = ref(null);
+
+const chartPalette = [
+    '#f59e0b', // amber-500
+    '#0ea5e9', // sky-500
+    '#10b981', // emerald-500
+    '#ec4899', // pink-500
+    '#8b5cf6', // violet-500
+    '#f97316', // orange-500
+    '#06b6d4', // cyan-500
+    '#6366f1', // indigo-500
+    '#14b8a6', // teal-500
+    '#e11d48', // rose-600
+    '#84cc16', // lime-500
+    '#64748b', // slate-500
+];
+
 const categoryIcons = {
     PROFESI: 'fa-solid fa-user-tie',
     PEKERJAAN: 'fa-solid fa-briefcase',
@@ -80,6 +100,101 @@ const dominantRefItem = computed(() => {
     if (!activeRefCategory.value || !activeRefCategory.value.items || !activeRefCategory.value.items.length) return null;
     const sorted = [...activeRefCategory.value.items].sort((a, b) => b.count - a.count);
     return sorted[0] && sorted[0].count > 0 ? sorted[0] : null;
+});
+
+const donutData = computed(() => {
+    if (!activeRefCategory.value || !activeRefCategory.value.items) return { slices: [], total: 0, hasData: false };
+    const items = [...activeRefCategory.value.items].filter(i => i.count > 0).sort((a, b) => b.count - a.count);
+    const totalCounted = items.reduce((sum, it) => sum + it.count, 0);
+    if (totalCounted === 0) {
+        return { slices: [], total: 0, hasData: false };
+    }
+
+    const topItems = items.slice(0, 6);
+    const otherItems = items.slice(6);
+    const otherCount = otherItems.reduce((sum, it) => sum + it.count, 0);
+
+    const slicesData = topItems.map((item, idx) => ({
+        name: item.nama,
+        count: item.count,
+        percent: Number(((item.count / totalCounted) * 100).toFixed(1)),
+        color: chartPalette[idx % chartPalette.length],
+        isOther: false,
+    }));
+
+    if (otherCount > 0) {
+        slicesData.push({
+            name: `Lainnya (${otherItems.length} item)`,
+            count: otherCount,
+            percent: Number(((otherCount / totalCounted) * 100).toFixed(1)),
+            color: '#94a3b8',
+            isOther: true,
+        });
+    }
+
+    const radius = 68;
+    const circumference = 2 * Math.PI * radius;
+    let accumulatedPercent = 0;
+
+    const slices = slicesData.map((slice, idx) => {
+        const dashLength = (slice.percent / 100) * circumference;
+        const strokeDasharray = `${dashLength} ${circumference}`;
+        const strokeDashoffset = -((accumulatedPercent / 100) * circumference);
+        accumulatedPercent += slice.percent;
+
+        return {
+            ...slice,
+            index: idx,
+            radius,
+            circumference,
+            strokeDasharray,
+            strokeDashoffset,
+        };
+    });
+
+    return {
+        slices,
+        total: totalCounted,
+        hasData: true,
+    };
+});
+
+const barChartItems = computed(() => {
+    if (!activeRefCategory.value || !activeRefCategory.value.items) return [];
+    let list = [...activeRefCategory.value.items];
+    if (onlyShowFilled.value) {
+        list = list.filter(it => it.count > 0);
+    }
+    list.sort((a, b) => b.count - a.count);
+    if (barChartLimit.value === 'top10') {
+        return list.slice(0, 10);
+    }
+    return list;
+});
+
+const maxBarCount = computed(() => {
+    const items = barChartItems.value;
+    if (!items.length) return 1;
+    return Math.max(1, ...items.map(it => it.count));
+});
+
+const overview12Categories = computed(() => {
+    if (!props.masterReferensiStats) return [];
+    return Object.entries(props.masterReferensiStats).map(([key, cat]) => {
+        const filledCount = (cat.items || []).filter(i => i.count > 0).length;
+        const fillRatio = cat.total_items > 0 ? Math.round((filledCount / cat.total_items) * 100) : 0;
+        return {
+            key,
+            label: cat.label,
+            icon: categoryIcons[key] || 'fa-solid fa-tag',
+            total_items: cat.total_items,
+            filled_items: filledCount,
+            total_counted: cat.total_counted,
+            unit: cat.unit,
+            fillRatio,
+            isActive: selectedRefCategory.value === key,
+        };
+    });
 });
 
 const formatNumber = (num) => {
@@ -611,9 +726,368 @@ const printDemografi = () => {
                     </div>
                 </div>
 
+                <!-- Display Mode & Chart Controls -->
+                <div v-if="activeRefCategory" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                    <!-- View Mode Pills -->
+                    <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 border border-slate-200/80 shrink-0">
+                        <button
+                            type="button"
+                            @click="refViewMode = 'both'"
+                            :class="[
+                                'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer',
+                                refViewMode === 'both' ? 'bg-white text-amber-700 shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-800'
+                            ]"
+                        >
+                            <i class="fa-solid fa-table-columns text-[11px]"></i>
+                            <span>Grafik & Tabel</span>
+                        </button>
+                        <button
+                            type="button"
+                            @click="refViewMode = 'charts'"
+                            :class="[
+                                'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer',
+                                refViewMode === 'charts' ? 'bg-white text-amber-700 shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-800'
+                            ]"
+                        >
+                            <i class="fa-solid fa-chart-pie text-[11px]"></i>
+                            <span>Fokus Grafik</span>
+                        </button>
+                        <button
+                            type="button"
+                            @click="refViewMode = 'table'"
+                            :class="[
+                                'px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer',
+                                refViewMode === 'table' ? 'bg-white text-amber-700 shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-800'
+                            ]"
+                        >
+                            <i class="fa-solid fa-table-list text-[11px]"></i>
+                            <span>Fokus Tabel</span>
+                        </button>
+                    </div>
+
+                    <!-- Chart Style Toggle (When charts are shown) -->
+                    <div v-if="refViewMode !== 'table'" class="flex items-center gap-1.5 text-xs">
+                        <span class="text-[11px] font-bold text-slate-400">Pilihan Diagram:</span>
+                        <div class="inline-flex rounded-xl bg-slate-100 p-0.5 border border-slate-200/80">
+                            <button
+                                type="button"
+                                @click="chartViewType = 'all'"
+                                :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer', chartViewType === 'all' ? 'bg-white text-amber-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900']"
+                            >
+                                Semua Diagram
+                            </button>
+                            <button
+                                type="button"
+                                @click="chartViewType = 'bars'"
+                                :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer', chartViewType === 'bars' ? 'bg-white text-amber-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900']"
+                            >
+                                Grafik Batang
+                            </button>
+                            <button
+                                type="button"
+                                @click="chartViewType = 'donut'"
+                                :class="['px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer', chartViewType === 'donut' ? 'bg-white text-amber-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900']"
+                            >
+                                Diagram Donat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHARTS CONTAINER -->
+                <div v-if="refViewMode !== 'table' && activeRefCategory" class="space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- DIAGRAM DONAT PROPORSI (LEFT) -->
+                        <div
+                            v-if="chartViewType === 'all' || chartViewType === 'donut'"
+                            :class="chartViewType === 'donut' ? 'lg:col-span-12' : 'lg:col-span-5'"
+                            class="bg-slate-50/70 rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between space-y-5"
+                        >
+                            <div class="flex items-center justify-between border-b border-slate-200/60 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs">
+                                        <i class="fa-solid fa-chart-pie"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Proporsi Distribusi</h3>
+                                        <p class="text-[11px] text-slate-500">Komposisi 6 butir teratas & lainnya</p>
+                                    </div>
+                                </div>
+                                <span class="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/70">
+                                    {{ donutData.slices.length }} Segmen
+                                </span>
+                            </div>
+
+                            <!-- SVG Donut Chart Visual -->
+                            <div class="relative flex items-center justify-center my-2">
+                                <template v-if="donutData.hasData">
+                                    <svg viewBox="0 0 200 200" class="w-48 h-48 sm:w-56 sm:h-56 -rotate-90 transform">
+                                        <!-- Background ring -->
+                                        <circle
+                                            cx="100"
+                                            cy="100"
+                                            r="68"
+                                            fill="transparent"
+                                            stroke="#f1f5f9"
+                                            stroke-width="26"
+                                        />
+                                        <!-- Slices -->
+                                        <circle
+                                            v-for="(slice, idx) in donutData.slices"
+                                            :key="slice.name"
+                                            cx="100"
+                                            cy="100"
+                                            r="68"
+                                            fill="transparent"
+                                            :stroke="slice.color"
+                                            :stroke-width="hoveredDonutIndex === idx ? 32 : 26"
+                                            :stroke-dasharray="slice.strokeDasharray"
+                                            :stroke-dashoffset="slice.strokeDashoffset"
+                                            class="transition-all duration-300 cursor-pointer"
+                                            @mouseenter="hoveredDonutIndex = idx"
+                                            @mouseleave="hoveredDonutIndex = null"
+                                        />
+                                    </svg>
+
+                                    <!-- Center Label / Tooltip Info -->
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4">
+                                        <template v-if="hoveredDonutIndex !== null && donutData.slices[hoveredDonutIndex]">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                {{ donutData.slices[hoveredDonutIndex].isOther ? 'Kelompok' : 'Butir Pilihan' }}
+                                            </span>
+                                            <span class="text-xs font-black text-slate-800 line-clamp-1 max-w-[130px]" :title="donutData.slices[hoveredDonutIndex].name">
+                                                {{ donutData.slices[hoveredDonutIndex].name }}
+                                            </span>
+                                            <span class="text-sm font-black text-amber-600 mt-0.5">
+                                                {{ formatNumber(donutData.slices[hoveredDonutIndex].count) }} {{ activeRefCategory.unit }}
+                                            </span>
+                                            <span class="text-[10px] font-bold text-slate-500">
+                                                ({{ donutData.slices[hoveredDonutIndex].percent }}%)
+                                            </span>
+                                        </template>
+                                        <template v-else>
+                                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Terdata</span>
+                                            <span class="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                                                {{ formatNumber(donutData.total) }}
+                                            </span>
+                                            <span class="text-[10px] font-semibold text-slate-500">
+                                                {{ activeRefCategory.unit }}
+                                            </span>
+                                            <span v-if="dominantRefItem" class="text-[9.5px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 rounded-full px-2 py-0.5 mt-1 max-w-[120px] truncate">
+                                                Dominan: {{ dominantRefItem.nama }}
+                                            </span>
+                                        </template>
+                                    </div>
+                                </template>
+                                <div v-else class="py-12 flex flex-col items-center justify-center text-center text-slate-400 space-y-2">
+                                    <i class="fa-solid fa-chart-pie text-3xl text-slate-300"></i>
+                                    <p class="text-xs font-bold text-slate-500">Belum ada data terisi pada kategori ini</p>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Legend List -->
+                            <div v-if="donutData.hasData" class="space-y-1.5 pt-2 border-t border-slate-200/60">
+                                <div
+                                    v-for="(slice, idx) in donutData.slices"
+                                    :key="slice.name"
+                                    @mouseenter="hoveredDonutIndex = idx"
+                                    @mouseleave="hoveredDonutIndex = null"
+                                    :class="[
+                                        'flex items-center justify-between p-1.5 rounded-xl text-xs transition cursor-pointer select-none',
+                                        hoveredDonutIndex === idx ? 'bg-amber-100/60 font-bold' : 'hover:bg-slate-100/80 text-slate-700'
+                                    ]"
+                                >
+                                    <div class="flex items-center gap-2 min-w-0 pr-2">
+                                        <span
+                                            class="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs"
+                                            :style="{ backgroundColor: slice.color }"
+                                        ></span>
+                                        <span class="truncate text-[11.5px] font-medium" :title="slice.name">{{ slice.name }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0 font-bold text-[11px]">
+                                        <span class="text-slate-900 font-extrabold">{{ formatNumber(slice.count) }}</span>
+                                        <span class="text-slate-400 font-semibold w-12 text-right">({{ slice.percent }}%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GRAFIK BATANG PERINGKAT (RIGHT) -->
+                        <div
+                            v-if="chartViewType === 'all' || chartViewType === 'bars'"
+                            :class="chartViewType === 'bars' ? 'lg:col-span-12' : 'lg:col-span-7'"
+                            class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between space-y-4"
+                        >
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">
+                                        <i class="fa-solid fa-chart-simple"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Peringkat Distribusi Terbanyak</h3>
+                                        <p class="text-[11px] text-slate-500">Urutan butir referensi dari volume terbesar</p>
+                                    </div>
+                                </div>
+
+                                <!-- Limit Toggle -->
+                                <div class="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 border border-slate-200/80 text-xs">
+                                    <button
+                                        type="button"
+                                        @click="barChartLimit = 'top10'"
+                                        :class="['px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer', barChartLimit === 'top10' ? 'bg-white text-amber-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800']"
+                                    >
+                                        Top 10
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="barChartLimit = 'all'"
+                                        :class="['px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer', barChartLimit === 'all' ? 'bg-white text-amber-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800']"
+                                    >
+                                        Semua ({{ activeRefCategory.total_items }})
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Horizontal Bars List -->
+                            <div v-if="barChartItems.length > 0" class="space-y-3 pt-1">
+                                <div
+                                    v-for="(item, idx) in barChartItems"
+                                    :key="item.id || item.nama || idx"
+                                    class="group p-2 rounded-2xl hover:bg-slate-50/80 transition space-y-1.5"
+                                >
+                                    <div class="flex items-center justify-between text-xs gap-2">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <!-- Rank Badge -->
+                                            <span
+                                                :class="[
+                                                    'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0',
+                                                    idx === 0 ? 'bg-amber-500 text-white shadow-xs' :
+                                                    idx === 1 ? 'bg-slate-300 text-slate-700' :
+                                                    idx === 2 ? 'bg-amber-700 text-amber-100' : 'bg-slate-100 text-slate-500'
+                                                ]"
+                                            >
+                                                {{ idx + 1 }}
+                                            </span>
+                                            <span class="font-bold text-slate-800 text-[12px] truncate group-hover:text-amber-700 transition" :title="item.nama">
+                                                {{ item.nama }}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <span class="font-black text-slate-900 text-xs">
+                                                {{ formatNumber(item.count) }} <span class="text-[10px] font-semibold text-slate-400">{{ activeRefCategory.unit }}</span>
+                                            </span>
+                                            <span class="text-[10.5px] font-bold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200/60 min-w-[42px] text-right">
+                                                {{ item.percentage }}%
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Progress Bar with gradient & animated width -->
+                                    <div class="h-3 w-full rounded-full bg-slate-100 overflow-hidden relative p-0.5">
+                                        <div
+                                            :style="{ width: `${(item.count / maxBarCount) * 100}%` }"
+                                            :class="[
+                                                'h-full rounded-full transition-all duration-700',
+                                                idx === 0 ? 'bg-gradient-to-r from-amber-500 to-amber-600 shadow-xs' :
+                                                idx === 1 ? 'bg-gradient-to-r from-sky-500 to-blue-600' :
+                                                idx === 2 ? 'bg-gradient-to-r from-emerald-500 to-teal-600' :
+                                                idx === 3 ? 'bg-gradient-to-r from-violet-500 to-purple-600' :
+                                                'bg-gradient-to-r from-slate-400 to-slate-500'
+                                            ]"
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="py-12 text-center text-slate-400 space-y-2">
+                                <i class="fa-solid fa-chart-simple text-3xl text-slate-300"></i>
+                                <p class="text-xs font-bold text-slate-500">Tidak ada data untuk ditampilkan</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANORAMA 12 KATEGORI OVERVIEW CARDS -->
+                    <div class="bg-gradient-to-br from-slate-50 via-white to-amber-50/20 rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-700 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-shapes"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Komparasi Panorama 12 Kategori Referensi</h3>
+                                    <p class="text-[11px] text-slate-500">Klik salah satu kartu di bawah ini untuk berpindah kategori secara instan</p>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-400 bg-white px-2.5 py-1 rounded-full border border-slate-200">
+                                12 Kategori Lengkap
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            <button
+                                v-for="cat in overview12Categories"
+                                :key="cat.key"
+                                type="button"
+                                @click="selectedRefCategory = cat.key; searchRefQuery = ''"
+                                :class="[
+                                    'p-3 rounded-2xl border text-left transition flex flex-col justify-between space-y-2 cursor-pointer',
+                                    cat.isActive
+                                        ? 'bg-amber-500/10 border-amber-500/60 ring-2 ring-amber-500/20 shadow-xs'
+                                        : 'bg-white hover:bg-slate-50 border-slate-200/70 hover:border-slate-300'
+                                ]"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div
+                                        :class="[
+                                            'w-7 h-7 rounded-xl flex items-center justify-center text-xs',
+                                            cat.isActive ? 'bg-amber-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600'
+                                        ]"
+                                    >
+                                        <i :class="cat.icon"></i>
+                                    </div>
+                                    <span
+                                        :class="[
+                                            'text-[10px] font-black px-1.5 py-0.5 rounded-full',
+                                            cat.isActive ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-600'
+                                        ]"
+                                    >
+                                        {{ cat.total_items }}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <div class="text-[11px] font-bold text-slate-800 line-clamp-1" :title="cat.label">{{ cat.label }}</div>
+                                    <div class="text-[10px] font-semibold text-slate-400 mt-0.5">
+                                        {{ formatNumber(cat.total_counted) }} {{ cat.unit }}
+                                    </div>
+                                </div>
+
+                                <!-- Mini fill progress bar -->
+                                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                    <div
+                                        :style="{ width: `${cat.fillRatio}%` }"
+                                        :class="cat.isActive ? 'bg-amber-600' : 'bg-slate-400'"
+                                        class="h-full rounded-full transition-all duration-500"
+                                    ></div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Detailed Table of Category Items -->
-                <div v-if="activeRefCategory" class="overflow-x-auto rounded-2xl border border-slate-200/80">
-                    <table class="w-full text-left text-xs">
+                <div v-if="activeRefCategory && (refViewMode === 'both' || refViewMode === 'table')" class="space-y-3 pt-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-table-list text-amber-600"></i>
+                            <span>Tabel Rincian Seluruh Butir Referensi</span>
+                        </h3>
+                        <span class="text-[11px] font-bold text-slate-400">
+                            Menampilkan {{ filteredRefItems.length }} dari {{ activeRefCategory.total_items }} butir
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200/80">
+                        <table class="w-full text-left text-xs">
                         <thead class="bg-slate-50/90 text-slate-600 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
                             <tr>
                                 <th class="py-3 px-3.5 text-center w-12">No.</th>
@@ -698,5 +1172,6 @@ const printDemografi = () => {
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </div>
+</AppLayout>
 </template>
