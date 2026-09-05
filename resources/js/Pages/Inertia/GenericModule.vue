@@ -3195,6 +3195,15 @@ const showKubFilter = computed(() => {
                                     </a>
                                     <!-- Mutasi KUB, Pisah KK, & Riwayat Buttons (For Umat) -->
                                     <template v-if="['umat', 'data-umat'].includes(moduleKey)">
+                                        <!-- Cetak Profil Umat / Jiwa -->
+                                        <a
+                                            :href="`${basePrefix}/umat/${item.uuid || item.id}/cetak`"
+                                            target="_blank"
+                                            title="Cetak Profil / Biodata Jiwa Umat (PDF / Print)"
+                                            class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
+                                        >
+                                            <i class="fa-solid fa-print text-xs"></i>
+                                        </a>
                                         <Link
                                             v-if="!isUmatReadOnlyRole"
                                             :href="`${basePrefix}/umat/${item.uuid || item.id}/mutasi`"

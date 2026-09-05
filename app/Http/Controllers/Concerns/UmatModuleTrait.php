@@ -631,4 +631,35 @@ trait UmatModuleTrait
 
         return response()->json($rows->all());
     }
+
+    public function exportUmatPdf(Request $request, string|int $id)
+    {
+        $umat = \App\Models\Umat::with(['kk', 'kk.anggota', 'wilayah', 'kapela', 'kub'])->whereUuidOrId($id)->first()
+            ?? \App\Models\Umat::with(['kk', 'kk.anggota', 'wilayah', 'kapela', 'kub'])->where('nik', $id)->first()
+            ?? \App\Models\Umat::with(['kk', 'kk.anggota', 'wilayah', 'kapela', 'kub'])->find($id)
+            ?? \App\Models\Umat::with(['kk', 'kk.anggota', 'wilayah', 'kapela', 'kub'])->firstOrFail();
+
+        $defaultParokiId = method_exists($this, 'defaultParokiIdFromProfile') ? $this->defaultParokiIdFromProfile() : null;
+        $paroki = Paroki::with('keuskupan')->find($defaultParokiId)
+            ?? Paroki::with('keuskupan')->first();
+
+        $keuskupan = $paroki?->keuskupan
+            ?? \App\Models\Keuskupan::find(5)
+            ?? \App\Models\Keuskupan::first();
+        $profilParoki = \App\Models\ProfilParoki::first();
+
+        $keuskupanLogo = $keuskupan?->logo ?: '/uploads/keuskupan/048f46b735f4e047e8f0055bc654ca4f.png';
+        $parokiLogo = $paroki?->logo ?: ($profilParoki?->logo ?: '/uploads/paroki/1787494152_6a8aff08b47a5.webp');
+
+        return response()->view('exports.umat-pdf', [
+            'umat' => $umat,
+            'kk' => $umat->kk,
+            'paroki' => $paroki,
+            'keuskupan' => $keuskupan,
+            'profilParoki' => $profilParoki,
+            'keuskupanLogo' => $keuskupanLogo,
+            'parokiLogo' => $parokiLogo,
+            'printedAt' => now()->format('d/m/Y H:i'),
+        ]);
+    }
 }

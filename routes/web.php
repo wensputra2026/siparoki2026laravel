@@ -323,6 +323,10 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::get('/umat/{id}/pisah-kk', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'showPisah'])->name("panel.{$prefix}.umat.pisah");
         Route::post('/umat/{id}/pisah-kk', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'prosesPisah'])->name("panel.{$prefix}.umat.pisah.store");
         Route::get('/umat/{id}/riwayat', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'showRiwayat'])->name("panel.{$prefix}.umat.riwayat");
+        Route::get('/umat/{id}/cetak', [\App\Http\Controllers\InertiaPanelController::class, 'exportUmatPdf'])->name("panel.{$prefix}.umat.cetak");
+        Route::get('/umat/{id}/pdf', [\App\Http\Controllers\InertiaPanelController::class, 'exportUmatPdf'])->name("panel.{$prefix}.umat.pdf");
+        Route::get('/data-umat/{id}/cetak', [\App\Http\Controllers\InertiaPanelController::class, 'exportUmatPdf'])->name("panel.{$prefix}.data-umat.cetak");
+        Route::get('/data-umat/{id}/pdf', [\App\Http\Controllers\InertiaPanelController::class, 'exportUmatPdf'])->name("panel.{$prefix}.data-umat.pdf");
         Route::get('/riwayat-mutasi/tambah', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'showTambah'])->name("panel.{$prefix}.riwayat-mutasi.create");
         Route::post('/riwayat-mutasi/tambah', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'storeTambah'])->name("panel.{$prefix}.riwayat-mutasi.store");
         Route::get('/master-pastor/create', [\App\Http\Controllers\InertiaPanelController::class, 'createPastor'])->name("panel.{$prefix}.master-pastor.create");

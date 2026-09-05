@@ -54,7 +54,7 @@ class MasterReferensiController extends Controller
 
     private const META_COLUMNS = [
         'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by',
-        'deleted_by', 'delete_reason', 'is_deleted',
+        'deleted_by', 'delete_reason', 'is_deleted', 'uuid',
     ];
 
     private const LONG_TEXT = [
@@ -634,7 +634,7 @@ class MasterReferensiController extends Controller
             if (in_array($col, self::META_COLUMNS, true)) {
                 continue;
             }
-            if ($col === 'id' || $col === 'status' || $col === 'foto') {
+            if ($col === 'id' || $col === 'status' || $col === 'foto' || $col === 'uuid') {
                 continue;
             }
             // Skip redundant text column when relational FK exists or when already combined in nama_pastor
