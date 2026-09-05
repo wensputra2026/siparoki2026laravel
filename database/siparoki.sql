@@ -97882,8 +97882,8 @@ CREATE TABLE `users` (
   CONSTRAINT `fk_users_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Default Superadmin User (Password: password)
-INSERT INTO `users` (`id`, `uuid`, `username`, `name`, `email`, `password`, `role_id`, `is_active`, `created_at`, `updated_at`) VALUES (1, '9c4b7871-3333-4444-9999-000000000001', 'superadmin', 'Super Administrator', 'superadmin@paroki.org', '$2y$12$e82Y9j5f9gYJ5eR4bW6gZeB7O8.17XbYQ0a7gN4B8g8W1Z3R4E6Kq', 1, 1, NOW(), NOW());
+-- Default Superadmin User (Password: Admin@Paroki2026!)
+INSERT INTO `users` (`id`, `uuid`, `username`, `nama_lengkap`, `email`, `password`, `role_id`, `status`, `created_at`, `updated_at`) VALUES (1, '9c4b7871-3333-4444-9999-000000000001', 'superadmin', 'Super Administrator', 'superadmin@paroki.org', '$2y$12$EA1hdLL7E5DIVF0lnaitgewljdjm2bhhFFNWHZDCuiWLfpzYBFcMG', 1, 1, NOW(), NOW());
 
 -- -----------------------------------------------------
 -- Table structure for `uskup`
