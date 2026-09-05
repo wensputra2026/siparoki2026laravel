@@ -27,7 +27,9 @@ return new class extends Migration
                 $table->text('user_agent')->nullable();
                 $table->timestamps();
 
-                $table->foreign('konten_id')->references('id')->on('konten')->onDelete('cascade');
+                if (Schema::hasTable('konten')) {
+                    $table->foreign('konten_id')->references('id')->on('konten')->onDelete('cascade');
+                }
                 $table->foreign('parent_id')->references('id')->on('komentar_artikel')->onDelete('cascade');
             });
         }

@@ -41,9 +41,11 @@ class SyncKatedralJenisIuranSeeder extends Seeder
         DB::statement("SET FOREIGN_KEY_CHECKS=0;");
         DB::table('jenis_iuran')->truncate();
 
+        $existingColumns = \Illuminate\Support\Facades\Schema::getColumnListing('jenis_iuran');
+
         foreach ($items as $item) {
             $row = (array)$item;
-            DB::table('jenis_iuran')->insert([
+            $data = [
                 'id' => $row['id'] ?? null,
                 'kode_iuran' => $row['kode_iuran'] ?? null,
                 'slug' => $row['slug'] ?? null,
@@ -71,7 +73,15 @@ class SyncKatedralJenisIuranSeeder extends Seeder
                 'deleted_by' => $row['deleted_by'] ?? null,
                 'delete_reason' => $row['delete_reason'] ?? null,
                 'is_deleted' => isset($row['is_deleted']) ? (int)$row['is_deleted'] : 0,
-            ]);
+            ];
+
+            $insertData = array_filter(
+                $data,
+                fn($key) => in_array($key, $existingColumns, true),
+                ARRAY_FILTER_USE_KEY
+            );
+
+            DB::table('jenis_iuran')->insert($insertData);
         }
 
         DB::statement("SET FOREIGN_KEY_CHECKS=1;");

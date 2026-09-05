@@ -22,42 +22,85 @@ Artisan::command('siparoki:setup {--force : Paksa timpa database yang ada}', fun
         $this->call('key:generate', ['--force' => true]);
     }
 
-    // 2. Import Master SQL Schema
-    $sqlPath = database_path('siparoki.sql');
-    if (!File::exists($sqlPath)) {
-        $sqlPath = database_path('data/siparoki.sql');
-    }
+    // 2. Import Master SQL Schema if needed
+    $needsImport = $this->option('force') || !Schema::hasTable('roles') || !Schema::hasTable('konten');
 
-    if (File::exists($sqlPath)) {
-        $this->info('2. Mengimpor Skema Master Database SIPAROKI (163 Tabel, Master Referensi & Wilayah Nasional)...');
-        $pdo = DB::connection()->getPdo();
-        $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
-        $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
-        $pdo->exec("SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';");
+    if ($needsImport) {
+        $candidates = [
+            database_path('siparoki_starter_template.sql'),
+            database_path('siparoki.sql'),
+            database_path('data/siparoki.sql'),
+        ];
 
-        $handle = fopen($sqlPath, 'r');
-        $queryBuffer = '';
-        $executedCount = 0;
-
-        while (($line = fgets($handle)) !== false) {
-            $trimmedLine = trim($line);
-            if (empty($trimmedLine) || str_starts_with($trimmedLine, '--') || str_starts_with($trimmedLine, '/*')) {
-                continue;
-            }
-            $queryBuffer .= $line;
-            if (str_ends_with(rtrim($trimmedLine), ';')) {
-                try {
-                    $pdo->exec($queryBuffer);
-                    $executedCount++;
-                } catch (\Throwable $e) {
-                    // Silently continue for duplicate table/drop ignore
-                }
-                $queryBuffer = '';
+        $sqlPath = null;
+        foreach ($candidates as $cand) {
+            if (File::exists($cand)) {
+                $sqlPath = $cand;
+                break;
             }
         }
-        fclose($handle);
-        $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
-        $this->info("   [OK] Skema Master Database Berhasil Diimpor ({$executedCount} blok query)!");
+
+        if (!$sqlPath) {
+            $zipPath = database_path('siparoki_starter_template.zip');
+            if (File::exists($zipPath) && class_exists('ZipArchive')) {
+                $this->info('   Mengekstrak database template dari ZIP...');
+                $zip = new \ZipArchive();
+                if ($zip->open($zipPath) === true) {
+                    $zip->extractTo(database_path());
+                    $zip->close();
+                    if (File::exists(database_path('siparoki_starter_template.sql'))) {
+                        $sqlPath = database_path('siparoki_starter_template.sql');
+                    }
+                }
+            }
+        }
+
+        if ($sqlPath && File::exists($sqlPath)) {
+            $this->info('2. Mengimpor Skema Master Database (163 Tabel & Master Data)...');
+            $pdo = DB::connection()->getPdo();
+            $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+            $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
+            $pdo->exec("SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';");
+
+            $handle = fopen($sqlPath, 'r');
+            $buffer = '';
+            $executedChunks = 0;
+
+            while (($line = fgets($handle)) !== false) {
+                $trimmed = trim($line);
+                if ($trimmed === '' || str_starts_with($trimmed, '--') || str_starts_with($trimmed, '/*')) {
+                    continue;
+                }
+
+                // Jangan timpa tabel migrations bawaan Laravel
+                if (stripos($trimmed, '`migrations`') !== false && 
+                    (stripos($trimmed, 'DROP TABLE') !== false || stripos($trimmed, 'CREATE TABLE') !== false || stripos($trimmed, 'INSERT INTO') !== false)) {
+                    continue;
+                }
+
+                $buffer .= $line;
+                if (strlen($buffer) > 262144 && str_ends_with(rtrim($trimmed), ';')) {
+                    try {
+                        $pdo->exec($buffer);
+                        $executedChunks++;
+                    } catch (\Throwable $e) {}
+                    $buffer = '';
+                }
+            }
+
+            if (!empty(trim($buffer))) {
+                try {
+                    $pdo->exec($buffer);
+                    $executedChunks++;
+                } catch (\Throwable $e) {}
+            }
+
+            fclose($handle);
+            $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
+            $this->info("   [OK] Skema Master Database Berhasil Diimpor!");
+        }
+    } else {
+        $this->info('2. Basis data inti sudah ada (melewati import awal).');
     }
 
     // 3. Run Incremental Migrations
@@ -68,15 +111,20 @@ Artisan::command('siparoki:setup {--force : Paksa timpa database yang ada}', fun
     $this->info('4. Menyiapkan Akun Super Administrator & Konfigurasi Paroki...');
     $this->call('db:seed', ['--force' => true]);
 
-    // 5. Clear Caches
-    $this->info('5. Mengoptimalkan Cache Aplikasi...');
+    // 5. Storage Symlink
+    $this->info('5. Memeriksa Symlink Storage Publik...');
+    try {
+        $this->call('storage:link');
+    } catch (\Throwable $e) {}
+
+    // 6. Clear Caches
+    $this->info('6. Mengoptimalkan Cache Aplikasi...');
     $this->call('optimize:clear');
 
     $this->newLine();
     $this->info('====================================================');
     $this->info('  INSTALASI SELESAI & SISTEM SIAP DIGUNAKAN!        ');
     $this->info('====================================================');
-    $this->line('  URL Akses : http://127.0.0.1:8000/login');
     $this->line('  Email     : superadmin@paroki.org');
     $this->line('  Password  : Admin@Paroki2026!');
     $this->info('====================================================');
