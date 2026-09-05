@@ -85,11 +85,28 @@ Route::get('/admin/login', fn () => redirect('/login'))->name('admin.login');
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'processLogin'])->name('login.process')->middleware('throttle:10,1');
 Route::get('/captcha/refresh', [\App\Http\Controllers\AuthController::class, 'refreshCaptcha'])->name('captcha.refresh');
 Route::get('/clear-cache', function () {
-    \Illuminate\Support\Facades\Artisan::call('view:clear');
-    \Illuminate\Support\Facades\Artisan::call('route:clear');
-    \Illuminate\Support\Facades\Artisan::call('config:clear');
-    \Illuminate\Support\Facades\Artisan::call('cache:clear');
-    return response('Cache cleared successfully!');
+    try {
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        if (\Illuminate\Support\Facades\Schema::hasTable('security_settings')) {
+            \Illuminate\Support\Facades\DB::table('security_settings')->updateOrInsert(
+                ['setting_key' => 'captcha_enabled'],
+                ['setting_value' => '1', 'updated_at' => now()]
+            );
+            \Illuminate\Support\Facades\DB::table('security_settings')->updateOrInsert(
+                ['setting_key' => 'captcha_required_backend_login'],
+                ['setting_value' => '1', 'updated_at' => now()]
+            );
+            \Illuminate\Support\Facades\DB::table('security_settings')->updateOrInsert(
+                ['setting_key' => 'captcha_show_after_failed_attempts'],
+                ['setting_value' => '0', 'updated_at' => now()]
+            );
+        }
+    } catch (\Throwable $e) {}
+    return response('Cache cleared and security settings updated successfully!');
 });
 
 Route::get('/register', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('register');

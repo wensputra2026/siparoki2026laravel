@@ -139,7 +139,6 @@
                     </div>
                 </div>
 
-                @if (!isset($showCaptcha) || !empty($showCaptcha))
                 <!-- Simple Math CAPTCHA -->
                 <div class="rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-[#263a55] p-3.5 space-y-2.5 shadow-2xs">
                     <div class="flex items-center justify-between">
@@ -154,7 +153,7 @@
                     <div class="flex items-center gap-2">
                         <!-- Tantangan Penjumlahan -->
                         <div class="flex-1 flex items-center justify-center py-2 px-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono font-bold text-sm tracking-wider select-none shadow-inner">
-                            <span id="captcha-question">{{ !empty($captchaQuestion) ? $captchaQuestion : '4 + 5 = ?' }}</span>
+                            <span id="captcha-question">{{ !empty($captchaQuestion) ? $captchaQuestion : '5 + 4 = ?' }}</span>
                         </div>
 
                         <!-- Tombol Reload Tantangan -->
@@ -187,7 +186,6 @@
                         <p class="text-xs text-red-500 font-medium mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                @endif
 
                 <div class="flex items-center">
                     <input type="checkbox" name="remember" id="remember" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">

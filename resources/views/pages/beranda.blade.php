@@ -35,7 +35,7 @@
             @if($youtubeId)
                 <iframe
                     class="hero-video-element"
-                    src="https://www.youtube.com/embed/{{ $youtubeId }}?autoplay=1&mute=1&loop=1&playlist={{ $youtubeId }}&controls=0&showinfo=0&rel=0&modestbranding=1"
+                    src="https://www.youtube.com/embed/{{ $youtubeId }}?autoplay=1&mute=1&loop=1&playlist={{ $youtubeId }}&controls=0&showinfo=0&rel=0&modestbranding=1&cc_load_policy=0&iv_load_policy=3"
                     title="Video profil {{ $globalNamaParoki ?? 'SIPAROKI' }}"
                     loading="lazy"
                     allow="autoplay; encrypted-media; picture-in-picture"
@@ -586,10 +586,6 @@
             </a>
         </div>
 
-        <!-- Share Website Buttons -->
-        <div style="margin-top: 50px; padding: 25px; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
-            @include('partials.share-buttons', ['title' => 'Portal Resmi ' . ($globalNamaParoki ?? 'Paroki')])
-        </div>
     </div>
 </section>
 

@@ -69,14 +69,6 @@ class AuthController extends Controller
                 if (isset($settings['captcha_required_backend_login']) && $settings['captcha_required_backend_login'] === '0') {
                     return false;
                 }
-
-                $threshold = (int) ($settings['captcha_show_after_failed_attempts'] ?? 0);
-                if ($threshold > 0) {
-                    $sessionFails = (int) session('login_failed_attempts', 0);
-                    if ($sessionFails < $threshold) {
-                        return false;
-                    }
-                }
             }
 
             // Active by default
