@@ -29,32 +29,35 @@ Artisan::command('siparoki:setup {--force : Paksa timpa database yang ada}', fun
     }
 
     if (File::exists($sqlPath)) {
-        $this->info('2. Mengimpor Skema Master Database SIPAROKI (Struktur & Wilayah Se-Indonesia)...');
+        $this->info('2. Mengimpor Skema Master Database SIPAROKI (163 Tabel, Master Referensi & Wilayah Nasional)...');
         $pdo = DB::connection()->getPdo();
         $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
+        $pdo->exec("SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';");
 
-        $sqlContent = File::get($sqlPath);
-        // Split SQL into manageable chunks
-        $queries = preg_split('/;\s*[\r\n]+/', $sqlContent);
-        $bar = $this->output->createProgressBar(count($queries));
-        $bar->start();
+        $handle = fopen($sqlPath, 'r');
+        $queryBuffer = '';
+        $executedCount = 0;
 
-        foreach ($queries as $query) {
-            $trimmed = trim($query);
-            if (!empty($trimmed) && !str_starts_with($trimmed, '--') && !str_starts_with($trimmed, '/*')) {
-                try {
-                    $pdo->exec($trimmed);
-                } catch (\Throwable $e) {
-                    // Silently continue for already existing constraints
-                }
+        while (($line = fgets($handle)) !== false) {
+            $trimmedLine = trim($line);
+            if (empty($trimmedLine) || str_starts_with($trimmedLine, '--') || str_starts_with($trimmedLine, '/*')) {
+                continue;
             }
-            $bar->advance();
+            $queryBuffer .= $line;
+            if (str_ends_with(rtrim($trimmedLine), ';')) {
+                try {
+                    $pdo->exec($queryBuffer);
+                    $executedCount++;
+                } catch (\Throwable $e) {
+                    // Silently continue for duplicate table/drop ignore
+                }
+                $queryBuffer = '';
+            }
         }
-        $bar->finish();
-        $this->newLine();
+        fclose($handle);
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
-        $this->info('   [OK] Skema Master Database Berhasil Diimpor!');
+        $this->info("   [OK] Skema Master Database Berhasil Diimpor ({$executedCount} blok query)!");
     }
 
     // 3. Run Incremental Migrations
