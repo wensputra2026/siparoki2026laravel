@@ -322,7 +322,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Show Register page.
+     * Show Register page (Dialihkan ke Cek Data Umat Mandiri).
      */
     public function showRegister()
     {
@@ -330,32 +330,9 @@ class AuthController extends Controller
             return $this->redirectUserByRole(Auth::user());
         }
 
-        $wilayahs = collect();
-        $kapelas = collect();
-        $kubs = collect();
-
-        try {
-            $wilayahs = DB::table('wilayah')->orderBy('nama_wilayah')->get(['id', 'nama_wilayah', 'kode_wilayah']);
-        } catch (\Throwable $e) {}
-
-        try {
-            $kapelas = DB::table('kapela')
-                ->where(function($q) {
-                    $q->where('is_deleted', 0)->orWhereNull('is_deleted');
-                })
-                ->orderBy('nama_kapela')
-                ->get(['id', 'nama_kapela', 'kode_kapela']);
-        } catch (\Throwable $e) {}
-
-        try {
-            $kubs = DB::table('kub')->orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id', 'kapela_id']);
-        } catch (\Throwable $e) {}
-
-        return view('pages.auth.register', [
-            'wilayahs' => $wilayahs,
-            'kapelas' => $kapelas,
-            'kubs' => $kubs,
-        ]);
+        // Umat paroki tidak memerlukan pembuatan akun mandiri.
+        // Data mereka dicek langsung melalui NIK di portal publik.
+        return redirect()->route('cek-data-umat')->with('info', 'Umat paroki tidak memerlukan akun login mandiri. Anda dapat langsung mengecek status data sensus & sakramen melalui NIK Anda.');
     }
 
     /**
@@ -363,57 +340,7 @@ class AuthController extends Controller
      */
     public function processRegister(Request $request)
     {
-        $request->validate([
-            'nama_lengkap' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'username' => 'nullable|string|unique:users,username|max:50',
-            'nik' => 'nullable|string|max:20',
-            'no_hp' => 'nullable|string|max:20',
-            'wilayah_id' => 'nullable|integer',
-            'kapela_id' => 'nullable|integer',
-            'kub_id' => 'nullable|integer',
-            'password' => 'required|string|min:6|confirmed',
-        ], [
-            'nama_lengkap.required' => 'Nama lengkap wajib diisi.',
-            'email.required' => 'Alamat email wajib diisi.',
-            'email.unique' => 'Alamat email ini sudah terdaftar di sistem.',
-            'username.unique' => 'Username ini sudah digunakan.',
-            'password.min' => 'Kata sandi minimal 6 karakter.',
-            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
-        ]);
-
-        $umatRole = Role::where('slug', 'umat')
-            ->orWhere('nama_role', 'like', '%umat%')
-            ->first();
-
-        $roleId = $umatRole->id ?? 5;
-        $username = $request->username ?: strtolower(preg_replace('/[^a-zA-Z0-9]/', '', explode('@', $request->email)[0]) . rand(10, 99));
-
-        $umatId = null;
-        if (!empty($request->nik)) {
-            $umatFound = DB::table('umat')->where('nik', $request->nik)->first();
-            if ($umatFound) {
-                $umatId = $umatFound->id;
-            }
-        }
-
-        $user = User::create([
-            'nama_lengkap' => $request->nama_lengkap,
-            'email' => $request->email,
-            'username' => $username,
-            'no_hp' => $request->no_hp,
-            'wilayah_id' => $request->wilayah_id,
-            'kapela_id' => $request->kapela_id,
-            'kub_id' => $request->kub_id,
-            'umat_id' => $umatId,
-            'password' => Hash::make($request->password),
-            'role_id' => $roleId,
-            'status' => 1,
-        ]);
-
-        Auth::login($user);
-
-        return redirect('/v2/dashboard')->with('success', 'Pendaftaran akun jemaat berhasil! Selamat datang di SIPAROKI.');
+        return redirect()->route('cek-data-umat')->with('info', 'Pendaftaran akun mandiri dinonaktifkan. Data sensus umat dikelola langsung oleh Sekretariat Paroki.');
     }
 
     /**

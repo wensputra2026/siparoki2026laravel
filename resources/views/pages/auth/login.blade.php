@@ -246,10 +246,21 @@
                 });
             </script>
 
+            <!-- Info khusus petugas & Link Cek Data Umat -->
+            <div class="mt-5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-center">
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-circle-info text-amber-500 me-1"></i>
+                    Akses login khusus <strong>Pengurus & Pelayan Paroki</strong>.
+                </p>
+                <a href="{{ route('cek-data-umat') }}" class="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 hover:underline">
+                    <i class="fa-solid fa-id-card"></i> Umat ingin cek data & sakramen? Klik di sini
+                </a>
+            </div>
+
             <!-- Bottom Icon Actions -->
-            <div class="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-center gap-4">
-                <a href="{{ route('register') }}" title="Belum Punya Akun? Daftar Sekarang" aria-label="Daftar Akun Baru" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200">
-                    <i class="fa-solid fa-user-plus text-sm"></i>
+            <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-center gap-4">
+                <a href="{{ route('cek-data-umat') }}" title="Cek Data Umat Mandiri via NIK" aria-label="Cek Data Umat" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-teal-600 hover:border-teal-300 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-950/30 shadow-sm transition-all duration-200">
+                    <i class="fa-solid fa-id-card text-sm"></i>
                 </a>
                 <a href="{{ route('beranda') }}" title="Kembali ke Beranda" aria-label="Kembali ke Beranda" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200">
                     <i class="fa-solid fa-house text-sm"></i>

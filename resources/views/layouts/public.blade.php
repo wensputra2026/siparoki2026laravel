@@ -251,6 +251,11 @@
                             <a class="nav-link {{ request()->is('statistik*') ? 'active' : '' }}" href="/statistik">Statistik</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {{ request()->is('cek-data-umat*') || request()->is('cek-nik*') ? 'active' : '' }}" href="/cek-data-umat" style="color: var(--primary-teal, #00897b); font-weight: 600;">
+                                <i class="fa-solid fa-id-card me-1 text-warning"></i> Cek Data Umat
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {{ request()->is('kontak*') ? 'active' : '' }}" href="/kontak">Kontak</a>
                         </li>
                         <li class="nav-item">
@@ -366,6 +371,7 @@
                 <div class="col-lg-3 col-md-6 mb-4">
                     <h5>Pelayanan</h5>
                     <ul>
+                        <li><a href="/cek-data-umat"><i class="fa-solid fa-id-card me-1 text-warning"></i> Cek Data Umat (NIK)</a></li>
                         <li><a href="/pelayanan">Daftar Pelayanan</a></li>
                         <li><a href="/sakramen">Pengajuan Sakramen</a></li>
                         <li><a href="/profil-kapela">Kapela &amp; Stasi</a></li>

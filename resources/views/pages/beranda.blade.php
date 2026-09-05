@@ -143,6 +143,32 @@
     </div>
 </section>
 
+<!-- ===== BANNER CEK DATA UMAT VIA NIK ===== -->
+<section class="cek-umat-banner-section py-4 my-3" style="background: linear-gradient(135deg, #004d40 0%, #00796b 100%); border-radius: 20px; margin-left: 15px; margin-right: 15px; box-shadow: 0 8px 25px rgba(0,77,64,0.18);">
+    <div class="container">
+        <div class="row align-items-center g-3 text-white">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 58px; height: 58px; border-radius: 16px; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0;">
+                        <i class="fa-solid fa-id-card text-warning"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1 fw-bold text-white" style="font-size: 1.35rem;">Cek Data Sensus &amp; Sakramen Umat Mandiri</h3>
+                        <p class="mb-0 text-white-50 small">
+                            Cukup masukkan NIK Anda untuk memeriksa data kependudukan gerejani, KUB, dan status sakramen inisiasi secara mandiri tanpa perlu login.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{{ route('cek-data-umat') }}" class="btn btn-warning fw-bold px-4 py-2.5 rounded-pill shadow-sm" style="color: #004d40; font-size: 0.95rem;">
+                    <i class="fa-solid fa-magnifying-glass me-1.5"></i> Cek Data Sekarang
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ===== SAMBUTAN PASTOR PAROKI SECTION ===== -->
 @php
     $pastorNameDisplay = $pastor_paroki ?? 'Data Pastor Paroki Belum Tersedia';

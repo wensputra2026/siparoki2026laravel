@@ -1743,4 +1743,134 @@ class PageController extends Controller
 
         return response()->json($payload);
     }
+
+    /**
+     * Halaman Publik Cek Data Umat Mandiri via NIK.
+     */
+    public function cekDataUmat(Request $request)
+    {
+        $common = $this->getCommonData();
+
+        $nikInput = trim((string) $request->input('nik', ''));
+        $tglLahirInput = trim((string) $request->input('tanggal_lahir', ''));
+        $tglLahirDisplay = '';
+        $normalizedDate = null;
+
+        if (!empty($tglLahirInput)) {
+            if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $tglLahirInput, $m)) {
+                $normalizedDate = sprintf('%04d-%02d-%02d', (int)$m[3], (int)$m[2], (int)$m[1]);
+                $tglLahirDisplay = sprintf('%02d/%02d/%04d', (int)$m[1], (int)$m[2], (int)$m[3]);
+            } else {
+                try {
+                    $cDate = \Carbon\Carbon::parse($tglLahirInput);
+                    $normalizedDate = $cDate->format('Y-m-d');
+                    $tglLahirDisplay = $cDate->format('d/m/Y');
+                } catch (\Throwable $e) {
+                    $normalizedDate = null;
+                    $tglLahirDisplay = $tglLahirInput;
+                }
+            }
+        }
+
+        $searchPerformed = false;
+        $umat = null;
+        $anggotaKeluarga = collect();
+        $errorMessage = null;
+        $waAdminUrl = null;
+
+        // Siapkan nomor WA sekretariat/admin
+        $topWa = !empty($common['pengaturan']->whatsapp)
+            ? $common['pengaturan']->whatsapp
+            : (!empty($common['pengaturan']->telepon)
+                ? $common['pengaturan']->telepon
+                : (!empty($common['globalProfil']->telepon)
+                    ? $common['globalProfil']->telepon
+                    : '081234567890'));
+        $cleanWa = preg_replace('/[^0-9]/', '', (string) $topWa);
+        if (str_starts_with($cleanWa, '0')) {
+            $cleanWa = '62' . substr($cleanWa, 1);
+        }
+
+        if ($request->isMethod('POST') || ($request->isMethod('GET') && $request->filled('nik'))) {
+            $searchPerformed = true;
+
+            // Bersihkan format input NIK (hanya angka)
+            $cleanNik = preg_replace('/[^0-9]/', '', $nikInput);
+
+            if (empty($cleanNik)) {
+                $errorMessage = 'Silakan masukkan NIK (Nomor Induk Kependudukan) Anda.';
+            } elseif (strlen($cleanNik) < 8) {
+                $errorMessage = 'Format NIK tidak valid. Masukkan NIK lengkap (16 digit angka).';
+            } else {
+                // Query umat dengan relasi lengkap
+                $query = \App\Models\Umat::with([
+                    'kk.anggota',
+                    'wilayah',
+                    'kapela',
+                    'kub',
+                    'lingkungan',
+                    'sakramen',
+                ])
+                ->where(function ($q) use ($cleanNik, $nikInput) {
+                    $q->where('nik', $cleanNik)
+                      ->orWhere('nik', $nikInput)
+                      ->orWhere('niu', $nikInput)
+                      ->orWhere('niu', $cleanNik);
+                });
+
+                // Jika user juga mengisi tanggal lahir, lakukan pencocokan tambahan (format Indonesia dd/mm/yyyy)
+                if (!empty($normalizedDate)) {
+                    $query->whereDate('tanggal_lahir', $normalizedDate);
+                }
+
+                $umat = $query->first();
+
+                if ($umat) {
+                    // Ambil anggota keluarga lain di KK yang sama
+                    if ($umat->kk && $umat->kk->anggota) {
+                        $anggotaKeluarga = $umat->kk->anggota->filter(function ($a) use ($umat) {
+                            return (int) $a->id !== (int) $umat->id;
+                        });
+                    }
+
+                    // Susun pesan WhatsApp otomatis
+                    $namaLengkap = $umat->nama_lengkap ?? 'Umat';
+                    $namaBaptis = $umat->nama_baptis ? " ({$umat->nama_baptis})" : '';
+                    $parokiNama = $common['namaParoki'] ?? 'Paroki Benlutu';
+                    $pesanWa = "Halo Admin/Sekretariat {$parokiNama},\n\n"
+                        . "Saya telah memeriksa data saya di Website Paroki:\n"
+                        . "• Nama: {$namaLengkap}{$namaBaptis}\n"
+                        . "• NIK: {$umat->masked_nik}\n"
+                        . "• KUB: " . ($umat->effective_kub?->nama_kub ?? '-') . "\n"
+                        . "• Stasi/Kapela: " . ($umat->kapela?->nama_kapela ?? $umat->kapela?->nama_stasi_kapela ?? '-') . "\n\n"
+                        . "Saya ingin mengonfirmasi perbaikan/pembaruan data berikut:\n"
+                        . "[Tuliskan data yang perlu diperbaiki / diubah di sini]\n\n"
+                        . "Terima kasih.";
+
+                    $waAdminUrl = "https://wa.me/{$cleanWa}?text=" . rawurlencode($pesanWa);
+                } else {
+                    // Pesan WA bila data belum ditemukan
+                    $parokiNama = $common['namaParoki'] ?? 'Paroki Benlutu';
+                    $pesanWa = "Halo Admin/Sekretariat {$parokiNama},\n\n"
+                        . "Saya mengecek NIK {$cleanNik} di website paroki namun data belum ditemukan/terdaftar.\n"
+                        . "Mohon bantuan informasi pendaftaran sensus umat / pembaruan data.\n\n"
+                        . "Terima kasih.";
+
+                    $waAdminUrl = "https://wa.me/{$cleanWa}?text=" . rawurlencode($pesanWa);
+                }
+            }
+        }
+
+        return view('pages.cek-data-umat', array_merge($common, [
+            'nikInput' => $nikInput,
+            'tglLahirInput' => $tglLahirInput,
+            'tglLahirDisplay' => $tglLahirDisplay,
+            'searchPerformed' => $searchPerformed,
+            'umat' => $umat,
+            'anggotaKeluarga' => $anggotaKeluarga,
+            'errorMessage' => $errorMessage,
+            'waAdminUrl' => $waAdminUrl,
+            'cleanWa' => $cleanWa,
+        ]));
+    }
 }

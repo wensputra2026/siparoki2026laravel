@@ -78,6 +78,13 @@ Route::get('/pelayanan', [PageController::class, 'pelayanan'])->name('pelayanan'
 Route::get('/pengajuan-sakramen', [PageController::class, 'sakramen'])->name('pengajuan-sakramen');
 Route::get('/sakramen', [PageController::class, 'sakramen'])->name('sakramen');
 
+// Layanan Publik Mandiri: Cek Data Umat via NIK
+Route::match(['get', 'post'], '/cek-data-umat', [PageController::class, 'cekDataUmat'])->name('cek-data-umat')->middleware('throttle:40,1');
+Route::get('/cek-nik', fn () => redirect()->route('cek-data-umat'));
+Route::get('/cek-umat', fn () => redirect()->route('cek-data-umat'));
+Route::get('/layanan/cek-data', fn () => redirect()->route('cek-data-umat'));
+
+
 // Auth Routes (Login, Register & Lupa Password)
 Route::get('/login', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('login');
 Route::get('/masuk', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('masuk');
