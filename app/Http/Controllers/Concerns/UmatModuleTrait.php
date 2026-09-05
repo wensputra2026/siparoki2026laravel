@@ -706,6 +706,42 @@ trait UmatModuleTrait
 
         $jabatanPastor = $pastorRecord?->jabatan ?: 'Pastor Paroki';
 
+        // Daftar Pastor di Paroki untuk opsi penandatangan (misal jika Pastor Paroki berhalangan dan diganti Pastor Rekan)
+        $daftarPastor = \Illuminate\Support\Facades\DB::table('master_pastor')
+            ->where('status', 'aktif')
+            ->where(function ($q) use ($paroki, $defaultParokiId) {
+                if ($defaultParokiId) {
+                    $q->where('paroki_id', $defaultParokiId)
+                      ->orWhere('paroki_tugas', 'like', '%Benlutu%')
+                      ->orWhereNull('paroki_tugas')
+                      ->orWhere('paroki_tugas', '');
+                } else {
+                    $q->where('paroki_tugas', 'like', '%Benlutu%')
+                      ->orWhereNull('paroki_tugas')
+                      ->orWhere('paroki_tugas', '');
+                }
+            })
+            ->orderByRaw("CASE WHEN jabatan LIKE '%Pastor Paroki%' THEN 1 ELSE 2 END")
+            ->get();
+
+        // Dukungan parameter URL jika admin ingin langsung memilih Pastor tertentu via URL
+        if ($request->filled('pastor_id')) {
+            $pReq = $daftarPastor->firstWhere('id', (int) $request->query('pastor_id'));
+            if ($pReq) {
+                $namaPastorParoki = trim(($pReq->gelar_depan ? $pReq->gelar_depan . ' ' : '') . $pReq->nama_pastor . ($pReq->gelar_belakang ? ', ' . $pReq->gelar_belakang : ''));
+                $jabatanPastor = $pReq->jabatan ?: 'Pastor Rekan';
+            }
+        } elseif ($request->filled('pastor')) {
+            $pSearch = (string) $request->query('pastor');
+            $pReq = $daftarPastor->first(function ($p) use ($pSearch) {
+                return stripos($p->nama_pastor, $pSearch) !== false;
+            });
+            if ($pReq) {
+                $namaPastorParoki = trim(($pReq->gelar_depan ? $pReq->gelar_depan . ' ' : '') . $pReq->nama_pastor . ($pReq->gelar_belakang ? ', ' . $pReq->gelar_belakang : ''));
+                $jabatanPastor = $pReq->jabatan ?: 'Pastor Rekan';
+            }
+        }
+
         // Resolusi KUB & Ketua KUB dari Umat / Kartu Keluarga
         $kub = $umat->kub ?: ($umat->kk ? $umat->kk->kub : null);
         if (!$kub && !empty($umat->kub_id)) {
@@ -738,7 +774,9 @@ trait UmatModuleTrait
             'namaKetuaKub' => $namaKetuaKub,
             'namaKub' => $namaKub,
             'namaPastorParoki' => $namaPastorParoki,
+            'cleanPastorName' => $cleanPastorName,
             'jabatanPastor' => $jabatanPastor,
+            'daftarPastor' => $daftarPastor,
             'paroki' => $paroki,
             'keuskupan' => $keuskupan,
             'profilParoki' => $profilParoki,
