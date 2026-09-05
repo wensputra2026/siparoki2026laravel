@@ -538,6 +538,12 @@ trait KkModuleTrait
             $data['nama_lahir_pemilik'] = $data['nama_baptis_pemilik'];
         }
 
+        foreach (['nama_lahir_pemilik', 'nama_baptis_pemilik', 'nama_pasangan'] as $nameField) {
+            if (!empty($data[$nameField])) {
+                $data[$nameField] = mb_convert_case(mb_strtolower(trim($data[$nameField]), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+            }
+        }
+
         if ($isCreate && empty($data['created_by']) && auth()->id()) {
             $data['created_by'] = auth()->id();
         }
@@ -595,17 +601,25 @@ trait KkModuleTrait
                 continue;
             }
 
+            $toProperName = function ($s) {
+                if (empty($s)) return null;
+                return mb_convert_case(mb_strtolower(trim((string)$s), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+            };
+
+            $namaLengkapFormatted = $toProperName($namaLengkap ?: $namaBaptis);
+            $namaBaptisFormatted = $toProperName($namaBaptis ?: $namaLengkap);
+
             $payload = [
                 'kk_id' => $kk->id,
                 'no_urut_anggota' => $idx + 1,
                 'kode_anggota' => !empty($member['kode_anggota']) ? trim($member['kode_anggota']) : null,
                 'suku_etnis' => !empty($member['suku_etnis']) ? trim($member['suku_etnis']) : null,
                 'nik' => $nik ?: null,
-                'nama_lengkap' => $namaLengkap ?: $namaBaptis,
-                'nama_lahir' => $namaLengkap ?: $namaBaptis,
-                'nama_baptis' => $namaBaptis ?: $namaLengkap,
+                'nama_lengkap' => $namaLengkapFormatted,
+                'nama_lahir' => $namaLengkapFormatted,
+                'nama_baptis' => $namaBaptisFormatted,
                 'no_kk_kw' => $kk->no_kk_kw,
-                'nama_pemilik_kk' => $kk->nama_lahir_pemilik ?: $kk->nama_baptis_pemilik,
+                'nama_pemilik_kk' => $toProperName($kk->nama_lahir_pemilik ?: $kk->nama_baptis_pemilik),
                 'hubungan_keluarga' => !empty($member['hubungan_keluarga']) ? trim($member['hubungan_keluarga']) : ($idx === 0 ? 'Kepala Keluarga' : 'Anak'),
                 'jenis_kelamin' => $normalizeGender($member['jenis_kelamin'] ?? null),
                 'tempat_lahir' => !empty($member['tempat_lahir']) ? trim($member['tempat_lahir']) : null,
@@ -623,8 +637,8 @@ trait KkModuleTrait
                 'jenis_penerimaan_baptis' => !empty($member['jenis_penerimaan_baptis']) ? trim($member['jenis_penerimaan_baptis']) : null,
                 'tgl_baptis' => $cleanDate($member['tgl_baptis'] ?? null),
                 'paroki_baptis' => !empty($member['paroki_baptis']) ? trim($member['paroki_baptis']) : null,
-                'pastor_baptis' => !empty($member['pastor_baptis']) ? trim($member['pastor_baptis']) : null,
-                'wali_baptis' => !empty($member['wali_baptis']) ? trim($member['wali_baptis']) : null,
+                'pastor_baptis' => $toProperName($member['pastor_baptis'] ?? null),
+                'wali_baptis' => $toProperName($member['wali_baptis'] ?? null),
                 'buku_baptis_vol' => !empty($member['buku_baptis_vol']) ? trim($member['buku_baptis_vol']) : null,
                 'buku_baptis_hal' => !empty($member['buku_baptis_hal']) ? trim($member['buku_baptis_hal']) : null,
                 'buku_baptis_no' => !empty($member['buku_baptis_no']) ? trim($member['buku_baptis_no']) : null,
@@ -634,7 +648,7 @@ trait KkModuleTrait
                 'paroki_krisma' => !empty($member['paroki_krisma']) ? trim($member['paroki_krisma']) : null,
                 'tgl_perkawinan' => $cleanDate($member['tgl_perkawinan'] ?? null),
                 'paroki_perkawinan' => !empty($member['paroki_perkawinan']) ? trim($member['paroki_perkawinan']) : null,
-                'nama_pasangan' => !empty($member['nama_pasangan']) ? trim($member['nama_pasangan']) : null,
+                'nama_pasangan' => $toProperName($member['nama_pasangan'] ?? null),
                 'status_perkawinan_kanonik' => !empty($member['status_perkawinan_kanonik']) ? trim($member['status_perkawinan_kanonik']) : null,
                 'peristiwa_lain' => !empty($member['peristiwa_lain']) ? trim($member['peristiwa_lain']) : null,
                 'no_surat_peristiwa' => !empty($member['no_surat_peristiwa']) ? trim($member['no_surat_peristiwa']) : null,

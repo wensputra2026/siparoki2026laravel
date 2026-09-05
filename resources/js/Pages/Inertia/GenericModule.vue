@@ -595,7 +595,7 @@ const isUmatReadOnlyRole = computed(() => {
 });
 
 const isKkReadOnlyForRole = computed(() => {
-    const p = (props.prefix || basePrefix.value || window.location.pathname || '').toLowerCase();
+    const p = (props.prefix || basePrefix.value || (typeof window !== 'undefined' ? window.location.pathname : '') || '').toLowerCase();
     const r = String(props.role?.slug || props.role?.nama_role || props.role || page.props.role || '').toLowerCase();
     const isWilayahOrKapela = p.includes('wilayah') || p.includes('kapela') || p.includes('stasi') || r.includes('wilayah') || r.includes('kapela') || r.includes('stasi');
     if (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey) && isWilayahOrKapela) {

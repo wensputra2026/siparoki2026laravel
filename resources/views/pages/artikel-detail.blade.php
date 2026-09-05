@@ -214,8 +214,6 @@
                         </div>
                     @endif
 
-                    <!-- 6. Share Buttons -->
-                    @include('partials.share-buttons', ['title' => $item->judul ?? null])
                 </div>
 
                 <!-- Komentar & Tanggapan Section Konoha Style -->

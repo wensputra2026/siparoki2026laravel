@@ -68,6 +68,14 @@ class KkKatolik extends Model
                 }
             }
         });
+
+        static::saved(function ($kk) {
+            try {
+                \App\Services\SakramenSyncService::syncFromKk($kk);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Sakramen sync failed for KK ' . $kk->id . ': ' . $e->getMessage());
+            }
+        });
     }
 
     public function getMaskedNikAttribute(): ?string

@@ -120,7 +120,45 @@ class SakramenSyncService
     }
 
     /**
-     * Rekap otomatis seluruh data sakramen dari seluruh tabel Umat
+     * Sinkronisasi data sakramen perkawinan dari Kartu Keluarga (KK Katolik)
+     */
+    public static function syncFromKk(\App\Models\KkKatolik $kk): void
+    {
+        if (empty($kk->id)) return;
+
+        $hasNikah = !empty($kk->tgl_menikah_gereja)
+            || !empty($kk->menikah_di_gereja)
+            || in_array(strtolower((string)$kk->pernikahan_gerejani), ['ya', '1', 'sudah', 'sah'], true);
+
+        if ($hasNikah) {
+            $kepalaKeluarga = Umat::where('kk_id', $kk->id)
+                ->where(function ($q) use ($kk) {
+                    $q->where('hubungan_keluarga', 'like', '%kepala%')
+                      ->orWhere('nik', $kk->nik_pemilik);
+                })->first();
+
+            if ($kepalaKeluarga) {
+                Sakramen::updateOrCreate(
+                    [
+                        'id_umat' => $kepalaKeluarga->id,
+                        'tipe_sakramen' => 'Perkawinan',
+                    ],
+                    [
+                        'tanggal' => $kk->tgl_menikah_gereja ?: ($kepalaKeluarga->tgl_perkawinan ?: $kk->created_at),
+                        'tempat' => $kk->menikah_di_gereja ?: ($kepalaKeluarga->paroki_perkawinan ?: 'Paroki St. Vinsensius a Paulo Benlutu'),
+                        'pastor' => $kk->yang_menikahkan ?: null,
+                        'pelaksana' => $kk->yang_menikahkan ?: null,
+                        'nama_pasangan' => $kk->nama_pasangan ?: $kepalaKeluarga->nama_pasangan,
+                        'jenis_perkawinan' => $kk->pernikahan_gerejani ?: 'Kanonik Katolik',
+                        'status' => 'Sah',
+                    ]
+                );
+            }
+        }
+    }
+
+    /**
+     * Rekap otomatis seluruh data sakramen dari seluruh tabel Umat dan KK
      */
     public static function syncAll(): int
     {
@@ -129,6 +167,10 @@ class SakramenSyncService
         foreach ($umats as $umat) {
             self::syncFromUmat($umat);
             $count++;
+        }
+        $kks = \App\Models\KkKatolik::whereNull('deleted_at')->get();
+        foreach ($kks as $kk) {
+            self::syncFromKk($kk);
         }
         return $count;
     }
