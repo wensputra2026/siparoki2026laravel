@@ -5,6 +5,7 @@ import { RoleMenuKey } from '../composables/useRoleMenu.js';
 import { roleMenus } from '../menu/roleMenus.js';
 import AppNotificationBell from './AppNotificationBell.vue';
 import AppChatWidget from './AppChatWidget.vue';
+import SearchableSelect from './SearchableSelect.vue';
 
 defineProps({
     title: { type: String, default: 'Dashboard' },
@@ -117,60 +118,72 @@ onUnmounted(() => {
                     </option>
                 </select>
 
-                <!-- Dynamic Pastor Selector (Ultrawide Desktop only) -->
+                <!-- Dynamic Pastor Selector -->
                 <template v-if="activeRole === 'Pastor' && pastorsList.length > 0">
-                    <select
-                        v-model="selectedPastorId"
-                        @change="onScopeChange('pastor_id', selectedPastorId)"
-                        class="hidden 2xl:block bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[120px] truncate"
-                    >
-                        <option value="">-- Semua Pastor --</option>
-                        <option v-for="p in pastorsList" :key="p.id" :value="p.id">
-                            {{ p.nama_pastor }}
-                        </option>
-                    </select>
+                    <div class="hidden xl:block w-36 2xl:w-44">
+                        <SearchableSelect
+                            v-model="selectedPastorId"
+                            :options="pastorsList"
+                            valueKey="id"
+                            labelKey="nama_pastor"
+                            placeholder="-- Semua Pastor --"
+                            searchPlaceholder="Cari pastor..."
+                            compact
+                            dropdownMinWidth="min-w-[240px]"
+                            @change="(val) => onScopeChange('pastor_id', val)"
+                        />
+                    </div>
                 </template>
 
-                <!-- Dynamic Wilayah Selector (Ultrawide Desktop only) -->
+                <!-- Dynamic Wilayah Selector -->
                 <template v-if="activeRole === 'Admin Wilayah' && wilayahList.length > 0">
-                    <select
-                        v-model="selectedWilayahId"
-                        @change="onScopeChange('wilayah_id', selectedWilayahId)"
-                        class="hidden 2xl:block bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[120px] truncate"
-                    >
-                        <option value="">-- Semua Wilayah --</option>
-                        <option v-for="w in wilayahList" :key="w.id" :value="w.id">
-                            {{ w.nama_wilayah }}
-                        </option>
-                    </select>
+                    <div class="hidden xl:block w-36 2xl:w-44">
+                        <SearchableSelect
+                            v-model="selectedWilayahId"
+                            :options="wilayahList"
+                            valueKey="id"
+                            labelKey="nama_wilayah"
+                            placeholder="-- Semua Wilayah --"
+                            searchPlaceholder="Cari wilayah..."
+                            compact
+                            dropdownMinWidth="min-w-[240px]"
+                            @change="(val) => onScopeChange('wilayah_id', val)"
+                        />
+                    </div>
                 </template>
 
-                <!-- Dynamic Kapela Selector (Ultrawide Desktop only) -->
+                <!-- Dynamic Kapela Selector -->
                 <template v-if="activeRole === 'Admin Kapela / Stasi' && kapelaList.length > 0">
-                    <select
-                        v-model="selectedKapelaId"
-                        @change="onScopeChange('kapela_id', selectedKapelaId)"
-                        class="hidden 2xl:block bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[120px] truncate"
-                    >
-                        <option value="">-- Semua Stasi / Kapela --</option>
-                        <option v-for="k in kapelaList" :key="k.id" :value="k.id">
-                            {{ k.nama_kapela }}
-                        </option>
-                    </select>
+                    <div class="hidden xl:block w-40 2xl:w-48">
+                        <SearchableSelect
+                            v-model="selectedKapelaId"
+                            :options="kapelaList"
+                            valueKey="id"
+                            labelKey="nama_kapela"
+                            placeholder="-- Semua Stasi / Kapela --"
+                            searchPlaceholder="Cari stasi / kapela..."
+                            compact
+                            dropdownMinWidth="min-w-[250px]"
+                            @change="(val) => onScopeChange('kapela_id', val)"
+                        />
+                    </div>
                 </template>
 
-                <!-- Dynamic KUB Selector (Ultrawide Desktop only) -->
+                <!-- Dynamic KUB Selector -->
                 <template v-if="activeRole === 'Ketua KUB' && kubList.length > 0">
-                    <select
-                        v-model="selectedKubId"
-                        @change="onScopeChange('kub_id', selectedKubId)"
-                        class="hidden 2xl:block bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[120px] truncate"
-                    >
-                        <option value="">-- Semua KUB --</option>
-                        <option v-for="kb in kubList" :key="kb.id" :value="kb.id">
-                            {{ kb.nama_kub }}
-                        </option>
-                    </select>
+                    <div class="hidden xl:block w-44 2xl:w-56">
+                        <SearchableSelect
+                            v-model="selectedKubId"
+                            :options="kubList"
+                            valueKey="id"
+                            labelKey="nama_kub"
+                            placeholder="-- Semua KUB --"
+                            searchPlaceholder="Cari nama KUB..."
+                            compact
+                            dropdownMinWidth="min-w-[270px]"
+                            @change="(val) => onScopeChange('kub_id', val)"
+                        />
+                    </div>
                 </template>
 
                 <!-- Quick Button: Return To Super Admin -->

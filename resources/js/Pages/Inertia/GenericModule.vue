@@ -594,6 +594,16 @@ const isUmatReadOnlyRole = computed(() => {
     return false;
 });
 
+const isKkReadOnlyForRole = computed(() => {
+    const p = (props.prefix || basePrefix.value || window.location.pathname || '').toLowerCase();
+    const r = String(props.role?.slug || props.role?.nama_role || props.role || page.props.role || '').toLowerCase();
+    const isWilayahOrKapela = p.includes('wilayah') || p.includes('kapela') || p.includes('stasi') || r.includes('wilayah') || r.includes('kapela') || r.includes('stasi');
+    if (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey) && isWilayahOrKapela) {
+        return true;
+    }
+    return false;
+});
+
 const isViewAndEditOnlyRole = computed(() => {
     return false;
 });
@@ -2508,11 +2518,11 @@ const showKubFilter = computed(() => {
                 <div class="grid grid-cols-2 sm:flex sm:flex-wrap xl:justify-end gap-2 w-full xl:w-auto">
                     <!-- 0. Read-Only Indicator for Wilayah / Kapela on KK & Umat Data -->
                     <div
-                        v-if="isUmatReadOnlyRole"
+                        v-if="isKkReadOnlyForRole || isUmatReadOnlyRole"
                         class="col-span-2 px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
                     >
                         <i class="fa-solid fa-eye text-blue-600 text-[11px]"></i>
-                        <span>{{ ['wilayah', 'kub', 'sakramen', 'buku-sakramen'].includes(moduleKey) ? 'Mode Lihat Saja (Kelola di Paroki)' : 'Mode Lihat Saja (CRUD di KUB)' }}</span>
+                        <span>{{ isKkReadOnlyForRole ? 'Mode Lihat Saja (Read-Only) - Tidak Dapat Edit & Cetak' : (['wilayah', 'kub', 'sakramen', 'buku-sakramen'].includes(moduleKey) ? 'Mode Lihat Saja (Kelola di Paroki)' : 'Mode Lihat Saja (CRUD di KUB)') }}</span>
                     </div>
 
                     <!-- 0.1 View & Edit Only Indicator for Wilayah / Kapela on Sakramen Data -->
@@ -2525,7 +2535,7 @@ const showKubFilter = computed(() => {
                     </div>
 
                     <!-- 1. Tambah Button (Conditional based on hasCreate & Role) -->
-                    <template v-if="hasCreate && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
+                    <template v-if="hasCreate && !isKkReadOnlyForRole && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <Link
                             v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
                             :href="moduleKey === 'konten' ? `${basePrefix}/konten/create` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/kk-katolik/create` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/create` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/create` : `${basePrefix}/role/create`)))"
@@ -2546,7 +2556,7 @@ const showKubFilter = computed(() => {
                     </template>
 
                     <!-- 2. Import Excel & Template Download Buttons (Only for whitelisted data-master modules) -->
-                    <template v-if="hasImportExportActions && hasImport && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
+                    <template v-if="hasImportExportActions && hasImport && !isKkReadOnlyForRole && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <input
                             ref="importFileInput"
                             type="file"
@@ -2576,7 +2586,7 @@ const showKubFilter = computed(() => {
 
                     <!-- 3. Export Excel Button (Only for whitelisted data-master modules) -->
                     <a
-                        v-if="hasImportExportActions && hasExport"
+                        v-if="hasImportExportActions && hasExport && !isKkReadOnlyForRole"
                         :href="exportModuleUrl('excel')"
                         class="px-3.5 py-2 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
                     >
@@ -2586,7 +2596,7 @@ const showKubFilter = computed(() => {
 
                     <!-- 4. Print / PDF Button (Only active for modules with hasPdf = true) -->
                     <a
-                        v-if="hasPdf"
+                        v-if="hasPdf && !isKkReadOnlyForRole"
                         :href="exportModuleUrl('print')"
                         target="_blank"
                         class="px-3.5 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
@@ -3082,7 +3092,7 @@ const showKubFilter = computed(() => {
 
                                     <!-- 2. Cetak Button (Only for KK, and only for non-read-only roles) -->
                                     <a
-                                        v-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) && !isUmatReadOnlyRole"
+                                        v-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) && !isKkReadOnlyForRole && !isUmatReadOnlyRole"
                                         :href="`${basePrefix}/kk-katolik/${item.uuid || item.id || item.no_kk_kw}/cetak`"
                                         target="_blank"
                                         title="Cetak Kartu Keluarga (PDF / Print)"
@@ -3117,8 +3127,8 @@ const showKubFilter = computed(() => {
                                         </Link>
                                     </template>
 
-                                    <!-- Edit Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
-                                    <template v-if="!isUmatReadOnlyRole">
+                                    <!-- Edit Button (Hidden for Read-Only KK on Wilayah/Kapela & Read-Only Umat) -->
+                                    <template v-if="!isKkReadOnlyForRole && !isUmatReadOnlyRole">
                                         <Link
                                             v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
                                             :href="moduleKey === 'konten' ? `${basePrefix}/konten/${item.uuid || item.id || item.slug}/edit` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/${moduleKey}/${item.uuid || item.id || item.slug || item.no_kk_kw}/edit` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/${item.uuid || item.id}/edit` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/${item.uuid || item.id}/edit` : `${basePrefix}/role/${item.uuid || item.id || item.id_role || item.slug}/edit`)))"

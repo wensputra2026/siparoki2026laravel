@@ -105,6 +105,25 @@ class Umat extends Model
         'usia',
     ];
 
+    protected static function booted()
+    {
+        static::saving(function ($umat) {
+            foreach (['nama_lengkap', 'nama_baptis', 'nama_lahir', 'nama_pemilik_kk', 'nama_marga', 'nama_pasangan', 'wali_baptis', 'pastor_baptis'] as $field) {
+                if (!empty($umat->{$field})) {
+                    $umat->{$field} = mb_convert_case(mb_strtolower(trim($umat->{$field}), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+                }
+            }
+        });
+
+        static::saved(function ($umat) {
+            try {
+                \App\Services\SakramenSyncService::syncFromUmat($umat);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Sakramen sync failed for umat ' . $umat->id . ': ' . $e->getMessage());
+            }
+        });
+    }
+
     public function getUsiaAttribute(): ?int
     {
         if (!$this->tanggal_lahir) return null;

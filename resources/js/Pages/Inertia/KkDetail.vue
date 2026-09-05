@@ -42,7 +42,12 @@ const calculateAge = (d) => {
         return null;
     }
 };
-const isReadOnlyRole = computed(() => false);
+
+const isReadOnlyRole = computed(() => {
+    const p = String(props.prefix || '').toLowerCase();
+    const r = String(props.role || '').toLowerCase();
+    return p.includes('wilayah') || p.includes('kapela') || p.includes('stasi') || r.includes('wilayah') || r.includes('kapela') || r.includes('stasi');
+});
 
 const formatLogoUrl = (url, fallback) => {
     if (!url) return fallback;

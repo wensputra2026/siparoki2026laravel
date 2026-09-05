@@ -1102,9 +1102,13 @@ class InertiaPanelController extends Controller
                 'has_export' => true,
                 'has_pdf' => true,
                 'columns' => [
-                    ['key' => 'tipe_sakramen', 'label' => 'Tipe Sakramen', 'isPrimary' => true],
-                    ['key' => 'tanggal', 'label' => 'Tanggal'],
-                    ['key' => 'tempat', 'label' => 'Tempat'],
+                    ['key' => 'umat', 'relation' => 'umat', 'relationKey' => 'nama_lengkap', 'label' => 'Nama Penerima', 'isPrimary' => true],
+                    ['key' => 'tipe_sakramen', 'label' => 'Tipe Sakramen'],
+                    ['key' => 'tanggal', 'label' => 'Tanggal Penerimaan', 'isDate' => true],
+                    ['key' => 'tempat', 'label' => 'Tempat / Paroki'],
+                    ['key' => 'pastor', 'altKey' => 'pelaksana', 'label' => 'Pastor / Pelayan'],
+                    ['key' => 'wali_baptis', 'altKey' => 'nama_pasangan', 'label' => 'Wali / Pasangan'],
+                    ['key' => 'liber_no', 'label' => 'No. Liber (Buku)'],
                 ],
             ],
             'pengajuan-sakramen' => [

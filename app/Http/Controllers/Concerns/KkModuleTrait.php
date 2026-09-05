@@ -27,10 +27,13 @@ use Inertia\Response;
 
 trait KkModuleTrait
 {
-    public function createKk(Request $request): Response
+    public function createKk(Request $request)
     {
         $this->ensureKkKatolikColumns();
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        if (in_array($firstSegment, ['wilayah', 'kapela'], true)) {
+            return redirect("/{$firstSegment}/kk-katolik")->with('error', 'Akses Terbatas: Level Wilayah / Stasi hanya memiliki hak akses Lihat Data KK (Read-Only).');
+        }
         $roleMap = [
             'superadmin' => 'Super Admin',
             'paroki' => 'Admin Paroki',
@@ -102,10 +105,13 @@ trait KkModuleTrait
     }
 
 
-    public function editKk(Request $request, string|int $id): Response
+    public function editKk(Request $request, string|int $id): Response|\Illuminate\Http\RedirectResponse
     {
         $this->ensureKkKatolikColumns();
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        if (in_array($firstSegment, ['wilayah', 'kapela'], true)) {
+            return redirect("/{$firstSegment}/kk-katolik")->with('error', 'Akses Terbatas: Level Wilayah / Stasi hanya memiliki hak akses Lihat Data KK (Read-Only).');
+        }
         $roleMap = [
             'superadmin' => 'Super Admin',
             'paroki' => 'Admin Paroki',
@@ -240,6 +246,11 @@ trait KkModuleTrait
 
     public function exportKkPdf(Request $request, string|int $id)
     {
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        if (in_array($firstSegment, ['wilayah', 'kapela'], true)) {
+            return redirect("/{$firstSegment}/kk-katolik")->with('error', 'Akses Terbatas: Level Wilayah / Stasi tidak memiliki akses cetak KK Katolik.');
+        }
+
         $kk = \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->whereUuidOrId($id)->first()
             ?? \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->where('no_kk_kw', $id)->first()
             ?? \App\Models\KkKatolik::with(['anggota', 'wilayah', 'kapela', 'kub'])->firstOrFail();

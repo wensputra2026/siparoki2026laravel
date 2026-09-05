@@ -17,8 +17,8 @@ class MinifyHtml
     {
         $response = $next($request);
 
-        // Skip on local/testing or debug mode for easier inspection and better dev performance
-        if (app()->environment(['local', 'testing']) || config('app.debug')) {
+        // Skip if explicitly disabled via query or config
+        if ($request->has('no_minify') || config('app.minify_html') === false || env('MINIFY_HTML') === false) {
             return $response;
         }
 
@@ -42,7 +42,7 @@ class MinifyHtml
             return $response;
         }
 
-        // Minify HTML output to super compact format (1-5 lines)
+        // Minify HTML output down to exactly 1 continuous line (Next.js / SatuSehat style)
         $response->setContent($this->minify($content));
 
         return $response;
@@ -72,6 +72,9 @@ class MinifyHtml
         // 3. Minify inline <script> blocks (safe trim lines, clean spacing)
         $html = preg_replace_callback('/<script(?:[^>]+)?>.*?<\/script>/si', function ($matches) {
             $script = $matches[0];
+            if (stripos($script, 'application/ld+json') !== false || stripos($script, 'application/json') !== false) {
+                return preg_replace('/\s+/', ' ', $script);
+            }
             $lines = explode("\n", $script);
             $cleanLines = [];
             foreach ($lines as $line) {
@@ -93,8 +96,9 @@ class MinifyHtml
         // 5. Remove spaces & linebreaks between tags
         $html = preg_replace('/>\s+</', '><', $html);
 
-        // 6. Collapse remaining whitespace into single space
-        $html = preg_replace('/[ \t\r\n]+/', ' ', $html);
+        // 6. Collapse remaining whitespace and strip all newlines into 1 continuous line (Next.js style)
+        $html = preg_replace('/[\r\n]+/', ' ', $html);
+        $html = preg_replace('/>\s+</', '><', $html);
 
         // 7. Restore preserved blocks (<pre>, <textarea>)
         if (!empty($placeholders)) {

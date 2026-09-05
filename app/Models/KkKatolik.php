@@ -59,6 +59,17 @@ class KkKatolik extends Model
         'is_deleted',
     ];
 
+    protected static function booted()
+    {
+        static::saving(function ($kk) {
+            foreach (['nama_lahir_pemilik', 'nama_baptis_pemilik', 'nama_pasangan'] as $field) {
+                if (!empty($kk->{$field})) {
+                    $kk->{$field} = mb_convert_case(mb_strtolower(trim($kk->{$field}), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+                }
+            }
+        });
+    }
+
     public function getMaskedNikAttribute(): ?string
     {
         $nik = $this->nik_pemilik;

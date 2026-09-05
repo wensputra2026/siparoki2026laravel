@@ -123,6 +123,11 @@ trait GenericModuleTrait
         } elseif (in_array($slug, ['riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'mutasi_umat'], true)) {
             $query->with(['umat', 'kk', 'kubAsal', 'kubTujuan', 'wilayahAsal', 'wilayahTujuan', 'kapelaAsal', 'kapelaTujuan']);
         } elseif (in_array($slug, ['sakramen', 'buku-sakramen'], true)) {
+            try {
+                \App\Services\SakramenSyncService::syncAll();
+            } catch (\Throwable $e) {
+                // Ignore silent sync error
+            }
             $query->with(['umat.kk.wilayah', 'umat.kk.kapela', 'umat.kk.kub']);
         }
 
@@ -728,6 +733,11 @@ trait GenericModuleTrait
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
 
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        if (in_array($firstSegment, ['wilayah', 'kapela'], true) && in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            return back()->with('error', 'Akses Terbatas: Level Wilayah / Stasi hanya memiliki hak akses Lihat Data KK (Read-Only).');
+        }
+
         // Financial data must be protected from manipulation (positive amount,
         // known type/category). This also satisfies the audit requirement.
         if ($slug === 'keuangan') {
@@ -1036,6 +1046,11 @@ trait GenericModuleTrait
 
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
+
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        if (in_array($firstSegment, ['wilayah', 'kapela'], true) && in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            return back()->with('error', 'Akses Terbatas: Level Wilayah / Stasi hanya memiliki hak akses Lihat Data KK (Read-Only).');
+        }
 
         // Validasi khusus modul wilayah gerejawi (Keuskupan & Dekenat/Kevikepan)
         $this->validateTerritoryModule($request, $slug, decode_id($id) ?: $id);
