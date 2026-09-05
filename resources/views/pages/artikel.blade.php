@@ -89,11 +89,6 @@
             </div>
         @endif
 
-        <!-- Share Buttons -->
-        <div style="margin-top: 35px;">
-            @include('partials.share-buttons', ['title' => 'Artikel & Edukasi Iman - ' . ($globalNamaParoki ?? 'Paroki')])
-        </div>
-
     </div>
 </section>
 @endsection
