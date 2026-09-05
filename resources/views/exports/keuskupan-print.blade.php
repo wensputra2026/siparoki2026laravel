@@ -431,8 +431,7 @@
                 <tfoot>
                     @if ($isStatistik)
                     <tr class="total-row">
-                        <th style="text-align: center; font-weight: 900; background: #0f172a; color: #fff;">&sum;</th>
-                        <th style="font-weight: 900; text-transform: uppercase; color: #0f172a; background: #e2e8f0;">
+                        <th colspan="2" style="font-weight: 900; text-transform: uppercase; color: #0f172a; background: #e2e8f0; text-align: left; padding-left: 12px;">
                             TOTAL POPULASI UMAT
                         </th>
                         <th style="font-weight: 800; color: #334155; background: #e2e8f0;">
@@ -450,8 +449,7 @@
                     </tr>
                     @else
                     <tr class="total-row">
-                        <th style="text-align: center; font-weight: 900; background: #0f172a; color: #fff;">&sum;</th>
-                        <th style="font-weight: 900; text-transform: uppercase; color: #0f172a; background: #e2e8f0;">
+                        <th colspan="2" style="font-weight: 900; text-transform: uppercase; color: #0f172a; background: #e2e8f0; text-align: left; padding-left: 12px;">
                             JUMLAH TOTAL KESELURUHAN
                         </th>
                         <th colspan="{{ max(1, count($headings) - 1) }}" style="font-weight: 900; color: #0f172a; background: #e2e8f0; font-size: 11px;">
