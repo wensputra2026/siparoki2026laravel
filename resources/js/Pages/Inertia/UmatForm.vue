@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import DateInput from '@/Components/DateInput.vue';
 import { triggerToast } from '@/composables/useRoleMenu';
 
 const props = defineProps({
@@ -518,10 +519,9 @@ const submitForm = () => {
                                     <span>{{ calculatedAge }} Tahun</span>
                                 </span>
                             </div>
-                            <input
+                            <DateInput
                                 v-model="form.tanggal_lahir"
-                                type="date"
-                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                placeholder="dd/mm/yyyy"
                             />
                         </div>
 
@@ -699,8 +699,11 @@ const submitForm = () => {
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Baptis</label>
-                                <input v-model="form.tgl_baptis" type="date" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white" />
+                                <DateInput
+                                    v-model="form.tgl_baptis"
+                                    placeholder="dd/mm/yyyy"
+                                    inputClass="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white text-slate-800 placeholder:text-slate-400 placeholder:italic font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                />
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-700 mb-1">Paroki Baptis (Select2)</label>
@@ -770,8 +773,11 @@ const submitForm = () => {
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Komuni 1</label>
-                                    <input v-model="form.tgl_komuni_1" type="date" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white" />
+                                    <DateInput
+                                        v-model="form.tgl_komuni_1"
+                                        placeholder="dd/mm/yyyy"
+                                        inputClass="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white text-slate-800 placeholder:text-slate-400 placeholder:italic font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                    />
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Paroki Komuni 1 (Select2)</label>
@@ -797,8 +803,11 @@ const submitForm = () => {
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Krisma</label>
-                                    <input v-model="form.tgl_krisma" type="date" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white" />
+                                    <DateInput
+                                        v-model="form.tgl_krisma"
+                                        placeholder="dd/mm/yyyy"
+                                        inputClass="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white text-slate-800 placeholder:text-slate-400 placeholder:italic font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                    />
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Paroki Krisma (Select2)</label>
@@ -825,8 +834,11 @@ const submitForm = () => {
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Perkawinan</label>
-                                <input v-model="form.tgl_perkawinan" type="date" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white" />
+                                <DateInput
+                                    v-model="form.tgl_perkawinan"
+                                    placeholder="dd/mm/yyyy"
+                                    inputClass="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white text-slate-800 placeholder:text-slate-400 placeholder:italic font-medium focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                />
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-700 mb-1">Paroki Perkawinan (Select2)</label>
@@ -937,10 +949,11 @@ const submitForm = () => {
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
                                 Tanggal Tahbisan / Pengikraran Kaul
                             </label>
-                            <input
+                            <DateInput
                                 v-model="form.tgl_tahbisan_kaul"
-                                type="date"
-                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                placeholder="dd/mm/yyyy"
+                                iconColor="text-purple-600"
+                                inputClass="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white placeholder:text-slate-400 placeholder:italic font-medium"
                             />
                         </div>
                     </div>

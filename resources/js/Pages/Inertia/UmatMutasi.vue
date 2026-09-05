@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import DateInput from '@/Components/DateInput.vue';
 
 const props = defineProps({
     mode: { type: String, default: 'mutasi' },
@@ -188,10 +189,11 @@ const submit = () => {
               </div>
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Tanggal Mutasi Terhitung</label>
-                <input
-                  type="date"
+                <DateInput
                   v-model="form.tgl_mutasi"
-                  class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"
+                  placeholder="dd/mm/yyyy"
+                  iconColor="text-emerald-600"
+                  inputClass="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition font-medium"
                 />
               </div>
             </div>
@@ -242,10 +244,11 @@ const submit = () => {
               </div>
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Tanggal Perkawinan</label>
-                <input
-                  type="date"
+                <DateInput
                   v-model="form.tgl_perkawinan"
-                  class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none transition"
+                  placeholder="dd/mm/yyyy"
+                  iconColor="text-sky-600"
+                  inputClass="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none transition font-medium"
                 />
               </div>
               <div>

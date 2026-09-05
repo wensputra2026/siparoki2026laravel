@@ -4,6 +4,8 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
+import DateInput from '@/Components/DateInput.vue';
+import { formatDateId, formatDateTimeId } from '@/utils/date';
 
 const page = usePage();
 
@@ -3341,7 +3343,7 @@ const showKubFilter = computed(() => {
                                 </div>
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                                     <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Tempat & Tanggal Lahir</span>
-                                    <span class="font-bold text-slate-900">{{ selectedItem.tempat_lahir || '—' }}, {{ selectedItem.tanggal_lahir ? String(selectedItem.tanggal_lahir).substring(0, 10) : '—' }}</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.tempat_lahir || '—' }}, {{ formatDateId(selectedItem.tanggal_lahir) }}</span>
                                 </div>
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                                     <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Kedudukan dalam Keluarga</span>
@@ -3417,7 +3419,7 @@ const showKubFilter = computed(() => {
                                 </div>
                                 <div class="p-3 bg-purple-50/60 rounded-xl border border-purple-200/80" v-if="selectedItem.tgl_tahbisan_kaul">
                                     <span class="text-[10px] text-purple-700 font-bold uppercase block mb-1">Tgl Tahbisan / Kaul</span>
-                                    <span class="font-bold text-slate-900">{{ String(selectedItem.tgl_tahbisan_kaul).substring(0, 10) }}</span>
+                                    <span class="font-bold text-slate-900">{{ formatDateId(selectedItem.tgl_tahbisan_kaul) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -3436,7 +3438,7 @@ const showKubFilter = computed(() => {
                                         <span>Sakramen Baptis</span>
                                     </div>
                                     <p class="text-slate-700 text-[11px] leading-relaxed">
-                                        Tgl: <b>{{ selectedItem.tgl_baptis ? String(selectedItem.tgl_baptis).substring(0, 10) : '—' }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_baptis || '—' }}</b><br />
+                                        Tgl: <b>{{ formatDateId(selectedItem.tgl_baptis) }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_baptis || '—' }}</b><br />
                                         Pastor: <b>{{ selectedItem.pastor_baptis || '—' }}</b> &bull; Wali: <b>{{ selectedItem.wali_baptis || '—' }}</b><br />
                                         Buku Baptis: <b>Vol {{ selectedItem.buku_baptis_vol || '-' }} / Hal {{ selectedItem.buku_baptis_hal || '-' }} / No {{ selectedItem.buku_baptis_no || '-' }}</b>
                                     </p>
@@ -3450,7 +3452,7 @@ const showKubFilter = computed(() => {
                                             <span>Komuni Pertama (Ekaristi)</span>
                                         </div>
                                         <p class="text-slate-700 text-[11px]">
-                                            Tgl: <b>{{ selectedItem.tgl_komuni_1 ? String(selectedItem.tgl_komuni_1).substring(0, 10) : '—' }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_komuni_1 || '—' }}</b>
+                                            Tgl: <b>{{ formatDateId(selectedItem.tgl_komuni_1) }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_komuni_1 || '—' }}</b>
                                         </p>
                                     </div>
                                     <div class="pt-1.5 border-t border-slate-200">
@@ -3459,7 +3461,7 @@ const showKubFilter = computed(() => {
                                             <span>Sakramen Krisma (Penguatan)</span>
                                         </div>
                                         <p class="text-slate-700 text-[11px]">
-                                            Tgl: <b>{{ selectedItem.tgl_krisma ? String(selectedItem.tgl_krisma).substring(0, 10) : '—' }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_krisma || '—' }}</b>
+                                            Tgl: <b>{{ formatDateId(selectedItem.tgl_krisma) }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_krisma || '—' }}</b>
                                         </p>
                                     </div>
                                 </div>
@@ -5962,10 +5964,11 @@ const showKubFilter = computed(() => {
 
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Bergabung</label>
-                                    <input
+                                    <DateInput
                                         v-model="formData.tanggal_bergabung"
-                                        type="date"
-                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+                                        placeholder="dd/mm/yyyy"
+                                        iconColor="text-sky-600"
+                                        inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition font-medium"
                                     />
                                 </div>
 
@@ -6531,11 +6534,11 @@ const showKubFilter = computed(() => {
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                         {{ (isKubLevel || formData.jenis_mutasi === 'Meninggal Dunia') ? 'Tanggal Meninggal Dunia *' : 'Tanggal Mutasi *' }}
                                     </label>
-                                    <input
+                                    <DateInput
                                         v-model="formData.tgl_mutasi"
-                                        type="date"
+                                        placeholder="dd/mm/yyyy"
                                         required
-                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                        inputClass="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                                     />
                                 </div>
 
@@ -7303,14 +7306,12 @@ const showKubFilter = computed(() => {
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                             Tanggal Pelaksanaan <span class="text-rose-500">*</span>
                                         </label>
-                                        <div class="relative">
-                                            <input
-                                                v-model="formData.tanggal"
-                                                type="date"
-                                                required
-                                                class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
-                                            />
-                                        </div>
+                                        <DateInput
+                                            v-model="formData.tanggal"
+                                            placeholder="dd/mm/yyyy"
+                                            required
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                        />
                                     </div>
 
                                     <div>
@@ -7458,20 +7459,20 @@ const showKubFilter = computed(() => {
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                             Tanggal Mulai <span class="text-rose-500">*</span>
                                         </label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal_mulai"
-                                            type="date"
+                                            placeholder="dd/mm/yyyy"
                                             required
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
                                         />
                                     </div>
 
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Selesai</label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal_selesai"
-                                            type="date"
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                            placeholder="dd/mm/yyyy"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
                                         />
                                     </div>
 
@@ -7539,10 +7540,10 @@ const showKubFilter = computed(() => {
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Tayang / Berlaku</label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tgl_tayang"
-                                            type="date"
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            placeholder="dd/mm/yyyy"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
 
@@ -7592,11 +7593,11 @@ const showKubFilter = computed(() => {
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Renungan <span class="text-rose-500">*</span></label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal"
-                                            type="date"
+                                            placeholder="dd/mm/yyyy"
                                             required
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
 
@@ -7645,10 +7646,10 @@ const showKubFilter = computed(() => {
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Peristiwa</label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal_peristiwa"
-                                            type="date"
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            placeholder="dd/mm/yyyy"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
                                     <div>
@@ -7710,11 +7711,11 @@ const showKubFilter = computed(() => {
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                             Tanggal Penerimaan Sakramen <span class="text-rose-500">*</span>
                                         </label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal"
-                                            type="date"
+                                            placeholder="dd/mm/yyyy"
                                             required
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
 
@@ -7925,10 +7926,10 @@ const showKubFilter = computed(() => {
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                         Tanggal Rencana Pelaksanaan
                                     </label>
-                                    <input
+                                    <DateInput
                                         v-model="formData.tanggal_pelaksanaan"
-                                        type="date"
-                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        placeholder="dd/mm/yyyy"
+                                        inputClass="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                     />
                                 </div>
 
@@ -8164,11 +8165,11 @@ const showKubFilter = computed(() => {
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                             Tanggal Bayar <span class="text-rose-500">*</span>
                                         </label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal_bayar"
-                                            type="date"
+                                            placeholder="dd/mm/yyyy"
                                             required
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
 
@@ -8236,11 +8237,11 @@ const showKubFilter = computed(() => {
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                             Tanggal Misa <span class="text-rose-500">*</span>
                                         </label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal"
-                                            type="date"
+                                            placeholder="dd/mm/yyyy"
                                             required
-                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            inputClass="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
 
@@ -8884,11 +8885,11 @@ const showKubFilter = computed(() => {
                                     <option v-for="opt in col.enumOptions" :key="opt" :value="opt">{{ opt }}</option>
                                 </select>
                                 <!-- Date input detection -->
-                                <input
+                                <DateInput
                                     v-else-if="col.isDate || col.key.includes('tanggal') || col.key.includes('tgl') || col.key.endsWith('_at')"
                                     v-model="formData[col.key]"
-                                    type="date"
-                                    class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    placeholder="dd/mm/yyyy"
+                                    inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
                                 />
                                 <!-- Time input detection -->
                                 <input

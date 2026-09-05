@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import DateInput from '@/Components/DateInput.vue';
 
 const props = defineProps({
     role: { type: String, default: 'Super Admin' },
@@ -647,10 +648,9 @@ const submit = () => {
                                             {{ calculatedAge }} Tahun
                                         </span>
                                     </div>
-                                    <input
+                                    <DateInput
                                         v-model="form.tanggal_lahir"
-                                        type="date"
-                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
+                                        placeholder="dd/mm/yyyy"
                                     />
                                 </div>
 
@@ -662,10 +662,10 @@ const submit = () => {
                                             {{ calculatedOrdinationYears }} Thn Imamat
                                         </span>
                                     </div>
-                                    <input
+                                    <DateInput
                                         v-model="form.tgl_tahbisan"
-                                        type="date"
-                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
+                                        placeholder="dd/mm/yyyy"
+                                        iconColor="text-emerald-600"
                                     />
                                 </div>
 

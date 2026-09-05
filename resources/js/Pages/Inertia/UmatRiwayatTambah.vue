@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import DateInput from '@/Components/DateInput.vue';
 
 const props = defineProps({
     prefix: { type: String, default: 'superadmin' },
@@ -113,8 +114,8 @@ const submit = () => {
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-700">Tanggal Mutasi</label>
-          <input type="date" v-model="form.tgl_mutasi" class="w-full border rounded px-3 py-2" />
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Tanggal Mutasi</label>
+          <DateInput v-model="form.tgl_mutasi" placeholder="dd/mm/yyyy" iconColor="text-emerald-600" />
         </div>
 
         <div>
