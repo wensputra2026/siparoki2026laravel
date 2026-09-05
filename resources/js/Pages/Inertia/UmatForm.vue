@@ -22,7 +22,7 @@ const props = defineProps({
 });
 
 const isSubmitting = ref(false);
-const activeTab = ref('identitas'); // 'identitas', 'sosial', 'sakramen', 'panggilan', 'gerejani'
+const activeTab = ref('gerejani'); // 'gerejani', 'identitas', 'sosial', 'sakramen', 'panggilan'
 
 // Helper kalkulasi usia otomatis
 const calculateAge = (dateString) => {
@@ -341,6 +341,19 @@ const submitForm = () => {
             <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200">
                 <button
                     type="button"
+                    @click="activeTab = 'gerejani'"
+                    :class="[
+                        'px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
+                        activeTab === 'gerejani'
+                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
+                            : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                    ]"
+                >
+                    <i class="fa-solid fa-church"></i>
+                    <span>1. Wilayah Pastoral & KUB</span>
+                </button>
+                <button
+                    type="button"
                     @click="activeTab = 'identitas'"
                     :class="[
                         'px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
@@ -350,7 +363,7 @@ const submitForm = () => {
                     ]"
                 >
                     <i class="fa-solid fa-id-card"></i>
-                    <span>1. Identitas Sipil & Lahir</span>
+                    <span>2. Identitas Sipil & Lahir</span>
                 </button>
                 <button
                     type="button"
@@ -363,7 +376,7 @@ const submitForm = () => {
                     ]"
                 >
                     <i class="fa-solid fa-graduation-cap"></i>
-                    <span>2. Sosial, Profesi</span>
+                    <span>3. Sosial, Profesi</span>
                 </button>
                 <button
                     type="button"
@@ -376,7 +389,7 @@ const submitForm = () => {
                     ]"
                 >
                     <i class="fa-solid fa-cross"></i>
-                    <span>3. Sakramen Gereja</span>
+                    <span>4. Sakramen Gereja</span>
                 </button>
                 <button
                     type="button"
@@ -389,26 +402,94 @@ const submitForm = () => {
                     ]"
                 >
                     <i class="fa-solid fa-hands-praying"></i>
-                    <span>4. Status Panggilan & Vokasi</span>
-                </button>
-                <button
-                    type="button"
-                    @click="activeTab = 'gerejani'"
-                    :class="[
-                        'px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer',
-                        activeTab === 'gerejani'
-                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                            : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
-                    ]"
-                >
-                    <i class="fa-solid fa-church"></i>
-                    <span>5. Wilayah Pastoral & KUB</span>
+                    <span>5. Status Panggilan & Vokasi</span>
                 </button>
             </div>
 
             <!-- 3. FORM BODY -->
             <form @submit.prevent="submitForm" class="space-y-6">
-                <!-- TAB 1: IDENTITAS SIPIL -->
+                <!-- TAB 1: WILAYAH GEREJANI & KUB -->
+                <div v-show="activeTab === 'gerejani'" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
+                    <div class="border-b border-slate-100 pb-4">
+                        <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-church text-amber-600"></i>
+                            <span>Wilayah Pastoral & Komunitas Umat Basis</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">Penetapan wilayah gerejani, stasi/kapela, dan kelompok KUB tempat umat berhimpun</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        <!-- Wilayah Pastoral (Select2) -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                                Wilayah Pastoral
+                            </label>
+                            <SearchableSelect
+                                v-model="form.wilayah_id"
+                                :options="wilayahList"
+                                valueKey="id"
+                                labelKey="nama_wilayah"
+                                placeholder="-- Pilih Wilayah Pastoral --"
+                                searchPlaceholder="Cari wilayah..."
+                                icon="fa-church"
+                                iconColor="text-blue-600"
+                            />
+                        </div>
+
+                        <!-- Stasi / Kapela (Select2) -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                                Stasi / Kapela
+                            </label>
+                            <SearchableSelect
+                                v-model="form.kapela_id"
+                                :options="kapelaList"
+                                valueKey="id"
+                                labelKey="nama_kapela"
+                                placeholder="-- Pusat Paroki / Tanpa Stasi --"
+                                searchPlaceholder="Cari stasi/kapela..."
+                                icon="fa-place-of-worship"
+                                iconColor="text-indigo-600"
+                            />
+                        </div>
+
+                        <!-- KUB (Select2) -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                                Komunitas Umat Basis (KUB / KBG)
+                            </label>
+                            <SearchableSelect
+                                v-model="form.kub_id"
+                                :options="filteredKubs"
+                                valueKey="id"
+                                labelKey="nama_kub"
+                                placeholder="-- Pilih KUB / KBG --"
+                                searchPlaceholder="Cari KUB..."
+                                icon="fa-people-group"
+                                iconColor="text-teal-600"
+                            />
+                        </div>
+
+                        <!-- Status Keaktifan Umat (Select2) -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                                Status Keaktifan Umat
+                            </label>
+                            <SearchableSelect
+                                v-model="form.status_umat"
+                                :options="statusUmatOptions"
+                                valueKey="id"
+                                labelKey="name"
+                                placeholder="Pilih status umat..."
+                                searchPlaceholder="Cari status..."
+                                icon="fa-circle-check"
+                                iconColor="text-emerald-600"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: IDENTITAS SIPIL -->
                 <div v-show="activeTab === 'identitas'" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
                     <div class="border-b border-slate-100 pb-4">
                         <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
@@ -954,87 +1035,6 @@ const submitForm = () => {
                                 placeholder="dd/mm/yyyy"
                                 iconColor="text-purple-600"
                                 inputClass="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white placeholder:text-slate-400 placeholder:italic font-medium"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 5: WILAYAH GEREJANI & KUB -->
-                <div v-show="activeTab === 'gerejani'" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
-                    <div class="border-b border-slate-100 pb-4">
-                        <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
-                            <i class="fa-solid fa-church text-amber-600"></i>
-                            <span>Wilayah Pastoral & Komunitas Umat Basis</span>
-                        </h3>
-                        <p class="text-xs text-slate-500">Penetapan wilayah gerejani, stasi/kapela, dan kelompok KUB tempat umat berhimpun</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                        <!-- Wilayah Pastoral (Select2) -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                Wilayah Pastoral
-                            </label>
-                            <SearchableSelect
-                                v-model="form.wilayah_id"
-                                :options="wilayahList"
-                                valueKey="id"
-                                labelKey="nama_wilayah"
-                                placeholder="-- Pilih Wilayah Pastoral --"
-                                searchPlaceholder="Cari wilayah..."
-                                icon="fa-church"
-                                iconColor="text-blue-600"
-                            />
-                        </div>
-
-                        <!-- Stasi / Kapela (Select2) -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                Stasi / Kapela
-                            </label>
-                            <SearchableSelect
-                                v-model="form.kapela_id"
-                                :options="kapelaList"
-                                valueKey="id"
-                                labelKey="nama_kapela"
-                                placeholder="-- Pusat Paroki / Tanpa Stasi --"
-                                searchPlaceholder="Cari stasi/kapela..."
-                                icon="fa-place-of-worship"
-                                iconColor="text-indigo-600"
-                            />
-                        </div>
-
-                        <!-- KUB (Select2) -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                Komunitas Umat Basis (KUB / KBG)
-                            </label>
-                            <SearchableSelect
-                                v-model="form.kub_id"
-                                :options="filteredKubs"
-                                valueKey="id"
-                                labelKey="nama_kub"
-                                placeholder="-- Pilih KUB / KBG --"
-                                searchPlaceholder="Cari KUB..."
-                                icon="fa-people-group"
-                                iconColor="text-teal-600"
-                            />
-                        </div>
-
-                        <!-- Status Keaktifan Umat (Select2) -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                Status Keaktifan Umat
-                            </label>
-                            <SearchableSelect
-                                v-model="form.status_umat"
-                                :options="statusUmatOptions"
-                                valueKey="id"
-                                labelKey="name"
-                                placeholder="Pilih status umat..."
-                                searchPlaceholder="Cari status..."
-                                icon="fa-circle-check"
-                                iconColor="text-emerald-600"
                             />
                         </div>
                     </div>
