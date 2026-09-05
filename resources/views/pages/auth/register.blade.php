@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pendaftaran Akun Umat - {{ $globalNamaParoki ?? 'SIPAROKI' }}</title>
+    <title>Pendaftaran Akun - {{ $globalNamaParoki ?? 'SIPAROKI' }}</title>
     @if(!empty($globalLogo))
         <link rel="icon" type="image/jpeg" href="{{ $globalLogo }}">
     @else
@@ -117,8 +117,7 @@
                         <img src="/assets/uploads/profil/logo_paroki_1787370466.jpeg" alt="Logo Paroki" class="w-full h-full object-contain">
                     @endif
                 </div>
-                <h1 class="text-xl font-bold text-slate-900 dark:text-white">Pendaftaran Akun Umat</h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Registrasi mandiri Portal Umat Katolik</p>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white">Pendaftaran Akun</h1>
             </div>
 
             @if ($errors->any())

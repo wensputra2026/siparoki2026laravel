@@ -78,7 +78,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head :title="`Pendaftaran Akun Umat - ${appName}`" />
+    <Head :title="`Pendaftaran Akun - ${appName}`" />
 
     <div class="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-amber-500 selection:text-white">
         <!-- Brand Header -->
@@ -101,7 +101,7 @@ const submit = () => {
                 </div>
             </a>
             <h2 class="mt-6 text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Pendaftaran Akun Umat / Jemaat
+                Pendaftaran Akun
             </h2>
             <p class="mt-1 text-xs text-slate-500 max-w-md mx-auto">
                 Daftarkan akun jemaat untuk mengakses layanan sakramen mandiri, KKK Digital, dan warta paroki.
