@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="50%" stop-color="#1e40af" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="94" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2" />
+
+  <!-- Diocese Shield -->
+  <path d="M 100 28 Q 150 28 158 55 C 158 115 130 155 100 172 C 70 155 42 115 42 55 Q 50 28 100 28 Z"
+        fill="url(#shieldGrad)" filter="url(#shadow)" stroke="url(#goldGrad)" stroke-width="4" stroke-linejoin="round" />
+
+  <!-- Inner Gold Border -->
+  <path d="M 100 36 Q 142 36 149 59 C 149 110 125 145 100 160 C 75 145 51 110 51 59 Q 58 36 100 36 Z"
+        fill="none" stroke="url(#goldGrad)" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.7" />
+
+  <!-- Bishop's Cross & Pastoral Staff Symbol -->
+  <!-- Latin Cross -->
+  <rect x="94" y="58" width="12" height="74" rx="3" fill="url(#goldGrad)" />
+  <rect x="74" y="74" width="52" height="12" rx="3" fill="url(#goldGrad)" />
+
+  <!-- Radiance Rays -->
+  <circle cx="100" cy="80" r="4" fill="#ffffff" />
+  <path d="M 100 68 L 100 62 M 100 92 L 100 98 M 82 80 L 76 80 M 118 80 L 124 80 M 87 67 L 83 63 M 113 93 L 117 97 M 87 93 L 83 97 M 113 67 L 117 63"
+        stroke="#fef08a" stroke-width="2" stroke-linecap="round" opacity="0.8" />
+
+  <!-- Star of Grace at Bottom -->
+  <path d="M 100 140 L 102 146 L 108 146 L 103 150 L 105 156 L 100 152 L 95 156 L 97 150 L 92 146 L 98 146 Z"
+        fill="url(#goldGrad)" />
+</svg>

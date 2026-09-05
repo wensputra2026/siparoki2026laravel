@@ -67,7 +67,7 @@ class Keuskupan extends Model
      */
     public function getLogoUrlAttribute(): string
     {
-        $default = asset('images/logo-keuskupan.png');
+        $default = asset('images/default-keuskupan.svg');
 
         if (!empty($this->attributes['logo'])) {
             $relative = ltrim((string) $this->attributes['logo'], '/');
