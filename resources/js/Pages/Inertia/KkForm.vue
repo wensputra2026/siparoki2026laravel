@@ -1374,7 +1374,7 @@ const submitForm = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Talenta / Keahlian Paroki</label>
+                                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Bidang Keahlian / Pelayanan Paroki</label>
                                         <input
                                             v-model="member.talenta"
                                             type="text"

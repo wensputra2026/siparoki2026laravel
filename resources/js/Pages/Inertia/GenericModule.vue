@@ -3466,11 +3466,11 @@ const showKubFilter = computed(() => {
                             </div>
                         </div>
 
-                        <!-- 5. PENDIDIKAN, PROFESI & TALENTA -->
+                        <!-- 5. SOSIAL, PROFESI -->
                         <div class="space-y-3">
                             <h5 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-100">
                                 <i class="fa-solid fa-graduation-cap text-amber-600"></i>
-                                <span>5. Pendidikan, Profesi & Talenta Pelayanan</span>
+                                <span>5. Sosial, Profesi</span>
                             </h5>
                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
@@ -3486,7 +3486,7 @@ const showKubFilter = computed(() => {
                                     <span class="font-bold text-slate-900">{{ selectedItem.disabilitas || 'Tidak Ada' }}</span>
                                 </div>
                                 <div class="sm:col-span-2 md:col-span-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80" v-if="selectedItem.talenta">
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Talenta / Bidang Pelayanan Paroki</span>
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Bidang Keahlian / Pelayanan Paroki</span>
                                     <span class="font-bold text-slate-900">{{ selectedItem.talenta }}</span>
                                 </div>
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80" v-if="selectedItem.handphone">

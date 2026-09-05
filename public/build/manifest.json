@@ -155,7 +155,7 @@
     ]
   },
   "resources/js/Pages/Inertia/GenericModule.vue": {
-    "file": "assets/GenericModule-Bd92NOIJ.js",
+    "file": "assets/GenericModule-B_KuksJs.js",
     "name": "GenericModule",
     "src": "resources/js/Pages/Inertia/GenericModule.vue",
     "isDynamicEntry": true,
@@ -181,7 +181,7 @@
     ]
   },
   "resources/js/Pages/Inertia/KkForm.vue": {
-    "file": "assets/KkForm-BFobwdes.js",
+    "file": "assets/KkForm-BEymIqfs.js",
     "name": "KkForm",
     "src": "resources/js/Pages/Inertia/KkForm.vue",
     "isDynamicEntry": true,
@@ -346,7 +346,7 @@
     ]
   },
   "resources/js/Pages/Inertia/UmatForm.vue": {
-    "file": "assets/UmatForm-BzPIMsXo.js",
+    "file": "assets/UmatForm-D_AjK628.js",
     "name": "UmatForm",
     "src": "resources/js/Pages/Inertia/UmatForm.vue",
     "isDynamicEntry": true,
@@ -436,7 +436,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-W7355RRC.js",
+    "file": "assets/app-tMVqF72h.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

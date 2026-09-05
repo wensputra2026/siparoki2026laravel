@@ -362,7 +362,7 @@ const submitForm = () => {
                     ]"
                 >
                     <i class="fa-solid fa-graduation-cap"></i>
-                    <span>2. Sosial, Profesi & Talenta</span>
+                    <span>2. Sosial, Profesi</span>
                 </button>
                 <button
                     type="button"
@@ -578,14 +578,14 @@ const submitForm = () => {
                     </div>
                 </div>
 
-                <!-- TAB 2: SOSIAL, PROFESI & TALENTA -->
+                <!-- TAB 2: SOSIAL, PROFESI -->
                 <div v-show="activeTab === 'sosial'" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
                     <div class="border-b border-slate-100 pb-4">
                         <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
                             <i class="fa-solid fa-graduation-cap text-amber-600"></i>
-                            <span>Pendidikan, Profesi & Talenta Pelayanan</span>
+                            <span>Sosial, Profesi</span>
                         </h3>
-                        <p class="text-xs text-slate-500">Latar belakang pendidikan, profesi kerja, dan keterlibatan karisma pelayanan di gereja</p>
+                        <p class="text-xs text-slate-500">Latar belakang pendidikan, profesi kerja, dan bidang pelayanan di gereja</p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -640,10 +640,10 @@ const submitForm = () => {
                             />
                         </div>
 
-                        <!-- Bidang Keahlian / Talenta Paroki -->
+                        <!-- Bidang Keahlian / Pelayanan Paroki -->
                         <div class="sm:col-span-2 lg:col-span-3 xl:col-span-4">
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                Bidang Keahlian / Talenta Pelayanan Paroki
+                                Bidang Keahlian / Pelayanan Paroki
                             </label>
                             <input
                                 v-model="form.talenta"
