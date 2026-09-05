@@ -46,14 +46,15 @@
 .chapel-search-box {
     display: flex;
     align-items: center;
-    background: #f8fafc;
+    background: #ffffff;
     border: 1.5px solid #cbd5e1;
     border-radius: 30px;
     padding: 4px 6px 4px 16px;
     transition: all 0.25s ease;
     flex: 1;
     min-width: 260px;
-    max-width: 480px;
+    max-width: 520px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .chapel-search-box:focus-within {
@@ -70,8 +71,13 @@
     font-size: 0.88rem;
     color: #0f172a;
     font-weight: 500;
-    padding: 6px 0;
+    padding: 7px 8px 7px 0;
     min-width: 0;
+}
+
+.chapel-search-box input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
 }
 
 .chapel-search-box .btn-search {
@@ -177,7 +183,7 @@
                 </div>
 
                 <!-- Center: Responsive Search Form -->
-                <form action="/profil-kapela" method="GET" class="chapel-search-form m-0" style="flex: 1; max-width: 480px;">
+                <form action="/profil-kapela" method="GET" class="chapel-search-form m-0" style="flex: 1; max-width: 520px;">
                     <div class="chapel-search-box">
                         <i class="fas fa-search me-2 text-muted" style="font-size: 0.88rem; flex-shrink: 0; color: #94a3b8 !important;"></i>
                         <input 
@@ -193,6 +199,7 @@
                             </a>
                         @endif
                         <button type="submit" class="btn-search">
+                            <i class="fas fa-magnifying-glass" style="font-size: 0.75rem;"></i>
                             <span>Cari</span>
                         </button>
                     </div>
@@ -304,9 +311,9 @@
                             @endif
 
                             @if($pj)
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="fas fa-user-tie text-secondary flex-shrink-0"></i>
-                                    <span class="text-secondary text-truncate">PJ: {{ $pj }}</span>
+                                <div class="d-flex align-items-center gap-2" title="Pengurus / Penanggung Jawab">
+                                    <i class="fas fa-user-tie text-secondary flex-shrink-0" style="font-size: 0.85rem;"></i>
+                                    <span class="text-secondary text-truncate fw-medium">{{ $pj }}</span>
                                 </div>
                             @endif
                         </div>
