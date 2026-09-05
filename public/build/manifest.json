@@ -73,7 +73,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-v_VH-3mL.css",
+    "file": "assets/app-DIULJpKS.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -367,7 +367,7 @@
     ]
   },
   "resources/js/Pages/Inertia/Statistik.vue": {
-    "file": "assets/Statistik-DM5Q6-lx.js",
+    "file": "assets/Statistik-BwXmQqRY.js",
     "name": "Statistik",
     "src": "resources/js/Pages/Inertia/Statistik.vue",
     "isDynamicEntry": true,
@@ -479,7 +479,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-OoKp9Rx5.js",
+    "file": "assets/app-BES1ZO2g.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

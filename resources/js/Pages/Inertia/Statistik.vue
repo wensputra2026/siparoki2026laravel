@@ -392,35 +392,35 @@ const printDemografi = () => {
                     </div>
                 </div>
 
-                <!-- Pastor / Imam Bertugas -->
+                <!-- Imam dari Keluarga Umat -->
                 <div class="bg-white rounded-3xl p-4.5 border border-slate-200/80 shadow-xs hover:shadow-md transition flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between">
-                            <span class="text-[11px] font-bold text-slate-500">Pastor Paroki</span>
-                            <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-xs shadow-2xs shrink-0">
+                            <span class="text-[11px] font-bold text-slate-500" title="Anggota keluarga dari keluarga umat yang menjadi Imam">Imam Asal Umat</span>
+                            <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center text-xs shadow-2xs shrink-0">
                                 <i class="fa-solid fa-cross"></i>
                             </div>
                         </div>
                         <div class="mt-2.5">
                             <span class="text-xl sm:text-2xl font-black text-slate-900">
-                                {{ formatNumber(summary.totalPastor || pastorStats?.totalPastor || 0) }}
+                                {{ formatNumber(summary.totalImam || pastorStats?.totalImam || 0) }}
                             </span>
                             <span class="text-[11px] font-semibold text-slate-400 ml-1">Imam</span>
                         </div>
                     </div>
-                    <div class="mt-1.5 flex items-center gap-1 text-[10px] text-amber-700 font-bold truncate">
-                        <i class="fa-solid fa-church text-[9px]"></i>
-                        <span>Aktif Bertugas</span>
+                    <div class="mt-1.5 flex items-center gap-1 text-[10px] text-purple-700 font-bold truncate">
+                        <i class="fa-solid fa-hands-praying text-[9px]"></i>
+                        <span>Keluarga Paroki</span>
                     </div>
                 </div>
 
-                <!-- Biarawan / Biarawati -->
+                <!-- Biarawan / Biarawati dari Keluarga Umat -->
                 <div class="bg-white rounded-3xl p-4.5 border border-slate-200/80 shadow-xs hover:shadow-md transition flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between">
-                            <span class="text-[11px] font-bold text-slate-500">Biarawan / wati</span>
+                            <span class="text-[11px] font-bold text-slate-500" title="Anggota keluarga yang menjadi Suster, Frater, Bruder, Novis">Biarawan / wati</span>
                             <div class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-xs shadow-2xs shrink-0">
-                                <i class="fa-solid fa-hands-praying"></i>
+                                <i class="fa-solid fa-dove"></i>
                             </div>
                         </div>
                         <div class="mt-2.5">
@@ -431,8 +431,8 @@ const printDemografi = () => {
                         </div>
                     </div>
                     <div class="mt-1.5 flex items-center gap-1 text-[10px] text-teal-700 font-bold truncate">
-                        <i class="fa-solid fa-dove text-[9px]"></i>
-                        <span>Hidup Bakti Terdata</span>
+                        <i class="fa-solid fa-shield-heart text-[9px]"></i>
+                        <span>Suster, Bruder, Frater</span>
                     </div>
                 </div>
             </div>
@@ -657,107 +657,107 @@ const printDemografi = () => {
                 </div>
             </div>
 
-            <!-- 4B. KLERUS & PANGGILAN HIDUP BAKTI (PASTOR, BIARAWAN & BIARAWATI) -->
+            <!-- 4B. PANGGILAN HIDUP BAKTI DARI KELUARGA UMAT (IMAM, BIARAWAN & BIARAWATI ASAL PAROKI) -->
             <div id="pastor-biarawan-stats" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
                 <!-- Section Header -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                     <div class="space-y-1">
-                        <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 text-[11px] font-bold border border-amber-200/60">
-                            <i class="fa-solid fa-cross text-amber-600"></i>
-                            <span>Klerus & Panggilan Khusus Gereja</span>
+                        <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-purple-50 text-purple-800 text-[11px] font-bold border border-purple-200/60">
+                            <i class="fa-solid fa-cross text-purple-600"></i>
+                            <span>Panggilan Hidup Bakti dari Keluarga Umat</span>
                         </div>
                         <h2 class="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2.5">
-                            <i class="fa-solid fa-church text-amber-600"></i>
-                            <span>Pastor Paroki & Panggilan Hidup Bakti (Biarawan / Biarawati)</span>
+                            <i class="fa-solid fa-hands-praying text-purple-600"></i>
+                            <span>Panggilan Hidup Bakti (Imam, Biarawan & Biarawati dari Keluarga Umat)</span>
                         </h2>
                         <p class="text-xs text-slate-500 leading-relaxed">
-                            Informasi Pastor/Imam yang bertugas melayani di paroki serta Biarawan, Biarawati, Frater, Suster, dan Novis yang terdata di paroki ini.
+                            Data anggota keluarga dari keluarga-keluarga umat di paroki yang terpanggil dan mempersembahkan diri sebagai Imam (Pastor), Biarawan (Bruder), Biarawati (Suster), maupun Calon Imam (Frater/Novis).
                         </p>
                     </div>
 
                     <div class="flex items-center gap-2.5 flex-wrap">
                         <Link
-                            :href="`/${prefix}/master-pastor`"
-                            class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200 transition flex items-center gap-1.5"
+                            :href="`/${prefix}/umat`"
+                            class="px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 text-xs font-bold border border-purple-200 transition flex items-center gap-1.5"
                         >
-                            <i class="fa-solid fa-user-tie text-amber-600"></i>
-                            <span>Kelola Data Pastor</span>
+                            <i class="fa-solid fa-user-plus text-purple-600"></i>
+                            <span>Data Umat & Panggilan</span>
                         </Link>
                         <Link
-                            :href="`/${prefix}/umat`"
+                            :href="`/${prefix}/kk-katolik`"
                             class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200 transition flex items-center gap-1.5"
                         >
-                            <i class="fa-solid fa-hands-praying text-emerald-600"></i>
-                            <span>Data Umat & Panggilan</span>
+                            <i class="fa-solid fa-house-chimney-user text-slate-600"></i>
+                            <span>Buku KK Katolik</span>
                         </Link>
                     </div>
                 </div>
 
-                <!-- 2 Main Cards: Pastor vs Biarawan/wati -->
+                <!-- 2 Main Cards: Imam vs Biarawan/wati dari Keluarga Umat -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Card 1: Pastor Aktif Bertugas -->
-                    <div class="p-5 rounded-2xl bg-gradient-to-br from-amber-50/60 via-amber-50/20 to-white border border-amber-200/70 space-y-4">
-                        <div class="flex items-center justify-between border-b border-amber-100 pb-3">
+                    <!-- Card 1: Imam dari Keluarga Umat -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-purple-50/60 via-purple-50/20 to-white border border-purple-200/70 space-y-4">
+                        <div class="flex items-center justify-between border-b border-purple-100 pb-3">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs">
+                                <div class="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xs shadow-xs">
                                     <i class="fa-solid fa-cross"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-sm font-bold text-slate-900">Pastor & Imam Bertugas di Paroki</h4>
-                                    <p class="text-[11px] text-slate-500">Imam Paroki & Rekan yang aktif melayani</p>
+                                    <h4 class="text-sm font-bold text-slate-900">Imam / Pastor dari Keluarga Umat</h4>
+                                    <p class="text-[11px] text-slate-500">Anggota keluarga umat yang telah ditahbiskan menjadi Imam</p>
                                 </div>
                             </div>
-                            <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-extrabold">
-                                {{ pastorStats?.totalPastor || 0 }} Imam
+                            <span class="px-2.5 py-1 rounded-full bg-purple-100 text-purple-900 text-xs font-extrabold">
+                                {{ pastorStats?.totalImam || 0 }} Jiwa
                             </span>
                         </div>
 
-                        <div v-if="pastorStats?.pastors?.length" class="space-y-3">
+                        <div v-if="pastorStats?.imamList?.length" class="space-y-3">
                             <div
-                                v-for="p in pastorStats.pastors"
-                                :key="p.id"
-                                class="p-3.5 rounded-xl bg-white border border-amber-100/80 shadow-2xs flex items-center justify-between gap-3 hover:border-amber-300 transition"
+                                v-for="im in pastorStats.imamList"
+                                :key="im.id"
+                                class="p-3.5 rounded-xl bg-white border border-purple-100/80 shadow-2xs flex items-center justify-between gap-3 hover:border-purple-300 transition"
                             >
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <div class="w-11 h-11 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                                    <div class="w-11 h-11 rounded-xl bg-purple-50 border border-purple-200 overflow-hidden shrink-0 flex items-center justify-center">
                                         <img
-                                            v-if="p.foto"
-                                            :src="p.foto.startsWith('/') ? p.foto : '/' + p.foto"
-                                            :alt="p.nama_pastor"
+                                            :src="im.foto || getDefaultAvatar(im.jenis_kelamin, im.tanggal_lahir)"
+                                            :alt="im.nama_lengkap"
                                             class="w-full h-full object-cover"
-                                            @error="(e) => e.target.src = '/images/laki-laki.jpg'"
+                                            @error="(e) => e.target.src = getDefaultAvatar(im.jenis_kelamin, im.tanggal_lahir)"
                                         />
-                                        <i v-else class="fa-solid fa-user-tie text-slate-400 text-sm"></i>
                                     </div>
                                     <div class="min-w-0">
                                         <div class="font-bold text-slate-900 text-xs truncate flex items-center gap-1.5">
-                                            <span>{{ p.nama_pastor }}</span>
-                                            <span v-if="p.gelar_belakang" class="text-slate-500 font-normal text-[11px]">, {{ p.gelar_belakang }}</span>
+                                            <span>{{ im.nama_lengkap }}</span>
                                         </div>
-                                        <div class="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                                            <span>{{ p.jenis_imam || 'Diosesan / Projo' }}</span>
-                                            <span v-if="p.ordo_kongregasi" class="text-amber-700 font-bold">• {{ p.ordo_kongregasi }}</span>
+                                        <div class="text-[11px] text-purple-800 font-semibold flex items-center gap-1.5 mt-0.5">
+                                            <span>{{ im.nama_ordo_kongregasi || 'Keuskupan / Ordo' }}</span>
+                                            <span v-if="im.tempat_tugas_biara" class="text-slate-500 font-normal">• {{ im.tempat_tugas_biara }}</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                                            <i class="fa-solid fa-house-chimney-user text-[9px]"></i>
+                                            <span>Keluarga: <strong>{{ im.nama_kepala_keluarga || '—' }}</strong> (KUB: {{ im.nama_kub }})</span>
                                         </div>
                                     </div>
                                 </div>
-                                <span
-                                    :class="[
-                                        'px-2.5 py-1 rounded-lg text-[11px] font-bold shrink-0',
-                                        p.jabatan?.toLowerCase().includes('paroki')
-                                            ? 'bg-amber-100 text-amber-900'
-                                            : 'bg-blue-100 text-blue-900'
-                                    ]"
-                                >
-                                    {{ p.jabatan || 'Pastor Paroki' }}
+                                <span class="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-900 text-[11px] font-bold shrink-0">
+                                    {{ im.status_panggilan || 'Imam' }}
                                 </span>
                             </div>
                         </div>
-                        <div v-else class="py-6 text-center text-slate-400 text-xs">
-                            Belum ada data pastor yang diatur untuk paroki ini.
+                        <div v-else class="py-8 px-4 text-center rounded-xl bg-white/70 border border-dashed border-purple-200">
+                            <div class="w-10 h-10 rounded-full bg-purple-50 text-purple-400 flex items-center justify-center text-sm mx-auto mb-2">
+                                <i class="fa-solid fa-cross"></i>
+                            </div>
+                            <div class="text-xs font-bold text-slate-700">Belum Ada Anggota Keluarga yang Terdata sebagai Imam</div>
+                            <p class="text-[11px] text-slate-400 max-w-sm mx-auto mt-1 leading-relaxed">
+                                Jika ada anggota keluarga umat yang menjadi Imam (Pastor), Anda dapat memilih status panggilan pada formulir Data Umat atau Buku KK Katolik.
+                            </p>
                         </div>
                     </div>
 
-                    <!-- Card 2: Biarawan / Biarawati Terdata -->
+                    <!-- Card 2: Biarawan / Biarawati dari Keluarga Umat -->
                     <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-emerald-50/20 to-white border border-emerald-200/70 space-y-4">
                         <div class="flex items-center justify-between border-b border-emerald-100 pb-3">
                             <div class="flex items-center gap-2.5">
@@ -765,8 +765,8 @@ const printDemografi = () => {
                                     <i class="fa-solid fa-hands-praying"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-sm font-bold text-slate-900">Biarawan, Biarawati & Panggilan Khusus</h4>
-                                    <p class="text-[11px] text-slate-500">Frater, Suster, Bruder, Novis asal/di paroki</p>
+                                    <h4 class="text-sm font-bold text-slate-900">Biarawan, Biarawati, Frater & Suster</h4>
+                                    <p class="text-[11px] text-slate-500">Anggota keluarga umat yang menjalani hidup bakti / biara</p>
                                 </div>
                             </div>
                             <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-extrabold">
@@ -774,9 +774,9 @@ const printDemografi = () => {
                             </span>
                         </div>
 
-                        <div v-if="pastorStats?.biarawan?.length" class="space-y-3">
+                        <div v-if="pastorStats?.biarawanList?.length" class="space-y-3">
                             <div
-                                v-for="b in pastorStats.biarawan"
+                                v-for="b in pastorStats.biarawanList"
                                 :key="b.id"
                                 class="p-3.5 rounded-xl bg-white border border-emerald-100/80 shadow-2xs flex items-center justify-between gap-3 hover:border-emerald-300 transition"
                             >
@@ -797,15 +797,30 @@ const printDemografi = () => {
                                             <span>{{ b.nama_ordo_kongregasi || 'Tarekat / Kongregasi Biara' }}</span>
                                             <span v-if="b.tempat_tugas_biara" class="text-slate-500 font-normal">• {{ b.tempat_tugas_biara }}</span>
                                         </div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                                            <i class="fa-solid fa-house-chimney-user text-[9px]"></i>
+                                            <span>Keluarga: <strong>{{ b.nama_kepala_keluarga || '—' }}</strong> (KUB: {{ b.nama_kub }})</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 text-[11px] font-bold shrink-0">
-                                    {{ b.status_panggilan || 'Biarawan/ti' }}
-                                </span>
+                                <div class="text-right shrink-0">
+                                    <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 text-[11px] font-bold block">
+                                        {{ b.status_panggilan || 'Biarawan/ti' }}
+                                    </span>
+                                    <span v-if="b.tahap_panggilan" class="text-[9.5px] text-slate-400 font-medium mt-1 block">
+                                        {{ b.tahap_panggilan }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                        <div v-else class="py-6 text-center text-slate-400 text-xs">
-                            Belum ada data Biarawan / Biarawati / Novis terdaftar di sensus umat.
+                        <div v-else class="py-8 px-4 text-center rounded-xl bg-white/70 border border-dashed border-emerald-200">
+                            <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-400 flex items-center justify-center text-sm mx-auto mb-2">
+                                <i class="fa-solid fa-hands-praying"></i>
+                            </div>
+                            <div class="text-xs font-bold text-slate-700">Belum Ada Anggota Keluarga yang Terdata sebagai Biarawan/wati</div>
+                            <p class="text-[11px] text-slate-400 max-w-sm mx-auto mt-1 leading-relaxed">
+                                Anda dapat menambahkan status panggilan (Suster, Bruder, Frater, Novis) pada data anggota keluarga.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -813,7 +828,7 @@ const printDemografi = () => {
                 <!-- Status Panggilan Breakdown Pills -->
                 <div v-if="pastorStats?.panggilanBreakdown?.length" class="pt-2 border-t border-slate-100">
                     <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                        Komposisi Status Panggilan Sensus Umat Paroki:
+                        Komposisi Status Panggilan Seluruh Sensus Umat Paroki:
                     </div>
                     <div class="flex items-center gap-2 flex-wrap">
                         <div

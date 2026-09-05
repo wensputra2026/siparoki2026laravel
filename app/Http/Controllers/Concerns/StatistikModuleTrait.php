@@ -227,41 +227,52 @@ trait StatistikModuleTrait
             $pekerjaanStats = $dynamicPekerjaan;
         }
 
-        // Data Pastor Aktif di Paroki ini
-        $defaultParokiId = $this->defaultParokiIdFromProfile();
-        $pastorQuery = \Illuminate\Support\Facades\DB::table('master_pastor')
-            ->where(function ($q) use ($defaultParokiId) {
-                if ($defaultParokiId) {
-                    $q->where('paroki_id', $defaultParokiId)
-                      ->orWhere('paroki_tugas', 'like', '%Benlutu%')
-                      ->orWhereNull('paroki_id');
-                }
-            })
-            ->where('status', 'like', '%Aktif%')
-            ->orderByRaw("CASE WHEN jabatan LIKE '%Pastor Paroki%' THEN 1 WHEN jabatan LIKE '%Pastor Rekan%' THEN 2 ELSE 3 END");
-
-        $pastors = $pastorQuery->get(['id', 'nama_pastor', 'gelar_depan', 'gelar_belakang', 'jabatan', 'jenis_imam', 'ordo_kongregasi', 'paroki_tugas', 'foto', 'status'])->all();
-        $totalPastor = count($pastors);
-
-        // Biarawan / Biarawati / Frater / Suster / Novis dari data Umat
-        $biarawanQuery = (clone $umatQuery)
+        // 4B. Panggilan Hidup Bakti dari Anggota Keluarga Umat (Putra-Putri Paroki yang Menjadi Imam, Biarawan, Biarawati)
+        $panggilanQuery = (clone $umatQuery)
+            ->with(['kk', 'kub', 'wilayah', 'kapela'])
             ->whereNotNull('status_panggilan')
             ->where('status_panggilan', '!=', '')
             ->where('status_panggilan', '!=', 'Awam');
 
-        $biarawanList = $biarawanQuery->get([
-            'id',
-            'uuid',
-            'nama_lengkap',
-            'jenis_kelamin',
-            'status_panggilan',
-            'nama_ordo_kongregasi',
-            'tahap_panggilan',
-            'tempat_tugas_biara',
-            'tanggal_lahir',
-            'foto'
-        ])->all();
+        $panggilanList = $panggilanQuery->get()->map(function ($u) {
+            $sp = strtolower($u->status_panggilan ?? '');
+            
+            $kategori = 'Lainnya';
+            if (str_contains($sp, 'imam') || str_contains($sp, 'pastor') || str_contains($sp, 'romo')) {
+                $kategori = 'Imam';
+            } elseif (str_contains($sp, 'frater') || str_contains($sp, 'calon imam')) {
+                $kategori = 'Frater';
+            } elseif (str_contains($sp, 'suster') || str_contains($sp, 'biarawati') || str_contains($sp, 'novis') || str_contains($sp, 'postulan') || str_contains($sp, 'aspiran')) {
+                $kategori = 'Biarawati';
+            } elseif (str_contains($sp, 'bruder') || str_contains($sp, 'biarawan')) {
+                $kategori = 'Bruder';
+            }
+
+            return [
+                'id' => $u->id,
+                'uuid' => $u->uuid,
+                'nama_lengkap' => $u->nama_lengkap,
+                'jenis_kelamin' => $u->jenis_kelamin,
+                'tanggal_lahir' => $u->tanggal_lahir,
+                'status_panggilan' => $u->status_panggilan,
+                'kategori' => $kategori,
+                'nama_ordo_kongregasi' => $u->nama_ordo_kongregasi,
+                'tahap_panggilan' => $u->tahap_panggilan,
+                'tempat_tugas_biara' => $u->tempat_tugas_biara,
+                'foto' => $u->foto,
+                'nama_kepala_keluarga' => $u->kk?->nama_lahir_pemilik,
+                'no_kk' => $u->kk?->no_kk_kw,
+                'nama_kub' => $u->kub?->nama_kub ?: ($u->kk?->kub?->nama_kub ?: '—'),
+                'nama_stasi' => $u->kapela?->nama_stasi_kapela ?: ($u->kk?->kapela?->nama_stasi_kapela ?: ($u->wilayah?->nama_wilayah ?: ($u->kk?->wilayah?->nama_wilayah ?: '—'))),
+            ];
+        });
+
+        $imamList = $panggilanList->where('kategori', 'Imam')->values()->all();
+        $biarawanList = $panggilanList->where('kategori', '!=', 'Imam')->values()->all();
+        
+        $totalImam = count($imamList);
         $totalBiarawan = count($biarawanList);
+        $totalPanggilan = $panggilanList->count();
 
         // Breakdown Status Panggilan Umat
         $panggilanBreakdown = (clone $umatQuery)
@@ -289,8 +300,9 @@ trait StatistikModuleTrait
                 'totalKUB' => $totalKub,
                 'totalWilayah' => $totalWilayah,
                 'totalKapela' => $totalKapela,
-                'totalPastor' => $totalPastor,
+                'totalImam' => $totalImam,
                 'totalBiarawan' => $totalBiarawan,
+                'totalPanggilan' => $totalPanggilan,
             ],
             'genderStats' => [
                 'pria' => $pria,
@@ -302,10 +314,12 @@ trait StatistikModuleTrait
             'wilayahStats' => $wilayahStats,
             'pekerjaanStats' => $pekerjaanStats,
             'pastorStats' => [
-                'totalPastor' => $totalPastor,
-                'pastors' => $pastors,
+                'totalImam' => $totalImam,
+                'imamList' => $imamList,
                 'totalBiarawan' => $totalBiarawan,
-                'biarawan' => $biarawanList,
+                'biarawanList' => $biarawanList,
+                'allPanggilan' => $panggilanList->all(),
+                'totalPanggilan' => $totalPanggilan,
                 'panggilanBreakdown' => $panggilanBreakdown,
             ],
             'masterReferensiStats' => $masterReferensiStats,
