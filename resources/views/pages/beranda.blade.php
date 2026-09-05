@@ -60,12 +60,13 @@
                         }
                     }
                 }
+                $videoVersion = \Illuminate\Support\Facades\Cache::get('global_view_data_version', 1);
             @endphp
-            <video class="hero-video-element" autoplay loop muted playsinline @if(!empty($posterUrl)) poster="{{ $posterUrl }}" @endif>
-                <source src="{{ asset('assets/uploads/video/' . basename($cleanVideoPath)) }}" type="video/mp4">
-                <source src="{{ asset('assets/uploads/' . $cleanVideoPath) }}" type="video/mp4">
-                <source src="{{ asset('uploads/' . $cleanVideoPath) }}" type="video/mp4">
-                <source src="{{ asset($heroVideoFile) }}" type="video/mp4">
+            <video class="hero-video-element" autoplay loop muted playsinline @if(!empty($posterUrl)) poster="{{ $posterUrl }}?v={{ $videoVersion }}" @endif>
+                <source src="{{ asset('assets/uploads/video/' . basename($cleanVideoPath)) }}?v={{ $videoVersion }}" type="video/mp4">
+                <source src="{{ asset('assets/uploads/' . $cleanVideoPath) }}?v={{ $videoVersion }}" type="video/mp4">
+                <source src="{{ asset('uploads/' . $cleanVideoPath) }}?v={{ $videoVersion }}" type="video/mp4">
+                <source src="{{ asset($heroVideoFile) }}?v={{ $videoVersion }}" type="video/mp4">
             </video>
         @endif
         <div class="hero-video-overlay" style="opacity: {{ $overlayOpacity }};"></div>

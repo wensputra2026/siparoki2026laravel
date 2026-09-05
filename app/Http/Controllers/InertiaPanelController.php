@@ -968,6 +968,7 @@ class InertiaPanelController extends Controller
                 'has_export' => true,
                 'has_pdf' => true,
                 'columns' => [
+                    ['key' => 'foto', 'label' => 'Foto Kepala', 'isImage' => true],
                     ['key' => 'no_kk_kw', 'altKey' => 'no_kk_dukcapil', 'label' => 'No KK Katolik', 'isPrimary' => true],
                     ['key' => 'nama_baptis_pemilik', 'altKey' => 'nama_lahir_pemilik', 'label' => 'Nama Kepala Keluarga (Baptis & Lahir)'],
                     ['key' => 'wilayah_nama', 'relation' => 'wilayah', 'relationKey' => 'nama_wilayah', 'label' => 'Wilayah Pelayanan'],
@@ -983,6 +984,7 @@ class InertiaPanelController extends Controller
                 'has_export' => true,
                 'has_pdf' => true,
                 'columns' => [
+                    ['key' => 'foto', 'label' => 'Foto Kepala', 'isImage' => true],
                     ['key' => 'no_kk_kw', 'altKey' => 'no_kk_dukcapil', 'label' => 'No KK Katolik', 'isPrimary' => true],
                     ['key' => 'nama_baptis_pemilik', 'altKey' => 'nama_lahir_pemilik', 'label' => 'Nama Kepala Keluarga (Baptis & Lahir)'],
                     ['key' => 'wilayah_nama', 'relation' => 'wilayah', 'relationKey' => 'nama_wilayah', 'label' => 'Wilayah Pelayanan'],
@@ -998,6 +1000,7 @@ class InertiaPanelController extends Controller
                 'has_export' => true,
                 'has_pdf' => true,
                 'columns' => [
+                    ['key' => 'foto', 'label' => 'Foto Kepala', 'isImage' => true],
                     ['key' => 'no_kk_kw', 'altKey' => 'no_kk_dukcapil', 'label' => 'No KK Katolik', 'isPrimary' => true],
                     ['key' => 'nama_baptis_pemilik', 'altKey' => 'nama_lahir_pemilik', 'label' => 'Nama Kepala Keluarga (Baptis & Lahir)'],
                     ['key' => 'wilayah_nama', 'relation' => 'wilayah', 'relationKey' => 'nama_wilayah', 'label' => 'Wilayah Pelayanan'],
@@ -1026,6 +1029,25 @@ class InertiaPanelController extends Controller
                 ],
             ],
             'data-umat' => [
+                'model' => \App\Models\Umat::class,
+                'title' => 'Data Umat / Jiwa Paroki',
+                'has_import' => true,
+                'has_export' => true,
+                'has_pdf' => true,
+                'columns' => [
+                    ['key' => 'foto', 'label' => 'Foto', 'isImage' => true],
+                    ['key' => 'nama_lengkap', 'altKey' => 'nama_baptis', 'label' => 'Nama Lengkap & Baptis', 'isPrimary' => true],
+                    ['key' => 'nik', 'label' => 'NIK'],
+                    ['key' => 'no_kk_kw', 'label' => 'No KK'],
+                    ['key' => 'jenis_kelamin', 'label' => 'L/P'],
+                    ['key' => 'tempat_lahir', 'label' => 'Tempat Lahir'],
+                    ['key' => 'tanggal_lahir', 'label' => 'Tanggal Lahir', 'isDate' => true],
+                    ['key' => 'hubungan_keluarga', 'label' => 'Kedudukan'],
+                    ['key' => 'status_menikah', 'label' => 'Status Perkawinan'],
+                    ['key' => 'status_umat', 'altKey' => 'status_aktif', 'label' => 'Status'],
+                ],
+            ],
+            'jiwa' => [
                 'model' => \App\Models\Umat::class,
                 'title' => 'Data Umat / Jiwa Paroki',
                 'has_import' => true,

@@ -34,6 +34,26 @@ class PengaturanAplikasi extends Model
         ];
     }
 
+    protected static function booted()
+    {
+        $clearCache = function () {
+            try {
+                \Illuminate\Support\Facades\Cache::forget('global_app_profile');
+                \Illuminate\Support\Facades\Cache::forget('global_app_settings');
+                \Illuminate\Support\Facades\Cache::forget('global_pengaturan_aplikasi_first');
+                \Illuminate\Support\Facades\Cache::increment('global_view_data_version');
+                for ($v = 1; $v <= 20; $v++) {
+                    \Illuminate\Support\Facades\Cache::forget("frontend.common_data.{$v}");
+                }
+            } catch (\Throwable $e) {
+                // Ignore cache clearing errors
+            }
+        };
+
+        static::saved($clearCache);
+        static::deleted($clearCache);
+    }
+
     /**
      * Self-healing migration check for setup-related columns.
      */

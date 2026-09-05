@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import DateInput from '@/Components/DateInput.vue';
 import { triggerToast } from '@/composables/useRoleMenu';
+import { getDefaultAvatar } from '@/utils/avatar';
 
 const page = usePage();
 const isKubRole = computed(() => {
@@ -328,14 +329,29 @@ const syncPastoralHierarchyFromKub = (targetKubId) => {
 
 // Cascading KUB options based on Stasi/Kapela or Wilayah
 const filteredKubList = computed(() => {
-    if (isKubRole.value) return props.kubList;
-    if (form.kapela_id) {
-        return props.kubList.filter(k => String(k.kapela_id) === String(form.kapela_id));
+    let list = props.kubList || [];
+    if (!isKubRole.value) {
+        if (form.kapela_id) {
+            list = list.filter(k => String(k.kapela_id) === String(form.kapela_id));
+        } else if (form.wilayah_id) {
+            list = list.filter(k => String(k.wilayah_id) === String(form.wilayah_id));
+        }
     }
-    if (form.wilayah_id) {
-        return props.kubList.filter(k => String(k.wilayah_id) === String(form.wilayah_id));
-    }
-    return props.kubList;
+    return list.map(k => {
+        let asal = '';
+        if (k.kapela_id) {
+            const kap = (props.kapelaList || []).find(kp => String(kp.id) === String(k.kapela_id));
+            if (kap) asal = `Stasi ${kap.nama_kapela}`;
+        }
+        if (!asal && k.wilayah_id) {
+            const wil = (props.wilayahList || []).find(w => String(w.id) === String(k.wilayah_id));
+            if (wil) asal = `Wilayah ${wil.nama_wilayah}`;
+        }
+        return {
+            ...k,
+            nama_kub_with_asal: asal ? `${k.nama_kub} (${asal})` : k.nama_kub,
+        };
+    });
 });
 
 const kapelaPlaceholder = computed(() => {
@@ -564,10 +580,12 @@ const addAnggota = () => {
         tempat_tugas_biara: '',
         tgl_tahbisan_kaul: '',
     });
+    triggerToast('Formulir anggota keluarga baru ditambahkan ke daftar.', 'info');
 };
 
 const removeAnggota = (index) => {
     form.anggota.splice(index, 1);
+    triggerToast('Anggota keluarga berhasil dihapus dari daftar formulir.', 'info');
 };
 
 const submitForm = () => {
@@ -606,9 +624,17 @@ const submitForm = () => {
     }
 
     if (props.isEdit && (props.kkItem?.uuid || props.kkItem?.id)) {
-        form.put(`${basePrefix.value}/kk-katolik/${props.kkItem.uuid || props.kkItem.id}`);
+        form.put(`${basePrefix.value}/kk-katolik/${props.kkItem.uuid || props.kkItem.id}`, {
+            onSuccess: () => {
+                triggerToast('Data Kartu Keluarga dan Anggota Keluarga berhasil diperbarui!', 'success');
+            },
+        });
     } else {
-        form.post(`${basePrefix.value}/kk-katolik`);
+        form.post(`${basePrefix.value}/kk-katolik`, {
+            onSuccess: () => {
+                triggerToast('Data Kartu Keluarga dan Anggota Keluarga baru berhasil disimpan!', 'success');
+            },
+        });
     }
 };
 </script>
@@ -778,7 +804,7 @@ const submitForm = () => {
                                 :disabled="isKubRole"
                                 :clearable="!isKubRole"
                                 valueKey="id"
-                                labelKey="nama_kub"
+                                labelKey="nama_kub_with_asal"
                                 placeholder="-- Pilih KUB / KBG --"
                                 searchPlaceholder="Cari KUB / KBG..."
                                 icon="fa-solid fa-people-group"
@@ -1210,9 +1236,16 @@ const submitForm = () => {
                             class="p-4 rounded-xl bg-slate-50 border border-slate-200/90 relative space-y-3"
                         >
                             <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
-                                <span class="text-xs font-extrabold text-blue-700">
-                                    Anggota #{{ idx + 1 }} &bull; {{ member.hubungan_keluarga || 'Anggota' }}
-                                </span>
+                                <div class="flex items-center gap-2">
+                                    <img
+                                        :src="member.foto ? (member.foto.startsWith('http') ? member.foto : '/' + String(member.foto).replace(/^\/+/, '')) : getDefaultAvatar(member.jenis_kelamin, member.usia || member.tanggal_lahir)"
+                                        class="w-6 h-6 rounded-full object-cover border border-slate-200 shadow-2xs shrink-0"
+                                        @error="(e) => { e.target.src = getDefaultAvatar(member.jenis_kelamin, member.usia || member.tanggal_lahir); }"
+                                    />
+                                    <span class="text-xs font-extrabold text-blue-700">
+                                        Anggota #{{ idx + 1 }} &bull; {{ member.hubungan_keluarga || 'Anggota' }}
+                                    </span>
+                                </div>
                                 <button
                                     type="button"
                                     @click="removeAnggota(idx)"

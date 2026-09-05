@@ -57,6 +57,10 @@
     "file": "assets/_plugin-vue_export-helper-DlAUqK2U.js",
     "name": "_plugin-vue_export-helper"
   },
+  "_avatar-Cj77F2dp.js": {
+    "file": "assets/avatar-Cj77F2dp.js",
+    "name": "avatar"
+  },
   "_vendor-DX-d4_2r.js": {
     "file": "assets/vendor-DX-d4_2r.js",
     "name": "vendor"
@@ -69,7 +73,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-gIHlNYoG.css",
+    "file": "assets/app-CanGOP8n.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -129,13 +133,14 @@
     ]
   },
   "resources/js/Pages/Inertia/Dashboard.vue": {
-    "file": "assets/Dashboard-BOqPjA2g.js",
+    "file": "assets/Dashboard-DJDOoYrm.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Inertia/Dashboard.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-vue-DKPcl_V5.js",
       "_AppLayout-sdOmBttO.js",
+      "_avatar-Cj77F2dp.js",
       "_vendor-DX-d4_2r.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "_SearchableSelect-BcRondBQ.js"
@@ -167,7 +172,7 @@
     ]
   },
   "resources/js/Pages/Inertia/GenericModule.vue": {
-    "file": "assets/GenericModule-Bs0cifwb.js",
+    "file": "assets/GenericModule-h7s0QqLm.js",
     "name": "GenericModule",
     "src": "resources/js/Pages/Inertia/GenericModule.vue",
     "isDynamicEntry": true,
@@ -177,25 +182,27 @@
       "_SearchableSelect-BcRondBQ.js",
       "_RichTextEditor-DG_8pL44.js",
       "_DateInput-Be-up3-x.js",
+      "_avatar-Cj77F2dp.js",
       "_vendor-DX-d4_2r.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Inertia/KkDetail.vue": {
-    "file": "assets/KkDetail-Dx6yXRuk.js",
+    "file": "assets/KkDetail-CMi8sTVO.js",
     "name": "KkDetail",
     "src": "resources/js/Pages/Inertia/KkDetail.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-vue-DKPcl_V5.js",
       "_AppLayout-sdOmBttO.js",
+      "_avatar-Cj77F2dp.js",
       "_vendor-DX-d4_2r.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "_SearchableSelect-BcRondBQ.js"
     ]
   },
   "resources/js/Pages/Inertia/KkForm.vue": {
-    "file": "assets/KkForm-BcQZ_jm-.js",
+    "file": "assets/KkForm-CKxeinhF.js",
     "name": "KkForm",
     "src": "resources/js/Pages/Inertia/KkForm.vue",
     "isDynamicEntry": true,
@@ -204,6 +211,7 @@
       "_AppLayout-sdOmBttO.js",
       "_SearchableSelect-BcRondBQ.js",
       "_DateInput-Be-up3-x.js",
+      "_avatar-Cj77F2dp.js",
       "_vendor-DX-d4_2r.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
@@ -372,7 +380,7 @@
     ]
   },
   "resources/js/Pages/Inertia/UmatForm.vue": {
-    "file": "assets/UmatForm-DjbvZzkG.js",
+    "file": "assets/UmatForm-D54cW9SG.js",
     "name": "UmatForm",
     "src": "resources/js/Pages/Inertia/UmatForm.vue",
     "isDynamicEntry": true,
@@ -386,13 +394,14 @@
     ]
   },
   "resources/js/Pages/Inertia/UmatIndex.vue": {
-    "file": "assets/UmatIndex-BqI-tzEg.js",
+    "file": "assets/UmatIndex-CZakoy-9.js",
     "name": "UmatIndex",
     "src": "resources/js/Pages/Inertia/UmatIndex.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-vue-DKPcl_V5.js",
       "_AppLayout-sdOmBttO.js",
+      "_avatar-Cj77F2dp.js",
       "_vendor-DX-d4_2r.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "_SearchableSelect-BcRondBQ.js"
@@ -469,7 +478,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-D9KeS43k.js",
+    "file": "assets/app-CG-piRWB.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

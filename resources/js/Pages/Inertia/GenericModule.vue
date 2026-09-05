@@ -6,6 +6,8 @@ import SearchableSelect from '@/Components/SearchableSelect.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 import DateInput from '@/Components/DateInput.vue';
 import { formatDateId, formatDateTimeId } from '@/utils/date';
+import { triggerToast } from '@/composables/useRoleMenu';
+import { getDefaultAvatar } from '@/utils/avatar';
 
 const page = usePage();
 
@@ -281,12 +283,27 @@ const showPassword = ref(false);
 const filteredFormKubs = computed(() => {
     let list = props.kubList || [];
     if (formData.value?.wilayah_id) {
-        return list.filter(k => String(k.wilayah_id || k.id_wilayah) === String(formData.value.wilayah_id));
+        list = list.filter(k => String(k.wilayah_id || k.id_wilayah) === String(formData.value.wilayah_id));
+    } else if (formData.value?.kapela_id) {
+        list = list.filter(k => String(k.kapela_id || k.id_kapela) === String(formData.value.kapela_id));
     }
-    if (formData.value?.kapela_id) {
-        return list.filter(k => String(k.kapela_id || k.id_kapela) === String(formData.value.kapela_id));
-    }
-    return list;
+    return list.map(k => {
+        let asal = '';
+        const kapId = k.kapela_id || k.id_kapela;
+        const wilId = k.wilayah_id || k.id_wilayah;
+        if (kapId) {
+            const kap = (props.kapelaList || []).find(kp => String(kp.id || kp.id_kapela) === String(kapId));
+            if (kap) asal = `Stasi ${kap.nama_kapela}`;
+        }
+        if (!asal && wilId) {
+            const wil = (props.wilayahList || []).find(w => String(w.id || w.id_wilayah) === String(wilId));
+            if (wil) asal = `Wilayah ${wil.nama_wilayah}`;
+        }
+        return {
+            ...k,
+            nama_kub_with_asal: asal ? `${k.nama_kub} (${asal})` : k.nama_kub,
+        };
+    });
 });
 
 const onMutasiUmatSelected = (umatId) => {
@@ -2080,6 +2097,12 @@ const submitForm = () => {
         onSuccess: () => {
             showFormModal.value = false;
             isSubmitting.value = false;
+            const isKkOrUmat = ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'jiwa'].includes(props.moduleKey);
+            const actionText = modalMode.value === 'edit' ? 'berhasil diperbarui' : 'berhasil disimpan';
+            const labelText = isKkOrUmat 
+                ? (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey) ? 'Data Kartu Keluarga dan Anggota Keluarga' : 'Data Anggota Keluarga / Umat')
+                : (props.title || 'Data');
+            triggerToast(`${labelText} ${actionText}!`, 'success');
         },
         onError: () => {
             isSubmitting.value = false;
@@ -2261,9 +2284,79 @@ const getImageUrl = (path) => {
         if (['galeri'].includes(props.moduleKey)) {
             return `/uploads/galeri/${clean}`;
         }
+        if (['umat', 'data-umat', 'jiwa'].includes(props.moduleKey)) {
+            return `/uploads/umat/${clean}`;
+        }
+        if (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey)) {
+            return `/uploads/kk_katolik/${clean}`;
+        }
         return `/foto-pastor/${clean}`;
     }
     return `/${clean}`;
+};
+
+const getDefaultAvatarByGender = (gender, ageOrBirthDate = null) => {
+    return getDefaultAvatar(gender, ageOrBirthDate);
+};
+
+const getAvatarUrl = (item, colKey = 'foto') => {
+    if (!item) return '/images/laki-laki.jpg';
+
+    // 1. Keuskupan / Paroki logos
+    if (props.moduleKey === 'keuskupan') {
+        return item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-keuskupan.png');
+    }
+    if (props.moduleKey === 'paroki') {
+        return item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-paroki.png');
+    }
+    if (colKey === 'logo' && item.logo_url) {
+        return item.logo_url;
+    }
+
+    // 2. Pastor modules
+    if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(props.moduleKey)) {
+        const val = item[colKey] || item.foto;
+        return val ? getImageUrl(val) : '/assets/frontend/siparoki/images/default-pastor.jpg';
+    }
+
+    // 3. Umat, Jiwa, KK Katolik or gender-based records
+    const isUmatOrKkModule = ['umat', 'data-umat', 'jiwa', 'kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey);
+    const photoVal = (colKey && item[colKey] !== undefined) ? item[colKey] : (item.foto || item.gambar);
+
+    if (photoVal && typeof photoVal === 'string' && photoVal.trim() !== '' && photoVal !== 'null' && photoVal !== 'undefined' && photoVal !== '—') {
+        return getImageUrl(photoVal);
+    }
+
+    if (isUmatOrKkModule || item.jenis_kelamin || colKey === 'foto') {
+        const ageOrBirthDate = item?.usia ?? item?.umur ?? item?.tanggal_lahir ?? item?.tgl_lahir;
+        return getDefaultAvatar(item?.jenis_kelamin, ageOrBirthDate);
+    }
+
+    const fieldVal = getFieldValue(item, { key: colKey });
+    return fieldVal && fieldVal !== '—' ? getImageUrl(fieldVal) : '';
+};
+
+const handleImageError = (e, item, colKey = 'foto') => {
+    if (!e || !e.target) return;
+    if (props.moduleKey === 'keuskupan') {
+        e.target.src = '/images/logo-keuskupan.png';
+    } else if (props.moduleKey === 'paroki' || colKey === 'logo') {
+        e.target.src = '/images/logo-paroki.png';
+    } else if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(props.moduleKey)) {
+        e.target.src = '/assets/frontend/siparoki/images/default-pastor.jpg';
+    } else if (['umat', 'data-umat', 'jiwa', 'kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey) || item?.jenis_kelamin || colKey === 'foto') {
+        const ageOrBirthDate = item?.usia ?? item?.umur ?? item?.tanggal_lahir ?? item?.tgl_lahir;
+        const fallback = getDefaultAvatar(item?.jenis_kelamin, ageOrBirthDate);
+        if (!e.target.dataset.fallbackApplied) {
+            e.target.dataset.fallbackApplied = 'true';
+            e.target.src = fallback;
+        }
+    } else {
+        e.target.style.display = 'none';
+        if (e.target.nextElementSibling) {
+            e.target.nextElementSibling.style.display = 'flex';
+        }
+    }
 };
 
 const isImageField = (col, val) => {
@@ -2857,10 +2950,10 @@ const showKubFilter = computed(() => {
                                 <!-- Image / Logo Column -->
                                 <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto' || isImageField(col, getFieldValue(item, col))" class="w-8.5 h-8.5 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5 whitespace-nowrap">
                                     <img
-                                        :src="moduleKey === 'keuskupan' ? (item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-keuskupan.png')) : (moduleKey === 'paroki' ? (item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-paroki.png')) : ((col.key === 'logo' && item.logo_url) ? item.logo_url : (getImageUrl(getFieldValue(item, col)) || (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey) ? '/assets/frontend/siparoki/images/default-pastor.jpg' : ''))))"
+                                        :src="getAvatarUrl(item, col.key)"
                                         :alt="item.nama_pastor || item.nama_lengkap || item.nama_paroki || item.nama_keuskupan || 'Foto'"
                                         :class="['w-full h-full rounded-md', col.key === 'logo' || moduleKey === 'keuskupan' || moduleKey === 'paroki' ? 'object-contain' : 'object-cover']"
-                                        @error="(e) => { if (moduleKey === 'keuskupan') { e.target.src = '/images/logo-keuskupan.png'; } else if (moduleKey === 'paroki' || col.key === 'logo') { e.target.src = '/images/logo-paroki.png'; } else if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey)) { e.target.src = '/assets/frontend/siparoki/images/default-pastor.jpg'; } else { e.target.style.display = 'none'; e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex'); } }"
+                                        @error="(e) => handleImageError(e, item, col.key)"
                                     />
                                 </div>
 
@@ -3296,18 +3389,16 @@ const showKubFilter = computed(() => {
                 <!-- Modal Body -->
                 <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
                     <!-- 0. DETAIL DATA UMAT / JIWA LENGKAP -->
-                    <template v-if="moduleKey === 'umat' || moduleKey === 'data-umat'">
+                    <template v-if="moduleKey === 'umat' || moduleKey === 'data-umat' || moduleKey === 'jiwa'">
                         <!-- Profile Header Card -->
                         <div class="p-5 rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-50/50 border border-amber-200/80 flex flex-col sm:flex-row items-center sm:items-start gap-5">
                             <div class="w-24 h-24 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-200 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-xs">
                                 <img
-                                    v-if="selectedItem.foto"
-                                    :src="getImageUrl(selectedItem.foto)"
-                                    :alt="selectedItem.nama_lengkap"
+                                    :src="getAvatarUrl(selectedItem, 'foto')"
+                                    :alt="selectedItem.nama_lengkap || selectedItem.nama_lahir || 'Foto'"
                                     class="w-full h-full object-cover"
-                                    @error="(e) => { e.target.onerror = null; e.target.parentElement.innerHTML = '<i class=\'fa-solid fa-user-tie text-4xl text-amber-600\'></i>'; }"
+                                    @error="(e) => handleImageError(e, selectedItem, 'foto')"
                                 />
-                                <i v-else class="fa-solid fa-user-circle text-5xl text-amber-500"></i>
                             </div>
                             <div class="flex-1 text-center sm:text-left space-y-2">
                                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
@@ -6777,7 +6868,7 @@ const showKubFilter = computed(() => {
                                                 v-model="formData.kub_id"
                                                 :options="filteredFormKubs"
                                                 valueKey="id"
-                                                labelKey="nama_kub"
+                                                labelKey="nama_kub_with_asal"
                                                 placeholder="-- Tidak Terikat KUB --"
                                                 searchPlaceholder="Cari KUB..."
                                                 icon="fa-users"
@@ -8745,11 +8836,11 @@ const showKubFilter = computed(() => {
                                 <div class="flex items-center gap-4">
                                     <div class="w-18 h-18 rounded-2xl bg-white border border-slate-200 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
                                         <img
-                                            v-if="previewImage || (formData[col.key] && typeof formData[col.key] === 'string')"
-                                            :src="previewImage || getImageUrl(formData[col.key])"
+                                            v-if="previewImage || (formData[col.key] && typeof formData[col.key] === 'string') || ['umat', 'data-umat', 'jiwa', 'kk-katolik', 'kk', 'keluarga'].includes(moduleKey) || col.key === 'foto'"
+                                            :src="previewImage || (formData[col.key] ? getImageUrl(formData[col.key]) : getDefaultAvatarByGender(formData.jenis_kelamin, formData.usia ?? formData.umur ?? formData.tanggal_lahir ?? formData.tgl_lahir))"
                                             :alt="col.label"
-                                            class="w-full h-full object-contain"
-                                            @error="(e) => { e.target.onerror = null; e.target.src = '/images/logo-keuskupan.png'; }"
+                                            class="w-full h-full object-cover"
+                                            @error="(e) => handleImageError(e, formData, col.key)"
                                         />
                                         <i v-else class="fa-solid fa-cloud-arrow-up text-2xl text-slate-300"></i>
                                     </div>

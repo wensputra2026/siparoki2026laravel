@@ -70,14 +70,17 @@
     @stack('head')
 
     <!-- Favicon -->
+    @php
+        $cacheBuster = \Illuminate\Support\Facades\Cache::get('global_view_data_version', 1);
+    @endphp
     @if(!empty($globalLogo))
-        <link rel="icon" type="image/png" href="{{ $globalLogo }}">
-        <link rel="shortcut icon" type="image/png" href="{{ $globalLogo }}">
-        <link rel="apple-touch-icon" href="{{ $globalLogo }}">
+        <link rel="icon" type="image/png" href="{{ $globalLogo }}?v={{ $cacheBuster }}">
+        <link rel="shortcut icon" type="image/png" href="{{ $globalLogo }}?v={{ $cacheBuster }}">
+        <link rel="apple-touch-icon" href="{{ $globalLogo }}?v={{ $cacheBuster }}">
     @else
-        <link rel="icon" type="image/png" href="{{ asset('images/church-logo.png') }}">
-        <link rel="shortcut icon" type="image/png" href="{{ asset('images/church-logo.png') }}">
-        <link rel="apple-touch-icon" href="{{ asset('images/church-logo.png') }}">
+        <link rel="icon" type="image/png" href="{{ asset('images/church-logo.png') }}?v={{ $cacheBuster }}">
+        <link rel="shortcut icon" type="image/png" href="{{ asset('images/church-logo.png') }}?v={{ $cacheBuster }}">
+        <link rel="apple-touch-icon" href="{{ asset('images/church-logo.png') }}?v={{ $cacheBuster }}">
     @endif
 
     <!-- SIPAROKI Theme: Bootstrap 5 + Icons + Fonts + Theme CSS -->
@@ -189,7 +192,7 @@
             <div class="container">
                 <a class="navbar-brand d-inline-flex align-items-center gap-1 gap-sm-2" href="/" style="text-decoration: none;">
                     @if(!empty($globalLogo))
-                        <img src="{{ $globalLogo }}" alt="Logo {{ $globalNamaParoki ?? 'Paroki' }}" style="width: 42px; height: 42px; object-fit: contain; border-radius: 50%; background: #fff; padding: 2px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); flex-shrink: 0; display: inline-block;">
+                        <img src="{{ $globalLogo }}?v={{ $cacheBuster }}" alt="Logo {{ $globalNamaParoki ?? 'Paroki' }}" style="width: 42px; height: 42px; object-fit: contain; border-radius: 50%; background: #fff; padding: 2px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); flex-shrink: 0; display: inline-block;">
                     @else
                         <i class="bi bi-church" style="font-size: 1.8rem; color: var(--primary-teal, #00897b); flex-shrink: 0;"></i>
                     @endif
@@ -383,29 +386,6 @@
                 </div>
             </div>
 
-            <!-- Visitor Stats Konoha Style (100% Database Driven) -->
-            @php
-                $statUmat   = $stats['total_umat'] ?? $global_stats['total_umat'] ?? (\Illuminate\Support\Facades\Schema::hasTable('umat') ? \Illuminate\Support\Facades\DB::table('umat')->count() : 0);
-                $statStasi  = $stats['total_kapela'] ?? $global_stats['total_kapela'] ?? ((\Illuminate\Support\Facades\Schema::hasTable('kapela') ? \Illuminate\Support\Facades\DB::table('kapela')->count() : 0) + (\Illuminate\Support\Facades\Schema::hasTable('stasi_kapela') ? \Illuminate\Support\Facades\DB::table('stasi_kapela')->count() : 0));
-                $statKub    = $stats['total_kub'] ?? $global_stats['total_kub'] ?? ((\Illuminate\Support\Facades\Schema::hasTable('kub') ? \Illuminate\Support\Facades\DB::table('kub')->count() : 0) + (\Illuminate\Support\Facades\Schema::hasTable('lingkungan') ? \Illuminate\Support\Facades\DB::table('lingkungan')->count() : 0));
-            @endphp
-            <div class="visitor-stats d-flex justify-content-center gap-3 flex-wrap">
-                <div class="visitor-item">
-                    <i class="fas fa-users"></i>
-                    <span class="visitor-count">{{ number_format($statUmat, 0, ',', '.') }}</span>
-                    <span class="visitor-label">Total Jiwa Umat</span>
-                </div>
-                <div class="visitor-item">
-                    <i class="fas fa-church"></i>
-                    <span class="visitor-count">{{ number_format($statStasi, 0, ',', '.') }}</span>
-                    <span class="visitor-label">Stasi & Kapela</span>
-                </div>
-                <div class="visitor-item">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span class="visitor-count">{{ number_format($statKub, 0, ',', '.') }}</span>
-                    <span class="visitor-label">Komunitas KUB</span>
-                </div>
-            </div>
 
             <!-- Footer Bottom -->
             <div class="footer-bottom">

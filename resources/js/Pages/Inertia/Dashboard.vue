@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { getDefaultAvatar } from '@/utils/avatar';
 
 const page = usePage();
 const isReloading = ref(false);
@@ -379,9 +380,12 @@ const sakramenSubtitle = computed(() => {
                             class="py-3.5 flex items-center justify-between gap-3 group"
                         >
                             <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-amber-700 font-bold text-xs shrink-0 group-hover:border-amber-400 transition">
-                                    {{ umat.nama_lengkap.charAt(0).toUpperCase() }}
-                                </div>
+                                <img
+                                    :src="umat.foto ? (umat.foto.startsWith('http') ? umat.foto : '/' + String(umat.foto).replace(/^\/+/, '')) : getDefaultAvatar(umat.jenis_kelamin, umat.usia || umat.tanggal_lahir)"
+                                    :alt="umat.nama_lengkap"
+                                    class="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0 group-hover:border-amber-400 transition"
+                                    @error="(e) => { e.target.src = getDefaultAvatar(umat.jenis_kelamin, umat.usia || umat.tanggal_lahir); }"
+                                />
                                 <div class="min-w-0">
                                     <h4 class="text-sm font-semibold text-slate-800 truncate group-hover:text-amber-600 transition">
                                         {{ umat.nama_lengkap }}

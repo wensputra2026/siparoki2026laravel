@@ -152,6 +152,9 @@
                         </a>
                     </div>
 
+                    <!-- WIDGET KALENDER LITURGI (imankatolik.or.id) -->
+                    @include('partials.kalender-liturgi-widget')
+
                     <!-- 2. RENUNGAN LAINNYA -->
                     @if(isset($terkait) && $terkait->isNotEmpty())
                         <div style="background: #ffffff; padding: 24px; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; border-left: 4px solid var(--primary-teal, #00897b);">

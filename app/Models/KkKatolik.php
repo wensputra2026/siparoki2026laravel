@@ -48,6 +48,61 @@ class KkKatolik extends Model
         'updated_by',
     ];
 
+    protected $appends = [
+        'foto',
+        'jenis_kelamin',
+        'tanggal_lahir',
+        'usia',
+    ];
+
+    public function getFotoAttribute(): ?string
+    {
+        if (!empty($this->attributes['foto'])) {
+            return $this->attributes['foto'];
+        }
+        if ($this->relationLoaded('anggota') && $this->anggota->isNotEmpty()) {
+            $kepala = $this->anggota->firstWhere('hubungan_keluarga', 'Kepala Keluarga') ?? $this->anggota->first();
+            return $kepala?->foto ?? null;
+        }
+        return null;
+    }
+
+    public function getJenisKelaminAttribute(): ?string
+    {
+        if (!empty($this->attributes['jenis_kelamin'])) {
+            return $this->attributes['jenis_kelamin'];
+        }
+        if ($this->relationLoaded('anggota') && $this->anggota->isNotEmpty()) {
+            $kepala = $this->anggota->firstWhere('hubungan_keluarga', 'Kepala Keluarga') ?? $this->anggota->first();
+            return $kepala?->jenis_kelamin ?? 'Laki-Laki';
+        }
+        return 'Laki-Laki';
+    }
+
+    public function getTanggalLahirAttribute(): ?string
+    {
+        if (!empty($this->attributes['tanggal_lahir'])) {
+            return $this->attributes['tanggal_lahir'];
+        }
+        if ($this->relationLoaded('anggota') && $this->anggota->isNotEmpty()) {
+            $kepala = $this->anggota->firstWhere('hubungan_keluarga', 'Kepala Keluarga') ?? $this->anggota->first();
+            return $kepala?->tanggal_lahir ?? null;
+        }
+        return null;
+    }
+
+    public function getUsiaAttribute(): ?int
+    {
+        if (isset($this->attributes['usia'])) {
+            return (int) $this->attributes['usia'];
+        }
+        if ($this->relationLoaded('anggota') && $this->anggota->isNotEmpty()) {
+            $kepala = $this->anggota->firstWhere('hubungan_keluarga', 'Kepala Keluarga') ?? $this->anggota->first();
+            return $kepala?->usia ?? null;
+        }
+        return null;
+    }
+
     protected function casts(): array
     {
         return [

@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { getDefaultAvatar } from '@/utils/avatar';
 
 const props = defineProps({
     role: { type: String, default: 'Super Admin' },
@@ -98,28 +99,36 @@ const parokiAlamat = computed(() => {
                         >
                             <i class="fa-solid fa-arrow-left text-sm"></i>
                         </Link>
-                        <div>
-                            <div class="flex items-center gap-2.5 flex-wrap">
-                                <h1 class="text-xl font-black text-slate-900 tracking-tight">
-                                    {{ kk.nama_lahir_pemilik }}
-                                </h1>
-                                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-800 border border-blue-200">
-                                    {{ kk.no_kk_kw }}
-                                </span>
-                                <span
-                                    class="px-2.5 py-0.5 rounded-full text-xs font-bold border"
-                                    :class="kk.status_kk === 'Aktif' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-50 text-slate-700 border-slate-200'"
-                                >
-                                    {{ kk.status_kk || 'Aktif' }}
-                                </span>
+                        <div class="flex items-center gap-3">
+                            <img
+                                :src="kk.foto ? (kk.foto.startsWith('http') ? kk.foto : '/' + String(kk.foto).replace(/^\/+/, '')) : getDefaultAvatar(kk.jenis_kelamin, kk.usia || kk.tanggal_lahir)"
+                                :alt="kk.nama_lahir_pemilik"
+                                class="w-12 h-12 rounded-2xl object-cover border border-slate-200 shadow-xs shrink-0"
+                                @error="(e) => { e.target.src = getDefaultAvatar(kk.jenis_kelamin, kk.usia || kk.tanggal_lahir); }"
+                            />
+                            <div>
+                                <div class="flex items-center gap-2.5 flex-wrap">
+                                    <h1 class="text-xl font-black text-slate-900 tracking-tight">
+                                        {{ kk.nama_lahir_pemilik }}
+                                    </h1>
+                                    <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                                        {{ kk.no_kk_kw }}
+                                    </span>
+                                    <span
+                                        class="px-2.5 py-0.5 rounded-full text-xs font-bold border"
+                                        :class="kk.status_kk === 'Aktif' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-50 text-slate-700 border-slate-200'"
+                                    >
+                                        {{ kk.status_kk || 'Aktif' }}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
+                                    <span><i class="fa-solid fa-church text-blue-600 me-1"></i> {{ kk.wilayah?.nama_wilayah || kk.kapela?.nama_kapela || 'Pusat Paroki' }}</span>
+                                    <span>•</span>
+                                    <span><i class="fa-solid fa-people-group text-emerald-600 me-1"></i> KUB: {{ kk.kub?.nama_kub || '-' }}</span>
+                                    <span>•</span>
+                                    <span><i class="fa-solid fa-location-dot text-amber-600 me-1"></i> {{ kk.desa_kelurahan || 'Benlutu' }}</span>
+                                </p>
                             </div>
-                            <p class="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
-                                <span><i class="fa-solid fa-church text-blue-600 me-1"></i> {{ kk.wilayah?.nama_wilayah || kk.kapela?.nama_kapela || 'Pusat Paroki' }}</span>
-                                <span>•</span>
-                                <span><i class="fa-solid fa-people-group text-emerald-600 me-1"></i> KUB: {{ kk.kub?.nama_kub || '-' }}</span>
-                                <span>•</span>
-                                <span><i class="fa-solid fa-location-dot text-amber-600 me-1"></i> {{ kk.desa_kelurahan || 'Benlutu' }}</span>
-                            </p>
                         </div>
                     </div>
 
@@ -260,10 +269,20 @@ const parokiAlamat = computed(() => {
                                 <tr v-for="(a, idx) in kk.anggota" :key="a.id" class="hover:bg-slate-50">
                                     <td class="p-2 text-center font-bold">{{ idx + 1 }}</td>
                                     <td class="p-2 font-bold text-slate-900">
-                                        {{ a.nama_lahir || a.nama_lengkap }}
-                                        <div v-if="a.status_panggilan && a.status_panggilan !== 'Awam'" class="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                                            <i class="fa-solid fa-cross text-[8px]"></i>
-                                            <span>{{ a.status_panggilan }} ({{ a.nama_ordo_kongregasi || 'Biarawan' }})</span>
+                                        <div class="flex items-center gap-2.5">
+                                            <img
+                                                :src="a.foto ? (a.foto.startsWith('http') ? a.foto : '/' + String(a.foto).replace(/^\/+/, '')) : getDefaultAvatar(a.jenis_kelamin, a.usia || a.tanggal_lahir)"
+                                                :alt="a.nama_lahir || a.nama_lengkap"
+                                                class="w-7 h-7 rounded-full object-cover border border-slate-200 shadow-2xs shrink-0"
+                                                @error="(e) => { e.target.src = getDefaultAvatar(a.jenis_kelamin, a.usia || a.tanggal_lahir); }"
+                                            />
+                                            <div>
+                                                <div>{{ a.nama_lahir || a.nama_lengkap }}</div>
+                                                <div v-if="a.status_panggilan && a.status_panggilan !== 'Awam'" class="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                                    <i class="fa-solid fa-cross text-[8px]"></i>
+                                                    <span>{{ a.status_panggilan }} ({{ a.nama_ordo_kongregasi || 'Biarawan' }})</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="p-2 text-slate-600">{{ a.nama_baptis || '-' }}</td>

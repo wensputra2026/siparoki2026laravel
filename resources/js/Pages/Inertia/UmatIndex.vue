@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { getDefaultAvatar } from '@/utils/avatar';
 
 const props = defineProps({
     umats: {
@@ -132,9 +133,12 @@ const formatPaginationLabel = (label) => {
                         >
                             <td class="px-5 py-4 font-bold text-slate-900">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-bold text-[11px] shrink-0">
-                                        {{ umat.nama_lengkap.charAt(0).toUpperCase() }}
-                                    </div>
+                                    <img
+                                        :src="umat.foto ? (umat.foto.startsWith('http') ? umat.foto : '/' + String(umat.foto).replace(/^\/+/, '')) : getDefaultAvatar(umat.jenis_kelamin, umat.usia || umat.tanggal_lahir)"
+                                        :alt="umat.nama_lengkap"
+                                        class="w-7 h-7 rounded-lg object-cover border border-slate-200 shadow-2xs shrink-0"
+                                        @error="(e) => { e.target.src = getDefaultAvatar(umat.jenis_kelamin, umat.usia || umat.tanggal_lahir); }"
+                                    />
                                     <span class="group-hover:text-amber-600 transition">{{ umat.nama_lengkap }}</span>
                                 </div>
                             </td>

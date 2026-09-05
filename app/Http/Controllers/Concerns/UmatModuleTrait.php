@@ -566,7 +566,7 @@ trait UmatModuleTrait
 
         $this->clearFastAccessCache();
 
-        return redirect("/{$firstSegment}/umat")->with('success', 'Data Umat baru berhasil disimpan.');
+        return redirect("/{$firstSegment}/umat")->with('success', 'Data Anggota Keluarga / Umat baru berhasil disimpan.');
     }
 
 
@@ -593,7 +593,7 @@ trait UmatModuleTrait
 
         $this->clearFastAccessCache();
 
-        return redirect("/{$firstSegment}/umat")->with('success', 'Data Umat berhasil diperbarui.');
+        return redirect("/{$firstSegment}/umat")->with('success', 'Data Anggota Keluarga / Umat berhasil diperbarui.');
     }
 
     public function umatOptions(\Illuminate\Http\Request $request)

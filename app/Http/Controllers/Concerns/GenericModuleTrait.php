@@ -377,6 +377,32 @@ trait GenericModuleTrait
                 if (in_array($slug, ['keuskupan', 'paroki'], true) && method_exists($item, 'getLogoUrlAttribute')) {
                     $item->append('logo_url');
                 }
+                // Pastikan KK memiliki data foto, jenis_kelamin, tanggal_lahir, dan usia kepala keluarga untuk avatar default
+                if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+                    $kepala = \App\Models\Umat::where('kk_id', $item->id)
+                        ->where(function ($q) use ($item) {
+                            $q->where('hubungan_keluarga', 'Kepala Keluarga')
+                              ->orWhere('nik', $item->nik_pemilik);
+                        })->first() ?? \App\Models\Umat::where('kk_id', $item->id)->first();
+                    if ($kepala) {
+                        if (empty($item->foto)) {
+                            $item->foto = $kepala->foto;
+                        }
+                        if (empty($item->jenis_kelamin)) {
+                            $item->jenis_kelamin = $kepala->jenis_kelamin ?: 'Laki-Laki';
+                        }
+                        if (empty($item->tanggal_lahir)) {
+                            $item->tanggal_lahir = $kepala->tanggal_lahir;
+                        }
+                        if (!isset($item->usia)) {
+                            $item->usia = $kepala->usia;
+                        }
+                    } else {
+                        if (empty($item->jenis_kelamin)) {
+                            $item->jenis_kelamin = 'Laki-Laki';
+                        }
+                    }
+                }
                 if (in_array($slug, ['kategori-konten', 'kategori_konten'], true)) {
                     $catId = $pkVal;
                     $catName = $item->nama_kategori ?? $item->kategori ?? '';
@@ -1030,7 +1056,10 @@ trait GenericModuleTrait
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
-            return redirect("/{$firstSegment}/kk-katolik")->with('success', 'Data Kartu Keluarga (KK) Katolik berhasil ditambahkan.');
+            return redirect("/{$firstSegment}/kk-katolik")->with('success', 'Data Kartu Keluarga (KK) dan Anggota Keluarga berhasil ditambahkan.');
+        }
+        if (in_array($slug, ['umat', 'data-umat', 'jiwa'], true)) {
+            return back()->with('success', 'Data Anggota Keluarga / Umat berhasil ditambahkan.');
         }
 
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil ditambahkan.');
@@ -1295,7 +1324,10 @@ trait GenericModuleTrait
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
-            return redirect("/{$firstSegment}/kk-katolik")->with('success', 'Data Kartu Keluarga (KK) Katolik berhasil diperbarui.');
+            return redirect("/{$firstSegment}/kk-katolik")->with('success', 'Data Kartu Keluarga (KK) dan Anggota Keluarga berhasil diperbarui.');
+        }
+        if (in_array($slug, ['umat', 'data-umat', 'jiwa'], true)) {
+            return back()->with('success', 'Data Anggota Keluarga / Umat berhasil diperbarui.');
         }
 
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil diperbarui.');

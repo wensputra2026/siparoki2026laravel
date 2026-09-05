@@ -632,6 +632,9 @@
                     </div>
                 </div>
 
+                <!-- 1.5. WIDGET KALENDER LITURGI (imankatolik.or.id) -->
+                @include('partials.kalender-liturgi-widget')
+
                 <!-- 2. WIDGET PENCARIAN -->
                 <div style="background: #ffffff; padding: 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border-top: 4px solid var(--primary-orange, #ff9800);">
                     <h4 style="color: var(--primary-teal, #00897b); font-weight: 700; font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">

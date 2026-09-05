@@ -269,6 +269,9 @@ const submitForm = () => {
         : `/${props.prefix}/umat/store`;
 
     router.post(targetUrl, form.value, {
+        onSuccess: () => {
+            triggerToast(props.isEdit ? 'Data Anggota Keluarga / Umat berhasil diperbarui!' : 'Data Anggota Keluarga / Umat baru berhasil ditambahkan!', 'success');
+        },
         onFinish: () => {
             isSubmitting.value = false;
         },

@@ -14,7 +14,7 @@ foreach (['routes-v7.php', 'config.php'] as $cacheFile) {
 // Clear compiled blade views once per deploy so changes appear instantly
 $viewsPath = dirname(__DIR__) . '/storage/framework/views';
 $deployMarker = $viewsPath . '/.deploy_marker';
-$currentMarker = 'v_deploy_20260905_1048';
+$currentMarker = 'v_deploy_20260905_1230';
 if (!file_exists($deployMarker) || @file_get_contents($deployMarker) !== $currentMarker) {
     if (is_dir($viewsPath)) {
         foreach (glob($viewsPath . '/*.php') as $vf) {
