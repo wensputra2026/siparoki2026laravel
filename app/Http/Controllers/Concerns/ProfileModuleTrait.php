@@ -167,8 +167,22 @@ trait ProfileModuleTrait
             $file = $request->file('banner');
             $ext = $file->getClientOriginalExtension() ?: 'webp';
             $filename = 'banner_' . time() . '_' . Str::random(8) . '.' . $ext;
+            if (!file_exists(public_path('uploads/banner'))) {
+                @mkdir(public_path('uploads/banner'), 0775, true);
+            }
             $file->move(public_path('uploads/banner'), $filename);
             $cleanData['banner'] = '/uploads/banner/' . $filename;
+
+            // Pastikan fallback statis juga tersinkronisasi
+            try {
+                @copy(public_path('uploads/banner/' . $filename), public_path('assets/uploads/profil/banner_1786529079.JPG'));
+                @copy(public_path('uploads/banner/' . $filename), public_path('uploads/profil/banner_1786529079.JPG'));
+            } catch (\Throwable $e) {}
+
+            // Invalidate global view cache
+            try {
+                \Illuminate\Support\Facades\Cache::increment('global_view_data_version');
+            } catch (\Throwable $e) {}
         }
 
         if ($request->hasFile('foto_gereja')) {

@@ -100,8 +100,32 @@ const isChildRelationOrCriticalMessage = (msg, type) => {
     );
 };
 
+let lastToastKey = '';
+let lastToastType = '';
+let lastToastTime = 0;
+
 const triggerToast = (msg, type = 'success', options = {}) => {
     if (!msg) return;
+
+    // Proteksi Anti-Duplicate: Cegah alert yang sama dipicu berulang kali dalam waktu singkat
+    const now = Date.now();
+    const currentKey = `${type}:${String(msg).trim()}`;
+    
+    // 1. Jika pesan & jenis alert sama persis dipicu dalam < 2.5 detik, abaikan
+    if (lastToastKey === currentKey && (now - lastToastTime) < 2500) {
+        return;
+    }
+
+    // 2. Jika tipe sama (misal sama-sama 'success') berturut-turut dipicu dalam < 1.5 detik
+    // (misal kombinasi flash redirect backend + event onSuccess frontend), abaikan yang kedua
+    if (type === 'success' && lastToastType === 'success' && (now - lastToastTime) < 1500) {
+        return;
+    }
+
+    lastToastKey = currentKey;
+    lastToastType = type;
+    lastToastTime = now;
+
     toastMessage.value = msg;
     toastType.value = type;
     showToast.value = true;
@@ -333,21 +357,6 @@ const init = (page) => {
     if (_initialized) return;
     _initialized = true;
 
-    // 1. Router event listener: langsung menangkap respon Inertia beserta flash message
-    router.on('success', (event) => {
-        const flash = event.detail.page?.props?.flash || usePage().props?.flash;
-        if (flash?.warning) {
-            triggerToast(flash.warning, 'warning');
-        } else if (flash?.error) {
-            triggerToast(flash.error, 'error');
-        } else if (flash?.info) {
-            triggerToast(flash.info, 'info');
-        } else if (flash?.success) {
-            triggerToast(flash.success, 'success');
-        } else if (flash?.status) {
-            triggerToast(flash.status, 'success');
-        }
-    });
 
     router.on('error', (errors) => {
         const firstError = typeof errors === 'object' ? Object.values(errors)[0] : null;

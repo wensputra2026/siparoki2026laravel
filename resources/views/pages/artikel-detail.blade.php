@@ -214,6 +214,10 @@
                         </div>
                     @endif
 
+                    <!-- Share Buttons Standard Siparoki -->
+                    <div style="margin-top: 25px;">
+                        @include('partials.share-buttons', ['title' => ($item->judul ?? '') . ' - ' . ($globalNamaParoki ?? 'SIPAROKI')])
+                    </div>
                 </div>
 
                 <!-- Komentar & Tanggapan Section Konoha Style -->

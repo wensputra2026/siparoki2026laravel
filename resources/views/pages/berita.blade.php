@@ -29,11 +29,14 @@
         if (file_exists(public_path('uploads/berita/' . $base))) {
             return asset('uploads/berita/' . $base);
         }
-        if (str_starts_with($clean, 'storage/') || str_starts_with($clean, 'assets/') || str_starts_with($clean, 'uploads/')) {
+        if (file_exists(public_path($clean))) {
             return asset($clean);
         }
 
-        return asset('assets/uploads/konten/' . $base);
+        if (file_exists(public_path('uploads/galeri/DEWAN-DELEGASI-CMF-INDO-TILES.jpg'))) {
+            return asset('uploads/galeri/DEWAN-DELEGASI-CMF-INDO-TILES.jpg');
+        }
+        return asset('uploads/profil/banner_1786529079.JPG');
     };
 
     $activeCatText = $activeCategory ?? request()->query('category') ?? request()->query('kategori') ?? '';
@@ -173,7 +176,7 @@
                                 <span style="position: absolute; top: 16px; left: 16px; background: var(--primary-orange, #ff9800); color: #ffffff; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 6px 16px; border-radius: 20px; z-index: 2; box-shadow: 0 4px 14px rgba(255,152,0,0.4);">
                                     <i class="fa-solid fa-star me-1"></i> Warta Utama
                                 </span>
-                                <img src="{{ $imageUrl($featuredItem->gambar ?? null) }}" alt="{{ $featuredItem->judul }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+                                <img src="{{ $imageUrl($featuredItem->gambar ?? null) }}" alt="{{ $featuredItem->judul }}" onerror="this.onerror=null; this.src='{{ asset('uploads/profil/banner_1786529079.JPG') }}';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
                             </a>
                         </div>
                         <div class="col-lg-6 col-md-12 p-4 p-lg-5">
@@ -237,7 +240,7 @@
                                     <i class="fas {{ $catIcon }} me-1"></i>
                                     {{ $item->kategori ?? $item->tipe ?? 'Warta' }}
                                 </span>
-                                <img src="{{ $imageUrl($item->gambar ?? null) }}" alt="{{ $item->judul }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.35s ease;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
+                                <img src="{{ $imageUrl($item->gambar ?? null) }}" alt="{{ $item->judul }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('uploads/profil/banner_1786529079.JPG') }}';" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.35s ease;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
                             </a>
 
                             <!-- Card Body -->

@@ -1,8 +1,4 @@
 @php
-    if (request()->is('warta*') || request()->is('berita*') || request()->is('artikel*') || request()->is('pengumuman*') || request()->is('renungan*') || request()->is('kategori*')) {
-        return;
-    }
-
     $currentShareUrl = url()->current();
     $currentShareTitle = $title ?? ($item->judul ?? ($globalNamaParoki ?? 'SIPAROKI'));
     $waText = rawurlencode($currentShareTitle . "\n" . $currentShareUrl);

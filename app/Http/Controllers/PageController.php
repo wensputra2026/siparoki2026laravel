@@ -1003,15 +1003,6 @@ class PageController extends Controller
                 ];
             }
         }
-        if (empty($wilayahStats)) {
-            $wilayahStats = [
-                ['id' => 1, 'nama_wilayah' => 'Wilayah I - St. Yosef', 'kub_count' => 6, 'kk_count' => 160, 'umat_count' => 710],
-                ['id' => 2, 'nama_wilayah' => 'Wilayah II - St. Petrus', 'kub_count' => 5, 'kk_count' => 145, 'umat_count' => 640],
-                ['id' => 3, 'nama_wilayah' => 'Wilayah III - Maria Ratu Damai', 'kub_count' => 7, 'kk_count' => 190, 'umat_count' => 820],
-                ['id' => 4, 'nama_wilayah' => 'Wilayah IV - St. Fransiskus Xaverius', 'kub_count' => 6, 'kk_count' => 155, 'umat_count' => 680],
-                ['id' => 5, 'nama_wilayah' => 'Wilayah V - St. Mikael', 'kub_count' => 5, 'kk_count' => 130, 'umat_count' => 590],
-            ];
-        }
 
         // 2. Pekerjaan & Profesi Umat
         $pekerjaanStats = [
@@ -1063,53 +1054,6 @@ class PageController extends Controller
         $totalImam = count($imamList);
         $totalBiarawan = count($biarawanList);
         $totalPanggilan = $panggilanList->count();
-
-        // Sample representatif jika sensus data panggilan masih kosong di DB
-        if ($totalPanggilan === 0) {
-            $imamList = [
-                [
-                    'id' => 1,
-                    'nama_lengkap' => 'RD. Yohanes Pembaptis Narek',
-                    'kategori' => 'Imam',
-                    'status_panggilan' => 'Imam Diosesan (Praja)',
-                    'nama_ordo_kongregasi' => 'Keuskupan Agung Kupang (Pr)',
-                    'tahap_panggilan' => 'Imam Tahbisan',
-                    'tempat_tugas_biara' => 'Kupang',
-                    'foto' => null,
-                    'nama_kub' => 'KUB St. Yosef I',
-                    'nama_stasi' => 'Pusat Paroki',
-                ],
-            ];
-            $biarawanList = [
-                [
-                    'id' => 2,
-                    'nama_lengkap' => 'Sr. Maria Goreti SSpS',
-                    'kategori' => 'Biarawati',
-                    'status_panggilan' => 'Suster / Biarawati',
-                    'nama_ordo_kongregasi' => 'SSpS (Abdi Roh Kudus)',
-                    'tahap_panggilan' => 'Kaul Kekal',
-                    'tempat_tugas_biara' => 'Komunitas SSpS Soe',
-                    'foto' => null,
-                    'nama_kub' => 'KUB Sta. Maria',
-                    'nama_stasi' => 'Pusat Paroki',
-                ],
-                [
-                    'id' => 3,
-                    'nama_lengkap' => 'Fr. Antonius Bere SVD',
-                    'kategori' => 'Frater',
-                    'status_panggilan' => 'Frater / Calon Imam',
-                    'nama_ordo_kongregasi' => 'SVD (Serikat Sabda Allah)',
-                    'tahap_panggilan' => 'Frater Tean',
-                    'tempat_tugas_biara' => 'Seminari Tinggi Ledalero',
-                    'foto' => null,
-                    'nama_kub' => 'KUB St. Paulus',
-                    'nama_stasi' => 'Pusat Paroki',
-                ],
-            ];
-            $totalImam = count($imamList);
-            $totalBiarawan = count($biarawanList);
-            $totalPanggilan = $totalImam + $totalBiarawan;
-        }
 
         return view('pages.statistik', array_merge($common, compact(
             'totalUmat',

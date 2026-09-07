@@ -624,17 +624,9 @@ const submitForm = () => {
     }
 
     if (props.isEdit && (props.kkItem?.uuid || props.kkItem?.id)) {
-        form.put(`${basePrefix.value}/kk-katolik/${props.kkItem.uuid || props.kkItem.id}`, {
-            onSuccess: () => {
-                triggerToast('Data Kartu Keluarga dan Anggota Keluarga berhasil diperbarui!', 'success');
-            },
-        });
+        form.put(`${basePrefix.value}/kk-katolik/${props.kkItem.uuid || props.kkItem.id}`);
     } else {
-        form.post(`${basePrefix.value}/kk-katolik`, {
-            onSuccess: () => {
-                triggerToast('Data Kartu Keluarga dan Anggota Keluarga baru berhasil disimpan!', 'success');
-            },
-        });
+        form.post(`${basePrefix.value}/kk-katolik`);
     }
 };
 </script>

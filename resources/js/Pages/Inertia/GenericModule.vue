@@ -2235,12 +2235,6 @@ const submitForm = () => {
         onSuccess: () => {
             showFormModal.value = false;
             isSubmitting.value = false;
-            const isKkOrUmat = ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'jiwa'].includes(props.moduleKey);
-            const actionText = modalMode.value === 'edit' ? 'berhasil diperbarui' : 'berhasil disimpan';
-            const labelText = isKkOrUmat 
-                ? (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey) ? 'Data Kartu Keluarga dan Anggota Keluarga' : 'Data Anggota Keluarga / Umat')
-                : (props.title || 'Data');
-            triggerToast(`${labelText} ${actionText}!`, 'success');
         },
         onError: () => {
             isSubmitting.value = false;

@@ -35,6 +35,11 @@
                     $metaImageMime = 'image/jpeg';
                 }
             }
+
+            // Pastikan URL gambar memakai HTTPS jika website diakses via HTTPS / Cloudflare / Reverse Proxy
+            if ($metaImageUrl && (request()->isSecure() || request()->header('x-forwarded-proto') === 'https' || \Illuminate\Support\Str::startsWith(config('app.url'), 'https://'))) {
+                $metaImageUrl = preg_replace('/^http:\/\//i', 'https://', $metaImageUrl);
+            }
         }
     @endphp
     <title>{{ $metaTitle }}</title>
@@ -138,13 +143,26 @@
             }
         }
         if (empty($resolvedHeaderBg)) {
-            $resolvedHeaderBg = asset('assets/uploads/profil/banner_1786529079.JPG');
+            if (file_exists(public_path('uploads/profil/banner_1786529079.JPG'))) {
+                $resolvedHeaderBg = asset('uploads/profil/banner_1786529079.JPG');
+            } elseif (file_exists(public_path('assets/uploads/profil/banner_1786529079.JPG'))) {
+                $resolvedHeaderBg = asset('assets/uploads/profil/banner_1786529079.JPG');
+            } else {
+                $resolvedHeaderBg = asset('assets/uploads/profil/banner_1786529079.JPG');
+            }
+        }
+        $headerBgVersion = time();
+        if (!empty($resolvedHeaderBg)) {
+            $cleanRel = ltrim(parse_url($resolvedHeaderBg, PHP_URL_PATH) ?? '', '/');
+            if (!empty($cleanRel) && file_exists(public_path($cleanRel))) {
+                $headerBgVersion = @filemtime(public_path($cleanRel)) ?: time();
+            }
         }
     @endphp
     @if(!empty($resolvedHeaderBg))
     <style>
         .page-header {
-            background: linear-gradient(135deg, rgba(0, 56, 47, 0.88) 0%, rgba(0, 121, 107, 0.85) 50%, rgba(2, 44, 34, 0.92) 100%), url('{{ $resolvedHeaderBg }}') center/cover no-repeat, linear-gradient(135deg, #004d40 0%, #00796b 50%, #00332c 100%) !important;
+            background: linear-gradient(135deg, rgba(0, 48, 40, 0.75) 0%, rgba(0, 95, 84, 0.70) 50%, rgba(2, 38, 30, 0.80) 100%), url('{{ $resolvedHeaderBg }}?v={{ $headerBgVersion }}') center/cover no-repeat, linear-gradient(135deg, #004d40 0%, #00796b 50%, #00332c 100%) !important;
         }
     </style>
     @endif

@@ -270,7 +270,7 @@ const submitForm = () => {
 
     router.post(targetUrl, form.value, {
         onSuccess: () => {
-            triggerToast(props.isEdit ? 'Data Anggota Keluarga / Umat berhasil diperbarui!' : 'Data Anggota Keluarga / Umat baru berhasil ditambahkan!', 'success');
+            // Flash message dari controller akan otomatis memicu alert secara terpusat
         },
         onFinish: () => {
             isSubmitting.value = false;

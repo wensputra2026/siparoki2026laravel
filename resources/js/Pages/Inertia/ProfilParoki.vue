@@ -28,8 +28,10 @@ const props = defineProps({
 const selectedParokiId = ref(props.paroki?.id_paroki || props.defaultParokiId || '');
 const showEditModal = ref(false);
 const showImageModal = ref(false);
+const showBannerModal = ref(false);
 const isSubmitting = ref(false);
 const logoPreview = ref(props.paroki?.logo || '');
+const bannerPreview = ref(props.paroki?.banner || '');
 
 const isDropdownOpen = ref(false);
 const parokiSearchQuery = ref('');
@@ -191,8 +193,10 @@ const openEditModal = () => {
         longitude: props.paroki?.longitude || '',
         keterangan: props.paroki?.keterangan || '',
         logo: null,
+        banner: null,
     };
     logoPreview.value = props.paroki?.logo || '';
+    bannerPreview.value = props.paroki?.banner || '';
     showEditModal.value = true;
 };
 
@@ -201,6 +205,23 @@ const handleLogoChange = (e) => {
     if (file) {
         form.value.logo = file;
         logoPreview.value = URL.createObjectURL(file);
+    }
+};
+
+const openBannerModal = () => {
+    form.value = {
+        paroki_id: props.paroki?.id_paroki || props.paroki?.id || '',
+        banner: null,
+    };
+    bannerPreview.value = props.paroki?.banner || '';
+    showBannerModal.value = true;
+};
+
+const handleBannerChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        form.value.banner = file;
+        bannerPreview.value = URL.createObjectURL(file);
     }
 };
 
@@ -243,6 +264,7 @@ const saveParoki = () => {
         onSuccess: () => {
             showEditModal.value = false;
             showImageModal.value = false;
+            showBannerModal.value = false;
             isSubmitting.value = false;
         },
         onError: () => {
@@ -344,7 +366,7 @@ const saveParoki = () => {
                             </div>
 
                             <!-- Buttons -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
                                 <Link
                                     href="/setup-paroki"
                                     class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
@@ -353,6 +375,15 @@ const saveParoki = () => {
                                     <i class="fa-solid fa-sliders text-xs"></i>
                                     <span class="truncate">Setup Default</span>
                                 </Link>
+                                <button
+                                    type="button"
+                                    @click="openBannerModal"
+                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+                                    title="Upload Banner Latar Belakang Header Website Publik"
+                                >
+                                    <i class="fa-solid fa-panorama text-xs"></i>
+                                    <span class="truncate">Upload Banner</span>
+                                </button>
                                 <button
                                     type="button"
                                     @click="showImageModal = true"
@@ -1046,6 +1077,85 @@ const saveParoki = () => {
                     <button type="button" @click="saveParoki" :disabled="isSubmitting" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5 disabled:opacity-60 cursor-pointer">
                         <i class="fa-solid fa-check"></i>
                         <span>{{ isSubmitting ? 'Menyimpan...' : 'Simpan Gambar & Sejarah' }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 3: UPLOAD BANNER HEADER -->
+        <div
+            v-if="showBannerModal"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-xs overflow-y-auto"
+        >
+            <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8">
+                <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 px-6 py-4 flex items-center justify-between text-white">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg font-black">
+                            <i class="fa-solid fa-panorama"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black">Upload Banner Header Website Publik</h3>
+                            <p class="text-[11px] text-emerald-100">Ganti latar belakang header halaman Statistik, Jadwal Misa, Kontak, dll.</p>
+                        </div>
+                    </div>
+                    <button @click="showBannerModal = false" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 space-y-5">
+                    <!-- Info Alert -->
+                    <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-start gap-3 text-emerald-950 text-xs">
+                        <i class="fa-solid fa-circle-info text-emerald-600 text-sm mt-0.5 shrink-0"></i>
+                        <div class="leading-relaxed text-[11.5px]">
+                            Foto yang Anda upload di sini akan langsung otomatis menjadi <b>latar belakang header atas</b> di seluruh sub-halaman publik, termasuk halaman <b>Statistik &amp; Demografi Umat</b>.
+                        </div>
+                    </div>
+
+                    <!-- Banner Preview Area -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-bold text-slate-700 uppercase tracking-wide block">Preview Banner Latar Belakang</label>
+                        <div class="w-full h-48 sm:h-56 rounded-2xl border-2 border-dashed border-emerald-300 bg-slate-900 overflow-hidden relative shadow-inner flex items-center justify-center group">
+                            <img
+                                v-if="bannerPreview"
+                                :src="bannerPreview"
+                                class="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                            />
+                            <div v-else class="flex flex-col items-center gap-2 text-slate-400">
+                                <i class="fa-solid fa-mountain-sun text-4xl text-emerald-500/60"></i>
+                                <span class="text-xs font-semibold">Belum ada gambar banner yang dipilih</span>
+                                <span class="text-[10px] text-slate-500">Klik tombol di bawah untuk memilih foto dari komputer/HP</span>
+                            </div>
+
+                            <!-- Header Simulation Overlay (Green gradient on top of preview) -->
+                            <div class="absolute inset-0 bg-gradient-to-r from-emerald-950/75 via-teal-900/60 to-emerald-950/80 pointer-events-none flex flex-col justify-end p-4">
+                                <span class="text-white font-black text-sm drop-shadow-md">Simulasi Tampilan Header</span>
+                                <span class="text-emerald-200/90 text-[10px] drop-shadow-sm">Statistik &amp; Demografi Umat &bull; Transparansi Data Jemaat</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Controls -->
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                        <label class="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm cursor-pointer shrink-0">
+                            <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+                            <span>Pilih Foto Banner (Komputer / HP)</span>
+                            <input type="file" accept="image/*" class="hidden" @change="handleBannerChange" />
+                        </label>
+                        <p class="text-[11px] text-slate-500 text-center sm:text-right">Format: JPG, PNG, atau WebP. Rekomendasi foto lanskap melebar (16:9 / 21:9), maks 5MB.</p>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/75">
+                    <button type="button" @click="showBannerModal = false" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition cursor-pointer">Batal</button>
+                    <button
+                        type="button"
+                        @click="saveParoki"
+                        :disabled="isSubmitting || !form.banner"
+                        class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition flex items-center gap-2 disabled:opacity-60 cursor-pointer"
+                    >
+                        <i class="fa-solid fa-check"></i>
+                        <span>{{ isSubmitting ? 'Mengunggah &amp; Menyimpan...' : 'Simpan Banner Header' }}</span>
                     </button>
                 </div>
             </div>
