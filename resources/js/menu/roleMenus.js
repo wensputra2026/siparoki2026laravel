@@ -112,6 +112,11 @@ export const roleMenus = {
                     href: '/superadmin/arsip-digital',
                 },
                 {
+                    name: 'Download Dokumen',
+                    icon: 'fa-cloud-arrow-down',
+                    href: '/superadmin/download',
+                },
+                {
                     name: 'Rapat & Notulen',
                     icon: 'fa-handshake',
                     href: '/superadmin/rapat',
@@ -346,6 +351,7 @@ export const roleMenus = {
                     ],
                 },
                 { name: 'Arsip Digital Paroki', href: '/paroki/arsip-digital', icon: 'fa-folder-tree' },
+                { name: 'Download Dokumen', href: '/paroki/download', icon: 'fa-cloud-arrow-down' },
                 { name: 'Rapat & Notulen', href: '/paroki/rapat', icon: 'fa-handshake' },
             ],
         },

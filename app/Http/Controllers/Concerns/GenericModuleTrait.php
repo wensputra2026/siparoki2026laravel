@@ -70,6 +70,10 @@ trait GenericModuleTrait
             $this->ensureKubColumns();
         }
 
+        if ($slug === 'download') {
+            $this->ensureDownloadsTableAndData();
+        }
+
         $query = $modelClass::query();
         if ($slug === 'keuskupan') {
             $query->with([
@@ -866,6 +870,9 @@ trait GenericModuleTrait
         if ($slug === 'arsip-digital' || $slug === 'arsip_digital') {
             $data = $this->normalizeArsipDigitalPayload($data, $request);
         }
+        if ($slug === 'download') {
+            $data = $this->normalizeDownloadPayload($data, $request);
+        }
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
         }
@@ -1238,6 +1245,9 @@ trait GenericModuleTrait
         }
         if ($slug === 'arsip-digital' || $slug === 'arsip_digital') {
             $data = $this->normalizeArsipDigitalPayload($data, $request, $item);
+        }
+        if ($slug === 'download') {
+            $data = $this->normalizeDownloadPayload($data, $request, $item);
         }
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
@@ -3542,6 +3552,73 @@ trait GenericModuleTrait
 
         if (!isset($data['paroki_id']) || empty($data['paroki_id'])) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
+        }
+
+        return $data;
+    }
+
+    protected function ensureDownloadsTableAndData(): void
+    {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('downloads')) {
+                return;
+            }
+            if (\Illuminate\Support\Facades\DB::table('downloads')->count() === 0) {
+                if (\Illuminate\Support\Facades\Schema::hasTable('arsip_digital') && \Illuminate\Support\Facades\DB::table('arsip_digital')->count() > 0) {
+                    $arsips = \Illuminate\Support\Facades\DB::table('arsip_digital')->get();
+                    foreach ($arsips as $a) {
+                        \Illuminate\Support\Facades\DB::table('downloads')->updateOrInsert(
+                            ['id' => $a->id],
+                            [
+                                'judul' => $a->judul ?? $a->nama_dokumen ?? 'Dokumen Paroki',
+                                'kategori' => $a->kategori_arsip ?? $a->kategori ?? 'Dokumen Resmi',
+                                'keterangan' => $a->deskripsi ?? null,
+                                'file_path' => $a->file_path ?? null,
+                                'file_name' => $a->file_path ? basename($a->file_path) : null,
+                                'file_type' => $a->file_type ?? 'pdf',
+                                'file_size' => $a->file_size ?? 0,
+                                'download_count' => $a->download_count ?? 0,
+                                'is_active' => 1,
+                                'created_at' => $a->created_at ?? now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('ensureDownloadsTableAndData error: ' . $e->getMessage());
+        }
+    }
+
+    protected function normalizeDownloadPayload(array $data, Request $request, $existingItem = null): array
+    {
+        if (isset($data['nama_file']) && !isset($data['judul'])) {
+            $data['judul'] = $data['nama_file'];
+        }
+        if (isset($data['judul']) && !isset($data['nama_file'])) {
+            $data['file_name'] = basename($data['judul']);
+        }
+        if (isset($data['status'])) {
+            $data['is_active'] = (strcasecmp($data['status'], 'Aktif') === 0 || $data['status'] === '1' || $data['status'] === 1) ? 1 : 0;
+        }
+
+        // Handle file upload for download
+        if ($request->hasFile('file_path') || $request->hasFile('file') || $request->hasFile('lampiran') || $request->hasFile('dokumen')) {
+            $file = $request->file('file_path') ?: ($request->file('file') ?: ($request->file('lampiran') ?: $request->file('dokumen')));
+            $destination = public_path('assets/uploads/downloads');
+            if (!file_exists($destination)) {
+                mkdir($destination, 0755, true);
+            }
+            $origName = $file->getClientOriginalName();
+            $ext = $file->getClientOriginalExtension() ?: 'pdf';
+            $safeFilename = 'doc_' . time() . '_' . Str::random(8) . '.' . $ext;
+            $file->move($destination, $safeFilename);
+
+            $data['file_path'] = 'assets/uploads/downloads/' . $safeFilename;
+            $data['file_name'] = $origName;
+            $data['file_type'] = strtolower($ext);
+            $data['file_size'] = @filesize($destination . '/' . $safeFilename) ?: $file->getSize();
         }
 
         return $data;

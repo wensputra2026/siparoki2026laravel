@@ -1882,8 +1882,9 @@ class InertiaPanelController extends Controller
                 'has_export' => true,
                 'has_pdf' => true,
                 'columns' => [
-                    ['key' => 'nama_file', 'label' => 'Nama File', 'isPrimary' => true],
+                    ['key' => 'nama_file', 'altKey' => 'judul', 'label' => 'Nama File', 'isPrimary' => true],
                     ['key' => 'kategori', 'label' => 'Kategori'],
+                    ['key' => 'status', 'altKey' => 'is_active', 'label' => 'Status'],
                 ],
             ],
             'role' => [
