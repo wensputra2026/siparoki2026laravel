@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\HasIndirectId;
+use App\Models\Concerns\HasUuid;
 
 class KkKatolik extends Model
 {
-    use HasIndirectId;
+    use HasIndirectId, HasUuid;
 
     protected $table = 'kk_katolik';
 
     protected $fillable = [
+        'uuid',
         'no_kk_kw',
         'no_kk_dukcapil',
         'nik_pemilik',
@@ -46,6 +48,61 @@ class KkKatolik extends Model
         'updated_by',
     ];
 
+    protected $appends = [
+        'foto',
+        'jenis_kelamin',
+        'tanggal_lahir',
+        'usia',
+    ];
+
+    public function getFotoAttribute(): ?string
+    {
+        if (!empty($this->attributes['foto'])) {
+            return $this->attributes['foto'];
+        }
+        if ($this->relationLoaded('anggota') && $this->anggota->isNotEmpty()) {
+            $kepala = $this->anggota->firstWhere('hubungan_keluarga', 'Kepala Keluarga') ?? $this->anggota->first();
+            return $kepala?->foto ?? null;
+        }
+        return null;
+    }
+
+    public function getJenisKelaminAttribute(): ?string
+    {
+        if (!empty($this->attributes['jenis_kelamin'])) {
+            return $this->attributes['jenis_kelamin'];
+        }
+        if ($this->relationLoaded('anggota') && $this->anggota->isNotEmpty()) {
+            $kepala = $this->anggota->firstWhere('hubungan_keluarga', 'Kepala Keluarga') ?? $this->anggota->first();
+            return $kepala?->jenis_kelamin ?? 'Laki-Laki';
+        }
+        return 'Laki-Laki';
+    }
+
+    public function getTanggalLahirAttribute(): ?string
+    {
+        if (!empty($this->attributes['tanggal_lahir'])) {
+            return $this->attributes['tanggal_lahir'];
+        }
+        if ($this->relationLoaded('anggota') && $this->anggota->isNotEmpty()) {
+            $kepala = $this->anggota->firstWhere('hubungan_keluarga', 'Kepala Keluarga') ?? $this->anggota->first();
+            return $kepala?->tanggal_lahir ?? null;
+        }
+        return null;
+    }
+
+    public function getUsiaAttribute(): ?int
+    {
+        if (isset($this->attributes['usia'])) {
+            return (int) $this->attributes['usia'];
+        }
+        if ($this->relationLoaded('anggota') && $this->anggota->isNotEmpty()) {
+            $kepala = $this->anggota->firstWhere('hubungan_keluarga', 'Kepala Keluarga') ?? $this->anggota->first();
+            return $kepala?->usia ?? null;
+        }
+        return null;
+    }
+
     protected function casts(): array
     {
         return [
@@ -56,6 +113,25 @@ class KkKatolik extends Model
     protected $hidden = [
         'is_deleted',
     ];
+
+    protected static function booted()
+    {
+        static::saving(function ($kk) {
+            foreach (['nama_lahir_pemilik', 'nama_baptis_pemilik', 'nama_pasangan'] as $field) {
+                if (!empty($kk->{$field})) {
+                    $kk->{$field} = mb_convert_case(mb_strtolower(trim($kk->{$field}), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+                }
+            }
+        });
+
+        static::saved(function ($kk) {
+            try {
+                \App\Services\SakramenSyncService::syncFromKk($kk);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Sakramen sync failed for KK ' . $kk->id . ': ' . $e->getMessage());
+            }
+        });
+    }
 
     public function getMaskedNikAttribute(): ?string
     {

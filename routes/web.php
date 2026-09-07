@@ -20,8 +20,13 @@ Route::prefix('api/wilayah')->group(function () {
     Route::get('/desa/{kecamatanKode}', [\App\Http\Controllers\WilayahDropdownController::class, 'getDesa'])->name('api.wilayah.desa');
 });
 
-// Beranda
-Route::get('/', [PageController::class, 'beranda'])->name('beranda');
+// Beranda (Mendukung GET, HEAD, dan graceful fallback POST agar tidak terjadi 405 Method Not Allowed)
+Route::match(['get', 'post', 'head'], '/', function (\Illuminate\Http\Request $request) {
+    if ($request->isMethod('post')) {
+        return redirect('/');
+    }
+    return app(PageController::class)->beranda($request);
+})->name('beranda');
 
 // Profil Dropdown
 Route::get('/profil', [PageController::class, 'profil'])->name('profil');
@@ -78,11 +83,19 @@ Route::get('/pelayanan', [PageController::class, 'pelayanan'])->name('pelayanan'
 Route::get('/pengajuan-sakramen', [PageController::class, 'sakramen'])->name('pengajuan-sakramen');
 Route::get('/sakramen', [PageController::class, 'sakramen'])->name('sakramen');
 
+// Layanan Publik Mandiri: Cek Data Umat via NIK
+Route::match(['get', 'post'], '/cek-data-umat', [PageController::class, 'cekDataUmat'])->name('cek-data-umat')->middleware('throttle:40,1');
+Route::get('/cek-nik', fn () => redirect()->route('cek-data-umat'));
+Route::get('/cek-umat', fn () => redirect()->route('cek-data-umat'));
+Route::get('/layanan/cek-data', fn () => redirect()->route('cek-data-umat'));
+
+
 // Auth Routes (Login, Register & Lupa Password)
 Route::get('/login', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('login');
 Route::get('/masuk', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('masuk');
 Route::get('/admin/login', fn () => redirect('/login'))->name('admin.login');
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'processLogin'])->name('login.process')->middleware('throttle:10,1');
+Route::get('/captcha/refresh', [\App\Http\Controllers\AuthController::class, 'refreshCaptcha'])->name('captcha.refresh');
 
 Route::get('/register', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('register');
 Route::get('/daftar', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('daftar');
@@ -252,10 +265,9 @@ $rolePrefixes = [
     'pastor' => 'Pastor',
     'wilayah' => 'Admin Wilayah',
     'kapela' => 'Admin Kapela / Stasi',
-    'kub' => 'Ketua KUB',
+    'kub' => 'Admin KUB',
     'bendahara' => 'Bendahara',
     'penulis' => 'Penulis',
-    'umat' => 'Umat',
 ];
 
 $legacyModuleAliases = [
@@ -298,6 +310,10 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::get('/umat/{id}/pisah-kk', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'showPisah'])->name("panel.{$prefix}.umat.pisah");
         Route::post('/umat/{id}/pisah-kk', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'prosesPisah'])->name("panel.{$prefix}.umat.pisah.store");
         Route::get('/umat/{id}/riwayat', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'showRiwayat'])->name("panel.{$prefix}.umat.riwayat");
+        Route::get('/umat/{id}/cetak', [\App\Http\Controllers\InertiaPanelController::class, 'exportUmatPdf'])->name("panel.{$prefix}.umat.cetak");
+        Route::get('/umat/{id}/pdf', [\App\Http\Controllers\InertiaPanelController::class, 'exportUmatPdf'])->name("panel.{$prefix}.umat.pdf");
+        Route::get('/data-umat/{id}/cetak', [\App\Http\Controllers\InertiaPanelController::class, 'exportUmatPdf'])->name("panel.{$prefix}.data-umat.cetak");
+        Route::get('/data-umat/{id}/pdf', [\App\Http\Controllers\InertiaPanelController::class, 'exportUmatPdf'])->name("panel.{$prefix}.data-umat.pdf");
         Route::get('/riwayat-mutasi/tambah', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'showTambah'])->name("panel.{$prefix}.riwayat-mutasi.create");
         Route::post('/riwayat-mutasi/tambah', [\App\Http\Controllers\Admin\Pastoral\MutasiUmatController::class, 'storeTambah'])->name("panel.{$prefix}.riwayat-mutasi.store");
         Route::get('/master-pastor/create', [\App\Http\Controllers\InertiaPanelController::class, 'createPastor'])->name("panel.{$prefix}.master-pastor.create");
@@ -308,15 +324,27 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::get('/pastor/{id}/edit', [\App\Http\Controllers\InertiaPanelController::class, 'editPastor'])->name("panel.{$prefix}.pastor.edit");
         Route::get('/pastor/edit/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'editPastor'])->name("panel.{$prefix}.pastor.edit.alt");
         Route::get('/master-referensi/pastor/edit/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'editPastor'])->name("panel.{$prefix}.master-referensi.pastor.edit");
+        Route::get('/master-referensi/pastor/{id}/edit', [\App\Http\Controllers\InertiaPanelController::class, 'editPastor'])->name("panel.{$prefix}.master-referensi.pastor.edit.id");
         Route::post('/master-pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name("panel.{$prefix}.master-pastor.store");
+        Route::get('/master-pastor/store', fn () => redirect("/{$prefix}/master-pastor/create"));
         Route::post('/pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name("panel.{$prefix}.pastor.store");
+        Route::get('/pastor/store', fn () => redirect("/{$prefix}/pastor/create"));
         Route::post('/master-referensi/pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name("panel.{$prefix}.master-referensi.pastor.store");
-        Route::post('/master-pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-pastor.update");
-        Route::post('/master-pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-pastor.update.alt");
-        Route::post('/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.pastor.update");
-        Route::post('/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.pastor.update.alt");
-        Route::post('/master-referensi/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-referensi.pastor.update");
-        Route::post('/master-referensi/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-referensi.pastor.update.alt");
+        Route::get('/master-referensi/pastor/store', fn () => redirect("/{$prefix}/master-referensi/pastor/create"));
+        Route::match(['post', 'put'], '/master-pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-pastor.update");
+        Route::match(['post', 'put'], '/master-pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-pastor.update.alt");
+        Route::match(['post', 'put'], '/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.pastor.update");
+        Route::match(['post', 'put'], '/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.pastor.update.alt");
+        Route::match(['post', 'put'], '/master-referensi/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-referensi.pastor.update");
+        Route::match(['post', 'put'], '/master-referensi/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name("panel.{$prefix}.master-referensi.pastor.update.alt");
+        Route::get('/master-referensi/pastor/{id}/update', fn ($id) => redirect("/admin/master-referensi/pastor/edit/{$id}"));
+        Route::get('/master-referensi/pastor/update/{id}', fn ($id) => redirect("/admin/master-referensi/pastor/edit/{$id}"));
+        Route::get('/master-pastor/{id}/update', fn ($id) => redirect("/{$prefix}/master-pastor/{$id}/edit"));
+        Route::get('/master-pastor/update/{id}', fn ($id) => redirect("/{$prefix}/master-pastor/{$id}/edit"));
+        Route::get('/pastor/{id}/update', fn ($id) => redirect("/{$prefix}/pastor/{$id}/edit"));
+        Route::get('/pastor/update/{id}', fn ($id) => redirect("/{$prefix}/pastor/{$id}/edit"));
+        Route::get('/umat/{id}/update', fn ($id) => redirect("/{$prefix}/umat/{$id}/edit"));
+        Route::get('/umat/store', fn () => redirect("/{$prefix}/umat/create"));
         if (in_array($prefix, ['superadmin', 'admin', 'paroki'], true)) {
             Route::get('/profil-paroki', [\App\Http\Controllers\InertiaPanelController::class, 'profilParoki'])->name("panel.{$prefix}.profil-paroki");
             Route::post('/profil-paroki/set-default', [\App\Http\Controllers\InertiaPanelController::class, 'setDefaultParoki'])->name("panel.{$prefix}.profil-paroki.set-default");
@@ -414,6 +442,8 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::post('/master-referensi/{type}', [\App\Http\Controllers\MasterReferensiController::class, 'store'])->name("panel.{$prefix}.master-referensi.store");
         Route::put('/master-referensi/{type}/{id}', [\App\Http\Controllers\MasterReferensiController::class, 'update'])->name("panel.{$prefix}.master-referensi.update");
         Route::post('/master-referensi/{type}/{id}', [\App\Http\Controllers\MasterReferensiController::class, 'update'])->name("panel.{$prefix}.master-referensi.update.post");
+        Route::get('/master-referensi/{type}/{id}/update', fn ($type, $id) => redirect("/{$prefix}/master-referensi/{$type}"));
+        Route::get('/master-referensi/{type}/{id}', fn ($type, $id) => redirect("/{$prefix}/master-referensi/{$type}"));
         Route::delete('/master-referensi/{type}/{id}', [\App\Http\Controllers\MasterReferensiController::class, 'destroy'])->name("panel.{$prefix}.master-referensi.destroy");
 
         Route::get('/jadwal-misa/bulan', fn () => redirect("/{$prefix}/jadwal-misa"));
@@ -429,6 +459,7 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::post('/{slug}/import', [\App\Http\Controllers\InertiaPanelController::class, 'importModule'])->name("panel.{$prefix}.module.import");
         Route::post('/user/{id}/reset-password', [\App\Http\Controllers\InertiaPanelController::class, 'resetUserPassword'])->name("panel.{$prefix}.user.reset-password");
         Route::post('/user/{id}/toggle-status', [\App\Http\Controllers\InertiaPanelController::class, 'toggleUserStatus'])->name("panel.{$prefix}.user.toggle-status");
+        Route::post('/user/{id}/impersonate', [\App\Http\Controllers\InertiaPanelController::class, 'impersonateUser'])->name("panel.{$prefix}.user.impersonate");
         Route::get('/{slug}', [\App\Http\Controllers\InertiaPanelController::class, 'module'])->name("panel.{$prefix}.module");
         Route::post('/{slug}', [\App\Http\Controllers\InertiaPanelController::class, 'storeModule'])->name("panel.{$prefix}.module.store");
         Route::put('/{slug}/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updateModule'])->name("panel.{$prefix}.module.update");
@@ -516,19 +547,30 @@ Route::middleware([\App\Http\Middleware\PanelAccess::class])->prefix('admin')->g
     Route::get('/master-referensi/pastor/{id}/edit', [\App\Http\Controllers\InertiaPanelController::class, 'editPastor'])->name('admin.master-referensi.pastor.edit');
     Route::get('/master-referensi/pastor/edit/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'editPastor'])->name('admin.master-referensi.pastor.edit.alt');
     Route::post('/master-pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name('admin.master-pastor.store');
-    Route::post('/master-pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-pastor.update');
-    Route::post('/master-pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-pastor.update.alt');
+    Route::get('/master-pastor/store', fn () => redirect('/admin/master-referensi/pastor/create'));
+    Route::match(['post', 'put'], '/master-pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-pastor.update');
+    Route::match(['post', 'put'], '/master-pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-pastor.update.alt');
+    Route::get('/master-pastor/{id}/update', fn ($id) => redirect("/admin/master-referensi/pastor/edit/{$id}"));
+    Route::get('/master-pastor/update/{id}', fn ($id) => redirect("/admin/master-referensi/pastor/edit/{$id}"));
     Route::post('/master-referensi/pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name('admin.master-referensi.pastor.store');
-    Route::post('/master-referensi/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-referensi.pastor.update');
-    Route::post('/master-referensi/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-referensi.pastor.update.alt');
+    Route::get('/master-referensi/pastor/store', fn () => redirect('/admin/master-referensi/pastor/create'));
+    Route::match(['post', 'put'], '/master-referensi/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-referensi.pastor.update');
+    Route::match(['post', 'put'], '/master-referensi/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.master-referensi.pastor.update.alt');
+    Route::get('/master-referensi/pastor/{id}/update', fn ($id) => redirect("/admin/master-referensi/pastor/edit/{$id}"));
+    Route::get('/master-referensi/pastor/update/{id}', fn ($id) => redirect("/admin/master-referensi/pastor/edit/{$id}"));
     Route::post('/pastor/store', [\App\Http\Controllers\InertiaPanelController::class, 'storePastor'])->name('admin.pastor.store');
-    Route::post('/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.pastor.update');
-    Route::post('/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.pastor.update.alt');
+    Route::get('/pastor/store', fn () => redirect('/admin/master-referensi/pastor/create'));
+    Route::match(['post', 'put'], '/pastor/{id}/update', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.pastor.update');
+    Route::match(['post', 'put'], '/pastor/update/{id}', [\App\Http\Controllers\InertiaPanelController::class, 'updatePastor'])->name('admin.pastor.update.alt');
+    Route::get('/pastor/{id}/update', fn ($id) => redirect("/admin/master-referensi/pastor/edit/{$id}"));
+    Route::get('/pastor/update/{id}', fn ($id) => redirect("/admin/master-referensi/pastor/edit/{$id}"));
     Route::get('/master-referensi/{type}', [MasterReferensiController::class, 'list'])->name('admin.master-referensi.list');
     Route::get('/master-referensi/options/{relTable}', [MasterReferensiController::class, 'options'])->name('admin.master-referensi.options');
     Route::post('/master-referensi/{type}', [MasterReferensiController::class, 'store'])->name('admin.master-referensi.store');
     Route::put('/master-referensi/{type}/{id}', [MasterReferensiController::class, 'update'])->name('admin.master-referensi.update');
     Route::post('/master-referensi/{type}/{id}', [MasterReferensiController::class, 'update'])->name('admin.master-referensi.update.post');
+    Route::get('/master-referensi/{type}/{id}/update', fn ($type, $id) => redirect("/admin/master-referensi/{$type}"));
+    Route::get('/master-referensi/{type}/{id}', fn ($type, $id) => redirect("/admin/master-referensi/{$type}"));
     Route::delete('/master-referensi/{type}/{id}', [MasterReferensiController::class, 'destroy'])->name('admin.master-referensi.destroy');
     Route::get('/jadwal-misa/bulan', fn () => redirect('/admin/jadwal-misa'));
     Route::get('/sakramen/daftar_pembayaran', fn () => redirect('/admin/pengajuan-sakramen'));
@@ -678,4 +720,266 @@ Route::get('/v2/{path?}', function ($path = '') {
     return redirect($target);
 })->where('path', '.*');
 
+// Impersonation & Scope Persistence
+Route::middleware('auth')->group(function () {
+    Route::post('/impersonate/leave', [\App\Http\Controllers\InertiaPanelController::class, 'leaveImpersonation'])->name('impersonate.leave');
+    Route::post('/api/set-active-scope', [\App\Http\Controllers\InertiaPanelController::class, 'setActiveScope'])->name('api.set-active-scope');
+});
 
+// ==========================================
+// WIZARD SETUP PAROKI MULTI-PAROKI
+// ==========================================
+Route::get('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'index'])->name('setup-paroki');
+Route::post('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'save'])->name('setup-paroki.save');
+Route::get('/api/setup/hierarchy', [\App\Http\Controllers\SetupParokiController::class, 'getHierarchy'])->name('setup-paroki.hierarchy');
+
+// ==========================================
+// MAINTENANCE / SYSTEM OPTIMIZE & MIGRATE
+// ==========================================
+Route::get('/clear-cache', function () {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+
+    // Bersihkan karakter encoding rusak (mojibake) dengan PHP str_replace (100% akurat per byte)
+    $replacements = [
+        'ΓÇ£' => '“',
+        'ΓÇ¥' => '”',
+        'ΓÇÖ' => '’',
+        'ΓÇÿ' => '‘',
+        'ΓÇö' => '—',
+        'ΓÇô' => '–',
+        'ΓÇª' => '…',
+        'Çœ'  => '“',
+        'Ç '  => '”',
+        'â€œ' => '“',
+        'â€' => '”',
+        'â€™' => '’',
+        'â€”' => '—',
+        'â€“' => '–',
+        'â€¦' => '…',
+    ];
+
+    $tables = ['kapela', 'paroki', 'wilayah', 'kub', 'konten', 'profil_paroki', 'jadwal_misa', 'kegiatan', 'arsip_digital', 'rapat'];
+    $fixedCount = 0;
+    foreach ($tables as $table) {
+        if (!\Illuminate\Support\Facades\Schema::hasTable($table)) {
+            continue;
+        }
+        $cols = \Illuminate\Support\Facades\Schema::getColumnListing($table);
+        $textCols = [];
+        foreach ($cols as $c) {
+            try {
+                $type = \Illuminate\Support\Facades\Schema::getColumnType($table, $c);
+                if (in_array($type, ['string', 'text', 'mediumtext', 'longtext'], true)) {
+                    $textCols[] = $c;
+                }
+            } catch (\Throwable $e) {
+                if (in_array($c, ['sejarah', 'keterangan', 'deskripsi', 'visi', 'misi', 'lokasi', 'alamat', 'nama_kapela', 'judul', 'isi'], true)) {
+                    $textCols[] = $c;
+                }
+            }
+        }
+
+        if (empty($textCols)) {
+            continue;
+        }
+
+        $pk = 'id';
+        if (!in_array('id', $cols, true)) {
+            $pk = $cols[0];
+        }
+
+        $records = \Illuminate\Support\Facades\DB::table($table)->get();
+        foreach ($records as $rec) {
+            $rowUpdates = [];
+            foreach ($textCols as $tc) {
+                $orig = $rec->$tc ?? null;
+                if (is_string($orig) && $orig !== '') {
+                    $cleaned = str_replace(array_keys($replacements), array_values($replacements), $orig);
+                    if ($cleaned !== $orig) {
+                        $rowUpdates[$tc] = $cleaned;
+                    }
+                }
+            }
+            if (!empty($rowUpdates)) {
+                \Illuminate\Support\Facades\DB::table($table)->where($pk, $rec->$pk)->update($rowUpdates);
+                $fixedCount++;
+            }
+        }
+    }
+
+    // Pastikan role Ketua KUB terbarui menjadi Admin KUB
+    if (\Illuminate\Support\Facades\Schema::hasTable('roles')) {
+        \Illuminate\Support\Facades\DB::table('roles')
+            ->where('nama_role', 'Ketua KUB')
+            ->orWhere('slug', 'ketua_kub')
+            ->update([
+                'nama_role' => 'Admin KUB',
+                'slug' => 'admin_kub',
+                'deskripsi' => 'Admin & Pengurus Komunitas Umat Basis (KUB)'
+            ]);
+    }
+
+    // Sinkronisasi data Kuasi Paroki sesuai data Excel Umat
+    if (\Illuminate\Support\Facades\Schema::hasTable('kuasi_paroki')) {
+        // 1. Haukoto
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')
+            ->where('id', 1)
+            ->orWhere('NamaKuasiParoki', 'LIKE', '%Haukoto%')
+            ->update([
+                'NamaKuasiParoki' => 'Kuasi Paroki Haukoto',
+                'nama_kuasi' => 'Kuasi Paroki Haukoto',
+                'paroki_id' => 392,
+                'dekenat_id' => 13,
+                'keuskupan_id' => 5,
+                'StatusAktif' => 'N',
+                'status' => 'Nonaktif',
+            ]);
+
+        // 2. Lasiana
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')
+            ->where('id', 2)
+            ->orWhere('NamaKuasiParoki', 'LIKE', '%Lasiana%')
+            ->update([
+                'NamaKuasiParoki' => 'Kuasi Paroki Lasiana',
+                'nama_kuasi' => 'Kuasi Paroki Lasiana',
+                'paroki_id' => 384,
+                'dekenat_id' => 13,
+                'keuskupan_id' => 5,
+                'StatusAktif' => 'Y',
+                'status' => 'Aktif',
+            ]);
+
+        // 3. Manulai
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')
+            ->where('id', 3)
+            ->orWhere('NamaKuasiParoki', 'LIKE', '%Manulai%')
+            ->update([
+                'NamaKuasiParoki' => 'Kuasi Paroki Manulai',
+                'nama_kuasi' => 'Kuasi Paroki Manulai',
+                'paroki_id' => 385,
+                'dekenat_id' => 13,
+                'keuskupan_id' => 5,
+                'StatusAktif' => 'Y',
+                'status' => 'Aktif',
+            ]);
+
+        // 4. Semau
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')
+            ->where('id', 4)
+            ->orWhere('NamaKuasiParoki', 'LIKE', '%Semau%')
+            ->update([
+                'NamaKuasiParoki' => 'Kuasi Paroki Semau',
+                'nama_kuasi' => 'Kuasi Paroki Semau',
+                'paroki_id' => 392,
+                'dekenat_id' => 13,
+                'keuskupan_id' => 5,
+                'pelindung' => 'Santo Petrus Bau-Kuanag',
+                'Keterangan' => 'Santo Petrus Bau-Kuanag',
+                'StatusAktif' => 'Y',
+                'status' => 'Aktif',
+            ]);
+
+        // 5. Oesapa
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')
+            ->where('id', 5)
+            ->orWhere('NamaKuasiParoki', 'LIKE', '%Oesapa%')
+            ->update([
+                'NamaKuasiParoki' => 'Kuasi Paroki Oesapa',
+                'nama_kuasi' => 'Kuasi Paroki Oesapa',
+                'paroki_id' => 397,
+                'dekenat_id' => 13,
+                'keuskupan_id' => 5,
+                'pelindung' => 'Santo Petrus dan Paulus',
+                'Keterangan' => 'Santo Petrus dan Paulus',
+                'StatusAktif' => 'Y',
+                'status' => 'Aktif',
+            ]);
+
+        // 6. Siolais
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')
+            ->where('id', 6)
+            ->orWhere('NamaKuasiParoki', 'LIKE', '%Siolais%')
+            ->update([
+                'NamaKuasiParoki' => 'Sta Maria Reinha Rosari Siolais',
+                'nama_kuasi' => 'Sta Maria Reinha Rosari Siolais',
+                'paroki_id' => 382,
+                'dekenat_id' => 14,
+                'keuskupan_id' => 5,
+                'StatusAktif' => 'Y',
+                'status' => 'Aktif',
+            ]);
+
+        // 7. Nunohonis
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')
+            ->where('id', 7)
+            ->orWhere('NamaKuasiParoki', 'LIKE', '%Nunohonis%')
+            ->update([
+                'NamaKuasiParoki' => 'Santo Vinsensius (Nunohonis)',
+                'nama_kuasi' => 'Santo Vinsensius (Nunohonis)',
+                'paroki_id' => 382,
+                'dekenat_id' => 14,
+                'keuskupan_id' => 5,
+                'StatusAktif' => 'N',
+                'status' => 'Nonaktif',
+            ]);
+
+        // 8. Tahon
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')
+            ->where('id', 14)
+            ->orWhere('NamaKuasiParoki', 'LIKE', '%Tahon%')
+            ->update([
+                'NamaKuasiParoki' => 'Tahon – Santa Maria Fatima',
+                'nama_kuasi' => 'Tahon – Santa Maria Fatima',
+                'paroki_id' => 409,
+                'dekenat_id' => 4,
+                'keuskupan_id' => 14,
+                'StatusAktif' => 'Y',
+                'status' => 'Aktif',
+            ]);
+
+        // 9. Orphans without parent paroki in excel
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')
+            ->whereIn('id', [13, 15, 16, 19, 20, 21])
+            ->update([
+                'paroki_id' => null,
+                'dekenat_id' => null,
+                'keuskupan_id' => null,
+            ]);
+
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')->where('id', 15)->update([
+            'NamaKuasiParoki' => 'Hati Kudus Yesus - Daruba',
+            'nama_kuasi' => 'Hati Kudus Yesus - Daruba',
+        ]);
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')->where('id', 16)->update([
+            'NamaKuasiParoki' => 'Maronggela - Kurubhoko',
+            'nama_kuasi' => 'Maronggela - Kurubhoko',
+        ]);
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')->where('id', 13)->update([
+            'NamaKuasiParoki' => 'Onekore - Puurere',
+            'nama_kuasi' => 'Onekore - Puurere',
+        ]);
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')->where('id', 19)->update([
+            'NamaKuasiParoki' => 'St. Fransiskus Xaverius - Kairatu/Meliau',
+            'nama_kuasi' => 'St. Fransiskus Xaverius - Kairatu/Meliau',
+        ]);
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')->where('id', 20)->update([
+            'NamaKuasiParoki' => 'St. Petrus - Seira',
+            'nama_kuasi' => 'St. Petrus - Seira',
+        ]);
+        \Illuminate\Support\Facades\DB::table('kuasi_paroki')->where('id', 21)->update([
+            'NamaKuasiParoki' => 'St. Petrus dan Paulus - Benu',
+            'nama_kuasi' => 'St. Petrus dan Paulus - Benu',
+        ]);
+    }
+
+    $kuasiSummary = \Illuminate\Support\Facades\DB::table('kuasi_paroki')
+        ->select('id', 'NamaKuasiParoki', 'paroki_id', 'dekenat_id', 'keuskupan_id', 'StatusAktif', 'status')
+        ->get();
+
+    return response()->json([
+        'status' => 'success',
+        'message' => "Cache cleared, migrations executed, roles updated, kuasi paroki synced, and {$fixedCount} records with mojibake cleaned successfully.",
+        'kuasi_summary' => $kuasiSummary
+    ]);
+});

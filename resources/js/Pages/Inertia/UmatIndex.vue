@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { getDefaultAvatar } from '@/utils/avatar';
 
 const props = defineProps({
     umats: {
@@ -132,9 +133,12 @@ const formatPaginationLabel = (label) => {
                         >
                             <td class="px-5 py-4 font-bold text-slate-900">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-bold text-[11px] shrink-0">
-                                        {{ umat.nama_lengkap.charAt(0).toUpperCase() }}
-                                    </div>
+                                    <img
+                                        :src="umat.foto ? (umat.foto.startsWith('http') ? umat.foto : '/' + String(umat.foto).replace(/^\/+/, '')) : getDefaultAvatar(umat.jenis_kelamin, umat.usia || umat.tanggal_lahir)"
+                                        :alt="umat.nama_lengkap"
+                                        class="w-7 h-7 rounded-lg object-cover border border-slate-200 shadow-2xs shrink-0"
+                                        @error="(e) => { e.target.src = getDefaultAvatar(umat.jenis_kelamin, umat.usia || umat.tanggal_lahir); }"
+                                    />
                                     <span class="group-hover:text-amber-600 transition">{{ umat.nama_lengkap }}</span>
                                 </div>
                             </td>
@@ -157,11 +161,16 @@ const formatPaginationLabel = (label) => {
                                     {{ umat.status_umat || 'Aktif' }}
                                 </span>
                             </td>
-                            <td class="px-5 py-4 text-right">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-semibold text-[11px]">
-                                    <i class="fa-solid fa-check text-[10px] text-emerald-600"></i>
-                                    <span>Terdata</span>
-                                </span>
+                            <td class="px-5 py-4 text-right whitespace-nowrap">
+                                <a
+                                    :href="`${basePrefix}/umat/${umat.uuid || umat.id}/cetak`"
+                                    target="_blank"
+                                    title="Cetak Profil / Biodata Jiwa Umat (PDF / Print)"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold text-[11px] transition shadow-2xs cursor-pointer"
+                                >
+                                    <i class="fa-solid fa-print text-[11px]"></i>
+                                    <span>Cetak Profil</span>
+                                </a>
                             </td>
                         </tr>
 

@@ -37,7 +37,7 @@ trait SecurityModuleTrait
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',
@@ -61,11 +61,11 @@ trait SecurityModuleTrait
             'block_untrusted_ip' => ($settingsRaw['block_untrusted_ip'] ?? '0') === '1',
 
             // CAPTCHA Configuration
-            'captcha_enabled' => ($settingsRaw['captcha_enabled'] ?? '0') === '1',
+            'captcha_enabled' => ($settingsRaw['captcha_enabled'] ?? '1') === '1',
             'captcha_provider' => $settingsRaw['captcha_provider'] ?? 'Simple CAPTCHA',
             'captcha_site_key' => $settingsRaw['captcha_site_key'] ?? '',
             'captcha_secret_key' => $settingsRaw['captcha_secret_key'] ?? '',
-            'captcha_show_after_failed_attempts' => (int) ($settingsRaw['captcha_show_after_failed_attempts'] ?? 3),
+            'captcha_show_after_failed_attempts' => (int) ($settingsRaw['captcha_show_after_failed_attempts'] ?? 0),
             'captcha_required_backend_login' => ($settingsRaw['captcha_required_backend_login'] ?? '1') === '1',
             'captcha_required_umat_login' => ($settingsRaw['captcha_required_umat_login'] ?? '0') === '1',
             'captcha_required_forgot_password' => ($settingsRaw['captcha_required_forgot_password'] ?? '1') === '1',

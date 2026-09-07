@@ -98,7 +98,7 @@
                 </div>
             @endif
 
-            @if ($errors->any())
+            @if (isset($errors) && $errors->any())
                 <div class="mb-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-xs text-red-600 dark:text-red-400 space-y-1">
                     @foreach ($errors->all() as $error)
                         <p>{{ $error }}</p>
@@ -139,6 +139,54 @@
                     </div>
                 </div>
 
+                <!-- Simple Math CAPTCHA -->
+                <div class="rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-[#263a55] p-3.5 space-y-2.5 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-halved text-amber-500 text-xs"></i>
+                            <span>Verifikasi Keamanan (CAPTCHA)</span>
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <span class="text-[10px] text-slate-400 font-medium">Anti-Bot</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <!-- Tantangan Penjumlahan -->
+                        <div class="flex-1 flex items-center justify-center py-2 px-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono font-bold text-sm tracking-wider select-none shadow-inner">
+                            <span id="captcha-question">{{ !empty($captchaQuestion) ? $captchaQuestion : '5 + 4 = ?' }}</span>
+                        </div>
+
+                        <!-- Tombol Reload Tantangan -->
+                        <button
+                            type="button"
+                            id="btn-refresh-captcha"
+                            class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 hover:border-amber-400 transition flex items-center justify-center shadow-xs cursor-pointer shrink-0"
+                            title="Ganti Soal CAPTCHA"
+                        >
+                            <i class="fa-solid fa-arrows-rotate text-xs" id="icon-refresh-captcha"></i>
+                        </button>
+                    </div>
+
+                    <!-- Input Jawaban -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-calculator text-xs"></i>
+                        </div>
+                        <input
+                            type="number"
+                            name="captcha"
+                            id="input_captcha"
+                            required
+                            autocomplete="off"
+                            placeholder="Ketik hasil perhitungan angka..."
+                            class="w-full pl-10 pr-3.5 py-2 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+                        >
+                    </div>
+                    @error('captcha')
+                        <p class="text-xs text-red-500 font-medium mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <div class="flex items-center">
                     <input type="checkbox" name="remember" id="remember" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
                     <label for="remember" class="ml-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none">Ingat saya</label>
@@ -170,13 +218,39 @@
                             }
                         });
                     }
+
+                    // Refresh CAPTCHA
+                    const btnRefreshCaptcha = document.getElementById('btn-refresh-captcha');
+                    const captchaQuestion = document.getElementById('captcha-question');
+                    const iconRefreshCaptcha = document.getElementById('icon-refresh-captcha');
+
+                    if (btnRefreshCaptcha && captchaQuestion) {
+                        btnRefreshCaptcha.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            if (iconRefreshCaptcha) iconRefreshCaptcha.classList.add('fa-spin');
+                            fetch('/captcha/refresh')
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data && data.question) {
+                                        captchaQuestion.textContent = data.question;
+                                    }
+                                })
+                                .catch(err => console.error('Gagal reload captcha:', err))
+                                .finally(() => {
+                                    if (iconRefreshCaptcha) {
+                                        setTimeout(() => iconRefreshCaptcha.classList.remove('fa-spin'), 350);
+                                    }
+                                });
+                        });
+                    }
                 });
             </script>
 
+
             <!-- Bottom Icon Actions -->
-            <div class="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-center gap-4">
-                <a href="{{ route('register') }}" title="Belum Punya Akun? Daftar Sekarang" aria-label="Daftar Akun Baru" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200">
-                    <i class="fa-solid fa-user-plus text-sm"></i>
+            <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-center gap-4">
+                <a href="{{ route('cek-data-umat') }}" title="Cek Data Umat Mandiri via NIK" aria-label="Cek Data Umat" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-teal-600 hover:border-teal-300 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-950/30 shadow-sm transition-all duration-200">
+                    <i class="fa-solid fa-id-card text-sm"></i>
                 </a>
                 <a href="{{ route('beranda') }}" title="Kembali ke Beranda" aria-label="Kembali ke Beranda" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 hover:border-amber-300 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow-sm transition-all duration-200">
                     <i class="fa-solid fa-house text-sm"></i>

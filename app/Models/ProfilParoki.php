@@ -20,6 +20,7 @@ class ProfilParoki extends Model
         'email',
         'website',
         'pastor_paroki',
+        'foto_pastor',
         'pastor_email',
         'logo',
     ];

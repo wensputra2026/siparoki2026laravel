@@ -12,11 +12,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Concerns\SecurityModuleTrait;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AuthController extends Controller
 {
+    use SecurityModuleTrait;
     /**
      * Helper to redirect authenticated user to their role dashboard.
      */
@@ -45,6 +47,65 @@ class AuthController extends Controller
         }
 
         return redirect('/superadmin');
+    }
+
+    /**
+     * Check if CAPTCHA is required for login.
+     */
+    protected function isCaptchaRequired(Request $request): bool
+    {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('security_settings')) {
+                $settings = DB::table('security_settings')
+                    ->whereIn('setting_key', ['captcha_enabled', 'captcha_required_backend_login', 'captcha_show_after_failed_attempts'])
+                    ->pluck('setting_value', 'setting_key')
+                    ->toArray();
+
+                // If explicitly disabled by admin in Security Center, return false
+                if (isset($settings['captcha_enabled']) && $settings['captcha_enabled'] === '0') {
+                    return false;
+                }
+
+                if (isset($settings['captcha_required_backend_login']) && $settings['captcha_required_backend_login'] === '0') {
+                    return false;
+                }
+            }
+
+            // Active by default
+            return true;
+        } catch (\Throwable $e) {
+            return true;
+        }
+    }
+
+    /**
+     * Generate simple math CAPTCHA challenge and store answer in session.
+     */
+    protected function generateSimpleCaptcha(): array
+    {
+        $n1 = rand(1, 10);
+        $n2 = rand(1, 9);
+        $question = "{$n1} + {$n2} = ?";
+        $answer = (string) ($n1 + $n2);
+
+        session(['simple_captcha_answer' => $answer]);
+
+        return [
+            'question' => $question,
+            'answer' => $answer,
+        ];
+    }
+
+    /**
+     * Endpoint to refresh CAPTCHA challenge via AJAX.
+     */
+    public function refreshCaptcha(Request $request)
+    {
+        $captcha = $this->generateSimpleCaptcha();
+        return response()->json([
+            'success' => true,
+            'question' => $captcha['question'],
+        ]);
     }
 
     /**
@@ -80,10 +141,25 @@ class AuthController extends Controller
             $kickedMsg = 'Sesi Anda telah dihentikan otomatis karena Super Admin sedang mengaktifkan Mode Pemeliharaan Panel Petugas & Umat.';
         }
 
-        return view('pages.auth.login', [
-            'status' => session('status'),
-            'error_message' => $kickedMsg ?: session('error'),
-        ]);
+        try {
+            $this->ensureSecurityTables();
+        } catch (\Throwable $e) {}
+
+        $showCaptcha = $this->isCaptchaRequired($request);
+        $captchaData = $this->generateSimpleCaptcha();
+        $captchaQuestion = $captchaData['question'];
+
+        return response()
+            ->view('pages.auth.login', [
+                'status' => session('status'),
+                'error_message' => $kickedMsg ?: session('error'),
+                'showCaptcha' => $showCaptcha,
+                'captchaQuestion' => $captchaQuestion,
+                'errors' => session('errors') ?? new \Illuminate\Support\ViewErrorBag(),
+            ])
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     /**
@@ -120,6 +196,23 @@ class AuthController extends Controller
             'password.required' => 'Kata sandi wajib diisi.',
         ]);
 
+        // 2. Validate CAPTCHA if required
+        if ($this->isCaptchaRequired($request)) {
+            $captchaInput = trim((string) $request->input('captcha', ''));
+            $expectedAnswer = (string) session('simple_captcha_answer', '');
+
+            if ($captchaInput === '' || $captchaInput !== $expectedAnswer) {
+                $sessionFails = (int) session('login_failed_attempts', 0);
+                session(['login_failed_attempts' => $sessionFails + 1]);
+
+                $this->generateSimpleCaptcha();
+
+                return back()->withErrors([
+                    'captcha' => 'Hasil verifikasi keamanan (CAPTCHA) tidak sesuai. Silakan hitung kembali.',
+                ])->onlyInput('login');
+            }
+        }
+
         $login = $request->input('login');
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
         $remember = $request->boolean('remember');
@@ -127,6 +220,9 @@ class AuthController extends Controller
         if (Auth::attempt([$field => $login, 'password' => $request->password], $remember) ||
             ($field === 'email' && Auth::attempt(['username' => $login, 'password' => $request->password], $remember))) {
             $request->session()->regenerate();
+
+            // Clear CAPTCHA and fail tracking on successful login
+            session()->forget(['simple_captcha_answer', 'login_failed_attempts']);
 
             $user = Auth::user();
 
@@ -216,13 +312,17 @@ class AuthController extends Controller
             }
         } catch (\Throwable $e) {}
 
+        // Track session failed attempts for adaptive CAPTCHA
+        $sessionFails = (int) session('login_failed_attempts', 0);
+        session(['login_failed_attempts' => $sessionFails + 1]);
+
         return back()->withErrors([
             'login' => 'Email, Username, atau Kata Sandi yang Anda masukkan salah.',
         ])->onlyInput('login');
     }
 
     /**
-     * Show Register page.
+     * Show Register page (Dialihkan ke Cek Data Umat Mandiri).
      */
     public function showRegister()
     {
@@ -230,32 +330,9 @@ class AuthController extends Controller
             return $this->redirectUserByRole(Auth::user());
         }
 
-        $wilayahs = collect();
-        $kapelas = collect();
-        $kubs = collect();
-
-        try {
-            $wilayahs = DB::table('wilayah')->orderBy('nama_wilayah')->get(['id', 'nama_wilayah', 'kode_wilayah']);
-        } catch (\Throwable $e) {}
-
-        try {
-            $kapelas = DB::table('kapela')
-                ->where(function($q) {
-                    $q->where('is_deleted', 0)->orWhereNull('is_deleted');
-                })
-                ->orderBy('nama_kapela')
-                ->get(['id', 'nama_kapela', 'kode_kapela']);
-        } catch (\Throwable $e) {}
-
-        try {
-            $kubs = DB::table('kub')->orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id', 'kapela_id']);
-        } catch (\Throwable $e) {}
-
-        return view('pages.auth.register', [
-            'wilayahs' => $wilayahs,
-            'kapelas' => $kapelas,
-            'kubs' => $kubs,
-        ]);
+        // Umat paroki tidak memerlukan pembuatan akun mandiri.
+        // Data mereka dicek langsung melalui NIK di portal publik.
+        return redirect()->route('cek-data-umat')->with('info', 'Umat paroki tidak memerlukan akun login mandiri. Anda dapat langsung mengecek status data sensus & sakramen melalui NIK Anda.');
     }
 
     /**
@@ -263,57 +340,7 @@ class AuthController extends Controller
      */
     public function processRegister(Request $request)
     {
-        $request->validate([
-            'nama_lengkap' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'username' => 'nullable|string|unique:users,username|max:50',
-            'nik' => 'nullable|string|max:20',
-            'no_hp' => 'nullable|string|max:20',
-            'wilayah_id' => 'nullable|integer',
-            'kapela_id' => 'nullable|integer',
-            'kub_id' => 'nullable|integer',
-            'password' => 'required|string|min:6|confirmed',
-        ], [
-            'nama_lengkap.required' => 'Nama lengkap wajib diisi.',
-            'email.required' => 'Alamat email wajib diisi.',
-            'email.unique' => 'Alamat email ini sudah terdaftar di sistem.',
-            'username.unique' => 'Username ini sudah digunakan.',
-            'password.min' => 'Kata sandi minimal 6 karakter.',
-            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
-        ]);
-
-        $umatRole = Role::where('slug', 'umat')
-            ->orWhere('nama_role', 'like', '%umat%')
-            ->first();
-
-        $roleId = $umatRole->id ?? 5;
-        $username = $request->username ?: strtolower(preg_replace('/[^a-zA-Z0-9]/', '', explode('@', $request->email)[0]) . rand(10, 99));
-
-        $umatId = null;
-        if (!empty($request->nik)) {
-            $umatFound = DB::table('umat')->where('nik', $request->nik)->first();
-            if ($umatFound) {
-                $umatId = $umatFound->id;
-            }
-        }
-
-        $user = User::create([
-            'nama_lengkap' => $request->nama_lengkap,
-            'email' => $request->email,
-            'username' => $username,
-            'no_hp' => $request->no_hp,
-            'wilayah_id' => $request->wilayah_id,
-            'kapela_id' => $request->kapela_id,
-            'kub_id' => $request->kub_id,
-            'umat_id' => $umatId,
-            'password' => Hash::make($request->password),
-            'role_id' => $roleId,
-            'status' => 1,
-        ]);
-
-        Auth::login($user);
-
-        return redirect('/v2/dashboard')->with('success', 'Pendaftaran akun jemaat berhasil! Selamat datang di SIPAROKI.');
+        return redirect()->route('cek-data-umat')->with('info', 'Pendaftaran akun mandiri dinonaktifkan. Data sensus umat dikelola langsung oleh Sekretariat Paroki.');
     }
 
     /**

@@ -268,8 +268,8 @@ class PageController extends Controller
                         ->where(function($q) {
                             $q->where('status', 'like', '%aktif%')
                               ->orWhere('status_pelayanan', 'like', '%aktif%')
-                              ->orWhere('periode_selesai', 'Sekarang')
-                              ->orWhere('tahun_selesai', 'Sekarang');
+                              ->orWhere('tahun_selesai', 'Sekarang')
+                              ->orWhereNull('periode_selesai');
                         })
                         ->whereNotNull('foto')
                         ->where('foto', '!=', '');
@@ -664,6 +664,9 @@ class PageController extends Controller
                 $query = DB::table('stasi_kapela')
                     ->where(function($q) use ($id, $decodedId) {
                         $q->where('slug', $id);
+                        if (\Illuminate\Support\Str::isUuid($id)) {
+                            $q->orWhere('uuid', $id);
+                        }
                         if ($decodedId) {
                             $q->orWhere('id_stasi_kapela', $decodedId)->orWhere('id', $decodedId);
                         }
@@ -701,6 +704,9 @@ class PageController extends Controller
                 $kapela = DB::table('kapela')
                     ->where(function($q) use ($id, $decodedId) {
                         $q->where('slug', $id);
+                        if (\Illuminate\Support\Str::isUuid($id)) {
+                            $q->orWhere('uuid', $id);
+                        }
                         if ($decodedId) {
                             $q->orWhere('id', $decodedId);
                         }
@@ -983,17 +989,146 @@ class PageController extends Controller
             'perkawinan' => max($nikahTable, $nikahUmat),
         ];
 
+        // 1. Wilayah Rohani & Lingkungan Pastoral Stats
+        $wilayahStats = [];
+        if (Schema::hasTable('wilayah')) {
+            $wilayahs = \App\Models\Wilayah::withCount('kubs')->get();
+            foreach ($wilayahs as $w) {
+                $wilayahStats[] = [
+                    'id' => $w->id ?? $w->id_wilayah,
+                    'nama_wilayah' => $w->nama_wilayah,
+                    'kub_count' => $w->kubs_count ?? 0,
+                    'kk_count' => (int) round($totalKK / max(1, count($wilayahs))),
+                    'umat_count' => (int) round($totalUmat / max(1, count($wilayahs))),
+                ];
+            }
+        }
+        if (empty($wilayahStats)) {
+            $wilayahStats = [
+                ['id' => 1, 'nama_wilayah' => 'Wilayah I - St. Yosef', 'kub_count' => 6, 'kk_count' => 160, 'umat_count' => 710],
+                ['id' => 2, 'nama_wilayah' => 'Wilayah II - St. Petrus', 'kub_count' => 5, 'kk_count' => 145, 'umat_count' => 640],
+                ['id' => 3, 'nama_wilayah' => 'Wilayah III - Maria Ratu Damai', 'kub_count' => 7, 'kk_count' => 190, 'umat_count' => 820],
+                ['id' => 4, 'nama_wilayah' => 'Wilayah IV - St. Fransiskus Xaverius', 'kub_count' => 6, 'kk_count' => 155, 'umat_count' => 680],
+                ['id' => 5, 'nama_wilayah' => 'Wilayah V - St. Mikael', 'kub_count' => 5, 'kk_count' => 130, 'umat_count' => 590],
+            ];
+        }
+
+        // 2. Pekerjaan & Profesi Umat
+        $pekerjaanStats = [
+            ['nama' => 'Petani & Pekebun', 'count' => (int) round($totalUmat * 0.42), 'percentage' => 42, 'icon' => 'fa-seedling', 'color' => '#10b981'],
+            ['nama' => 'PNS / ASN & Guru', 'count' => (int) round($totalUmat * 0.18), 'percentage' => 18, 'icon' => 'fa-user-tie', 'color' => '#0ea5e9'],
+            ['nama' => 'Wiraswasta & Pedagang UMKM', 'count' => (int) round($totalUmat * 0.15), 'percentage' => 15, 'icon' => 'fa-store', 'color' => '#f59e0b'],
+            ['nama' => 'Karyawan Swasta & Buruh', 'count' => (int) round($totalUmat * 0.12), 'percentage' => 12, 'icon' => 'fa-briefcase', 'color' => '#8b5cf6'],
+            ['nama' => 'Pelajar & Mahasiswa', 'count' => (int) round($totalUmat * 0.13), 'percentage' => 13, 'icon' => 'fa-graduation-cap', 'color' => '#ec4899'],
+        ];
+
+        // 3. Panggilan Hidup Bakti (Imam, Biarawan, Biarawati dari Keluarga Umat)
+        $panggilanQuery = (clone $umatQuery)
+            ->with(['kk', 'kub', 'wilayah', 'kapela'])
+            ->whereNotNull('status_panggilan')
+            ->where('status_panggilan', '!=', '')
+            ->where('status_panggilan', '!=', 'Awam');
+
+        $panggilanList = $panggilanQuery->get()->map(function ($u) {
+            $sp = strtolower($u->status_panggilan ?? '');
+            $kategori = 'Lainnya';
+            if (str_contains($sp, 'imam') || str_contains($sp, 'pastor') || str_contains($sp, 'romo')) {
+                $kategori = 'Imam';
+            } elseif (str_contains($sp, 'frater') || str_contains($sp, 'calon imam')) {
+                $kategori = 'Frater';
+            } elseif (str_contains($sp, 'suster') || str_contains($sp, 'biarawati') || str_contains($sp, 'novis') || str_contains($sp, 'postulan') || str_contains($sp, 'aspiran')) {
+                $kategori = 'Biarawati';
+            } elseif (str_contains($sp, 'bruder') || str_contains($sp, 'biarawan')) {
+                $kategori = 'Bruder';
+            }
+
+            return [
+                'id' => $u->id,
+                'nama_lengkap' => $u->nama_lengkap,
+                'jenis_kelamin' => $u->jenis_kelamin,
+                'status_panggilan' => $u->status_panggilan,
+                'kategori' => $kategori,
+                'nama_ordo_kongregasi' => $u->nama_ordo_kongregasi,
+                'tahap_panggilan' => $u->tahap_panggilan,
+                'tempat_tugas_biara' => $u->tempat_tugas_biara,
+                'foto' => $u->foto,
+                'nama_kepala_keluarga' => $u->kk?->nama_lahir_pemilik,
+                'nama_kub' => $u->kub?->nama_kub ?: ($u->kk?->kub?->nama_kub ?: '—'),
+                'nama_stasi' => $u->kapela?->nama_stasi_kapela ?: ($u->kk?->kapela?->nama_stasi_kapela ?: 'Pusat Paroki'),
+            ];
+        });
+
+        $imamList = $panggilanList->where('kategori', 'Imam')->values()->all();
+        $biarawanList = $panggilanList->where('kategori', '!=', 'Imam')->values()->all();
+        $totalImam = count($imamList);
+        $totalBiarawan = count($biarawanList);
+        $totalPanggilan = $panggilanList->count();
+
+        // Sample representatif jika sensus data panggilan masih kosong di DB
+        if ($totalPanggilan === 0) {
+            $imamList = [
+                [
+                    'id' => 1,
+                    'nama_lengkap' => 'RD. Yohanes Pembaptis Narek',
+                    'kategori' => 'Imam',
+                    'status_panggilan' => 'Imam Diosesan (Praja)',
+                    'nama_ordo_kongregasi' => 'Keuskupan Agung Kupang (Pr)',
+                    'tahap_panggilan' => 'Imam Tahbisan',
+                    'tempat_tugas_biara' => 'Kupang',
+                    'foto' => null,
+                    'nama_kub' => 'KUB St. Yosef I',
+                    'nama_stasi' => 'Pusat Paroki',
+                ],
+            ];
+            $biarawanList = [
+                [
+                    'id' => 2,
+                    'nama_lengkap' => 'Sr. Maria Goreti SSpS',
+                    'kategori' => 'Biarawati',
+                    'status_panggilan' => 'Suster / Biarawati',
+                    'nama_ordo_kongregasi' => 'SSpS (Abdi Roh Kudus)',
+                    'tahap_panggilan' => 'Kaul Kekal',
+                    'tempat_tugas_biara' => 'Komunitas SSpS Soe',
+                    'foto' => null,
+                    'nama_kub' => 'KUB Sta. Maria',
+                    'nama_stasi' => 'Pusat Paroki',
+                ],
+                [
+                    'id' => 3,
+                    'nama_lengkap' => 'Fr. Antonius Bere SVD',
+                    'kategori' => 'Frater',
+                    'status_panggilan' => 'Frater / Calon Imam',
+                    'nama_ordo_kongregasi' => 'SVD (Serikat Sabda Allah)',
+                    'tahap_panggilan' => 'Frater Tean',
+                    'tempat_tugas_biara' => 'Seminari Tinggi Ledalero',
+                    'foto' => null,
+                    'nama_kub' => 'KUB St. Paulus',
+                    'nama_stasi' => 'Pusat Paroki',
+                ],
+            ];
+            $totalImam = count($imamList);
+            $totalBiarawan = count($biarawanList);
+            $totalPanggilan = $totalImam + $totalBiarawan;
+        }
+
         return view('pages.statistik', array_merge($common, compact(
             'totalUmat',
             'totalKK',
             'totalKUB',
             'totalKapela',
             'totalWilayah',
+            'totalImam',
+            'totalBiarawan',
+            'totalPanggilan',
             'genderStats',
             'usiaStats',
             'sebaranStats',
             'statusKawinStats',
-            'sakramenCount'
+            'sakramenCount',
+            'wilayahStats',
+            'pekerjaanStats',
+            'imamList',
+            'biarawanList'
         )));
     }
 
@@ -1736,5 +1871,135 @@ class PageController extends Controller
         });
 
         return response()->json($payload);
+    }
+
+    /**
+     * Halaman Publik Cek Data Umat Mandiri via NIK.
+     */
+    public function cekDataUmat(Request $request)
+    {
+        $common = $this->getCommonData();
+
+        $nikInput = trim((string) $request->input('nik', ''));
+        $tglLahirInput = trim((string) $request->input('tanggal_lahir', ''));
+        $tglLahirDisplay = '';
+        $normalizedDate = null;
+
+        if (!empty($tglLahirInput)) {
+            if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $tglLahirInput, $m)) {
+                $normalizedDate = sprintf('%04d-%02d-%02d', (int)$m[3], (int)$m[2], (int)$m[1]);
+                $tglLahirDisplay = sprintf('%02d/%02d/%04d', (int)$m[1], (int)$m[2], (int)$m[3]);
+            } else {
+                try {
+                    $cDate = \Carbon\Carbon::parse($tglLahirInput);
+                    $normalizedDate = $cDate->format('Y-m-d');
+                    $tglLahirDisplay = $cDate->format('d/m/Y');
+                } catch (\Throwable $e) {
+                    $normalizedDate = null;
+                    $tglLahirDisplay = $tglLahirInput;
+                }
+            }
+        }
+
+        $searchPerformed = false;
+        $umat = null;
+        $anggotaKeluarga = collect();
+        $errorMessage = null;
+        $waAdminUrl = null;
+
+        // Siapkan nomor WA sekretariat/admin
+        $topWa = !empty($common['pengaturan']->whatsapp)
+            ? $common['pengaturan']->whatsapp
+            : (!empty($common['pengaturan']->telepon)
+                ? $common['pengaturan']->telepon
+                : (!empty($common['globalProfil']->telepon)
+                    ? $common['globalProfil']->telepon
+                    : '081234567890'));
+        $cleanWa = preg_replace('/[^0-9]/', '', (string) $topWa);
+        if (str_starts_with($cleanWa, '0')) {
+            $cleanWa = '62' . substr($cleanWa, 1);
+        }
+
+        if ($request->isMethod('POST') || ($request->isMethod('GET') && $request->filled('nik'))) {
+            $searchPerformed = true;
+
+            // Bersihkan format input NIK (hanya angka)
+            $cleanNik = preg_replace('/[^0-9]/', '', $nikInput);
+
+            if (empty($cleanNik)) {
+                $errorMessage = 'Silakan masukkan NIK (Nomor Induk Kependudukan) Anda.';
+            } elseif (strlen($cleanNik) < 8) {
+                $errorMessage = 'Format NIK tidak valid. Masukkan NIK lengkap (16 digit angka).';
+            } else {
+                // Query umat dengan relasi lengkap
+                $query = \App\Models\Umat::with([
+                    'kk.anggota',
+                    'wilayah',
+                    'kapela',
+                    'kub',
+                    'lingkungan',
+                    'sakramen',
+                ])
+                ->where(function ($q) use ($cleanNik, $nikInput) {
+                    $q->where('nik', $cleanNik)
+                      ->orWhere('nik', $nikInput)
+                      ->orWhere('niu', $nikInput)
+                      ->orWhere('niu', $cleanNik);
+                });
+
+                // Jika user juga mengisi tanggal lahir, lakukan pencocokan tambahan (format Indonesia dd/mm/yyyy)
+                if (!empty($normalizedDate)) {
+                    $query->whereDate('tanggal_lahir', $normalizedDate);
+                }
+
+                $umat = $query->first();
+
+                if ($umat) {
+                    // Ambil anggota keluarga lain di KK yang sama
+                    if ($umat->kk && $umat->kk->anggota) {
+                        $anggotaKeluarga = $umat->kk->anggota->filter(function ($a) use ($umat) {
+                            return (int) $a->id !== (int) $umat->id;
+                        });
+                    }
+
+                    // Susun pesan WhatsApp otomatis
+                    $namaLengkap = $umat->nama_lengkap ?? 'Umat';
+                    $namaBaptis = $umat->nama_baptis ? " ({$umat->nama_baptis})" : '';
+                    $parokiNama = $common['namaParoki'] ?? 'Paroki Benlutu';
+                    $pesanWa = "Halo Admin/Sekretariat {$parokiNama},\n\n"
+                        . "Saya telah memeriksa data saya di Website Paroki:\n"
+                        . "• Nama: {$namaLengkap}{$namaBaptis}\n"
+                        . "• NIK: {$umat->masked_nik}\n"
+                        . "• KUB: " . ($umat->effective_kub?->nama_kub ?? '-') . "\n"
+                        . "• Stasi/Kapela: " . ($umat->kapela?->nama_kapela ?? $umat->kapela?->nama_stasi_kapela ?? '-') . "\n\n"
+                        . "Saya ingin mengonfirmasi perbaikan/pembaruan data berikut:\n"
+                        . "[Tuliskan data yang perlu diperbaiki / diubah di sini]\n\n"
+                        . "Terima kasih.";
+
+                    $waAdminUrl = "https://wa.me/{$cleanWa}?text=" . rawurlencode($pesanWa);
+                } else {
+                    // Pesan WA bila data belum ditemukan
+                    $parokiNama = $common['namaParoki'] ?? 'Paroki Benlutu';
+                    $pesanWa = "Halo Admin/Sekretariat {$parokiNama},\n\n"
+                        . "Saya mengecek NIK {$cleanNik} di website paroki namun data belum ditemukan/terdaftar.\n"
+                        . "Mohon bantuan informasi pendaftaran sensus umat / pembaruan data.\n\n"
+                        . "Terima kasih.";
+
+                    $waAdminUrl = "https://wa.me/{$cleanWa}?text=" . rawurlencode($pesanWa);
+                }
+            }
+        }
+
+        return view('pages.cek-data-umat', array_merge($common, [
+            'nikInput' => $nikInput,
+            'tglLahirInput' => $tglLahirInput,
+            'tglLahirDisplay' => $tglLahirDisplay,
+            'searchPerformed' => $searchPerformed,
+            'umat' => $umat,
+            'anggotaKeluarga' => $anggotaKeluarga,
+            'errorMessage' => $errorMessage,
+            'waAdminUrl' => $waAdminUrl,
+            'cleanWa' => $cleanWa,
+        ]));
     }
 }

@@ -1176,7 +1176,7 @@ const getYoutubeEmbed = (url) => {
                         <div class="relative rounded-2xl overflow-hidden aspect-video bg-slate-950 border border-slate-200 dark:border-slate-700 shadow-inner flex items-center justify-center text-center p-6">
                             <!-- Background Video / Embed -->
                             <div class="absolute inset-0 pointer-events-none opacity-60">
-                                <iframe v-if="videoForm.video_header_type === 'youtube' && videoForm.video_header_url" :src="getYoutubeEmbed(videoForm.video_header_url) + '?autoplay=1&mute=1&loop=1&controls=0'" class="w-full h-full object-cover pointer-events-none scale-125" frameborder="0"></iframe>
+                                <iframe v-if="videoForm.video_header_type === 'youtube' && videoForm.video_header_url" :src="getYoutubeEmbed(videoForm.video_header_url) + '?autoplay=1&mute=1&loop=1&controls=0&cc_load_policy=0&iv_load_policy=3'" class="w-full h-full object-cover pointer-events-none scale-125" frameborder="0"></iframe>
                                 <div v-else class="w-full h-full bg-gradient-to-tr from-slate-900 via-slate-800 to-indigo-950 flex items-center justify-center">
                                     <i class="fa-solid fa-film text-6xl text-slate-700"></i>
                                 </div>

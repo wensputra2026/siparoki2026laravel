@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\HasIndirectId;
+use App\Models\Concerns\HasUuid;
 
 class MasterPastor extends Model
 {
-    use HasIndirectId;
+    use HasIndirectId, HasUuid;
 
     protected $table = 'master_pastor';
     protected $fillable = [
+        'uuid',
         'nama_pastor',
         'nama_singkat',
         'gelar_depan',

@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\HasIndirectId;
+use App\Models\Concerns\HasUuid;
 
 class Umat extends Model
 {
-    use HasIndirectId;
+    use HasIndirectId, HasUuid;
 
     protected $table = 'umat';
 
     protected $fillable = [
+        'uuid',
         'niu',
         'kk_id',
         'no_urut_anggota',
@@ -84,7 +86,12 @@ class Umat extends Model
     protected function casts(): array
     {
         return [
-            'tanggal_lahir' => 'date',
+            'tanggal_lahir' => 'date:Y-m-d',
+            'tgl_baptis' => 'date:Y-m-d',
+            'tgl_komuni_1' => 'date:Y-m-d',
+            'tgl_krisma' => 'date:Y-m-d',
+            'tgl_perkawinan' => 'date:Y-m-d',
+            'tgl_tahbisan_kaul' => 'date:Y-m-d',
             'status_aktif' => 'boolean',
             'is_deleted' => 'boolean',
         ];
@@ -97,6 +104,25 @@ class Umat extends Model
     protected $appends = [
         'usia',
     ];
+
+    protected static function booted()
+    {
+        static::saving(function ($umat) {
+            foreach (['nama_lengkap', 'nama_baptis', 'nama_lahir', 'nama_pemilik_kk', 'nama_marga', 'nama_pasangan', 'wali_baptis', 'pastor_baptis'] as $field) {
+                if (!empty($umat->{$field})) {
+                    $umat->{$field} = mb_convert_case(mb_strtolower(trim($umat->{$field}), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+                }
+            }
+        });
+
+        static::saved(function ($umat) {
+            try {
+                \App\Services\SakramenSyncService::syncFromUmat($umat);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Sakramen sync failed for umat ' . $umat->id . ': ' . $e->getMessage());
+            }
+        });
+    }
 
     public function getUsiaAttribute(): ?int
     {

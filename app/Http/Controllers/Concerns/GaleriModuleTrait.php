@@ -37,7 +37,7 @@ trait GaleriModuleTrait
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',
@@ -62,16 +62,15 @@ trait GaleriModuleTrait
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $decodedId = decode_id($id) ?: $id;
         $item = \App\Models\Galeri::query()
-            ->where('id', $decodedId)
+            ->whereUuidOrId($id)
             ->orWhere('slug', $id)
             ->firstOrFail();
 

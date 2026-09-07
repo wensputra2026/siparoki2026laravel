@@ -37,7 +37,7 @@ trait BackupModuleTrait
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',

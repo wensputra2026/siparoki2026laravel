@@ -19,6 +19,7 @@ class Paroki extends Model
         'status_paroki',
         'tanggal_berdiri',
         'nama_pastor_paroki_aktif',
+        'foto_pastor',
         'nama_pastor_rekan',
         'alamat',
         'provinsi_id',
@@ -47,6 +48,30 @@ class Paroki extends Model
             'tanggal_berdiri' => 'date',
             'is_deleted' => 'boolean',
         ];
+    }
+
+    protected static function booted()
+    {
+        $clearCache = function () {
+            try {
+                \Illuminate\Support\Facades\Cache::forget('global_app_profile');
+                \Illuminate\Support\Facades\Cache::forget('global_app_settings');
+                \Illuminate\Support\Facades\Cache::forget('global_pengaturan_aplikasi_first');
+                \Illuminate\Support\Facades\Cache::forget('active_paroki_middleware_v3');
+                \Illuminate\Support\Facades\Cache::forget('active_paroki_model_v3');
+                \Illuminate\Support\Facades\Cache::forget('ref_paroki_list_v2');
+                \Illuminate\Support\Facades\Cache::forget('ref_paroki_with_relations');
+                \Illuminate\Support\Facades\Cache::increment('global_view_data_version');
+                for ($v = 1; $v <= 20; $v++) {
+                    \Illuminate\Support\Facades\Cache::forget("frontend.common_data.{$v}");
+                }
+            } catch (\Throwable $e) {
+                // Ignore cache clearing errors
+            }
+        };
+
+        static::saved($clearCache);
+        static::deleted($clearCache);
     }
 
     public function keuskupan()

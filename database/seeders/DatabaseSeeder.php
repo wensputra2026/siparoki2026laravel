@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Seed Roles
+        // 1. Seed Roles (Level Umat ditiadakan, umat dilayani via cek NIK mandiri)
         $roles = [
             ['id' => 1, 'nama_role' => 'Super Admin', 'slug' => 'super_admin', 'deskripsi' => 'Administrator Utama Sistem Informasi Paroki (Akses Penuh)', 'level_akses' => 1],
             ['id' => 2, 'nama_role' => 'Admin Paroki', 'slug' => 'admin_paroki', 'deskripsi' => 'Sekretariat & Tata Usaha Kantor Paroki', 'level_akses' => 2],
@@ -26,16 +26,19 @@ class DatabaseSeeder extends Seeder
             ['id' => 4, 'nama_role' => 'Admin Wilayah', 'slug' => 'admin_wilayah', 'deskripsi' => 'Koordinator & Pengurus Wilayah Rohani', 'level_akses' => 4],
             ['id' => 5, 'nama_role' => 'Admin Kapela / Stasi', 'slug' => 'admin_kapela', 'deskripsi' => 'Pengurus Stasi / Kapela Lingkungan', 'level_akses' => 5],
             ['id' => 6, 'nama_role' => 'Ketua KUB', 'slug' => 'ketua_kub', 'deskripsi' => 'Ketua & Pengurus Komunitas Umat Basis (KUB)', 'level_akses' => 6],
-            ['id' => 7, 'nama_role' => 'Umat', 'slug' => 'umat', 'deskripsi' => 'Warga Jemaat / Umat Paroki', 'level_akses' => 7],
             ['id' => 8, 'nama_role' => 'Penulis', 'slug' => 'penulis', 'deskripsi' => 'Kontributor Berita, Renungan, Warta & Artikel Paroki', 'level_akses' => 8],
             ['id' => 9, 'nama_role' => 'Bendahara', 'slug' => 'bendahara', 'deskripsi' => 'Pengelola Keuangan, Iuran & Kolekte Paroki', 'level_akses' => 9],
         ];
 
         if (Schema::hasTable('roles')) {
-            // Bersihkan duplikat role superadmin 62 jika ada
+            // Bersihkan duplikat role superadmin 62 dan role umat jika ada
             if (DB::table('roles')->where('id', 62)->exists()) {
                 DB::table('users')->where('role_id', 62)->update(['role_id' => 1]);
                 DB::table('roles')->where('id', 62)->delete();
+            }
+            if (DB::table('roles')->where('id', 7)->orWhere('slug', 'umat')->exists()) {
+                DB::table('users')->where('role_id', 7)->delete();
+                DB::table('roles')->where('id', 7)->orWhere('slug', 'umat')->delete();
             }
 
             foreach ($roles as $r) {
@@ -73,18 +76,29 @@ class DatabaseSeeder extends Seeder
         }
 
         // 3. Seed Default Profil Paroki & Pengaturan Aplikasi
-        $benlutuParoki = null;
+        $targetParokiId = env('PAROKI_ID', null);
+        $targetNamaParoki = env('NAMA_PAROKI', null);
+
+        $selectedParoki = null;
         if (Schema::hasTable('paroki')) {
-            $benlutuParoki = DB::table('paroki')->where('id_paroki', 380)->first()
-                ?? DB::table('paroki')->where('nama_paroki', 'like', '%Benlutu%')->first();
+            if ($targetParokiId) {
+                $selectedParoki = DB::table('paroki')->where('id_paroki', $targetParokiId)->first();
+            } elseif ($targetNamaParoki) {
+                $selectedParoki = DB::table('paroki')->where('nama_paroki', 'like', "%{$targetNamaParoki}%")->first();
+            }
+            if (!$selectedParoki) {
+                $selectedParoki = DB::table('paroki')->where('id_paroki', 380)->first()
+                    ?? DB::table('paroki')->where('nama_paroki', 'like', '%Benlutu%')->first()
+                    ?? DB::table('paroki')->first();
+            }
         }
 
-        $namaParoki = $benlutuParoki?->nama_paroki ?? 'St. Vinsensius a Paulo - Benlutu';
-        $parokiId = $benlutuParoki?->id_paroki ?? 380;
-        $keuskupanId = $benlutuParoki?->keuskupan_id ?? 5;
-        $dekenatId = $benlutuParoki?->dekenat_id ?? 14;
-        $alamatParoki = $benlutuParoki?->alamat ?: 'Benlutu, Kec. Batu Putih, Kab. Timor Tengah Selatan, NTT';
-        $pastorParoki = $benlutuParoki?->nama_pastor_paroki_aktif ?? 'RD. Herman Hilers Penga';
+        $namaParoki = $selectedParoki?->nama_paroki ?? 'St. Vinsensius a Paulo - Benlutu';
+        $parokiId = $selectedParoki?->id_paroki ?? 380;
+        $keuskupanId = $selectedParoki?->keuskupan_id ?? 5;
+        $dekenatId = $selectedParoki?->dekenat_id ?? 14;
+        $alamatParoki = $selectedParoki?->alamat ?: 'Benlutu, Kec. Batu Putih, Kab. Timor Tengah Selatan, NTT';
+        $pastorParoki = $selectedParoki?->nama_pastor_paroki_aktif ?? 'RD. Herman Hilers Penga';
 
         if (Schema::hasTable('profil_paroki')) {
             $parokiData = [
@@ -200,28 +214,61 @@ class DatabaseSeeder extends Seeder
             $this->call(JenisIuranSeeder::class);
         }
 
-        // 9. Pastikan tabel teritori pastoral spesifik paroki (wilayah, kapela, kub) serta data jemaat lokal bersih saat instal awal
-        $localTables = [
-            'wilayah',
-            'lingkungan',
-            'kapela',
-            'stasi_kapela',
-            'master_kapela',
-            'kub',
-            'umat',
-            'kk_katolik',
-            'riwayat_mutasi_umat',
-            'sakramen',
-            'sakramen_umat',
-        ];
-        foreach ($localTables as $lt) {
-            if (Schema::hasTable($lt)) {
-                try {
-                    DB::table($lt)->truncate();
-                } catch (\Throwable $e) {
+        // 9. Pastikan tabel teritori pastoral spesifik paroki (wilayah, kapela, kub) serta data jemaat lokal bersih HANYA saat instal awal (jika belum ada data umat)
+        $hasExistingUmat = Schema::hasTable('umat') && DB::table('umat')->count() > 0;
+        if (!$hasExistingUmat) {
+            $localTables = [
+                'umat',
+                'kk_katolik',
+                'kub',
+                'kubs',
+                'wilayah',
+                'wilayahs',
+                'kapela',
+                'stasi_kapela',
+                'master_kapela',
+                'lingkungan',
+                'riwayat_mutasi_umat',
+                'sakramen_umat',
+                'sakramen_verifikasi',
+                'pengajuan_sakramen',
+                'iuran',
+                'transaksi_pembayaran',
+                'kas_rekening',
+                'keuangan',
+                'kolekte',
+                'konten',
+                'artikel',
+                'galeri',
+                'galeri_album',
+                'galeri_item',
+                'kegiatan',
+                'pengumuman',
+                'rapat',
+                'rapat_peserta',
+                'arsip_digital',
+                'chat_pesan',
+                'aset',
+                'aset_maintenance',
+                'intensi_misa',
+                'misa_kapela',
+                'misa_pastor',
+                'jadwal_misa',
+                'jadwal_petugas_liturgi',
+                'log_aktivitas',
+                'login_activity',
+                'login_attempts',
+                'security_logs',
+            ];
+            foreach ($localTables as $lt) {
+                if (Schema::hasTable($lt)) {
                     try {
-                        DB::table($lt)->delete();
-                    } catch (\Throwable $ex) {}
+                        DB::table($lt)->truncate();
+                    } catch (\Throwable $e) {
+                        try {
+                            DB::table($lt)->delete();
+                        } catch (\Throwable $ex) {}
+                    }
                 }
             }
         }

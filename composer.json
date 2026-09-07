@@ -37,11 +37,14 @@
         }
     },
     "scripts": {
+        "deploy": [
+            "@php artisan siparoki:setup"
+        ],
         "setup": [
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
-            "@php artisan migrate --force",
+            "@php artisan siparoki:setup",
             "npm install",
             "npm run build"
         ],

@@ -24,7 +24,7 @@
 .cc-content h3 { font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.1; margin: 0; }
 [data-theme="dark"] .cc-content h3 { color: #fff; }
 .cc-content p { font-size: 0.85rem; color: #64748b; font-weight: 500; margin: 4px 0 0; }
-.sambutan-pastor-section { background: transparent; padding: 20px 20px 70px; }
+.sambutan-pastor-section { background: transparent; padding: 50px 20px 70px; }
 [data-theme="dark"] .sambutan-pastor-section { background: #090e1a; }
 .sambutan-pastor-card { display: grid; grid-template-columns: 340px 1fr; max-width: 1100px; margin: 0 auto; background: #ffffff; border: 1px solid #eef2f6; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.06); }
 [data-theme="dark"] .sambutan-pastor-card { background: #101d31; border-color: #263a55; }

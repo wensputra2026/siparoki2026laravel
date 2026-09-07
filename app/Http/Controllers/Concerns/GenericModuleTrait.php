@@ -62,6 +62,14 @@ trait GenericModuleTrait
             $this->ensureKomentarArtikelTableAndData();
         }
 
+        if ($slug === 'wilayah') {
+            $this->ensureWilayahColumns();
+        }
+
+        if ($slug === 'kub') {
+            $this->ensureKubColumns();
+        }
+
         $query = $modelClass::query();
         if ($slug === 'keuskupan') {
             $query->with([
@@ -87,7 +95,7 @@ trait GenericModuleTrait
                 'wilayahs'
             ]);
         } elseif ($slug === 'kuasi-paroki') {
-            $query->with(['paroki.dekenat']);
+            $query->with(['paroki.dekenat', 'dekenat']);
         } elseif ($slug === 'kapela' || $slug === 'stasi') {
             if (Schema::hasColumn('kapela', 'paroki_id')) {
                 $query->with(['paroki']);
@@ -99,9 +107,9 @@ trait GenericModuleTrait
                 $query->with(['wilayahs']);
             }
         } elseif ($slug === 'wilayah') {
-            $query->with(['paroki', 'kubs']);
+            $query->with(['paroki', 'kapela', 'kubs', 'provinsi', 'kabupaten', 'kecamatan', 'desa']);
         } elseif ($slug === 'kub') {
-            $query->with(['wilayah', 'kapela', 'paroki']);
+            $query->with(['wilayah', 'kapela', 'paroki', 'provinsi', 'kabupaten', 'kecamatan', 'desa'])->withCount(['kks as jumlah_kk']);
         } elseif ($slug === 'provinsi') {
             $query->with(['kabupatens']);
         } elseif ($slug === 'kabupaten') {
@@ -123,6 +131,11 @@ trait GenericModuleTrait
         } elseif (in_array($slug, ['riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'mutasi_umat'], true)) {
             $query->with(['umat', 'kk', 'kubAsal', 'kubTujuan', 'wilayahAsal', 'wilayahTujuan', 'kapelaAsal', 'kapelaTujuan']);
         } elseif (in_array($slug, ['sakramen', 'buku-sakramen'], true)) {
+            try {
+                \App\Services\SakramenSyncService::syncAll();
+            } catch (\Throwable $e) {
+                // Ignore silent sync error
+            }
             $query->with(['umat.kk.wilayah', 'umat.kk.kapela', 'umat.kk.kub']);
         }
 
@@ -146,11 +159,13 @@ trait GenericModuleTrait
         $isKubScope = ($firstSegment === 'kub' || str_contains($userRoleSlug, 'kub'));
         $targetKub = null;
         if ($isKubScope) {
-            $targetKubId = $request->input('kub_id') ?: $authUser?->kub_id;
+            $targetKubId = $authUser?->kub_id ?: ($request->input('kub_id') ?: session('simulated_kub_id'));
             if (!$targetKubId) {
-                $targetKubId = \App\Models\Kub::value('id');
+                // Utamakan KUB dari user Ketua KUB yang ada (mis. Emilia) atau KUB pertama
+                $targetKubId = \App\Models\User::whereNotNull('kub_id')->value('kub_id') ?: \App\Models\Kub::value('id');
             }
             if ($targetKubId) {
+                session(['simulated_kub_id' => $targetKubId]);
                 $targetKub = \App\Models\Kub::with(['wilayah', 'kapela'])->find($targetKubId);
             }
         }
@@ -158,13 +173,25 @@ trait GenericModuleTrait
         $isWilayahScope = ($firstSegment === 'wilayah' || str_contains($userRoleSlug, 'wilayah'));
         $targetWilayahId = null;
         if ($isWilayahScope) {
-            $targetWilayahId = $request->input('wilayah_id') ?: $authUser?->wilayah_id ?: \App\Models\Wilayah::value('id');
+            $targetWilayahId = $authUser?->wilayah_id ?: ($request->input('wilayah_id') ?: session('simulated_wilayah_id'));
+            if (!$targetWilayahId) {
+                $targetWilayahId = \App\Models\User::whereNotNull('wilayah_id')->value('wilayah_id') ?: \App\Models\Wilayah::value('id');
+            }
+            if ($targetWilayahId) {
+                session(['simulated_wilayah_id' => $targetWilayahId]);
+            }
         }
 
         $isKapelaScope = ($firstSegment === 'kapela' || str_contains($userRoleSlug, 'kapela') || str_contains($userRoleSlug, 'stasi'));
         $targetKapelaId = null;
         if ($isKapelaScope) {
-            $targetKapelaId = $request->input('kapela_id') ?: $authUser?->kapela_id ?: \App\Models\Kapela::value('id');
+            $targetKapelaId = $authUser?->kapela_id ?: ($request->input('kapela_id') ?: session('simulated_kapela_id'));
+            if (!$targetKapelaId) {
+                $targetKapelaId = \App\Models\User::whereNotNull('kapela_id')->value('kapela_id') ?: \App\Models\Kapela::value('id');
+            }
+            if ($targetKapelaId) {
+                session(['simulated_kapela_id' => $targetKapelaId]);
+            }
         }
 
         if ($targetKub) {
@@ -358,6 +385,32 @@ trait GenericModuleTrait
                 if (in_array($slug, ['keuskupan', 'paroki'], true) && method_exists($item, 'getLogoUrlAttribute')) {
                     $item->append('logo_url');
                 }
+                // Pastikan KK memiliki data foto, jenis_kelamin, tanggal_lahir, dan usia kepala keluarga untuk avatar default
+                if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+                    $kepala = \App\Models\Umat::where('kk_id', $item->id)
+                        ->where(function ($q) use ($item) {
+                            $q->where('hubungan_keluarga', 'Kepala Keluarga')
+                              ->orWhere('nik', $item->nik_pemilik);
+                        })->first() ?? \App\Models\Umat::where('kk_id', $item->id)->first();
+                    if ($kepala) {
+                        if (empty($item->foto)) {
+                            $item->foto = $kepala->foto;
+                        }
+                        if (empty($item->jenis_kelamin)) {
+                            $item->jenis_kelamin = $kepala->jenis_kelamin ?: 'Laki-Laki';
+                        }
+                        if (empty($item->tanggal_lahir)) {
+                            $item->tanggal_lahir = $kepala->tanggal_lahir;
+                        }
+                        if (!isset($item->usia)) {
+                            $item->usia = $kepala->usia;
+                        }
+                    } else {
+                        if (empty($item->jenis_kelamin)) {
+                            $item->jenis_kelamin = 'Laki-Laki';
+                        }
+                    }
+                }
                 if (in_array($slug, ['kategori-konten', 'kategori_konten'], true)) {
                     $catId = $pkVal;
                     $catName = $item->nama_kategori ?? $item->kategori ?? '';
@@ -396,7 +449,9 @@ trait GenericModuleTrait
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
+            'admin_kub' => 'Admin KUB',
+            'ketua_kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',
@@ -405,9 +460,9 @@ trait GenericModuleTrait
 
         $needsKeuskupanReferences = in_array($slug, ['keuskupan', 'dekenat', 'kevikepan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'wilayah', 'kub'], true);
         $needsDekenatReferences = in_array($slug, ['keuskupan', 'dekenat', 'kevikepan', 'paroki', 'kuasi-paroki'], true);
-        $needsProvinsiReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'kabupaten', 'kecamatan', 'desa-kelurahan'], true);
-        $needsKabupatenReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'kecamatan', 'desa-kelurahan'], true);
-        $needsKecamatanReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'desa-kelurahan'], true);
+        $needsProvinsiReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'wilayah', 'kub', 'kabupaten', 'kecamatan', 'desa-kelurahan'], true);
+        $needsKabupatenReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'wilayah', 'kub', 'kecamatan', 'desa-kelurahan'], true);
+        $needsKecamatanReferences = in_array($slug, ['keuskupan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'wilayah', 'kub', 'desa-kelurahan'], true);
         $needsParokiReferences = in_array($slug, ['keuskupan', 'dekenat', 'kevikepan', 'paroki', 'kuasi-paroki', 'kapela', 'stasi', 'wilayah', 'kub', 'user'], true);
         $needsPastors = in_array($slug, ['paroki', 'kuasi-paroki', 'dekenat', 'kevikepan', 'master-pastor', 'riwayat-pastor', 'sakramen', 'pengajuan-sakramen']);
         $needsUmatReferences = in_array($slug, ['pengajuan-sakramen', 'sakramen', 'iuran', 'umat', 'data-umat', 'riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'mutasi_umat'], true);
@@ -461,7 +516,7 @@ trait GenericModuleTrait
         }
 
         $desaList = [];
-        if ($slug === 'keuskupan' || $slug === 'paroki' || $slug === 'kapela' || $slug === 'stasi') {
+        if ($slug === 'keuskupan' || $slug === 'paroki' || $slug === 'kapela' || $slug === 'stasi' || $slug === 'wilayah' || $slug === 'kub') {
             $desaList = \Illuminate\Support\Facades\Cache::remember('ref_desa_list_ntt_v3', 3600, function() {
                 $nttKecIds = \App\Models\Kecamatan::whereHas('kabupaten.provinsi', function($q) {
                     $q->where('nama_provinsi', 'like', '%Nusa Tenggara Timur%')
@@ -476,8 +531,8 @@ trait GenericModuleTrait
         }
 
         $parokiList = $needsParokiReferences
-            ? \Illuminate\Support\Facades\Cache::remember('ref_paroki_list_all_v2', 3600, function() {
-                return \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'keuskupan_id', 'nama_paroki', 'kode_paroki']);
+            ? \Illuminate\Support\Facades\Cache::remember('ref_paroki_list_all_v3', 3600, function() {
+                return \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'dekenat_id', 'keuskupan_id', 'nama_paroki', 'kode_paroki']);
             })
             : collect();
 
@@ -486,8 +541,12 @@ trait GenericModuleTrait
             : null;
 
         $roleList = $slug === 'user'
-            ? \Illuminate\Support\Facades\Cache::remember('ref_role_list_v1', 3600, function() {
-                return \App\Models\Role::where('status', 1)->orderBy('nama_role')->get(['id', 'nama_role', 'slug']);
+            ? \Illuminate\Support\Facades\Cache::remember('ref_role_list_v3', 3600, function() {
+                return \App\Models\Role::where('status', 1)
+                    ->whereNotIn('slug', ['umat'])
+                    ->where('nama_role', 'not like', '%umat%')
+                    ->orderBy('nama_role')
+                    ->get(['id', 'nama_role', 'slug']);
             })
             : [];
 
@@ -714,6 +773,11 @@ trait GenericModuleTrait
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
 
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        if (in_array($firstSegment, ['wilayah', 'kapela'], true) && in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            return back()->with('error', 'Akses Terbatas: Level Wilayah / Stasi hanya memiliki hak akses Lihat Data KK (Read-Only).');
+        }
+
         // Financial data must be protected from manipulation (positive amount,
         // known type/category). This also satisfies the audit requirement.
         if ($slug === 'keuangan') {
@@ -804,6 +868,35 @@ trait GenericModuleTrait
         }
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
+        }
+        if ($slug === 'wilayah') {
+            $this->ensureWilayahColumns();
+            if (empty($data['paroki_id']) && Schema::hasColumn('wilayah', 'paroki_id')) {
+                $data['paroki_id'] = $this->defaultParokiIdFromProfile();
+            }
+            if (empty($data['kode_wilayah']) && Schema::hasColumn('wilayah', 'kode_wilayah')) {
+                $paroki = \App\Models\Paroki::find($data['paroki_id'] ?? $this->defaultParokiIdFromProfile());
+                $parokiKode = $paroki ? ($paroki->kode_paroki ?: '012.014') : '012.014';
+                $nextNum = \App\Models\Wilayah::count() + 1;
+                $data['kode_wilayah'] = sprintf('WIL-%s-%02d', $parokiKode, $nextNum);
+            }
+        }
+        if ($slug === 'kub') {
+            $this->ensureKubColumns();
+            if (empty($data['paroki_id']) && Schema::hasColumn('kub', 'paroki_id')) {
+                $data['paroki_id'] = $this->defaultParokiIdFromProfile();
+            }
+            if (empty($data['kode_kub']) && Schema::hasColumn('kub', 'kode_kub')) {
+                $paroki = \App\Models\Paroki::find($data['paroki_id'] ?? $this->defaultParokiIdFromProfile());
+                $parokiKode = $paroki ? ($paroki->kode_paroki ?: '012.014') : '012.014';
+                $nextNum = \App\Models\Kub::count() + 1;
+                $data['kode_kub'] = sprintf('KUB-%s-%02d', $parokiKode, $nextNum);
+            }
+            if (!empty($data['pelindung']) && empty($data['nama_pelindung']) && Schema::hasColumn('kub', 'nama_pelindung')) {
+                $data['nama_pelindung'] = $data['pelindung'];
+            } elseif (!empty($data['nama_pelindung']) && empty($data['pelindung']) && Schema::hasColumn('kub', 'pelindung')) {
+                $data['pelindung'] = $data['nama_pelindung'];
+            }
         }
 
         $nullableFks = ['keuskupan_id', 'dekenat_id', 'paroki_id', 'provinsi_id', 'kabupaten_id', 'kecamatan_id', 'desa_id', 'wilayah_id', 'kapela_id', 'kub_id', 'umat_id'];
@@ -1006,7 +1099,10 @@ trait GenericModuleTrait
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
-            return redirect("/{$firstSegment}/kk-katolik")->with('success', 'Data Kartu Keluarga (KK) Katolik berhasil ditambahkan.');
+            return redirect("/{$firstSegment}/kk-katolik")->with('success', 'Data Kartu Keluarga (KK) dan Anggota Keluarga berhasil ditambahkan.');
+        }
+        if (in_array($slug, ['umat', 'data-umat', 'jiwa'], true)) {
+            return back()->with('success', 'Data Anggota Keluarga / Umat berhasil ditambahkan.');
         }
 
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil ditambahkan.');
@@ -1023,6 +1119,11 @@ trait GenericModuleTrait
         $config = $moduleMap[$slug];
         $modelClass = $config['model'];
 
+        $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
+        if (in_array($firstSegment, ['wilayah', 'kapela'], true) && in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
+            return back()->with('error', 'Akses Terbatas: Level Wilayah / Stasi hanya memiliki hak akses Lihat Data KK (Read-Only).');
+        }
+
         // Validasi khusus modul wilayah gerejawi (Keuskupan & Dekenat/Kevikepan)
         $this->validateTerritoryModule($request, $slug, decode_id($id) ?: $id);
 
@@ -1031,8 +1132,14 @@ trait GenericModuleTrait
 
         $decodedId = decode_id($id) ?: $id;
 
-        // Try by the model's declared primary key first
-        $item = $modelClass::where($pk, $decodedId)->first();
+        // Try by UUID or model's declared primary key first
+        $item = null;
+        if (method_exists($modelClass, 'scopeWhereUuidOrId')) {
+            $item = $modelClass::whereUuidOrId($id)->first();
+        }
+        if (!$item) {
+            $item = $modelClass::where($pk, $decodedId)->first();
+        }
 
         // Fallback: try common primary key patterns
         if (!$item) {
@@ -1134,6 +1241,17 @@ trait GenericModuleTrait
         }
         if (($slug === 'kapela' || $slug === 'stasi') && Schema::hasColumn('kapela', 'paroki_id')) {
             $data['paroki_id'] = $this->defaultParokiIdFromProfile();
+        }
+        if ($slug === 'wilayah') {
+            $this->ensureWilayahColumns();
+        }
+        if ($slug === 'kub') {
+            $this->ensureKubColumns();
+            if (!empty($data['pelindung']) && empty($data['nama_pelindung']) && Schema::hasColumn('kub', 'nama_pelindung')) {
+                $data['nama_pelindung'] = $data['pelindung'];
+            } elseif (!empty($data['nama_pelindung']) && empty($data['pelindung']) && Schema::hasColumn('kub', 'pelindung')) {
+                $data['pelindung'] = $data['nama_pelindung'];
+            }
         }
 
         $nullableFks = ['keuskupan_id', 'dekenat_id', 'paroki_id', 'provinsi_id', 'kabupaten_id', 'kecamatan_id', 'desa_id', 'wilayah_id', 'kapela_id', 'kub_id', 'umat_id'];
@@ -1260,7 +1378,10 @@ trait GenericModuleTrait
 
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         if (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true)) {
-            return redirect("/{$firstSegment}/kk-katolik")->with('success', 'Data Kartu Keluarga (KK) Katolik berhasil diperbarui.');
+            return redirect("/{$firstSegment}/kk-katolik")->with('success', 'Data Kartu Keluarga (KK) dan Anggota Keluarga berhasil diperbarui.');
+        }
+        if (in_array($slug, ['umat', 'data-umat', 'jiwa'], true)) {
+            return back()->with('success', 'Data Anggota Keluarga / Umat berhasil diperbarui.');
         }
 
         return back()->with('success', 'Data ' . $config['title'] . ' berhasil diperbarui.');
@@ -1564,7 +1685,13 @@ trait GenericModuleTrait
         $modelInstance = new $modelClass;
         $pk = $modelInstance->getKeyName();
         $decodedId = decode_id($id) ?: $id;
-        $item = $modelClass::where($pk, $decodedId)->first();
+        $item = null;
+        if (method_exists($modelClass, 'scopeWhereUuidOrId')) {
+            $item = $modelClass::whereUuidOrId($id)->first();
+        }
+        if (!$item) {
+            $item = $modelClass::where($pk, $decodedId)->first();
+        }
         if (!$item && is_numeric($decodedId)) {
             $item = $modelClass::find($decodedId);
         }
@@ -1686,7 +1813,12 @@ trait GenericModuleTrait
             $decodedIds = array_values(array_filter($decodedIds, fn ($id) => (int)$id !== (int)auth()->id()));
         }
 
-        $items = $modelClass::whereIn($pk, $decodedIds)->get();
+        $items = $modelClass::where(function ($q) use ($pk, $decodedIds, $ids, $modelInstance) {
+            $q->whereIn($pk, $decodedIds);
+            if (\Illuminate\Support\Facades\Schema::hasColumn($modelInstance->getTable(), 'uuid')) {
+                $q->orWhereIn('uuid', $ids);
+            }
+        })->get();
         if ($items->isEmpty() && in_array('slug', \Illuminate\Support\Facades\Schema::getColumnListing($modelInstance->getTable()))) {
             $items = $modelClass::whereIn('slug', $ids)->get();
         }
@@ -2253,11 +2385,11 @@ trait GenericModuleTrait
             $defaultParokiId = $this->defaultParokiIdFromProfile();
             $paroki = Paroki::with('keuskupan')->find($defaultParokiId)
                 ?? Paroki::with('keuskupan')->first();
-            $keuskupan = $paroki?->keuskupan ?? \App\Models\Keuskupan::first();
+            $keuskupan = $paroki?->keuskupan ?? \App\Models\Keuskupan::find(5) ?? \App\Models\Keuskupan::first();
             $profilParoki = \App\Models\ProfilParoki::first();
 
-            $keuskupanLogo = $keuskupan?->logo ?: '/uploads/keuskupan/logo_keuskupan_kupang.svg';
-            $parokiLogo = $paroki?->logo ?: '/assets/uploads/profil/logo_paroki_1787370466.jpeg';
+            $keuskupanLogo = $keuskupan?->logo ?: '/images/logo-keuskupan.png';
+            $parokiLogo = $paroki?->logo ?: ($profilParoki?->logo ?: '/uploads/paroki/1787494152_6a8aff08b47a5.webp');
 
             $summaryLabel = in_array($slug, ['umat', 'data-umat'], true) ? 'Total Jiwa / Umat' : (in_array($slug, ['kk-katolik', 'kk', 'keluarga'], true) ? 'Total Kepala Keluarga' : 'Total Data');
 
@@ -2854,7 +2986,7 @@ trait GenericModuleTrait
                 $query->with($with);
             }
         } elseif ($slug === 'wilayah') {
-            $query->with(['paroki', 'kapela', 'kubs']);
+            $query->with(['paroki', 'kapela', 'kubs', 'provinsi', 'kabupaten', 'kecamatan', 'desa']);
         } elseif ($slug === 'kub') {
             $query->with(['wilayah', 'kapela', 'paroki']);
         } elseif ($slug === 'provinsi') {
@@ -3562,13 +3694,16 @@ trait GenericModuleTrait
      */
     protected function normalizeKeuskupanPayload(array $data): array
     {
-        if (isset($data['uskup']) && !isset($data['nama_uskup'])) {
+        // Selalu timpa nama_uskup dari uskup jika ada (form mengirim keduanya via ...item spread)
+        if (isset($data['uskup']) && $data['uskup'] !== '' && $data['uskup'] !== null) {
             $data['nama_uskup'] = $data['uskup'];
         }
-        if (isset($data['no_telp']) && !isset($data['telepon'])) {
+        // Selalu timpa telepon dari no_telp jika ada
+        if (isset($data['no_telp']) && $data['no_telp'] !== '' && $data['no_telp'] !== null) {
             $data['telepon'] = $data['no_telp'];
         }
-        if (isset($data['nama_keuskupan_latin']) && !isset($data['nama_latin'])) {
+        // Selalu timpa nama_latin dari nama_keuskupan_latin jika ada
+        if (isset($data['nama_keuskupan_latin']) && $data['nama_keuskupan_latin'] !== '') {
             $data['nama_latin'] = $data['nama_keuskupan_latin'];
         }
         if (isset($data['logo']) && (!is_string($data['logo']) || in_array($data['logo'], ['', 'null', 'undefined', '[object Object]'], true))) {
@@ -3609,6 +3744,100 @@ trait GenericModuleTrait
         $absolute = public_path($relative);
         if (is_file($absolute)) {
             @unlink($absolute);
+        }
+    }
+
+    /**
+     * Pastikan kolom kapela_id dan wilayah administratif tersedia pada tabel wilayah.
+     */
+    protected function ensureWilayahColumns(): void
+    {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('wilayah')) {
+                $needed = [
+                    'kapela_id' => fn($table) => $table->unsignedInteger('kapela_id')->nullable()->after('paroki_id'),
+                    'alamat' => fn($table) => $table->text('alamat')->nullable()->after('status'),
+                    'provinsi_id' => fn($table) => $table->unsignedBigInteger('provinsi_id')->nullable()->after('alamat'),
+                    'kabupaten_id' => fn($table) => $table->unsignedBigInteger('kabupaten_id')->nullable()->after('provinsi_id'),
+                    'kecamatan_id' => fn($table) => $table->unsignedBigInteger('kecamatan_id')->nullable()->after('kabupaten_id'),
+                    'desa_id' => fn($table) => $table->unsignedBigInteger('desa_id')->nullable()->after('kecamatan_id'),
+                ];
+
+                $hasMissing = false;
+                foreach (array_keys($needed) as $col) {
+                    if (!\Illuminate\Support\Facades\Schema::hasColumn('wilayah', $col)) {
+                        $hasMissing = true;
+                        break;
+                    }
+                }
+
+                if ($hasMissing) {
+                    \Illuminate\Support\Facades\Schema::table('wilayah', function ($table) use ($needed) {
+                        foreach ($needed as $col => $closure) {
+                            if (!\Illuminate\Support\Facades\Schema::hasColumn('wilayah', $col)) {
+                                $closure($table);
+                            }
+                        }
+                    });
+                    \Illuminate\Support\Facades\Cache::forget('schema_columns_wilayah');
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('ensureWilayahColumns warning: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Pastikan kolom detail dan administratif tersedia pada tabel kub serta role Admin KUB up-to-date.
+     */
+    protected function ensureKubColumns(): void
+    {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('kub')) {
+                $needed = [
+                    'pelindung' => fn($table) => $table->string('pelindung')->nullable()->after('nama_pelindung'),
+                    'alamat' => fn($table) => $table->text('alamat')->nullable()->after('nama_pelindung'),
+                    'lokasi' => fn($table) => $table->text('lokasi')->nullable()->after('alamat'),
+                    'jadwal_ibadat' => fn($table) => $table->string('jadwal_ibadat')->nullable()->after('lokasi'),
+                    'provinsi_id' => fn($table) => $table->unsignedBigInteger('provinsi_id')->nullable()->after('jadwal_ibadat'),
+                    'kabupaten_id' => fn($table) => $table->unsignedBigInteger('kabupaten_id')->nullable()->after('provinsi_id'),
+                    'kecamatan_id' => fn($table) => $table->unsignedBigInteger('kecamatan_id')->nullable()->after('kabupaten_id'),
+                    'desa_id' => fn($table) => $table->unsignedBigInteger('desa_id')->nullable()->after('kecamatan_id'),
+                ];
+
+                $hasMissing = false;
+                foreach (array_keys($needed) as $col) {
+                    if (!\Illuminate\Support\Facades\Schema::hasColumn('kub', $col)) {
+                        $hasMissing = true;
+                        break;
+                    }
+                }
+
+                if ($hasMissing) {
+                    \Illuminate\Support\Facades\Schema::table('kub', function ($table) use ($needed) {
+                        foreach ($needed as $col => $closure) {
+                            if (!\Illuminate\Support\Facades\Schema::hasColumn('kub', $col)) {
+                                $closure($table);
+                            }
+                        }
+                    });
+                    \Illuminate\Support\Facades\Cache::forget('schema_columns_kub');
+                }
+            }
+
+            // Sinkronkan nama role Ketua KUB menjadi Admin KUB
+            if (\Illuminate\Support\Facades\Schema::hasTable('roles')) {
+                \Illuminate\Support\Facades\DB::table('roles')
+                    ->where('nama_role', 'Ketua KUB')
+                    ->orWhere('slug', 'ketua_kub')
+                    ->update([
+                        'nama_role' => 'Admin KUB',
+                        'slug' => 'admin_kub',
+                        'deskripsi' => 'Admin & Pengurus Komunitas Umat Basis (KUB)'
+                    ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('ensureKubColumns warning: ' . $e->getMessage());
         }
     }
 

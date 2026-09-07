@@ -56,6 +56,18 @@ const props = defineProps({
         type: Number,
         default: 250,
     },
+    compact: {
+        type: Boolean,
+        default: false,
+    },
+    dropdownMinWidth: {
+        type: String,
+        default: '',
+    },
+    wrapText: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['update:modelValue', 'change']);
@@ -230,19 +242,25 @@ onBeforeUnmount(() => {
             @click="toggleDropdown"
             :disabled="disabled"
             :class="[
-                'min-h-[40px] px-3.5 py-2 rounded-xl border flex items-center justify-between gap-1.5 transition-all shadow-2xs cursor-pointer text-left w-full text-xs sm:text-[12.5px]',
+                compact
+                    ? 'h-[32px] px-2.5 py-1 rounded-lg border flex items-center justify-between gap-1.5 transition-all shadow-2xs cursor-pointer text-left w-full text-xs font-bold'
+                    : 'min-h-[40px] px-3.5 py-2 rounded-xl border flex items-center justify-between gap-1.5 transition-all shadow-2xs cursor-pointer text-left w-full text-xs sm:text-[12.5px]',
                 isOpen
-                    ? 'bg-white border-blue-500 ring-2 ring-blue-500/15'
-                    : 'bg-slate-50 hover:bg-white border-slate-200 text-slate-700',
+                    ? 'bg-white border-amber-500 ring-2 ring-amber-500/15'
+                    : 'bg-white hover:bg-slate-50 border-amber-300 text-slate-800',
                 disabled ? 'opacity-50 cursor-not-allowed' : ''
             ]"
         >
             <div class="flex items-center gap-2 min-w-0 flex-1">
                 <i v-if="icon" :class="[formattedIcon, iconColor, 'text-xs shrink-0']"></i>
-                <span :class="[
-                    'truncate font-semibold',
-                    selectedOption ? 'text-slate-900' : 'text-slate-400 font-medium'
-                ]">
+                <span
+                    :class="[
+                        wrapText ? 'whitespace-normal break-words leading-tight py-0.5' : 'truncate',
+                        'font-bold text-left',
+                        selectedOption ? 'text-slate-900' : 'text-slate-500 font-medium'
+                    ]"
+                    :title="selectedOption ? getItemLabel(selectedOption) : placeholder"
+                >
                     {{ selectedOption ? getItemLabel(selectedOption) : placeholder }}
                 </span>
             </div>
@@ -250,7 +268,7 @@ onBeforeUnmount(() => {
             <div class="flex items-center gap-1 shrink-0">
                 <!-- Clear Button -->
                 <span
-                    v-if="clearable && selectedOption"
+                    v-if="clearable && !disabled && selectedOption"
                     @click="clearSelection"
                     class="text-slate-400 hover:text-rose-600 transition p-0.5 rounded-md hover:bg-slate-100 cursor-pointer"
                     title="Hapus pilihan"
@@ -279,7 +297,10 @@ onBeforeUnmount(() => {
         >
             <div
                 v-if="isOpen"
-                class="absolute left-0 top-full mt-1.5 z-50 w-full min-w-0 max-w-[calc(100vw-2rem)] rounded-2xl bg-white border border-slate-200/90 shadow-xl shadow-slate-900/10 overflow-hidden"
+                :class="[
+                    'absolute left-0 top-full mt-1.5 z-[100] rounded-2xl bg-white border border-slate-200/90 shadow-2xl shadow-slate-900/15 overflow-hidden',
+                    dropdownMinWidth ? dropdownMinWidth : 'w-full min-w-[220px] max-w-[calc(100vw-2rem)]'
+                ]"
             >
                 <!-- Search Box inside Dropdown -->
                 <div class="p-2 border-b border-slate-100 bg-slate-50/70">
@@ -330,7 +351,7 @@ onBeforeUnmount(() => {
                     >
                         <span class="flex items-center gap-2 min-w-0">
                             <i v-if="icon" :class="[formattedIcon, iconColor, 'text-[10px] shrink-0']"></i>
-                            <span class="truncate">{{ getItemLabel(opt) }}</span>
+                            <span :class="[wrapText ? 'whitespace-normal break-words leading-tight' : 'truncate', 'text-left']" :title="getItemLabel(opt)">{{ getItemLabel(opt) }}</span>
                         </span>
                         <i
                             v-if="isSelected(opt)"

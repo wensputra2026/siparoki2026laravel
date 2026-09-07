@@ -3,6 +3,26 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+// Auto-clear stale bootstrap cache files on shared hosting / FTP deploys
+foreach (['routes-v7.php', 'config.php'] as $cacheFile) {
+    $targetPath = __DIR__ . '/cache/' . $cacheFile;
+    if (file_exists($targetPath)) {
+        @unlink($targetPath);
+    }
+}
+
+// Clear compiled blade views once per deploy so changes appear instantly
+$viewsPath = dirname(__DIR__) . '/storage/framework/views';
+$deployMarker = $viewsPath . '/.deploy_marker';
+$currentMarker = 'v_deploy_20260905_1725';
+if (!file_exists($deployMarker) || @file_get_contents($deployMarker) !== $currentMarker) {
+    if (is_dir($viewsPath)) {
+        foreach (glob($viewsPath . '/*.php') as $vf) {
+            @unlink($vf);
+        }
+        @file_put_contents($deployMarker, $currentMarker);
+    }
+}
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,15 +41,44 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
+            '/',
             'midtrans/*',
             'api/midtrans/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->respond(function ($response, \Throwable $exception, \Illuminate\Http\Request $request) {
+            if ($exception instanceof \Illuminate\Session\TokenMismatchException) {
+                if ($request->is('/')) {
+                    return redirect('/');
+                }
+                return redirect()->back()->with('warning', 'Sesi Anda telah diperbarui, silakan coba kembali.');
+            }
+
+            if ($exception instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
+                if ($request->isMethod('GET')) {
+                    $path = trim($request->path(), '/');
+                    if (str_contains($path, 'update')) {
+                        $editPath = preg_replace('#/update(?:/([^/]+))?$#', '/edit/$1', $path);
+                        if ($editPath === $path) {
+                            $editPath = preg_replace('#/([^/]+)/update$#', '/edit/$1', $path);
+                        }
+                        if ($editPath !== $path) {
+                            return redirect('/' . trim($editPath, '/'));
+                        }
+                    } elseif (str_contains($path, 'store')) {
+                        $createPath = preg_replace('#/store$#', '/create', $path);
+                        if ($createPath !== $path) {
+                            return redirect('/' . trim($createPath, '/'));
+                        }
+                    }
+                }
+                return redirect('/');
+            }
+
             $statusCode = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 500;
 
-            if (in_array($statusCode, [500, 503, 404, 403, 419, 429], true)) {
+            if (in_array($statusCode, [405, 500, 503, 404, 403, 419, 429], true)) {
                 if ($request->header('X-Inertia')) {
                     return \Inertia\Inertia::render('Errors/Error', [
                         'status' => $statusCode,

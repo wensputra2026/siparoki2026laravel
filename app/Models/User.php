@@ -6,14 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Concerns\HasIndirectId;
+use App\Models\Concerns\HasUuid;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasIndirectId;
+    use HasFactory, Notifiable, HasIndirectId, HasUuid;
 
     protected $table = 'users';
 
     protected $fillable = [
+        'uuid',
         'role_id',
         'username',
         'email',

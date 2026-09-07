@@ -214,7 +214,7 @@ const cellValue = (item, col) => {
 };
 
 const displayedColumns = computed(() => {
-    return (props.tableColumns || []).filter(c => c.name !== 'status');
+    return (props.tableColumns || []).filter(c => c.name !== 'status' && c.name !== 'uuid');
 });
 </script>
 

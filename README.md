@@ -271,7 +271,7 @@ Bagi paroki yang mengelola server VPS sendiri menggunakan **aaPanel**:
 2. Buka menu **Terminal** di aaPanel (atau via SSH) dan jalankan:
    ```bash
    cd /www/wwwroot/paroki-anda.org
-   # Hapus file default index.html 404.html jika ada
+   # Hapus file default bawaan aaPanel jika ada
    rm -f index.html 404.html .user.ini
    # Klon repositori SIPAROKI
    git clone https://github.com/wensputra2026/siparoki2026laravel.git .
@@ -286,25 +286,41 @@ Bagi paroki yang mengelola server VPS sendiri menggunakan **aaPanel**:
    - Pilih preset template **laravel5** dari dropdown (aaPanel otomatis mengisi aturan `try_files $uri $uri/ /index.php?$query_string;`).
    - Klik **Save**.
 
-#### Langkah 5: Atur Hak Akses Folder (Permissions)
-Buka menu **Terminal** aaPanel dan jalankan perintah izin folder Laravel:
+#### Langkah 5: Instalasi Dependensi & Setup Database Otomatis (1 Perintah)
+Buka menu **Terminal** aaPanel di folder website Anda:
 ```bash
 cd /www/wwwroot/paroki-anda.org
-chown -R www:www storage bootstrap/cache public/uploads
-chmod -R 775 storage bootstrap/cache public/uploads
+
+# 1. Install paket dependensi PHP
+composer install --no-dev --optimize-autoloader
+
+# 2. Salin file environment dan generate APP_KEY
+cp .env.example .env
+php artisan key:generate
+
+# 3. Buka file .env (via File Manager aaPanel atau nano) dan masukkan info database dari Langkah 2:
+# DB_DATABASE=nama_db_anda
+# DB_USERNAME=user_db_anda
+# DB_PASSWORD=password_db_anda
+
+# 4. Jalankan pemasangan database & konfigurasi otomatis 1-klik:
+php artisan siparoki:setup
 ```
 
-#### Langkah 6: Pasang SSL Gratis (HTTPS)
-1. Di jendela pengaturan website aaPanel &rarr; Buka tab **SSL**.
-2. Pilih tab **Let's Encrypt** &rarr; Centang domain paroki Anda.
-3. Klik **Apply**. Setelah berhasil terbit, aktifkan toggle **Force HTTPS**.
+#### Langkah 6: Atur Hak Akses Folder (Permissions) & Storage Symlink
+Di terminal aaPanel, jalankan perintah izin folder:
+```bash
+chown -R www:www storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+php artisan storage:link
+```
 
-#### Langkah 7: Jalankan Web Installer Wizard
-1. Buka browser Anda: `https://paroki-anda.org/installer` (atau `https://paroki-anda.org/install.php`).
-2. Masukkan kredensial database yang didapatkan pada Langkah 2.
-3. Pilih Keuskupan, Dekenat, dan Paroki Anda dari master data 39 Keuskupan KWI.
-4. Masukkan akun Super Administrator paroki Anda.
-5. Klik **Mulai Instalasi Sekarang**. Website paroki siap online dan dapat diakses publik!
+#### Langkah 7: Pasang SSL Gratis (HTTPS) & Akses Login
+1. Di jendela pengaturan website aaPanel &rarr; Buka tab **SSL** &rarr; Let's Encrypt &rarr; Klik **Apply** & aktifkan **Force HTTPS**.
+2. Buka browser: `https://paroki-anda.org/login`
+   - **Email Super Admin**: `superadmin@paroki.org`
+   - **Password Default**: `Admin@Paroki2026!`
+3. Buka menu **Profil Paroki** atau akses `https://paroki-anda.org/setup-paroki` untuk memilih identitas Paroki Anda dari daftar 39 Keuskupan KWI & menyimpan santo pelindung, pastor paroki, dan logo paroki Anda!
 
 ---
 
@@ -331,16 +347,20 @@ Untuk instalasi di server VPS murni tanpa control panel (Ubuntu / Debian / CentO
    ```
    *Buka berkas `.env` dan sesuaikan kredensial database (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`), serta `APP_URL`.*
 
-4. **Impor Skema Database Awal**:
+4. **Inisialisasi Database Lengkap**:
    ```bash
-   # Impor database baseline yang telah dilengkapi master Keuskupan & Paroki se-Indonesia
-   mysql -u username_db -p nama_database < public/installer/database/siparoki.sql
+   # Cara paling praktis & otomatis:
+   php artisan siparoki:setup
+
+   # Atau via impor manual MySQL:
+   mysql -u username_db -p nama_database < database/siparoki.sql
    ```
 
-5. **Atur Izin Folder (Permissions)**:
+5. **Atur Izin Folder (Permissions) & Symlink**:
    ```bash
-   chmod -R 775 storage bootstrap/cache public/uploads
-   chown -R www-data:www-data storage bootstrap/cache public/uploads
+   chmod -R 775 storage bootstrap/cache
+   chown -R www-data:www-data storage bootstrap/cache
+   php artisan storage:link
    ```
 
 6. **Konfigurasi Nginx Server Block (Contoh)**:

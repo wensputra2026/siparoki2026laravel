@@ -233,6 +233,12 @@ trait ParokiModuleTrait
                     \Illuminate\Support\Facades\DB::table('profil_paroki')->insert($payload);
                 }
             }
+
+            if (\Illuminate\Support\Facades\Schema::hasTable('sambutan_pastor') && !empty($paroki->nama_pastor_paroki_aktif)) {
+                \Illuminate\Support\Facades\DB::table('sambutan_pastor')->update([
+                    'nama_pastor' => $paroki->nama_pastor_paroki_aktif,
+                ]);
+            }
         }
 
         // 2. Sync to pengaturan_aplikasi if table exists

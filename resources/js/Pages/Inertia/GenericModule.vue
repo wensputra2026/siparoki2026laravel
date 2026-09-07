@@ -4,6 +4,10 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
+import DateInput from '@/Components/DateInput.vue';
+import { formatDateId, formatDateTimeId } from '@/utils/date';
+import { triggerToast } from '@/composables/useRoleMenu';
+import { getDefaultAvatar } from '@/utils/avatar';
 
 const page = usePage();
 
@@ -197,6 +201,27 @@ const resolvedKubName = computed(() => {
     return resolvedKub.value?.nama_kub || '-';
 });
 
+const selectedKuasiParokiName = computed(() => {
+    if (!formData.value?.paroki_id) return '';
+    const p = (props.parokiList || []).find(x => String(x.id_paroki || x.id) === String(formData.value.paroki_id));
+    return p?.nama_paroki || '';
+});
+
+const selectedKuasiDekenatName = computed(() => {
+    if (!formData.value?.dekenat_id) return '';
+    const d = (props.dekenatList || []).find(x => String(x.id_dekenat || x.id_kevikepan || x.id) === String(formData.value.dekenat_id));
+    return d?.nama_dekenat || d?.nama_kevikepan || d?.name || '';
+});
+
+watch(() => formData.value?.paroki_id, (newParokiId) => {
+    if (props.moduleKey === 'kuasi-paroki' && newParokiId) {
+        const found = (props.parokiList || []).find(p => String(p.id_paroki || p.id) === String(newParokiId));
+        if (found && found.dekenat_id) {
+            formData.value.dekenat_id = found.dekenat_id;
+        }
+    }
+});
+
 const statusOptions = [
     { value: '', label: 'Semua Status' },
     { value: 'Aktif', label: 'Aktif / Terverifikasi' },
@@ -279,12 +304,27 @@ const showPassword = ref(false);
 const filteredFormKubs = computed(() => {
     let list = props.kubList || [];
     if (formData.value?.wilayah_id) {
-        return list.filter(k => String(k.wilayah_id || k.id_wilayah) === String(formData.value.wilayah_id));
+        list = list.filter(k => String(k.wilayah_id || k.id_wilayah) === String(formData.value.wilayah_id));
+    } else if (formData.value?.kapela_id) {
+        list = list.filter(k => String(k.kapela_id || k.id_kapela) === String(formData.value.kapela_id));
     }
-    if (formData.value?.kapela_id) {
-        return list.filter(k => String(k.kapela_id || k.id_kapela) === String(formData.value.kapela_id));
-    }
-    return list;
+    return list.map(k => {
+        let asal = '';
+        const kapId = k.kapela_id || k.id_kapela;
+        const wilId = k.wilayah_id || k.id_wilayah;
+        if (kapId) {
+            const kap = (props.kapelaList || []).find(kp => String(kp.id || kp.id_kapela) === String(kapId));
+            if (kap) asal = `Stasi ${kap.nama_kapela}`;
+        }
+        if (!asal && wilId) {
+            const wil = (props.wilayahList || []).find(w => String(w.id || w.id_wilayah) === String(wilId));
+            if (wil) asal = `Wilayah ${wil.nama_wilayah}`;
+        }
+        return {
+            ...k,
+            nama_kub_with_asal: asal ? `${k.nama_kub} (${asal})` : k.nama_kub,
+        };
+    });
 });
 
 const onMutasiUmatSelected = (umatId) => {
@@ -520,6 +560,7 @@ watch(kapelaFilter, (newKapela) => {
 });
 
 watch(() => formData.value?.wilayah_id, (newWilayah) => {
+    if (props.moduleKey === 'wilayah') return;
     if (newWilayah && formData.value) {
         formData.value.kapela_id = '';
     }
@@ -529,6 +570,7 @@ watch(() => formData.value?.wilayah_id, (newWilayah) => {
 });
 
 watch(() => formData.value?.kapela_id, (newKapela) => {
+    if (props.moduleKey === 'wilayah') return;
     if (newKapela && formData.value) {
         formData.value.wilayah_id = '';
     }
@@ -589,6 +631,16 @@ const roleBadgeClass = (role) => {
 };
 
 const isUmatReadOnlyRole = computed(() => {
+    return false;
+});
+
+const isKkReadOnlyForRole = computed(() => {
+    const p = (props.prefix || basePrefix.value || (typeof window !== 'undefined' ? window.location.pathname : '') || '').toLowerCase();
+    const r = String(props.role?.slug || props.role?.nama_role || props.role || page.props.role || '').toLowerCase();
+    const isWilayahOrKapela = p.includes('wilayah') || p.includes('kapela') || p.includes('stasi') || r.includes('wilayah') || r.includes('kapela') || r.includes('stasi');
+    if (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey) && isWilayahOrKapela) {
+        return true;
+    }
     return false;
 });
 
@@ -721,6 +773,24 @@ const kapelaOptionsForMisdinar = computed(() => {
                 id: k.id || k.id_kapela,
                 nama_kapela: k.nama_kapela || k.nama,
                 label: `Kapela / Stasi: ${k.nama_kapela || k.nama}`,
+            });
+        });
+    }
+    return list;
+});
+
+const kapelaOptionsForWilayah = computed(() => {
+    const list = [
+        { id: '', nama_kapela: 'Pusat Paroki (Gereja Paroki Induk)', label: 'Pusat Paroki (Gereja Paroki Induk)' },
+    ];
+    if (props.kapelaList && props.kapelaList.length) {
+        props.kapelaList.forEach(k => {
+            const kId = k.id || k.id_kapela;
+            const kName = k.nama_kapela || k.nama || `Stasi #${kId}`;
+            list.push({
+                id: kId,
+                nama_kapela: kName,
+                label: `Stasi / Kapela ${kName}`,
             });
         });
     }
@@ -1176,6 +1246,55 @@ const openCreateModal = () => {
         formData.value.sejarah = '';
         formData.value.visi = '';
         formData.value.misi = '';
+    }
+
+    if (props.moduleKey === 'wilayah') {
+        const profileParoki = activeProfileParoki.value;
+        const parokiId = activeProfileParokiId.value;
+        const parokiKode = profileParoki ? (profileParoki.kode_paroki || '012.014') : '012.014';
+        const randNum = String(Math.floor(1 + Math.random() * 99)).padStart(2, '0');
+
+        formData.value.paroki_id = parokiId;
+        formData.value.kapela_id = '';
+        formData.value.status = 'Aktif';
+        formData.value.kode_wilayah = `WIL-${parokiKode}-${randNum}`;
+        formData.value.nama_wilayah = '';
+        formData.value.ketua_wilayah = '';
+        formData.value.no_hp = '';
+        formData.value.alamat = initAlamat || 'Benlutu';
+        formData.value.provinsi_id = initProvId;
+        formData.value.kabupaten_id = initKabId;
+        formData.value.kecamatan_id = initKecId;
+        formData.value.desa_id = initDesaId;
+        formData.value.keterangan = '';
+        formData.value.deskripsi = '';
+    }
+
+    if (props.moduleKey === 'kub') {
+        const profileParoki = activeProfileParoki.value;
+        const parokiId = activeProfileParokiId.value;
+        const parokiKode = profileParoki ? (profileParoki.kode_paroki || '012.014') : '012.014';
+        const randNum = String(Math.floor(1 + Math.random() * 99)).padStart(2, '0');
+
+        formData.value.paroki_id = parokiId;
+        formData.value.kapela_id = '';
+        formData.value.wilayah_id = '';
+        formData.value.status = 'Aktif';
+        formData.value.kode_kub = `KUB-${parokiKode}-${randNum}`;
+        formData.value.nama_kub = '';
+        formData.value.pelindung = '';
+        formData.value.nama_pelindung = '';
+        formData.value.ketua_kub = '';
+        formData.value.no_hp = '';
+        formData.value.alamat = initAlamat || 'Benlutu';
+        formData.value.lokasi = '';
+        formData.value.jadwal_ibadat = '';
+        formData.value.provinsi_id = initProvId;
+        formData.value.kabupaten_id = initKabId;
+        formData.value.kecamatan_id = initKecId;
+        formData.value.desa_id = initDesaId;
+        formData.value.keterangan = '';
+        formData.value.deskripsi = '';
     }
 
     if (props.moduleKey === 'direktori-dpp') {
@@ -1651,6 +1770,54 @@ const openEditModal = (item) => {
         return;
     }
 
+    if (props.moduleKey === 'wilayah') {
+        formData.value = {
+            id: item.id || item.id_wilayah,
+            id_wilayah: item.id || item.id_wilayah,
+            paroki_id: item.paroki_id || activeProfileParokiId.value,
+            kapela_id: item.kapela_id || '',
+            kode_wilayah: item.kode_wilayah || item.kode || '',
+            nama_wilayah: item.nama_wilayah || item.nama || '',
+            ketua_wilayah: item.ketua_wilayah || item.nama_ketua || item.penanggung_jawab || '',
+            no_hp: item.no_hp || item.kontak || item.telepon || '',
+            alamat: item.alamat || item.deskripsi || '',
+            provinsi_id: provId,
+            kabupaten_id: kabId,
+            kecamatan_id: kecId,
+            desa_id: desaId,
+            status: item.status || 'Aktif',
+            keterangan: item.keterangan || item.deskripsi || '',
+        };
+        showFormModal.value = true;
+        return;
+    }
+
+    if (props.moduleKey === 'kub') {
+        formData.value = {
+            id: item.id,
+            paroki_id: item.paroki_id || activeProfileParokiId.value,
+            kapela_id: item.kapela_id || '',
+            wilayah_id: item.wilayah_id || '',
+            kode_kub: item.kode_kub || item.kode || '',
+            nama_kub: item.nama_kub || item.nama || '',
+            pelindung: item.pelindung || item.nama_pelindung || '',
+            nama_pelindung: item.pelindung || item.nama_pelindung || '',
+            ketua_kub: item.ketua_kub || item.penanggung_jawab || item.nama_ketua || '',
+            no_hp: item.no_hp || item.kontak || item.telepon || '',
+            alamat: item.alamat || '',
+            lokasi: item.lokasi || '',
+            jadwal_ibadat: item.jadwal_ibadat || '',
+            provinsi_id: provId,
+            kabupaten_id: kabId,
+            kecamatan_id: kecId,
+            desa_id: desaId,
+            status: item.status || 'Aktif',
+            keterangan: item.keterangan || item.deskripsi || '',
+        };
+        showFormModal.value = true;
+        return;
+    }
+
     if (props.moduleKey === 'kabupaten') {
         formData.value = {
             id_kabupaten: item.id_kabupaten || item.id,
@@ -1990,6 +2157,7 @@ onMounted(() => {
 
 const resolveEntityId = (item) => {
     if (!item) return '';
+    if (item.uuid) return item.uuid;
     if (item.id !== undefined && item.id !== null && item.id !== '') return item.id;
     if (item.id_desa !== undefined && item.id_desa !== null && item.id_desa !== '') return item.id_desa;
     if (item.id_kecamatan !== undefined && item.id_kecamatan !== null && item.id_kecamatan !== '') return item.id_kecamatan;
@@ -2067,6 +2235,12 @@ const submitForm = () => {
         onSuccess: () => {
             showFormModal.value = false;
             isSubmitting.value = false;
+            const isKkOrUmat = ['kk-katolik', 'kk', 'keluarga', 'umat', 'data-umat', 'jiwa'].includes(props.moduleKey);
+            const actionText = modalMode.value === 'edit' ? 'berhasil diperbarui' : 'berhasil disimpan';
+            const labelText = isKkOrUmat 
+                ? (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey) ? 'Data Kartu Keluarga dan Anggota Keluarga' : 'Data Anggota Keluarga / Umat')
+                : (props.title || 'Data');
+            triggerToast(`${labelText} ${actionText}!`, 'success');
         },
         onError: () => {
             isSubmitting.value = false;
@@ -2126,6 +2300,14 @@ const toggleUserStatus = (item) => {
     router.post(`${moduleBasePath.value}/${item.id}/toggle-status`, {}, {
         preserveScroll: true,
     });
+};
+
+const impersonateUser = (item) => {
+    if (isSelfUser(item)) return;
+    const name = item.nama_lengkap || item.name || item.username;
+    if (confirm(`Apakah Anda ingin masuk dan melihat sistem langsung sebagai ${name} (${item.role?.nama_role || 'Pengguna'})?`)) {
+        router.post(`${moduleBasePath.value}/${item.id}/impersonate`);
+    }
 };
 
 // Bulk Selection State
@@ -2240,9 +2422,79 @@ const getImageUrl = (path) => {
         if (['galeri'].includes(props.moduleKey)) {
             return `/uploads/galeri/${clean}`;
         }
+        if (['umat', 'data-umat', 'jiwa'].includes(props.moduleKey)) {
+            return `/uploads/umat/${clean}`;
+        }
+        if (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey)) {
+            return `/uploads/kk_katolik/${clean}`;
+        }
         return `/foto-pastor/${clean}`;
     }
     return `/${clean}`;
+};
+
+const getDefaultAvatarByGender = (gender, ageOrBirthDate = null) => {
+    return getDefaultAvatar(gender, ageOrBirthDate);
+};
+
+const getAvatarUrl = (item, colKey = 'foto') => {
+    if (!item) return '/images/laki-laki.jpg';
+
+    // 1. Keuskupan / Paroki logos
+    if (props.moduleKey === 'keuskupan') {
+        return item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-keuskupan.png');
+    }
+    if (props.moduleKey === 'paroki') {
+        return item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-paroki.png');
+    }
+    if (colKey === 'logo' && item.logo_url) {
+        return item.logo_url;
+    }
+
+    // 2. Pastor modules
+    if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(props.moduleKey)) {
+        const val = item[colKey] || item.foto;
+        return val ? getImageUrl(val) : '/assets/frontend/siparoki/images/default-pastor.jpg';
+    }
+
+    // 3. Umat, Jiwa, KK Katolik or gender-based records
+    const isUmatOrKkModule = ['umat', 'data-umat', 'jiwa', 'kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey);
+    const photoVal = (colKey && item[colKey] !== undefined) ? item[colKey] : (item.foto || item.gambar);
+
+    if (photoVal && typeof photoVal === 'string' && photoVal.trim() !== '' && photoVal !== 'null' && photoVal !== 'undefined' && photoVal !== '—') {
+        return getImageUrl(photoVal);
+    }
+
+    if (isUmatOrKkModule || item.jenis_kelamin || colKey === 'foto') {
+        const ageOrBirthDate = item?.usia ?? item?.umur ?? item?.tanggal_lahir ?? item?.tgl_lahir;
+        return getDefaultAvatar(item?.jenis_kelamin, ageOrBirthDate);
+    }
+
+    const fieldVal = getFieldValue(item, { key: colKey });
+    return fieldVal && fieldVal !== '—' ? getImageUrl(fieldVal) : '';
+};
+
+const handleImageError = (e, item, colKey = 'foto') => {
+    if (!e || !e.target) return;
+    if (props.moduleKey === 'keuskupan') {
+        e.target.src = '/images/logo-keuskupan.png';
+    } else if (props.moduleKey === 'paroki' || colKey === 'logo') {
+        e.target.src = '/images/logo-paroki.png';
+    } else if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(props.moduleKey)) {
+        e.target.src = '/assets/frontend/siparoki/images/default-pastor.jpg';
+    } else if (['umat', 'data-umat', 'jiwa', 'kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey) || item?.jenis_kelamin || colKey === 'foto') {
+        const ageOrBirthDate = item?.usia ?? item?.umur ?? item?.tanggal_lahir ?? item?.tgl_lahir;
+        const fallback = getDefaultAvatar(item?.jenis_kelamin, ageOrBirthDate);
+        if (!e.target.dataset.fallbackApplied) {
+            e.target.dataset.fallbackApplied = 'true';
+            e.target.src = fallback;
+        }
+    } else {
+        e.target.style.display = 'none';
+        if (e.target.nextElementSibling) {
+            e.target.nextElementSibling.style.display = 'flex';
+        }
+    }
 };
 
 const isImageField = (col, val) => {
@@ -2343,6 +2595,14 @@ const statusLabel = (item) => {
 
 const showRoleFilter = computed(() => {
     return ['user', 'users'].includes(props.moduleKey);
+});
+
+const sanitizedRoleList = computed(() => {
+    return (props.roleList || []).filter(r => {
+        const slug = String(r.slug || '').toLowerCase();
+        const name = String(r.nama_role || r.name || '').toLowerCase();
+        return !slug.includes('umat') && !name.includes('umat');
+    });
 });
 
 const showWilayahFilter = computed(() => {
@@ -2497,11 +2757,11 @@ const showKubFilter = computed(() => {
                 <div class="grid grid-cols-2 sm:flex sm:flex-wrap xl:justify-end gap-2 w-full xl:w-auto">
                     <!-- 0. Read-Only Indicator for Wilayah / Kapela on KK & Umat Data -->
                     <div
-                        v-if="isUmatReadOnlyRole"
+                        v-if="isKkReadOnlyForRole || isUmatReadOnlyRole"
                         class="col-span-2 px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
                     >
                         <i class="fa-solid fa-eye text-blue-600 text-[11px]"></i>
-                        <span>{{ ['wilayah', 'kub', 'sakramen', 'buku-sakramen'].includes(moduleKey) ? 'Mode Lihat Saja (Kelola di Paroki)' : 'Mode Lihat Saja (CRUD di KUB)' }}</span>
+                        <span>{{ isKkReadOnlyForRole ? 'Mode Lihat Saja (Read-Only) - Tidak Dapat Edit & Cetak' : (['wilayah', 'kub', 'sakramen', 'buku-sakramen'].includes(moduleKey) ? 'Mode Lihat Saja (Kelola di Paroki)' : 'Mode Lihat Saja (CRUD di KUB)') }}</span>
                     </div>
 
                     <!-- 0.1 View & Edit Only Indicator for Wilayah / Kapela on Sakramen Data -->
@@ -2514,7 +2774,7 @@ const showKubFilter = computed(() => {
                     </div>
 
                     <!-- 1. Tambah Button (Conditional based on hasCreate & Role) -->
-                    <template v-if="hasCreate && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
+                    <template v-if="hasCreate && !isKkReadOnlyForRole && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <Link
                             v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
                             :href="moduleKey === 'konten' ? `${basePrefix}/konten/create` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/kk-katolik/create` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/create` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/create` : `${basePrefix}/role/create`)))"
@@ -2535,7 +2795,7 @@ const showKubFilter = computed(() => {
                     </template>
 
                     <!-- 2. Import Excel & Template Download Buttons (Only for whitelisted data-master modules) -->
-                    <template v-if="hasImportExportActions && hasImport && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
+                    <template v-if="hasImportExportActions && hasImport && !isKkReadOnlyForRole && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <input
                             ref="importFileInput"
                             type="file"
@@ -2565,7 +2825,7 @@ const showKubFilter = computed(() => {
 
                     <!-- 3. Export Excel Button (Only for whitelisted data-master modules) -->
                     <a
-                        v-if="hasImportExportActions && hasExport"
+                        v-if="hasImportExportActions && hasExport && !isKkReadOnlyForRole"
                         :href="exportModuleUrl('excel')"
                         class="px-3.5 py-2 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
                     >
@@ -2575,7 +2835,7 @@ const showKubFilter = computed(() => {
 
                     <!-- 4. Print / PDF Button (Only active for modules with hasPdf = true) -->
                     <a
-                        v-if="hasPdf"
+                        v-if="hasPdf && !isKkReadOnlyForRole"
                         :href="exportModuleUrl('print')"
                         target="_blank"
                         class="px-3.5 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
@@ -2604,7 +2864,7 @@ const showKubFilter = computed(() => {
                     <label class="block text-[11px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Filter Level</label>
                     <SearchableSelect
                         v-model="roleFilter"
-                        :options="roleList"
+                        :options="sanitizedRoleList"
                         valueKey="id"
                         labelKey="nama_role"
                         placeholder="Semua Level"
@@ -2836,10 +3096,10 @@ const showKubFilter = computed(() => {
                                 <!-- Image / Logo Column -->
                                 <div v-if="col.isImage || col.key === 'logo' || col.key === 'foto' || isImageField(col, getFieldValue(item, col))" class="w-8.5 h-8.5 rounded-lg overflow-hidden bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-0.5 whitespace-nowrap">
                                     <img
-                                        :src="moduleKey === 'keuskupan' ? (item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-keuskupan.png')) : (moduleKey === 'paroki' ? (item.logo ? getImageUrl(item.logo) : (item.logo_url || '/images/logo-paroki.png')) : ((col.key === 'logo' && item.logo_url) ? item.logo_url : (getImageUrl(getFieldValue(item, col)) || (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey) ? '/assets/frontend/siparoki/images/default-pastor.jpg' : ''))))"
+                                        :src="getAvatarUrl(item, col.key)"
                                         :alt="item.nama_pastor || item.nama_lengkap || item.nama_paroki || item.nama_keuskupan || 'Foto'"
                                         :class="['w-full h-full rounded-md', col.key === 'logo' || moduleKey === 'keuskupan' || moduleKey === 'paroki' ? 'object-contain' : 'object-cover']"
-                                        @error="(e) => { if (moduleKey === 'keuskupan') { e.target.src = '/images/logo-keuskupan.png'; } else if (moduleKey === 'paroki' || col.key === 'logo') { e.target.src = '/images/logo-paroki.png'; } else if (['riwayat-pastor', 'riwayat_pastor_paroki', 'master-pastor', 'pastor'].includes(moduleKey)) { e.target.src = '/assets/frontend/siparoki/images/default-pastor.jpg'; } else { e.target.style.display = 'none'; e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex'); } }"
+                                        @error="(e) => handleImageError(e, item, col.key)"
                                     />
                                 </div>
 
@@ -2998,6 +3258,24 @@ const showKubFilter = computed(() => {
                                     </span>
                                 </template>
 
+                                <!-- Dekenat / Kevikepan Column (Responsive & Clean) -->
+                                <template v-else-if="col.key === 'dekenat_nama' || col.key === 'nama_dekenat' || col.key === 'nama_kevikepan'">
+                                    <div v-if="getFieldValue(item, col) && getFieldValue(item, col) !== '—'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-50/80 text-cyan-900 border border-cyan-200/80 font-semibold text-xs whitespace-normal break-words max-w-[240px] text-left leading-snug shadow-2xs">
+                                        <i class="fa-solid fa-layer-group text-cyan-600 text-[11px] shrink-0"></i>
+                                        <span>{{ getFieldValue(item, col) }}</span>
+                                    </div>
+                                    <span v-else class="text-slate-400 italic text-xs">—</span>
+                                </template>
+
+                                <!-- Paroki Induk Column (Responsive & Clean) -->
+                                <template v-else-if="col.key === 'paroki_nama' || col.key === 'nama_paroki'">
+                                    <div v-if="getFieldValue(item, col) && getFieldValue(item, col) !== '—'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50/80 text-amber-900 border border-amber-200/80 font-semibold text-xs whitespace-normal break-words max-w-[260px] text-left leading-snug shadow-2xs">
+                                        <i class="fa-solid fa-church text-amber-600 text-[11px] shrink-0"></i>
+                                        <span>{{ getFieldValue(item, col) }}</span>
+                                    </div>
+                                    <span v-else class="text-slate-400 italic text-xs">—</span>
+                                </template>
+
                                 <!-- General Text Column -->
                                 <span v-else class="text-slate-700 font-medium text-xs sm:text-[12.5px]">
                                     {{ getFieldValue(item, col) }}
@@ -3045,7 +3323,7 @@ const showKubFilter = computed(() => {
                                     <!-- 1. Detail / Preview Button (Exactly ONE view icon per row) -->
                                     <Link
                                         v-if="moduleKey === 'konten'"
-                                        :href="`${basePrefix}/konten/${item.id || item.slug}/preview`"
+                                        :href="`${basePrefix}/konten/${item.uuid || item.id || item.slug}/preview`"
                                         title="Preview Konten"
                                         class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                     >
@@ -3053,7 +3331,7 @@ const showKubFilter = computed(() => {
                                     </Link>
                                     <Link
                                         v-else-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey)"
-                                        :href="`${basePrefix}/kk-katolik/${item.id || item.no_kk_kw}/view`"
+                                        :href="`${basePrefix}/kk-katolik/${item.uuid || item.id || item.no_kk_kw}/view`"
                                         title="Lihat Detail Kartu Keluarga"
                                         class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                     >
@@ -3071,8 +3349,8 @@ const showKubFilter = computed(() => {
 
                                     <!-- 2. Cetak Button (Only for KK, and only for non-read-only roles) -->
                                     <a
-                                        v-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) && !isUmatReadOnlyRole"
-                                        :href="`${basePrefix}/kk-katolik/${item.id || item.no_kk_kw}/cetak`"
+                                        v-if="['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) && !isKkReadOnlyForRole && !isUmatReadOnlyRole"
+                                        :href="`${basePrefix}/kk-katolik/${item.uuid || item.id || item.no_kk_kw}/cetak`"
                                         target="_blank"
                                         title="Cetak Kartu Keluarga (PDF / Print)"
                                         class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
@@ -3081,9 +3359,18 @@ const showKubFilter = computed(() => {
                                     </a>
                                     <!-- Mutasi KUB, Pisah KK, & Riwayat Buttons (For Umat) -->
                                     <template v-if="['umat', 'data-umat'].includes(moduleKey)">
+                                        <!-- Cetak Profil Umat / Jiwa -->
+                                        <a
+                                            :href="`${basePrefix}/umat/${item.uuid || item.id}/cetak`"
+                                            target="_blank"
+                                            title="Cetak Profil / Biodata Jiwa Umat (PDF / Print)"
+                                            class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
+                                        >
+                                            <i class="fa-solid fa-print text-xs"></i>
+                                        </a>
                                         <Link
                                             v-if="!isUmatReadOnlyRole"
-                                            :href="`${basePrefix}/umat/${item.id}/mutasi`"
+                                            :href="`${basePrefix}/umat/${item.uuid || item.id}/mutasi`"
                                             title="Mutasi / Pindah KUB"
                                             class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-teal-50 hover:text-teal-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         >
@@ -3091,14 +3378,14 @@ const showKubFilter = computed(() => {
                                         </Link>
                                         <Link
                                             v-if="!isUmatReadOnlyRole"
-                                            :href="`${basePrefix}/umat/${item.id}/pisah-kk`"
+                                            :href="`${basePrefix}/umat/${item.uuid || item.id}/pisah-kk`"
                                             title="Pisah KK (Menikah / Bentuk Keluarga Baru)"
                                             class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-purple-50 hover:text-purple-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         >
                                             <i class="fa-solid fa-people-roof text-xs"></i>
                                         </Link>
                                         <Link
-                                            :href="`${basePrefix}/umat/${item.id}/riwayat`"
+                                            :href="`${basePrefix}/umat/${item.uuid || item.id}/riwayat`"
                                             title="Riwayat Mutasi & Pergerakan Umat"
                                             class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-amber-50 hover:text-amber-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         >
@@ -3106,11 +3393,11 @@ const showKubFilter = computed(() => {
                                         </Link>
                                     </template>
 
-                                    <!-- Edit Button (Hidden for Read-Only Umat on Wilayah/Kapela) -->
-                                    <template v-if="!isUmatReadOnlyRole">
+                                    <!-- Edit Button (Hidden for Read-Only KK on Wilayah/Kapela & Read-Only Umat) -->
+                                    <template v-if="!isKkReadOnlyForRole && !isUmatReadOnlyRole">
                                         <Link
                                             v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
-                                            :href="moduleKey === 'konten' ? `${basePrefix}/konten/${item.id || item.slug}/edit` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/${moduleKey}/${item.id || item.slug || item.no_kk_kw}/edit` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/${item.id}/edit` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/${item.id}/edit` : `${basePrefix}/role/${item.id || item.id_role || item.slug}/edit`)))"
+                                            :href="moduleKey === 'konten' ? `${basePrefix}/konten/${item.uuid || item.id || item.slug}/edit` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/${moduleKey}/${item.uuid || item.id || item.slug || item.no_kk_kw}/edit` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/${item.uuid || item.id}/edit` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/${item.uuid || item.id}/edit` : `${basePrefix}/role/${item.uuid || item.id || item.id_role || item.slug}/edit`)))"
                                             title="Ubah Data"
                                             class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         >
@@ -3148,6 +3435,15 @@ const showKubFilter = computed(() => {
                                         ]"
                                     >
                                         <i class="fa-solid fa-toggle-on text-xs"></i>
+                                    </button>
+                                    <button
+                                        v-if="moduleKey === 'user' && isSuperAdmin && !isSelfUser(item)"
+                                        type="button"
+                                        @click="impersonateUser(item)"
+                                        :title="`Login Langsung Sebagai ${item.nama_lengkap || item.name || item.username} (Simulasi Nyata Akun)`"
+                                        class="w-7.5 h-7.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 text-slate-500 border border-slate-200 flex items-center justify-center transition cursor-pointer shadow-2xs"
+                                    >
+                                        <i class="fa-solid fa-right-to-bracket text-xs"></i>
                                     </button>
 
                                     <!-- Delete Button (Only visible if authorized to delete) -->
@@ -3266,18 +3562,16 @@ const showKubFilter = computed(() => {
                 <!-- Modal Body -->
                 <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
                     <!-- 0. DETAIL DATA UMAT / JIWA LENGKAP -->
-                    <template v-if="moduleKey === 'umat' || moduleKey === 'data-umat'">
+                    <template v-if="moduleKey === 'umat' || moduleKey === 'data-umat' || moduleKey === 'jiwa'">
                         <!-- Profile Header Card -->
                         <div class="p-5 rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-50/50 border border-amber-200/80 flex flex-col sm:flex-row items-center sm:items-start gap-5">
                             <div class="w-24 h-24 rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-200 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-xs">
                                 <img
-                                    v-if="selectedItem.foto"
-                                    :src="getImageUrl(selectedItem.foto)"
-                                    :alt="selectedItem.nama_lengkap"
+                                    :src="getAvatarUrl(selectedItem, 'foto')"
+                                    :alt="selectedItem.nama_lengkap || selectedItem.nama_lahir || 'Foto'"
                                     class="w-full h-full object-cover"
-                                    @error="(e) => { e.target.onerror = null; e.target.parentElement.innerHTML = '<i class=\'fa-solid fa-user-tie text-4xl text-amber-600\'></i>'; }"
+                                    @error="(e) => handleImageError(e, selectedItem, 'foto')"
                                 />
-                                <i v-else class="fa-solid fa-user-circle text-5xl text-amber-500"></i>
                             </div>
                             <div class="flex-1 text-center sm:text-left space-y-2">
                                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
@@ -3340,7 +3634,7 @@ const showKubFilter = computed(() => {
                                 </div>
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                                     <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Tempat & Tanggal Lahir</span>
-                                    <span class="font-bold text-slate-900">{{ selectedItem.tempat_lahir || '—' }}, {{ selectedItem.tanggal_lahir ? String(selectedItem.tanggal_lahir).substring(0, 10) : '—' }}</span>
+                                    <span class="font-bold text-slate-900">{{ selectedItem.tempat_lahir || '—' }}, {{ formatDateId(selectedItem.tanggal_lahir) }}</span>
                                 </div>
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                                     <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Kedudukan dalam Keluarga</span>
@@ -3416,7 +3710,7 @@ const showKubFilter = computed(() => {
                                 </div>
                                 <div class="p-3 bg-purple-50/60 rounded-xl border border-purple-200/80" v-if="selectedItem.tgl_tahbisan_kaul">
                                     <span class="text-[10px] text-purple-700 font-bold uppercase block mb-1">Tgl Tahbisan / Kaul</span>
-                                    <span class="font-bold text-slate-900">{{ String(selectedItem.tgl_tahbisan_kaul).substring(0, 10) }}</span>
+                                    <span class="font-bold text-slate-900">{{ formatDateId(selectedItem.tgl_tahbisan_kaul) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -3435,7 +3729,7 @@ const showKubFilter = computed(() => {
                                         <span>Sakramen Baptis</span>
                                     </div>
                                     <p class="text-slate-700 text-[11px] leading-relaxed">
-                                        Tgl: <b>{{ selectedItem.tgl_baptis ? String(selectedItem.tgl_baptis).substring(0, 10) : '—' }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_baptis || '—' }}</b><br />
+                                        Tgl: <b>{{ formatDateId(selectedItem.tgl_baptis) }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_baptis || '—' }}</b><br />
                                         Pastor: <b>{{ selectedItem.pastor_baptis || '—' }}</b> &bull; Wali: <b>{{ selectedItem.wali_baptis || '—' }}</b><br />
                                         Buku Baptis: <b>Vol {{ selectedItem.buku_baptis_vol || '-' }} / Hal {{ selectedItem.buku_baptis_hal || '-' }} / No {{ selectedItem.buku_baptis_no || '-' }}</b>
                                     </p>
@@ -3449,7 +3743,7 @@ const showKubFilter = computed(() => {
                                             <span>Komuni Pertama (Ekaristi)</span>
                                         </div>
                                         <p class="text-slate-700 text-[11px]">
-                                            Tgl: <b>{{ selectedItem.tgl_komuni_1 ? String(selectedItem.tgl_komuni_1).substring(0, 10) : '—' }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_komuni_1 || '—' }}</b>
+                                            Tgl: <b>{{ formatDateId(selectedItem.tgl_komuni_1) }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_komuni_1 || '—' }}</b>
                                         </p>
                                     </div>
                                     <div class="pt-1.5 border-t border-slate-200">
@@ -3458,18 +3752,18 @@ const showKubFilter = computed(() => {
                                             <span>Sakramen Krisma (Penguatan)</span>
                                         </div>
                                         <p class="text-slate-700 text-[11px]">
-                                            Tgl: <b>{{ selectedItem.tgl_krisma ? String(selectedItem.tgl_krisma).substring(0, 10) : '—' }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_krisma || '—' }}</b>
+                                            Tgl: <b>{{ formatDateId(selectedItem.tgl_krisma) }}</b> &bull; Paroki: <b>{{ selectedItem.paroki_krisma || '—' }}</b>
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 5. PENDIDIKAN, PROFESI & TALENTA -->
+                        <!-- 5. SOSIAL, PROFESI -->
                         <div class="space-y-3">
                             <h5 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-100">
                                 <i class="fa-solid fa-graduation-cap text-amber-600"></i>
-                                <span>5. Pendidikan, Profesi & Talenta Pelayanan</span>
+                                <span>5. Sosial, Profesi</span>
                             </h5>
                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
@@ -3485,7 +3779,7 @@ const showKubFilter = computed(() => {
                                     <span class="font-bold text-slate-900">{{ selectedItem.disabilitas || 'Tidak Ada' }}</span>
                                 </div>
                                 <div class="sm:col-span-2 md:col-span-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80" v-if="selectedItem.talenta">
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Talenta / Bidang Pelayanan Paroki</span>
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Bidang Keahlian / Pelayanan Paroki</span>
                                     <span class="font-bold text-slate-900">{{ selectedItem.talenta }}</span>
                                 </div>
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80" v-if="selectedItem.handphone">
@@ -4149,6 +4443,18 @@ const showKubFilter = computed(() => {
                                     </span>
                                 </div>
 
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80" v-if="selectedItem.provinsi || selectedItem.kabupaten || selectedItem.kecamatan || selectedItem.desa">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-map text-rose-500"></i> Wilayah Administratif Sipil
+                                    </span>
+                                    <p class="text-slate-800 leading-relaxed font-medium">
+                                        <span v-if="selectedItem.desa">Desa/Kel. {{ selectedItem.desa?.nama_desa || selectedItem.desa }}, </span>
+                                        <span v-if="selectedItem.kecamatan">Kec. {{ selectedItem.kecamatan?.nama_kecamatan || selectedItem.kecamatan }}, </span>
+                                        <span v-if="selectedItem.kabupaten">{{ selectedItem.kabupaten?.nama_kabupaten || selectedItem.kabupaten }}, </span>
+                                        <span v-if="selectedItem.provinsi">{{ selectedItem.provinsi?.nama_provinsi || selectedItem.provinsi }}</span>
+                                    </p>
+                                </div>
+
                                 <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80" v-if="selectedItem.keterangan || selectedItem.deskripsi || selectedItem.alamat">
                                     <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
                                         <i class="fa-solid fa-circle-info text-amber-500"></i> Batas & Keterangan Wilayah
@@ -4210,7 +4516,7 @@ const showKubFilter = computed(() => {
 
                                 <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80">
                                     <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
-                                        <i class="fa-solid fa-user-tie text-blue-600"></i> Ketua KUB / Pengurus
+                                        <i class="fa-solid fa-user-tie text-blue-600"></i> Admin KUB / Pengurus
                                     </span>
                                     <span class="font-bold text-slate-900">
                                         {{ selectedItem.ketua_kub || selectedItem.penanggung_jawab || selectedItem.nama_ketua || '—' }}
@@ -4231,7 +4537,7 @@ const showKubFilter = computed(() => {
                                         <i class="fa-solid fa-house-chimney-user text-indigo-600"></i> Jumlah KK Terdata
                                     </span>
                                     <span class="font-bold text-slate-900">
-                                        {{ selectedItem.jumlah_kk || (selectedItem.kks ? selectedItem.kks.length : '—') }} KK
+                                        {{ (selectedItem.jumlah_kk !== undefined && selectedItem.jumlah_kk !== null) ? selectedItem.jumlah_kk : (selectedItem.kks ? selectedItem.kks.length : 0) }} KK
                                     </span>
                                 </div>
 
@@ -4244,6 +4550,15 @@ const showKubFilter = computed(() => {
                                     </p>
                                     <p v-if="selectedItem.jadwal_ibadat" class="text-amber-800 text-xs font-semibold">
                                         Jadwal Ibadat: {{ selectedItem.jadwal_ibadat }}
+                                    </p>
+                                </div>
+
+                                <div class="sm:col-span-2 p-3 bg-slate-50/80 rounded-xl border border-slate-200/80" v-if="selectedItem.desa || selectedItem.kecamatan || selectedItem.kabupaten">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-map-location-dot text-rose-500"></i> Wilayah Administratif Sipil
+                                    </span>
+                                    <p class="text-slate-800 leading-relaxed font-semibold">
+                                        {{ [selectedItem.desa?.nama_desa, selectedItem.kecamatan?.nama_kecamatan, selectedItem.kabupaten?.nama_kabupaten, selectedItem.provinsi?.nama_provinsi].filter(Boolean).join(', ') || '—' }}
                                     </p>
                                 </div>
                             </div>
@@ -4559,7 +4874,7 @@ const showKubFilter = computed(() => {
             <div
                 :class="[
                     'bg-white rounded-3xl p-6 sm:p-7 w-full shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 my-8 transition-all',
-                    (moduleKey === 'keuskupan' || moduleKey === 'dekenat' || moduleKey === 'kevikepan' || moduleKey === 'paroki' || moduleKey === 'kapela' || moduleKey === 'stasi' || moduleKey === 'user' || moduleKey === 'role' || moduleKey === 'roles' || moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga' || moduleKey === 'umat' || moduleKey === 'data-umat' || moduleKey === 'riwayat-mutasi-umat' || moduleKey === 'riwayat-mutasi' || moduleKey === 'mutasi-umat' || moduleKey === 'mutasi_umat') ? 'max-w-4xl' : (['rapat', 'rapat-notulen', 'kegiatan', 'surat-masuk', 'surat-keluar', 'arsip-digital'].includes(moduleKey) ? 'max-w-2xl' : 'max-w-lg')
+                    (moduleKey === 'keuskupan' || moduleKey === 'dekenat' || moduleKey === 'kevikepan' || moduleKey === 'paroki' || moduleKey === 'kuasi-paroki' || moduleKey === 'kapela' || moduleKey === 'stasi' || moduleKey === 'wilayah' || moduleKey === 'kub' || moduleKey === 'user' || moduleKey === 'role' || moduleKey === 'roles' || moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga' || moduleKey === 'umat' || moduleKey === 'data-umat' || moduleKey === 'riwayat-mutasi-umat' || moduleKey === 'riwayat-mutasi' || moduleKey === 'mutasi-umat' || moduleKey === 'mutasi_umat') ? 'max-w-4xl' : (['rapat', 'rapat-notulen', 'kegiatan', 'surat-masuk', 'surat-keluar', 'arsip-digital'].includes(moduleKey) ? 'max-w-2xl' : 'max-w-lg')
                 ]"
             >
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -4569,7 +4884,7 @@ const showKubFilter = computed(() => {
                         </div>
                         <div>
                             <h3 class="text-sm font-bold text-slate-900">
-                                {{ modalMode === 'create' ? `Form Tambah ${title} Baru` : `Form Edit ${title}: ${selectedItem?.nama_keuskupan || selectedItem?.nama_kevikepan || selectedItem?.nama_dekenat || selectedItem?.nama_paroki || selectedItem?.nama || title}` }}
+                                {{ modalMode === 'create' ? `Form Tambah ${title} Baru` : `Form Edit ${title}: ${selectedItem?.nama_kuasi || selectedItem?.NamaKuasiParoki || selectedItem?.nama_keuskupan || selectedItem?.nama_kevikepan || selectedItem?.nama_dekenat || selectedItem?.nama_paroki || selectedItem?.nama || title}` }}
                             </h3>
                             <p class="text-[11px] text-slate-400">Silakan lengkapi formulir data master berikut ini</p>
                         </div>
@@ -5610,6 +5925,413 @@ const showKubFilter = computed(() => {
                         </div>
                     </template>
 
+                    <!-- 4B. WILAYAH PELAYANAN FORM (Lengkap dengan Paroki, Stasi Naungan, & Wilayah Administratif) -->
+                    <template v-else-if="moduleKey === 'wilayah'">
+                        <!-- Section 1: Informasi Induk & Identitas Wilayah Pelayanan -->
+                        <div class="space-y-3.5">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-map-location-dot text-amber-600"></i>
+                                <span>Informasi Induk & Identitas Wilayah Pelayanan</span>
+                            </h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Paroki Induk *</label>
+                                    <SearchableSelect
+                                        v-model="formData.paroki_id"
+                                        :options="parokiList"
+                                        value-key="id_paroki"
+                                        label-key="nama_paroki"
+                                        placeholder="Mengikuti Profil Paroki"
+                                        search-placeholder="Ketik cari paroki..."
+                                        icon="fa-church"
+                                        icon-color="text-amber-600"
+                                        :clearable="false"
+                                        disabled
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Stasi / Kapela Naungan</label>
+                                    <SearchableSelect
+                                        v-model="formData.kapela_id"
+                                        :options="kapelaOptionsForWilayah"
+                                        value-key="id"
+                                        label-key="label"
+                                        placeholder="Pusat Paroki (Gereja Paroki Induk)"
+                                        search-placeholder="Ketik cari stasi/kapela..."
+                                        icon="fa-place-of-worship"
+                                        icon-color="text-teal-600"
+                                        :clearable="true"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status</label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-[11px] font-bold text-slate-700">Kode Wilayah</label>
+                                        <span class="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Otomatis</span>
+                                    </div>
+                                    <input
+                                        v-model="formData.kode_wilayah"
+                                        type="text"
+                                        placeholder="(Otomatis dari Sistem)"
+                                        readonly
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-100/90 border border-slate-200 text-xs text-slate-700 font-mono font-bold cursor-not-allowed transition"
+                                    />
+                                    <p class="text-[10px] text-slate-400 mt-1">Dibuat otomatis berdasarkan Paroki</p>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Wilayah Pelayanan *</label>
+                                    <input
+                                        v-model="formData.nama_wilayah"
+                                        type="text"
+                                        placeholder="Contoh: Wilayah I - St. Petrus"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-semibold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Ketua / Koordinator Wilayah</label>
+                                    <input
+                                        v-model="formData.ketua_wilayah"
+                                        type="text"
+                                        placeholder="Nama ketua wilayah..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kontak / WhatsApp</label>
+                                    <input
+                                        v-model="formData.no_hp"
+                                        type="text"
+                                        placeholder="Contoh: 081234567890"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-3">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Batas & Cakupan Wilayah</label>
+                                    <textarea
+                                        v-model="formData.alamat"
+                                        rows="2"
+                                        placeholder="Cakupan batas teritorial / dusun wilayah pelayanan..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Wilayah Administratif -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-map-location-dot text-rose-500"></i>
+                                <span>Wilayah Administratif</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Provinsi</label>
+                                    <SearchableSelect
+                                        v-model="formData.provinsi_id"
+                                        :options="provinsiList"
+                                        value-key="id_provinsi"
+                                        label-key="nama_provinsi"
+                                        placeholder="-- Pilih Provinsi --"
+                                        search-placeholder="Ketik cari provinsi..."
+                                        icon="fa-map"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kabupaten / Kota</label>
+                                    <SearchableSelect
+                                        v-model="formData.kabupaten_id"
+                                        :options="availableKabupatens"
+                                        value-key="id_kabupaten"
+                                        label-key="nama_kabupaten"
+                                        placeholder="-- Pilih Kabupaten --"
+                                        search-placeholder="Ketik cari kabupaten..."
+                                        icon="fa-city"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kecamatan</label>
+                                    <SearchableSelect
+                                        v-model="formData.kecamatan_id"
+                                        :options="availableKecamatans"
+                                        value-key="id_kecamatan"
+                                        label-key="nama_kecamatan"
+                                        placeholder="-- Pilih Kecamatan --"
+                                        search-placeholder="Ketik cari kecamatan..."
+                                        icon="fa-building-columns"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kelurahan / Desa</label>
+                                    <SearchableSelect
+                                        v-model="formData.desa_id"
+                                        :options="availableDesas"
+                                        value-key="id_desa"
+                                        label-key="nama_desa"
+                                        placeholder="-- Pilih Kelurahan/Desa --"
+                                        search-placeholder="Ketik cari kelurahan/desa..."
+                                        icon="fa-tree-city"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Keterangan & Catatan -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-info text-amber-600"></i>
+                                <span>Keterangan & Catatan</span>
+                            </h4>
+                            <div>
+                                <textarea
+                                    v-model="formData.keterangan"
+                                    rows="3"
+                                    placeholder="Keterangan tambahan tentang wilayah pelayanan..."
+                                    class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                ></textarea>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- KUB FORM (100% Matches Kapela / Stasi Layout & Aesthetic) -->
+                    <template v-else-if="moduleKey === 'kub'">
+                        <!-- Section 1: Informasi Induk & Identitas KUB -->
+                        <div class="space-y-3.5">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <i class="fa-solid fa-people-roof text-teal-600"></i>
+                                <span>Informasi Induk & Identitas KUB</span>
+                            </h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Paroki Induk *</label>
+                                    <SearchableSelect
+                                        v-model="formData.paroki_id"
+                                        :options="parokiList"
+                                        value-key="id_paroki"
+                                        label-key="nama_paroki"
+                                        placeholder="Mengikuti Profil Paroki"
+                                        search-placeholder="Ketik cari paroki..."
+                                        icon="fa-church"
+                                        icon-color="text-amber-600"
+                                        :clearable="false"
+                                        disabled
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Stasi / Kapela Naungan</label>
+                                    <SearchableSelect
+                                        v-model="formData.kapela_id"
+                                        :options="kapelaList"
+                                        value-key="id"
+                                        label-key="nama_kapela"
+                                        placeholder="-- Pusat Paroki / Pilih Stasi --"
+                                        search-placeholder="Ketik cari stasi/kapela..."
+                                        icon="fa-place-of-worship"
+                                        icon-color="text-teal-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Wilayah Pastoral Naungan</label>
+                                    <SearchableSelect
+                                        v-model="formData.wilayah_id"
+                                        :options="wilayahList"
+                                        value-key="id"
+                                        label-key="nama_wilayah"
+                                        placeholder="-- Pilih Wilayah Pastoral --"
+                                        search-placeholder="Ketik cari wilayah..."
+                                        icon="fa-compass"
+                                        icon-color="text-blue-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Status KUB</label>
+                                    <select
+                                        v-model="formData.status"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition font-semibold"
+                                    >
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-[11px] font-bold text-slate-700">Kode KUB</label>
+                                        <span class="text-[9px] font-bold text-teal-700 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded">Otomatis</span>
+                                    </div>
+                                    <input
+                                        v-model="formData.kode_kub"
+                                        type="text"
+                                        placeholder="(Otomatis dari Sistem)"
+                                        readonly
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-100/90 border border-slate-200 text-xs text-slate-700 font-mono font-bold cursor-not-allowed transition"
+                                    />
+                                    <p class="text-[10px] text-slate-400 mt-1">Dibuat otomatis berdasarkan format KUB</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama KUB *</label>
+                                    <input
+                                        v-model="formData.nama_kub"
+                                        type="text"
+                                        placeholder="Contoh: KUB Santo Petrus"
+                                        required
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition font-semibold"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Pelindung / Nama Kudus</label>
+                                    <input
+                                        v-model="formData.pelindung"
+                                        type="text"
+                                        placeholder="Contoh: Santo Vinsensius a Paulo"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Admin KUB / Pengurus</label>
+                                    <input
+                                        v-model="formData.ketua_kub"
+                                        type="text"
+                                        placeholder="Nama Admin / Pengurus KUB..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kontak / WhatsApp</label>
+                                    <input
+                                        v-model="formData.no_hp"
+                                        type="text"
+                                        placeholder="Contoh: 081234567890"
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition font-mono"
+                                    />
+                                </div>
+
+                                <div class="md:col-span-3">
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Lokasi / Jadwal Ibadat / Pertemuan</label>
+                                    <textarea
+                                        v-model="formData.lokasi"
+                                        rows="2"
+                                        placeholder="Alamat / lokasi pertemuan bergilir dan jadwal ibadat sabda KUB..."
+                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Wilayah Administratif -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-map-location-dot text-rose-500"></i>
+                                <span>Wilayah Administratif (Kemendagri / BPS)</span>
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Provinsi</label>
+                                    <SearchableSelect
+                                        v-model="formData.provinsi_id"
+                                        :options="provinsiList"
+                                        value-key="id_provinsi"
+                                        label-key="nama_provinsi"
+                                        placeholder="-- Pilih Provinsi --"
+                                        search-placeholder="Ketik cari provinsi..."
+                                        icon="fa-map"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kabupaten / Kota</label>
+                                    <SearchableSelect
+                                        v-model="formData.kabupaten_id"
+                                        :options="availableKabupatens"
+                                        value-key="id_kabupaten"
+                                        label-key="nama_kabupaten"
+                                        placeholder="-- Pilih Kabupaten --"
+                                        search-placeholder="Ketik cari kabupaten..."
+                                        icon="fa-city"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kecamatan</label>
+                                    <SearchableSelect
+                                        v-model="formData.kecamatan_id"
+                                        :options="availableKecamatans"
+                                        value-key="id_kecamatan"
+                                        label-key="nama_kecamatan"
+                                        placeholder="-- Pilih Kecamatan --"
+                                        search-placeholder="Ketik cari kecamatan..."
+                                        icon="fa-building-columns"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Kelurahan / Desa</label>
+                                    <SearchableSelect
+                                        v-model="formData.desa_id"
+                                        :options="availableDesas"
+                                        value-key="id_desa"
+                                        label-key="nama_desa"
+                                        placeholder="-- Pilih Kelurahan/Desa --"
+                                        search-placeholder="Ketik cari kelurahan/desa..."
+                                        icon="fa-tree-city"
+                                        icon-color="text-rose-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Keterangan & Catatan -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-info text-amber-600"></i>
+                                <span>Keterangan & Catatan Pastoral</span>
+                            </h4>
+                            <div>
+                                <textarea
+                                    v-model="formData.keterangan"
+                                    rows="3"
+                                    placeholder="Catatan tambahan pastoral mengenai Komunitas Umat Basis ini..."
+                                    class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                                ></textarea>
+                            </div>
+                        </div>
+                    </template>
+
                     <!-- 5. DIREKTORI DPP FORM (100% Matches http://localhost/katedral/admin/direktori-dpp) -->
                     <template v-else-if="moduleKey === 'direktori-dpp'">
                         <div class="space-y-4">
@@ -5961,10 +6683,11 @@ const showKubFilter = computed(() => {
 
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Bergabung</label>
-                                    <input
+                                    <DateInput
                                         v-model="formData.tanggal_bergabung"
-                                        type="date"
-                                        class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+                                        placeholder="dd/mm/yyyy"
+                                        iconColor="text-sky-600"
+                                        inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition font-medium"
                                     />
                                 </div>
 
@@ -6060,35 +6783,58 @@ const showKubFilter = computed(() => {
                                     />
                                 </div>
 
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Paroki Induk (Asal Pemekaran) *</label>
-                                    <SearchableSelect
-                                        v-model="formData.paroki_id"
-                                        :options="parokiList"
-                                        value-key="id_paroki"
-                                        label-key="nama_paroki"
-                                        placeholder="-- Pilih Paroki Induk --"
-                                        search-placeholder="Ketik cari paroki..."
-                                        icon="fa-church"
-                                        icon-color="text-amber-600"
-                                    />
+                                <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
+                                    <div class="space-y-1.5">
+                                        <label class="block text-[11.5px] font-bold text-slate-800 flex items-center justify-between">
+                                            <span class="flex items-center gap-1.5">
+                                                <i class="fa-solid fa-church text-amber-600"></i>
+                                                <span>Paroki Induk (Asal Pemekaran) *</span>
+                                            </span>
+                                        </label>
+                                        <SearchableSelect
+                                            v-model="formData.paroki_id"
+                                            :options="parokiList"
+                                            value-key="id_paroki"
+                                            label-key="nama_paroki"
+                                            placeholder="-- Pilih Paroki Induk --"
+                                            search-placeholder="Ketik cari paroki..."
+                                            icon="fa-church"
+                                            icon-color="text-amber-600"
+                                            :wrap-text="true"
+                                        />
+                                        <div v-if="selectedKuasiParokiName" class="mt-1 flex items-start gap-1.5 text-[11px] text-amber-800 bg-amber-50/90 px-2.5 py-1.5 rounded-xl border border-amber-200 leading-snug">
+                                            <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 shrink-0 text-[10px]"></i>
+                                            <span class="font-bold">Paroki Induk: <span class="font-semibold">{{ selectedKuasiParokiName }}</span></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        <label class="block text-[11.5px] font-bold text-slate-800 flex items-center justify-between">
+                                            <span class="flex items-center gap-1.5">
+                                                <i class="fa-solid fa-layer-group text-cyan-600"></i>
+                                                <span>Dekenat / Kevikepan</span>
+                                            </span>
+                                            <span v-if="formData.paroki_id" class="text-[10px] text-cyan-700 bg-cyan-100/70 px-2 py-0.5 rounded-full font-bold">Otomatis Terhubung</span>
+                                        </label>
+                                        <SearchableSelect
+                                            v-model="formData.dekenat_id"
+                                            :options="dekenatList"
+                                            value-key="id_dekenat"
+                                            label-key="nama_dekenat"
+                                            placeholder="-- Pilih Kevikepan --"
+                                            search-placeholder="Ketik cari kevikepan..."
+                                            icon="fa-layer-group"
+                                            icon-color="text-cyan-600"
+                                            :wrap-text="true"
+                                        />
+                                        <div v-if="selectedKuasiDekenatName" class="mt-1 flex items-start gap-1.5 text-[11px] text-cyan-800 bg-cyan-50/90 px-2.5 py-1.5 rounded-xl border border-cyan-200 leading-snug">
+                                            <i class="fa-solid fa-circle-check text-cyan-600 mt-0.5 shrink-0 text-[10px]"></i>
+                                            <span class="font-bold">Kevikepan: <span class="font-semibold">{{ selectedKuasiDekenatName }}</span></span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Dekenat / Kevikepan</label>
-                                    <SearchableSelect
-                                        v-model="formData.dekenat_id"
-                                        :options="dekenatList"
-                                        value-key="id_kevikepan"
-                                        label-key="nama_kevikepan"
-                                        placeholder="-- Pilih Kevikepan --"
-                                        search-placeholder="Ketik cari kevikepan..."
-                                        icon="fa-layer-group"
-                                        icon-color="text-cyan-600"
-                                    />
-                                </div>
-
-                                <div>
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Pastor Administrator Kuasi</label>
                                     <SearchableSelect
                                         v-model="formData.pastor_administrator"
@@ -6099,6 +6845,7 @@ const showKubFilter = computed(() => {
                                         search-placeholder="Ketik cari nama pastor..."
                                         icon="fa-user-tie"
                                         icon-color="text-amber-600"
+                                        :wrap-text="true"
                                     />
                                 </div>
 
@@ -6530,11 +7277,11 @@ const showKubFilter = computed(() => {
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                         {{ (isKubLevel || formData.jenis_mutasi === 'Meninggal Dunia') ? 'Tanggal Meninggal Dunia *' : 'Tanggal Mutasi *' }}
                                     </label>
-                                    <input
+                                    <DateInput
                                         v-model="formData.tgl_mutasi"
-                                        type="date"
+                                        placeholder="dd/mm/yyyy"
                                         required
-                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                        inputClass="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                                     />
                                 </div>
 
@@ -6676,7 +7423,7 @@ const showKubFilter = computed(() => {
                                             <label class="block text-[11px] font-bold text-slate-700 mb-1">Peran / Role *</label>
                                             <SearchableSelect
                                                 v-model="formData.role_id"
-                                                :options="roleList"
+                                                :options="sanitizedRoleList"
                                                 valueKey="id"
                                                 labelKey="nama_role"
                                                 placeholder="-- Pilih Peran / Role --"
@@ -6746,7 +7493,7 @@ const showKubFilter = computed(() => {
                                                 v-model="formData.kub_id"
                                                 :options="filteredFormKubs"
                                                 valueKey="id"
-                                                labelKey="nama_kub"
+                                                labelKey="nama_kub_with_asal"
                                                 placeholder="-- Tidak Terikat KUB --"
                                                 searchPlaceholder="Cari KUB..."
                                                 icon="fa-users"
@@ -7302,14 +8049,12 @@ const showKubFilter = computed(() => {
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                             Tanggal Pelaksanaan <span class="text-rose-500">*</span>
                                         </label>
-                                        <div class="relative">
-                                            <input
-                                                v-model="formData.tanggal"
-                                                type="date"
-                                                required
-                                                class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
-                                            />
-                                        </div>
+                                        <DateInput
+                                            v-model="formData.tanggal"
+                                            placeholder="dd/mm/yyyy"
+                                            required
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                        />
                                     </div>
 
                                     <div>
@@ -7457,20 +8202,20 @@ const showKubFilter = computed(() => {
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                             Tanggal Mulai <span class="text-rose-500">*</span>
                                         </label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal_mulai"
-                                            type="date"
+                                            placeholder="dd/mm/yyyy"
                                             required
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
                                         />
                                     </div>
 
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Selesai</label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal_selesai"
-                                            type="date"
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
+                                            placeholder="dd/mm/yyyy"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 transition"
                                         />
                                     </div>
 
@@ -7538,10 +8283,10 @@ const showKubFilter = computed(() => {
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Tayang / Berlaku</label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tgl_tayang"
-                                            type="date"
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            placeholder="dd/mm/yyyy"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
 
@@ -7591,11 +8336,11 @@ const showKubFilter = computed(() => {
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Renungan <span class="text-rose-500">*</span></label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal"
-                                            type="date"
+                                            placeholder="dd/mm/yyyy"
                                             required
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
 
@@ -7644,10 +8389,10 @@ const showKubFilter = computed(() => {
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                                     <div>
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">Tanggal Peristiwa</label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal_peristiwa"
-                                            type="date"
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            placeholder="dd/mm/yyyy"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
                                     <div>
@@ -7709,11 +8454,11 @@ const showKubFilter = computed(() => {
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                             Tanggal Penerimaan Sakramen <span class="text-rose-500">*</span>
                                         </label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal"
-                                            type="date"
+                                            placeholder="dd/mm/yyyy"
                                             required
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
 
@@ -7924,10 +8669,10 @@ const showKubFilter = computed(() => {
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                         Tanggal Rencana Pelaksanaan
                                     </label>
-                                    <input
+                                    <DateInput
                                         v-model="formData.tanggal_pelaksanaan"
-                                        type="date"
-                                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                        placeholder="dd/mm/yyyy"
+                                        inputClass="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                     />
                                 </div>
 
@@ -8163,11 +8908,11 @@ const showKubFilter = computed(() => {
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                             Tanggal Bayar <span class="text-rose-500">*</span>
                                         </label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal_bayar"
-                                            type="date"
+                                            placeholder="dd/mm/yyyy"
                                             required
-                                            class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
 
@@ -8235,11 +8980,11 @@ const showKubFilter = computed(() => {
                                         <label class="block text-[11px] font-bold text-slate-700 mb-1">
                                             Tanggal Misa <span class="text-rose-500">*</span>
                                         </label>
-                                        <input
+                                        <DateInput
                                             v-model="formData.tanggal"
-                                            type="date"
+                                            placeholder="dd/mm/yyyy"
                                             required
-                                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                                            inputClass="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                                         />
                                     </div>
 
@@ -8716,11 +9461,11 @@ const showKubFilter = computed(() => {
                                 <div class="flex items-center gap-4">
                                     <div class="w-18 h-18 rounded-2xl bg-white border border-slate-200 p-1.5 shadow-2xs flex items-center justify-center overflow-hidden shrink-0">
                                         <img
-                                            v-if="previewImage || (formData[col.key] && typeof formData[col.key] === 'string')"
-                                            :src="previewImage || getImageUrl(formData[col.key])"
+                                            v-if="previewImage || (formData[col.key] && typeof formData[col.key] === 'string') || ['umat', 'data-umat', 'jiwa', 'kk-katolik', 'kk', 'keluarga'].includes(moduleKey) || col.key === 'foto'"
+                                            :src="previewImage || (formData[col.key] ? getImageUrl(formData[col.key]) : getDefaultAvatarByGender(formData.jenis_kelamin, formData.usia ?? formData.umur ?? formData.tanggal_lahir ?? formData.tgl_lahir))"
                                             :alt="col.label"
-                                            class="w-full h-full object-contain"
-                                            @error="(e) => { e.target.onerror = null; e.target.src = '/images/logo-keuskupan.png'; }"
+                                            class="w-full h-full object-cover"
+                                            @error="(e) => handleImageError(e, formData, col.key)"
                                         />
                                         <i v-else class="fa-solid fa-cloud-arrow-up text-2xl text-slate-300"></i>
                                     </div>
@@ -8883,11 +9628,11 @@ const showKubFilter = computed(() => {
                                     <option v-for="opt in col.enumOptions" :key="opt" :value="opt">{{ opt }}</option>
                                 </select>
                                 <!-- Date input detection -->
-                                <input
+                                <DateInput
                                     v-else-if="col.isDate || col.key.includes('tanggal') || col.key.includes('tgl') || col.key.endsWith('_at')"
                                     v-model="formData[col.key]"
-                                    type="date"
-                                    class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                                    placeholder="dd/mm/yyyy"
+                                    inputClass="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-medium"
                                 />
                                 <!-- Time input detection -->
                                 <input

@@ -37,7 +37,7 @@ trait SettingsModuleTrait
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',
@@ -318,6 +318,12 @@ trait SettingsModuleTrait
                 DB::table('pengaturan_aplikasi')->insert($payload);
             }
             Cache::forget('global_pengaturan_aplikasi_first');
+            Cache::forget('global_app_profile');
+            Cache::forget('global_app_settings');
+            Cache::increment('global_view_data_version');
+            for ($v = 1; $v <= 20; $v++) {
+                Cache::forget("frontend.common_data.{$v}");
+            }
         }
 
         return back()->with('success', 'Pengaturan Video Header berhasil disimpan.');

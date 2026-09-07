@@ -13,180 +13,200 @@ return new class extends Migration
         // -----------------------------------------------------------------
         // 1. TABEL ADMINISTRASI PEMERINTAHAN (KEMENDAGRI / CAHYADSN)
         // -----------------------------------------------------------------
-        Schema::create('wilayah_provinsis', function (Blueprint $table) {
-            $table->char('kode', 2)->primary();
-            $table->string('nama', 100);
-        });
+        if (!Schema::hasTable('wilayah_provinsis')) {
+            Schema::create('wilayah_provinsis', function (Blueprint $table) {
+                $table->char('kode', 2)->primary();
+                $table->string('nama', 100);
+            });
+        }
 
-        Schema::create('wilayah_kabupatens', function (Blueprint $table) {
-            $table->char('kode', 5)->primary();
-            $table->char('provinsi_kode', 2)->index();
-            $table->string('nama', 100);
-            $table->foreign('provinsi_kode')->references('kode')->on('wilayah_provinsis')->cascadeOnDelete();
-        });
+        if (!Schema::hasTable('wilayah_kabupatens')) {
+            Schema::create('wilayah_kabupatens', function (Blueprint $table) {
+                $table->char('kode', 5)->primary();
+                $table->char('provinsi_kode', 2)->index();
+                $table->string('nama', 100);
+                $table->foreign('provinsi_kode')->references('kode')->on('wilayah_provinsis')->cascadeOnDelete();
+            });
+        }
 
-        Schema::create('wilayah_kecamatans', function (Blueprint $table) {
-            $table->char('kode', 8)->primary();
-            $table->char('kabupaten_kode', 5)->index();
-            $table->string('nama', 100);
-            $table->foreign('kabupaten_kode')->references('kode')->on('wilayah_kabupatens')->cascadeOnDelete();
-        });
+        if (!Schema::hasTable('wilayah_kecamatans')) {
+            Schema::create('wilayah_kecamatans', function (Blueprint $table) {
+                $table->char('kode', 8)->primary();
+                $table->char('kabupaten_kode', 5)->index();
+                $table->string('nama', 100);
+                $table->foreign('kabupaten_kode')->references('kode')->on('wilayah_kabupatens')->cascadeOnDelete();
+            });
+        }
 
-        Schema::create('wilayah_desas', function (Blueprint $table) {
-            $table->char('kode', 13)->primary();
-            $table->char('kecamatan_kode', 8)->index();
-            $table->string('nama', 100);
-            $table->char('kode_pos', 5)->nullable();
-            $table->foreign('kecamatan_kode')->references('kode')->on('wilayah_kecamatans')->cascadeOnDelete();
-        });
+        if (!Schema::hasTable('wilayah_desas')) {
+            Schema::create('wilayah_desas', function (Blueprint $table) {
+                $table->char('kode', 13)->primary();
+                $table->char('kecamatan_kode', 8)->index();
+                $table->string('nama', 100);
+                $table->char('kode_pos', 5)->nullable();
+                $table->foreign('kecamatan_kode')->references('kode')->on('wilayah_kecamatans')->cascadeOnDelete();
+            });
+        }
 
         // -----------------------------------------------------------------
         // 2. TABEL HIERARKI GEREJAWI (DENGAN ALAMAT SIPIL LENGKAP)
         // -----------------------------------------------------------------
 
         // A. KEUSKUPAN
-        Schema::create('keuskupans', function (Blueprint $table) {
-            $table->id();
-            $table->string('kode', 30)->index();
-            $table->string('nama', 150);
-            $table->string('nama_latin', 180)->nullable();
-            $table->string('nama_uskup', 150)->nullable();
-            $table->string('tipe', 50)->default('Keuskupan Sufragan');
-            
-            // 4 Level Wilayah Sipil (Pusat Kuria Keuskupan)
-            $table->char('provinsi_kode', 2)->nullable();
-            $table->char('kabupaten_kode', 5)->nullable();
-            $table->char('kecamatan_kode', 8)->nullable();
-            $table->char('desa_kode', 13)->nullable();
+        if (!Schema::hasTable('keuskupans')) {
+            Schema::create('keuskupans', function (Blueprint $table) {
+                $table->id();
+                $table->string('kode', 30)->index();
+                $table->string('nama', 150);
+                $table->string('nama_latin', 180)->nullable();
+                $table->string('nama_uskup', 150)->nullable();
+                $table->string('tipe', 50)->default('Keuskupan Sufragan');
+                
+                // 4 Level Wilayah Sipil (Pusat Kuria Keuskupan)
+                $table->char('provinsi_kode', 2)->nullable();
+                $table->char('kabupaten_kode', 5)->nullable();
+                $table->char('kecamatan_kode', 8)->nullable();
+                $table->char('desa_kode', 13)->nullable();
 
-            $table->text('alamat_kantor')->nullable();
-            $table->string('kontak', 100)->nullable();
-            $table->boolean('is_aktif')->default(true);
-            $table->timestamps();
-            $table->softDeletes();
+                $table->text('alamat_kantor')->nullable();
+                $table->string('kontak', 100)->nullable();
+                $table->boolean('is_aktif')->default(true);
+                $table->timestamps();
+                $table->softDeletes();
 
-            $this->addWilayahForeignKeys($table);
-        });
+                $this->addWilayahForeignKeys($table);
+            });
+        }
 
         // B. KEVIKEPAN / DEKENAT
-        Schema::create('kevikepans', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('keuskupan_id')->constrained('keuskupans')->cascadeOnDelete();
-            $table->string('kode', 30)->index();
-            $table->string('nama', 150);
-            $table->string('nama_vikep', 150)->nullable();
+        if (!Schema::hasTable('kevikepans')) {
+            Schema::create('kevikepans', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('keuskupan_id')->constrained('keuskupans')->cascadeOnDelete();
+                $table->string('kode', 30)->index();
+                $table->string('nama', 150);
+                $table->string('nama_vikep', 150)->nullable();
 
-            // 4 Level Wilayah Sipil (Kantor Kevikepan)
-            $table->char('provinsi_kode', 2)->nullable();
-            $table->char('kabupaten_kode', 5)->nullable();
-            $table->char('kecamatan_kode', 8)->nullable();
-            $table->char('desa_kode', 13)->nullable();
+                // 4 Level Wilayah Sipil (Kantor Kevikepan)
+                $table->char('provinsi_kode', 2)->nullable();
+                $table->char('kabupaten_kode', 5)->nullable();
+                $table->char('kecamatan_kode', 8)->nullable();
+                $table->char('desa_kode', 13)->nullable();
 
-            $table->text('alamat_kantor')->nullable();
-            $table->string('kontak', 100)->nullable();
-            $table->boolean('is_aktif')->default(true);
-            $table->timestamps();
-            $table->softDeletes();
+                $table->text('alamat_kantor')->nullable();
+                $table->string('kontak', 100)->nullable();
+                $table->boolean('is_aktif')->default(true);
+                $table->timestamps();
+                $table->softDeletes();
 
-            $this->addWilayahForeignKeys($table);
-        });
+                $this->addWilayahForeignKeys($table);
+            });
+        }
 
         // C. PAROKI / KUASI PAROKI
-        Schema::create('parokis', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('kevikepan_id')->constrained('kevikepans')->cascadeOnDelete();
-            $table->string('kode', 30)->index();
-            $table->string('nama', 150);
-            $table->enum('tipe', ['Paroki', 'Kuasi Paroki'])->default('Paroki');
-            $table->string('pelindung', 150)->nullable();
-            $table->string('pastor_kepala', 150)->nullable();
+        if (!Schema::hasTable('parokis')) {
+            Schema::create('parokis', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('kevikepan_id')->constrained('kevikepans')->cascadeOnDelete();
+                $table->string('kode', 30)->index();
+                $table->string('nama', 150);
+                $table->enum('tipe', ['Paroki', 'Kuasi Paroki'])->default('Paroki');
+                $table->string('pelindung', 150)->nullable();
+                $table->string('pastor_kepala', 150)->nullable();
 
-            // 4 Level Wilayah Sipil (Lokasi Pastoran / Gereja Paroki)
-            $table->char('provinsi_kode', 2)->nullable();
-            $table->char('kabupaten_kode', 5)->nullable();
-            $table->char('kecamatan_kode', 8)->nullable();
-            $table->char('desa_kode', 13)->nullable();
+                // 4 Level Wilayah Sipil (Lokasi Pastoran / Gereja Paroki)
+                $table->char('provinsi_kode', 2)->nullable();
+                $table->char('kabupaten_kode', 5)->nullable();
+                $table->char('kecamatan_kode', 8)->nullable();
+                $table->char('desa_kode', 13)->nullable();
 
-            $table->text('alamat')->nullable();
-            $table->string('kontak', 100)->nullable();
-            $table->boolean('is_aktif')->default(true);
-            $table->timestamps();
-            $table->softDeletes();
+                $table->text('alamat')->nullable();
+                $table->string('kontak', 100)->nullable();
+                $table->boolean('is_aktif')->default(true);
+                $table->timestamps();
+                $table->softDeletes();
 
-            $this->addWilayahForeignKeys($table);
-        });
+                $this->addWilayahForeignKeys($table);
+            });
+        }
 
         // D. STASI / KAPELA
-        Schema::create('stasis', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('paroki_id')->constrained('parokis')->cascadeOnDelete();
-            $table->string('kode', 30)->index();
-            $table->string('nama', 150);
-            $table->enum('tipe', ['Stasi', 'Kapela'])->default('Stasi');
-            $table->string('pelindung', 100)->nullable();
+        if (!Schema::hasTable('stasis')) {
+            Schema::create('stasis', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('paroki_id')->constrained('parokis')->cascadeOnDelete();
+                $table->string('kode', 30)->index();
+                $table->string('nama', 150);
+                $table->enum('tipe', ['Stasi', 'Kapela'])->default('Stasi');
+                $table->string('pelindung', 100)->nullable();
 
-            // 4 Level Wilayah Sipil (Lokasi Gedung Kapela/Stasi)
-            $table->char('provinsi_kode', 2)->nullable();
-            $table->char('kabupaten_kode', 5)->nullable();
-            $table->char('kecamatan_kode', 8)->nullable();
-            $table->char('desa_kode', 13)->nullable();
+                // 4 Level Wilayah Sipil (Lokasi Gedung Kapela/Stasi)
+                $table->char('provinsi_kode', 2)->nullable();
+                $table->char('kabupaten_kode', 5)->nullable();
+                $table->char('kecamatan_kode', 8)->nullable();
+                $table->char('desa_kode', 13)->nullable();
 
-            $table->text('alamat')->nullable();
-            $table->boolean('is_aktif')->default(true);
-            $table->timestamps();
-            $table->softDeletes();
+                $table->text('alamat')->nullable();
+                $table->boolean('is_aktif')->default(true);
+                $table->timestamps();
+                $table->softDeletes();
 
-            $this->addWilayahForeignKeys($table);
-        });
+                $this->addWilayahForeignKeys($table);
+            });
+        }
 
         // E. WILAYAH ROHANI
-        Schema::create('wilayahs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('paroki_id')->constrained('parokis')->cascadeOnDelete();
-            $table->string('kode', 30)->index();
-            $table->string('nama', 150);
-            $table->string('nomor_wilayah', 20)->nullable();
-            $table->string('nama_koordinator', 150)->nullable();
+        if (!Schema::hasTable('wilayahs')) {
+            Schema::create('wilayahs', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('paroki_id')->constrained('parokis')->cascadeOnDelete();
+                $table->string('kode', 30)->index();
+                $table->string('nama', 150);
+                $table->string('nomor_wilayah', 20)->nullable();
+                $table->string('nama_koordinator', 150)->nullable();
 
-            // 4 Level Wilayah Sipil (Cakupan Teritori Wilayah)
-            $table->char('provinsi_kode', 2)->nullable();
-            $table->char('kabupaten_kode', 5)->nullable();
-            $table->char('kecamatan_kode', 8)->nullable();
-            $table->char('desa_kode', 13)->nullable();
+                // 4 Level Wilayah Sipil (Cakupan Teritori Wilayah)
+                $table->char('provinsi_kode', 2)->nullable();
+                $table->char('kabupaten_kode', 5)->nullable();
+                $table->char('kecamatan_kode', 8)->nullable();
+                $table->char('desa_kode', 13)->nullable();
 
-            $table->boolean('is_aktif')->default(true);
-            $table->timestamps();
-            $table->softDeletes();
+                $table->boolean('is_aktif')->default(true);
+                $table->timestamps();
+                $table->softDeletes();
 
-            $this->addWilayahForeignKeys($table);
-        });
+                $this->addWilayahForeignKeys($table);
+            });
+        }
 
         // F. KUB (KOMUNITAS UMAT BASIS)
-        Schema::create('kubs', function (Blueprint $table) {
-            $table->id();
-            $table->string('kode', 50)->index();
-            $table->string('nama', 150);
+        if (!Schema::hasTable('kubs')) {
+            Schema::create('kubs', function (Blueprint $table) {
+                $table->id();
+                $table->string('kode', 50)->index();
+                $table->string('nama', 150);
 
-            // Induk Gerejawi (XOR: Salah satu antara Stasi atau Wilayah)
-            $table->foreignId('stasi_id')->nullable()->constrained('stasis')->nullOnDelete();
-            $table->foreignId('wilayah_id')->nullable()->constrained('wilayahs')->nullOnDelete();
+                // Induk Gerejawi (XOR: Salah satu antara Stasi atau Wilayah)
+                $table->foreignId('stasi_id')->nullable()->constrained('stasis')->nullOnDelete();
+                $table->foreignId('wilayah_id')->nullable()->constrained('wilayahs')->nullOnDelete();
 
-            // 4 Level Wilayah Sipil (Titik Pusat Komunitas Basis)
-            $table->char('provinsi_kode', 2)->nullable();
-            $table->char('kabupaten_kode', 5)->nullable();
-            $table->char('kecamatan_kode', 8)->nullable();
-            $table->char('desa_kode', 13)->nullable();
+                // 4 Level Wilayah Sipil (Titik Pusat Komunitas Basis)
+                $table->char('provinsi_kode', 2)->nullable();
+                $table->char('kabupaten_kode', 5)->nullable();
+                $table->char('kecamatan_kode', 8)->nullable();
+                $table->char('desa_kode', 13)->nullable();
 
-            $table->string('dusun', 100)->nullable();
-            $table->string('rw', 10)->nullable();
-            $table->string('rt', 10)->nullable();
-            $table->string('nama_ketua', 150)->nullable();
-            $table->boolean('is_aktif')->default(true);
-            $table->timestamps();
-            $table->softDeletes();
+                $table->string('dusun', 100)->nullable();
+                $table->string('rw', 10)->nullable();
+                $table->string('rt', 10)->nullable();
+                $table->string('nama_ketua', 150)->nullable();
+                $table->boolean('is_aktif')->default(true);
+                $table->timestamps();
+                $table->softDeletes();
 
-            $this->addWilayahForeignKeys($table);
-        });
+                $this->addWilayahForeignKeys($table);
+            });
+        }
     }
 
     /**

@@ -57,8 +57,9 @@ const roleDetails = {
     kub: {
         key: 'kub',
         level: 'Tingkat Basis',
-        name: 'Ketua / Pengurus KUB',
+        name: 'Admin KUB',
         scope: 'Pengurus Komunitas Umat Basis',
+
         badge: 'Scope KUB (Ujung Tombak)',
         badgeColor: 'bg-cyan-50 text-cyan-700 border-cyan-200',
         icon: 'fa-people-group',
@@ -494,7 +495,8 @@ const activeRoleData = computed(() => {
 });
 
 const tabList = [
-    { key: 'kub', label: 'Ketua KUB', icon: 'fa-people-group' },
+    { key: 'kub', label: 'Admin KUB', icon: 'fa-people-group' },
+
     { key: 'wilayah', label: 'Admin Wilayah', icon: 'fa-compass' },
     { key: 'kapela', label: 'Admin Kapela / Stasi', icon: 'fa-place-of-worship' },
     { key: 'pastor', label: 'Pastor Paroki', icon: 'fa-user-tie' },

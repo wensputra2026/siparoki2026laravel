@@ -37,7 +37,7 @@ trait UmatModuleTrait
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',
@@ -338,7 +338,7 @@ trait UmatModuleTrait
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',
@@ -397,7 +397,7 @@ trait UmatModuleTrait
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',
@@ -416,14 +416,40 @@ trait UmatModuleTrait
             ];
         });
 
+        $authUser = auth()->user();
+        $targetKubId = $authUser?->kub_id ?: ($firstSegment === 'kub' ? (session('simulated_kub_id') ?: $request->input('kub_id')) : null);
+        if (!$targetKubId && $firstSegment === 'kub') {
+            $targetKubId = \App\Models\User::whereNotNull('kub_id')->value('kub_id') ?: \App\Models\Kub::value('id');
+            session(['simulated_kub_id' => $targetKubId]);
+        }
+        $userKub = $targetKubId ? \App\Models\Kub::find($targetKubId) : null;
+        $userKubId = $userKub?->id;
+        $userWilayahId = $authUser?->wilayah_id ?: $userKub?->wilayah_id ?: ($firstSegment === 'wilayah' ? (session('simulated_wilayah_id') ?: $request->input('wilayah_id')) : null);
+        $userKapelaId = $authUser?->kapela_id ?: $userKub?->kapela_id ?: ($firstSegment === 'kapela' ? (session('simulated_kapela_id') ?: $request->input('kapela_id')) : null);
+
+        $kkQuery = \App\Models\KkKatolik::orderBy('nama_lahir_pemilik');
+        if ($targetKubId) {
+            $kkQuery->where('kub_id', $targetKubId);
+        } elseif ($userWilayahId) {
+            $kkQuery->where('wilayah_id', $userWilayahId);
+        } elseif ($userKapelaId) {
+            $kkQuery->where('kapela_id', $userKapelaId);
+        }
+
         return Inertia::render('Inertia/UmatForm', [
             'role' => $resolvedRole,
             'prefix' => $firstSegment,
             'isEdit' => false,
             'umatItem' => null,
-            'kkList' => \App\Models\KkKatolik::orderBy('nama_lahir_pemilik')->get(['id', 'no_kk_kw', 'nama_lahir_pemilik', 'nama_baptis_pemilik', 'wilayah_id', 'kapela_id', 'kub_id']),
+            'userKubId' => $userKubId,
+            'userWilayahId' => $userWilayahId,
+            'userKapelaId' => $userKapelaId,
+            'defaultKubId' => $userKubId,
+            'defaultWilayahId' => $userWilayahId,
+            'defaultKapelaId' => $userKapelaId,
+            'kkList' => $kkQuery->get(['id', 'no_kk_kw', 'nama_lahir_pemilik', 'nama_baptis_pemilik', 'wilayah_id', 'kapela_id', 'kub_id']),
             'wilayahList' => \App\Models\Wilayah::orderBy('nama_wilayah')->get(['id', 'nama_wilayah']),
-            'kubList' => \App\Models\Kub::orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id']),
+            'kubList' => \App\Models\Kub::orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id', 'kapela_id']),
             'kapelaList' => \App\Models\Kapela::orderBy('nama_kapela')->get(['id', 'nama_kapela']),
             'parokiList' => \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'nama_paroki', 'kode_paroki']),
             'pastorList' => $pastorList,
@@ -444,17 +470,30 @@ trait UmatModuleTrait
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',
         ];
         $resolvedRole = $roleMap[$firstSegment] ?? auth()->user()?->role?->nama_role ?? 'Super Admin';
 
-        $decodedId = decode_id($id) ?: $id;
-        $umatItem = \App\Models\Umat::findOrFail($decodedId);
+        $umatItem = \App\Models\Umat::findByUuidOrIdOrFail($id);
         $umatItem->hashid = encode_id($umatItem->id);
         $umatItem->iid = $umatItem->hashid;
+
+        $authUser = auth()->user();
+        $isSuperAdmin = (int)($authUser?->role_id ?? 0) === 1 || in_array(strtolower($authUser?->role?->nama_role ?? ''), ['super admin', 'superadmin'], true);
+        $targetKubId = $authUser?->kub_id ?: ($firstSegment === 'kub' ? (session('simulated_kub_id') ?: $request->input('kub_id')) : null);
+
+        // Proteksi Hak Akses Level KUB: Ketua KUB tidak boleh mengakses data umat di luar KUB-nya
+        if ($firstSegment === 'kub' || (!$isSuperAdmin && $authUser?->kub_id)) {
+            $umatKubId = $umatItem->kub_id ?: ($umatItem->kk?->kub_id);
+            if ($targetKubId && $umatKubId && (int)$umatKubId !== (int)$targetKubId) {
+                if (!$isSuperAdmin) {
+                    return redirect("/{$firstSegment}/umat")->with('error', 'Anda tidak memiliki hak akses untuk mengedit data umat di luar KUB Anda.');
+                }
+            }
+        }
 
         $defaultParokiId = $this->defaultParokiIdFromProfile();
         $defaultParoki = Paroki::with('keuskupan')->find($defaultParokiId)
@@ -468,14 +507,34 @@ trait UmatModuleTrait
             ];
         });
 
+        $userKub = $targetKubId ? \App\Models\Kub::find($targetKubId) : ($umatItem->kub_id ? \App\Models\Kub::find($umatItem->kub_id) : null);
+        $userKubId = $userKub?->id ?: $umatItem->kub_id;
+        $userWilayahId = $userKub?->wilayah_id ?: $umatItem->wilayah_id;
+        $userKapelaId = $userKub?->kapela_id ?: $umatItem->kapela_id;
+
+        $kkQuery = \App\Models\KkKatolik::orderBy('nama_lahir_pemilik');
+        if ($targetKubId) {
+            $kkQuery->where('kub_id', $targetKubId);
+        } elseif ($userWilayahId) {
+            $kkQuery->where('wilayah_id', $userWilayahId);
+        } elseif ($userKapelaId) {
+            $kkQuery->where('kapela_id', $userKapelaId);
+        }
+
         return Inertia::render('Inertia/UmatForm', [
             'role' => $resolvedRole,
             'prefix' => $firstSegment,
             'isEdit' => true,
             'umatItem' => $umatItem,
-            'kkList' => \App\Models\KkKatolik::orderBy('nama_lahir_pemilik')->get(['id', 'no_kk_kw', 'nama_lahir_pemilik', 'nama_baptis_pemilik', 'wilayah_id', 'kapela_id', 'kub_id']),
+            'userKubId' => $userKubId,
+            'userWilayahId' => $userWilayahId,
+            'userKapelaId' => $userKapelaId,
+            'defaultKubId' => $userKubId,
+            'defaultWilayahId' => $userWilayahId,
+            'defaultKapelaId' => $userKapelaId,
+            'kkList' => $kkQuery->get(['id', 'no_kk_kw', 'nama_lahir_pemilik', 'nama_baptis_pemilik', 'wilayah_id', 'kapela_id', 'kub_id']),
             'wilayahList' => \App\Models\Wilayah::orderBy('nama_wilayah')->get(['id', 'nama_wilayah']),
-            'kubList' => \App\Models\Kub::orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id']),
+            'kubList' => \App\Models\Kub::orderBy('nama_kub')->get(['id', 'nama_kub', 'wilayah_id', 'kapela_id']),
             'kapelaList' => \App\Models\Kapela::orderBy('nama_kapela')->get(['id', 'nama_kapela']),
             'parokiList' => \App\Models\Paroki::orderBy('nama_paroki')->get(['id_paroki', 'nama_paroki', 'kode_paroki']),
             'pastorList' => $pastorList,
@@ -507,7 +566,7 @@ trait UmatModuleTrait
 
         $this->clearFastAccessCache();
 
-        return redirect("/{$firstSegment}/umat")->with('success', 'Data Umat baru berhasil disimpan.');
+        return redirect("/{$firstSegment}/umat")->with('success', 'Data Anggota Keluarga / Umat baru berhasil disimpan.');
     }
 
 
@@ -516,8 +575,7 @@ trait UmatModuleTrait
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $userRoleSlug = strtolower(auth()->user()?->role?->slug ?? auth()->user()?->role?->nama_role ?? '');
 
-        $decodedId = decode_id($id) ?: $id;
-        $umat = \App\Models\Umat::findOrFail($decodedId);
+        $umat = \App\Models\Umat::findByUuidOrIdOrFail($id);
         $data = $request->all();
         $validColumns = $this->schemaColumns('umat');
         $cleanData = [];
@@ -535,7 +593,7 @@ trait UmatModuleTrait
 
         $this->clearFastAccessCache();
 
-        return redirect("/{$firstSegment}/umat")->with('success', 'Data Umat berhasil diperbarui.');
+        return redirect("/{$firstSegment}/umat")->with('success', 'Data Anggota Keluarga / Umat berhasil diperbarui.');
     }
 
     public function umatOptions(\Illuminate\Http\Request $request)
@@ -572,5 +630,205 @@ trait UmatModuleTrait
             });
 
         return response()->json($rows->all());
+    }
+
+    public function exportUmatPdf(Request $request, string|int $id)
+    {
+        $umat = \App\Models\Umat::with([
+            'kk',
+            'kk.anggota',
+            'wilayah',
+            'kapela',
+            'kub',
+            'kk.kub',
+            'kk.wilayah',
+            'kk.kapela'
+        ])->whereUuidOrId($id)->first()
+            ?? \App\Models\Umat::with([
+                'kk',
+                'kk.anggota',
+                'wilayah',
+                'kapela',
+                'kub',
+                'kk.kub',
+                'kk.wilayah',
+                'kk.kapela'
+            ])->where('nik', $id)->first()
+            ?? \App\Models\Umat::with([
+                'kk',
+                'kk.anggota',
+                'wilayah',
+                'kapela',
+                'kub',
+                'kk.kub',
+                'kk.wilayah',
+                'kk.kapela'
+            ])->find($id)
+            ?? \App\Models\Umat::with([
+                'kk',
+                'kk.anggota',
+                'wilayah',
+                'kapela',
+                'kub',
+                'kk.kub',
+                'kk.wilayah',
+                'kk.kapela'
+            ])->firstOrFail();
+
+        // Paroki Utama (Default) dari profil_paroki / pengaturan
+        $defaultParokiId = method_exists($this, 'defaultParokiIdFromProfile') ? $this->defaultParokiIdFromProfile() : null;
+        $paroki = Paroki::with(['keuskupan', 'dekenat'])->find($defaultParokiId)
+            ?? Paroki::with(['keuskupan', 'dekenat'])->where('nama_paroki', 'like', '%Benlutu%')->first()
+            ?? Paroki::with(['keuskupan', 'dekenat'])->first();
+
+        $profilParoki = \App\Models\ProfilParoki::first();
+
+        // Nama Pastor Paroki aktif sesuai Profil Paroki Utama (Default)
+        $namaPastorParoki = $profilParoki?->pastor_paroki
+            ?: ($paroki?->nama_pastor_paroki_aktif
+            ?: ($paroki?->pastor_paroki
+            ?: 'RD. Herman Hilers Penga'));
+
+        $namaPastorRekan = $profilParoki?->pastor_rekan ?: null;
+
+        // Jabatan Pastor aktif
+        $cleanPastorName = trim(preg_replace('/^(RD\.|Pr\.|RP\.|P\.)\s*/i', '', $namaPastorParoki));
+        $pastorRecord = \Illuminate\Support\Facades\DB::table('master_pastor')
+            ->where(function ($q) use ($namaPastorParoki, $cleanPastorName) {
+                $q->where('nama_pastor', $namaPastorParoki)
+                  ->orWhere('nama_pastor', 'like', '%' . $cleanPastorName . '%');
+            })
+            ->first()
+            ?? \Illuminate\Support\Facades\DB::table('riwayat_pastor_paroki')
+            ->where(function ($q) use ($namaPastorParoki, $cleanPastorName) {
+                $q->where('nama_pastor', $namaPastorParoki)
+                  ->orWhere('nama_pastor', 'like', '%' . $cleanPastorName . '%');
+            })
+            ->first();
+
+        $jabatanPastor = $pastorRecord?->jabatan ?: 'Pastor Paroki';
+
+        // Daftar Pastor resmi yang bertugas di Paroki ini (sesuai Profil Paroki & Master Pastor terkait)
+        $pastorsInDb = \App\Models\MasterPastor::where(function ($q) {
+                $q->whereNull('status')
+                  ->orWhere('status', 'like', '%aktif%')
+                  ->orWhere('status', 1)
+                  ->orWhere('status', '1');
+            })
+            ->where(function ($q) use ($defaultParokiId, $paroki) {
+                if ($defaultParokiId) {
+                    $q->where('paroki_id', $defaultParokiId);
+                }
+                $namaParokiClean = preg_replace('/^Paroki\s+/i', '', $paroki?->nama_paroki ?? 'Benlutu');
+                $q->orWhere('paroki_tugas', 'like', '%' . $namaParokiClean . '%');
+            })
+            ->get();
+
+        $daftarPastor = collect();
+
+        // 1. Tambah Pastor Paroki dari Profil Paroki Default
+        if ($namaPastorParoki) {
+            $dbMatch = $pastorsInDb->first(function ($p) use ($namaPastorParoki) {
+                return stripos($p->nama_pastor, trim(preg_replace('/^(RD\.|RP\.|Pr\.|P\.)\s*/i', '', $namaPastorParoki))) !== false;
+            });
+            $formattedName = $dbMatch ? \App\Models\MasterPastor::formatNama($dbMatch) : $namaPastorParoki;
+            $daftarPastor->push((object)[
+                'id' => $dbMatch?->id ?? 1,
+                'nama_pastor' => $formattedName,
+                'jabatan' => 'Pastor Paroki',
+            ]);
+        }
+
+        // 2. Tambah Pastor Rekan dari Profil Paroki Default
+        if ($namaPastorRekan) {
+            $dbMatch = $pastorsInDb->first(function ($p) use ($namaPastorRekan) {
+                return stripos($p->nama_pastor, trim(preg_replace('/^(RD\.|RP\.|Pr\.|P\.)\s*/i', '', $namaPastorRekan))) !== false;
+            });
+            $formattedName = $dbMatch ? \App\Models\MasterPastor::formatNama($dbMatch) : $namaPastorRekan;
+            if (!$daftarPastor->contains(fn($it) => stripos($it->nama_pastor, $formattedName) !== false)) {
+                $daftarPastor->push((object)[
+                    'id' => $dbMatch?->id ?? 2,
+                    'nama_pastor' => $formattedName,
+                    'jabatan' => 'Pastor Rekan',
+                ]);
+            }
+        }
+
+        // 3. Tambahkan pastor lain yang secara sah terdaftar bertugas di paroki ini (paroki_id = defaultParokiId)
+        foreach ($pastorsInDb as $p) {
+            $formatted = \App\Models\MasterPastor::formatNama($p);
+            $cleanP = trim(preg_replace('/^(RD\.|RP\.|Pr\.|P\.)\s*/i', '', $p->nama_pastor));
+            $alreadyExists = $daftarPastor->contains(function ($it) use ($cleanP, $formatted) {
+                return stripos($it->nama_pastor, $cleanP) !== false || stripos($it->nama_pastor, $formatted) !== false;
+            });
+            if (!$alreadyExists) {
+                $daftarPastor->push((object)[
+                    'id' => $p->id,
+                    'nama_pastor' => $formatted,
+                    'jabatan' => $p->jabatan ?: 'Pastor Rekan',
+                ]);
+            }
+        }
+
+        // Dukungan parameter URL jika admin ingin langsung memilih Pastor tertentu via URL
+        if ($request->filled('pastor_id')) {
+            $pReq = $daftarPastor->firstWhere('id', (int) $request->query('pastor_id'));
+            if ($pReq) {
+                $namaPastorParoki = $pReq->nama_pastor;
+                $jabatanPastor = $pReq->jabatan ?: 'Pastor Rekan';
+            }
+        } elseif ($request->filled('pastor')) {
+            $pSearch = (string) $request->query('pastor');
+            $pReq = $daftarPastor->first(function ($p) use ($pSearch) {
+                return stripos($p->nama_pastor, $pSearch) !== false;
+            });
+            if ($pReq) {
+                $namaPastorParoki = $pReq->nama_pastor;
+                $jabatanPastor = $pReq->jabatan ?: 'Pastor Rekan';
+            }
+        }
+
+        // Resolusi KUB & Ketua KUB dari Umat / Kartu Keluarga
+        $kub = $umat->kub ?: ($umat->kk ? $umat->kk->kub : null);
+        if (!$kub && !empty($umat->kub_id)) {
+            $kub = \App\Models\Kub::find($umat->kub_id);
+        }
+        if (!$kub && !empty($umat->kk?->kub_id)) {
+            $kub = \App\Models\Kub::find($umat->kk->kub_id);
+        }
+
+        $namaKetuaKub = $kub?->ketua_kub ?: '( .............................................. )';
+        $namaKub = $kub?->nama_kub ?: '';
+
+        // Resolusi Wilayah & Kapela
+        $wilayah = $umat->wilayah ?: ($umat->kk ? $umat->kk->wilayah : ($kub ? $kub->wilayah : null));
+        $kapela = $umat->kapela ?: ($umat->kk ? $umat->kk->kapela : ($kub ? $kub->kapela : null));
+
+        $keuskupan = $paroki?->keuskupan
+            ?? \App\Models\Keuskupan::find(5)
+            ?? \App\Models\Keuskupan::first();
+
+        $keuskupanLogo = $keuskupan?->logo ?: '/images/logo-keuskupan.png';
+        $parokiLogo = $paroki?->logo ?: ($profilParoki?->logo ?: '/uploads/paroki/1787494152_6a8aff08b47a5.webp');
+
+        return response()->view('exports.umat-pdf', [
+            'umat' => $umat,
+            'kk' => $umat->kk,
+            'kub' => $kub,
+            'wilayah' => $wilayah,
+            'kapela' => $kapela,
+            'namaKetuaKub' => $namaKetuaKub,
+            'namaKub' => $namaKub,
+            'namaPastorParoki' => $namaPastorParoki,
+            'cleanPastorName' => $cleanPastorName,
+            'jabatanPastor' => $jabatanPastor,
+            'daftarPastor' => $daftarPastor,
+            'paroki' => $paroki,
+            'keuskupan' => $keuskupan,
+            'profilParoki' => $profilParoki,
+            'keuskupanLogo' => $keuskupanLogo,
+            'parokiLogo' => $parokiLogo,
+            'printedAt' => now()->format('d/m/Y H:i'),
+        ]);
     }
 }

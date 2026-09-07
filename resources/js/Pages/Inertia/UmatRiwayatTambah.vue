@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import DateInput from '@/Components/DateInput.vue';
 
 const props = defineProps({
     prefix: { type: String, default: 'superadmin' },
@@ -56,9 +57,11 @@ watch(() => form.value.umat_id, (id) => {
     if (id) fillAsalFromUmat(id);
 });
 
+const basePrefix = computed(() => `/${props.prefix}`);
+
 const submit = () => {
     isSubmitting.value = true;
-    router.post(route(`panel.${props.prefix}.riwayat-mutasi.store`), form.value, {
+    router.post(`${basePrefix.value}/riwayat-mutasi/tambah`, form.value, {
         preserveScroll: true,
         onFinish: () => (isSubmitting.value = false),
     });
@@ -66,9 +69,9 @@ const submit = () => {
 </script>
 
 <template>
-<AppLayout :title="'Tambah Riwayat Mutasi Umat'">
+<AppLayout :title="'Tambah Riwayat Mutasi Umat'" :fullWidth="true">
   <Head :title="'Tambah Riwayat Mutasi Umat & KUB'" />
-  <div class="max-w-3xl mx-auto py-6 px-4">
+  <div class="w-full space-y-4 pb-6">
     <div class="bg-white rounded-xl shadow p-6">
       <h1 class="text-lg font-bold text-slate-800">Form Tambah Riwayat Mutasi Umat &amp; KUB</h1>
       <p class="text-sm text-slate-500 mb-4">{{ namaParoki }} — pilihan umat, KUB, dan wilayah diambil dari database.</p>
@@ -111,8 +114,8 @@ const submit = () => {
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-700">Tanggal Mutasi</label>
-          <input type="date" v-model="form.tgl_mutasi" class="w-full border rounded px-3 py-2" />
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Tanggal Mutasi</label>
+          <DateInput v-model="form.tgl_mutasi" placeholder="dd/mm/yyyy" iconColor="text-emerald-600" />
         </div>
 
         <div>
@@ -125,7 +128,7 @@ const submit = () => {
             class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold disabled:opacity-50">
             {{ isSubmitting ? 'Menyimpan…' : 'Simpan Riwayat' }}
           </button>
-          <Link :href="route(`panel.${prefix}.umat`)" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-semibold">
+          <Link :href="`${basePrefix}/umat`" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-semibold">
             Batal
           </Link>
         </div>

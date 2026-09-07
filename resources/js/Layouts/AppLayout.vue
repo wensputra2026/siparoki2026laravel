@@ -39,6 +39,7 @@ const {
     confirmLogout,
     page,
     activeRole,
+    leaveImpersonation,
 } = menu;
 </script>
 
@@ -47,6 +48,30 @@ const {
     <div class="h-screen w-full overflow-hidden bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-amber-500 selection:text-white">
         <!-- 1. FIXED TOPBAR / HEADER -->
         <AppTopbar :title="title" />
+
+        <!-- IMPERSONATION SIMULATION BANNER -->
+        <div
+            v-if="page.props.impersonating"
+            class="w-full bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 text-white px-3 sm:px-6 py-2 text-xs flex items-center justify-between shadow-md z-40 shrink-0 border-b border-amber-500/40"
+        >
+            <div class="flex items-center gap-2 truncate">
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 text-[11px] shrink-0">
+                    <i class="fa-solid fa-user-gear"></i>
+                </span>
+                <span class="truncate">
+                    Mode Simulasi Akun: Anda sedang masuk sebagai <strong class="text-amber-100 underline decoration-amber-300 underline-offset-2">{{ page.props.auth?.user?.name }}</strong> 
+                    ({{ page.props.auth?.user?.role }}{{ page.props.auth?.user?.nama_kub ? ' • ' + page.props.auth?.user?.nama_kub : '' }})
+                </span>
+            </div>
+            <button
+                type="button"
+                @click="leaveImpersonation"
+                class="ml-3 shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white text-amber-900 hover:bg-amber-50 font-bold text-[11px] shadow-sm transition cursor-pointer"
+            >
+                <i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i>
+                <span>Kembali ke Super Admin</span>
+            </button>
+        </div>
 
         <!-- FLOATING TOAST NOTIFICATION -->
         <AppToast

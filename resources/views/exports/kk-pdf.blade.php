@@ -8,12 +8,12 @@
     <!-- Favicon Resmi Profil Paroki -->
     @php
         $keuskupanLogoUrl = !empty($keuskupanLogo)
-            ? (\Illuminate\Support\Str::startsWith($keuskupanLogo, ['http://', 'https://']) ? $keuskupanLogo : asset($keuskupanLogo))
-            : asset('uploads/keuskupan/logo_keuskupan_kupang.svg');
+            ? (\Illuminate\Support\Str::startsWith($keuskupanLogo, ['http://', 'https://']) ? $keuskupanLogo : asset(ltrim($keuskupanLogo, '/')))
+            : asset('images/logo-keuskupan.png');
 
         $parokiLogoUrl = !empty($parokiLogo)
-            ? (\Illuminate\Support\Str::startsWith($parokiLogo, ['http://', 'https://']) ? $parokiLogo : asset($parokiLogo))
-            : asset('assets/uploads/profil/logo_paroki_1787370466.jpeg');
+            ? (\Illuminate\Support\Str::startsWith($parokiLogo, ['http://', 'https://']) ? $parokiLogo : asset(ltrim($parokiLogo, '/')))
+            : asset('uploads/paroki/1787494152_6a8aff08b47a5.webp');
     @endphp
     <link rel="icon" type="image/jpeg" href="{{ $parokiLogoUrl }}">
     <link rel="shortcut icon" type="image/jpeg" href="{{ $parokiLogoUrl }}">
@@ -206,15 +206,69 @@
         }
     </style>
 </head>
-<body onload="window.print()">
+<body>
 
-    <div class="no-print">
-        <div>
-            <strong>Kartu Keluarga Katolik:</strong> {{ $kk->no_kk_kw }} - {{ $kk->nama_lahir_pemilik }}
+    <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; background: #0f172a; color: #ffffff; padding: 10px 18px; border-radius: 8px; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <div>
+                <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold; display: block;">Kartu Keluarga Katolik:</span>
+                <strong style="font-size: 13.5px; color: #f8fafc;">{{ $kk->nama_lahir_pemilik }}</strong> 
+                <span style="font-size: 11.5px; color: #cbd5e1;">(No. KW: {{ $kk->no_kk_kw }})</span>
+            </div>
+
+            <!-- Selector Pastor Penandatangan (Solusi bila Pastor Paroki berhalangan) -->
+            <div style="background: rgba(255, 255, 255, 0.08); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <label for="selectPastor" style="font-size: 12px; font-weight: 600; color: #cbd5e1; white-space: nowrap;">
+                    ✍️ Penandatangan Pastor:
+                </label>
+                <select id="selectPastor" onchange="updatePastorSignature(this)" style="background: #1e293b; color: #ffffff; border: 1px solid #475569; border-radius: 5px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer; font-weight: 600;">
+                    @php
+                        $selectedFound = false;
+                    @endphp
+                    @if(isset($daftarPastor) && count($daftarPastor) > 0)
+                        @foreach($daftarPastor as $p)
+                            @php
+                                $fullName = $p->nama_pastor;
+                                $jabatan = $p->jabatan ?: 'Pastor';
+                                $isCurrent = ($fullName === $namaPastorParoki || str_contains($namaPastorParoki, $fullName) || str_contains($fullName, $namaPastorParoki) || str_contains($fullName, $cleanPastorName ?? 'Herman'));
+                                if ($isCurrent && !$selectedFound) {
+                                    $selectedFound = true;
+                                    $isSelected = true;
+                                } else {
+                                    $isSelected = false;
+                                }
+                            @endphp
+                            <option value="{{ $fullName }}" data-jabatan="{{ $jabatan }}" {{ $isSelected ? 'selected' : '' }}>
+                                {{ $fullName }} ({{ $jabatan }})
+                            </option>
+                        @endforeach
+                    @endif
+                    @if(!$selectedFound)
+                        <option value="{{ $namaPastorParoki }}" data-jabatan="{{ $jabatanPastor ?? 'Pastor Paroki' }}" selected>
+                            {{ $namaPastorParoki }} ({{ $jabatanPastor ?? 'Pastor Paroki' }})
+                        </option>
+                    @endif
+                    <option value="custom" data-jabatan="custom">✍️ Tulis Manual Nama / Pastor Lain...</option>
+                </select>
+
+                <!-- Format Gelar Tanda Tangan -->
+                <select id="selectTtdHeader" onchange="updateTtdHeader(this)" style="background: #1e293b; color: #ffffff; border: 1px solid #475569; border-radius: 5px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer;" title="Format Keterangan di Atas Tanda Tangan">
+                    <option value="auto">Header: Otomatis sesuai Jabatan</option>
+                    <option value="Pastor Paroki / Sekretariat">Pastor Paroki / Sekretariat</option>
+                    <option value="Pastor Rekan / Sekretariat">Pastor Rekan / Sekretariat</option>
+                    <option value="a.n. Pastor Paroki (Pastor Rekan)">a.n. Pastor Paroki (Pastor Rekan)</option>
+                    <option value="Pjs. Pastor Paroki">Pjs. Pastor Paroki</option>
+                </select>
+            </div>
         </div>
-        <div>
-            <button onclick="window.print()" class="btn-print">🖨️ Cetak Dokumen / Simpan PDF</button>
-            <button type="button" onclick="handleGoBack()" class="btn-back">⬅️ Kembali</button>
+
+        <div style="display: flex; gap: 8px;">
+            <button onclick="window.print()" class="btn-print" style="background: #0284c7; color: #fff; border: none; padding: 7px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <span>🖨️ Cetak / Simpan PDF</span>
+            </button>
+            <button type="button" onclick="handleGoBack()" class="btn-back" style="background: #475569; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                <span>⬅️ Kembali</span>
+            </button>
         </div>
     </div>
 
@@ -410,7 +464,7 @@
             <div>Mengetahui,</div>
             <div><strong>Ketua KUB / KBG</strong></div>
             <div class="ttd-space"></div>
-            <div class="ttd-name">({{ $kk->kub->ketua ?? '.........................................' }})</div>
+            <div class="ttd-name">({{ $kk->kub->ketua_kub ?? ($kk->kub->ketua ?? '.........................................') }})</div>
         </div>
         <div class="ttd-box">
             <div>Mengetahui,</div>
@@ -426,14 +480,66 @@
         </div>
         <div class="ttd-box">
             <div>Benlutu, {{ now()->translatedFormat('d F Y') }}</div>
-            <div><strong>Pastor Paroki / Sekretariat</strong></div>
+            <div><strong id="ttdPastorHeader">{{ (str_contains(strtolower($jabatanPastor ?? ''), 'paroki') ? 'Pastor Paroki' : ($jabatanPastor ?? 'Pastor Paroki')) }} / Sekretariat</strong></div>
             <div class="ttd-space"></div>
-            <div class="ttd-name">({{ $paroki->nama_pastor_paroki_aktif ?? ($profil->pastor_paroki ?? ($namaPastor ?? 'Pastor Paroki')) }})</div>
-            <div style="font-size: 9px; margin-top: 2px;">Pastor Paroki St. Vinsensius a Paulo</div>
+            <div id="ttdPastorName" class="ttd-name">({{ $namaPastorParoki }})</div>
+            <div id="ttdPastorJabatan" style="font-size: 9px; margin-top: 2px;">{{ $jabatanPastor ?? 'Pastor Paroki' }}</div>
         </div>
     </div>
 
     <script>
+        function updatePastorSignature(select) {
+            if (select.value === 'custom') {
+                const customName = prompt('Masukkan Nama Lengkap Pastor Pengganti (contoh: RD. Patrisius Tampani):', 'RD. Patrisius Tampani');
+                if (!customName) {
+                    select.selectedIndex = 0;
+                    return;
+                }
+                const customJabatan = prompt('Masukkan Jabatan (contoh: Pastor Rekan / Pjs. Pastor Paroki):', 'Pastor Rekan');
+                const finalJabatan = customJabatan || 'Pastor Rekan';
+                
+                document.getElementById('ttdPastorName').textContent = '(' + customName + ')';
+                document.getElementById('ttdPastorJabatan').textContent = finalJabatan;
+                
+                const headerSelect = document.getElementById('selectTtdHeader');
+                if (headerSelect && headerSelect.value === 'auto') {
+                    document.getElementById('ttdPastorHeader').textContent = finalJabatan + ' / Sekretariat';
+                }
+                return;
+            }
+
+            const opt = select.options[select.selectedIndex];
+            const name = opt.value;
+            const jabatan = opt.getAttribute('data-jabatan') || 'Pastor Rekan';
+
+            document.getElementById('ttdPastorName').textContent = '(' + name + ')';
+            document.getElementById('ttdPastorJabatan').textContent = jabatan;
+
+            const headerSelect = document.getElementById('selectTtdHeader');
+            if (headerSelect && headerSelect.value === 'auto') {
+                if (jabatan.toLowerCase().includes('paroki')) {
+                    document.getElementById('ttdPastorHeader').textContent = 'Pastor Paroki / Sekretariat';
+                } else {
+                    document.getElementById('ttdPastorHeader').textContent = jabatan + ' / Sekretariat';
+                }
+            }
+        }
+
+        function updateTtdHeader(select) {
+            if (select.value === 'auto') {
+                const pastorSelect = document.getElementById('selectPastor');
+                const opt = pastorSelect.options[pastorSelect.selectedIndex];
+                const jabatan = opt.getAttribute('data-jabatan') || 'Pastor Rekan';
+                if (jabatan.toLowerCase().includes('paroki')) {
+                    document.getElementById('ttdPastorHeader').textContent = 'Pastor Paroki / Sekretariat';
+                } else {
+                    document.getElementById('ttdPastorHeader').textContent = jabatan + ' / Sekretariat';
+                }
+            } else {
+                document.getElementById('ttdPastorHeader').textContent = select.value;
+            }
+        }
+
         function handleGoBack() {
             if (window.opener && !window.opener.closed) {
                 window.close();

@@ -97,6 +97,55 @@
     </div>
 </section>
 
+<style>
+.detail-content {
+    background: #ffffff;
+    padding: 30px 32px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+}
+.comments-section {
+    padding: 35px 38px;
+    border-radius: 15px;
+}
+@media (max-width: 768px) {
+    .content-section {
+        padding: 20px 0 45px !important;
+    }
+    .detail-content {
+        padding: 20px 14px !important;
+        border-radius: 14px !important;
+    }
+    .comments-section {
+        padding: 20px 14px !important;
+        border-radius: 14px !important;
+    }
+    .article-text {
+        font-size: 1.08rem !important;
+        line-height: 1.85 !important;
+    }
+    .article-text p, .article-text li, .article-text span {
+        font-size: 1.06rem !important;
+        line-height: 1.85 !important;
+    }
+    .article-text h1 {
+        font-size: 1.65rem !important;
+    }
+    .article-text h2 {
+        font-size: 1.45rem !important;
+        font-weight: 800 !important;
+    }
+    .article-text h3 {
+        font-size: 1.3rem !important;
+        font-weight: 800 !important;
+    }
+    .article-text h4 {
+        font-size: 1.18rem !important;
+        font-weight: 700 !important;
+    }
+}
+</style>
+
 <!-- Main Detail Content Section Konoha Style -->
 <section class="content-section" style="padding: 50px 0 70px; background: #f4faf9;">
     <div class="container">
@@ -112,7 +161,7 @@
             
             <!-- Left: Main Article Card -->
             <div class="col-lg-8">
-                <div class="detail-content" style="background: #ffffff; padding: 30px 32px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+                <div class="detail-content">
                     
                     <!-- 1. Category Pill Badge -->
                     <div style="margin-bottom: 20px;">
@@ -165,13 +214,11 @@
                         </div>
                     @endif
 
-                    <!-- 6. Share Buttons -->
-                    @include('partials.share-buttons', ['title' => $item->judul ?? null])
                 </div>
 
                 <!-- Komentar & Tanggapan Section Konoha Style -->
                 <!-- Komentar & Tanggapan Section Konoha Style (Live Backend & Database Connected) -->
-                <div class="comments-section" id="commentsSection" style="margin-top: 32px; background: #ffffff; padding: 35px 38px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
+                <div class="comments-section" id="commentsSection" style="margin-top: 32px; background: #ffffff; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06);">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; padding-bottom: 16px; border-bottom: 2px solid #f1f5f9; flex-wrap: wrap; gap: 10px;">
                         <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 10px;">
                             <i class="far fa-comments" style="color: var(--primary-teal, #00897b); font-size: 1.35rem;"></i> 
@@ -584,6 +631,9 @@
                         </a>
                     </div>
                 </div>
+
+                <!-- 1.5. WIDGET KALENDER LITURGI (imankatolik.or.id) -->
+                @include('partials.kalender-liturgi-widget')
 
                 <!-- 2. WIDGET PENCARIAN -->
                 <div style="background: #ffffff; padding: 24px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border-top: 4px solid var(--primary-orange, #ff9800);">

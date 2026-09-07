@@ -117,9 +117,11 @@ class HandleInertiaRequests extends Middleware
         $roleKey = str_replace(['_', '-', ' '], '', strtolower($currentRole));
         $isSuperUser = (int) ($request->user()?->role_id ?? 0) === 1 || in_array($roleKey, ['superadmin', 'superadministrator', 'admin', 'administrator', 'pastor', 'pastorparoki'], true);
         $needsPastorScope = $isSuperUser || str_contains($roleKey, 'pastor');
-        $needsWilayahScope = $isSuperUser || str_contains($roleKey, 'wilayah');
-        $needsKapelaScope = $isSuperUser || str_contains($roleKey, 'kapela') || str_contains($roleKey, 'stasi');
+        $needsWilayahScope = $isSuperUser || str_contains($roleKey, 'wilayah') || str_contains($roleKey, 'kub');
+        $needsKapelaScope = $isSuperUser || str_contains($roleKey, 'kapela') || str_contains($roleKey, 'stasi') || str_contains($roleKey, 'kub');
         $needsKubScope = $isSuperUser || str_contains($roleKey, 'kub');
+
+
 
         $scopeOptions = Cache::remember("scope_options_middleware_v5.{$roleKey}", 600, function () use ($needsPastorScope, $needsWilayahScope, $needsKapelaScope, $needsKubScope) {
             $result = ['pastors' => [], 'wilayah' => [], 'kapela' => [], 'kub' => []];
@@ -185,17 +187,37 @@ class HandleInertiaRequests extends Middleware
             return $result;
         });
 
+        $authUser = $request->user();
+        $userKub = null;
+        $userWilayahId = $authUser?->wilayah_id;
+        $userKapelaId = $authUser?->kapela_id;
+        if ($authUser && $authUser->kub_id) {
+            $userKub = \App\Models\Kub::find($authUser->kub_id);
+            if (!$userWilayahId && $userKub?->wilayah_id) {
+                $userWilayahId = $userKub->wilayah_id;
+            }
+            if (!$userKapelaId && $userKub?->kapela_id) {
+                $userKapelaId = $userKub->kapela_id;
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user() ? [
-                    'id'             => $request->user()->id,
-                    'name'           => $request->user()->nama_lengkap ?? $request->user()->name,
-                    'email'          => $request->user()->email,
-                    'foto'           => $request->user()->foto ?? null,
-                    'role_id'        => (int) ($request->user()->role_id ?? 0),
-                    'role'           => $request->user()->role?->nama_role ?? 'Pengguna',
-                    'is_super_admin' => (int) ($request->user()->role_id ?? 0) === 1 || in_array(strtolower(preg_replace('/[^a-z]/', '', $request->user()->role?->nama_role ?? $request->user()->role?->slug ?? '')), ['superadmin', 'superadministrator'], true),
+                'user' => $authUser ? [
+                    'id'             => $authUser->id,
+                    'name'           => $authUser->nama_lengkap ?? $authUser->name,
+                    'email'          => $authUser->email,
+                    'foto'           => $authUser->foto ?? null,
+                    'role_id'        => (int) ($authUser->role_id ?? 0),
+                    'role'           => $authUser->role?->nama_role ?? 'Pengguna',
+                    'role_slug'      => $authUser->role?->slug ?? '',
+                    'wilayah_id'     => $userWilayahId,
+                    'kapela_id'      => $userKapelaId,
+                    'kub_id'         => $authUser->kub_id,
+                    'nama_kub'       => $userKub?->nama_kub,
+                    'umat_id'        => $authUser->umat_id,
+                    'is_super_admin' => (int) ($authUser->role_id ?? 0) === 1 || in_array(strtolower(preg_replace('/[^a-z]/', '', $authUser->role?->nama_role ?? $authUser->role?->slug ?? '')), ['superadmin', 'superadministrator'], true),
                 ] : null,
             ],
             'scopeOptions' => $scopeOptions,
@@ -213,6 +235,15 @@ class HandleInertiaRequests extends Middleware
                 'logo'        => $logoParoki,
                 'favicon'     => $logoParoki,
                 'fitur_chat_aktif' => (bool) ($pengaturanAplikasi?->fitur_chat_aktif ?? true),
+            ],
+            'impersonating' => $request->session()->has('impersonated_by') ? [
+                'original_admin_id' => $request->session()->get('impersonated_by'),
+            ] : null,
+            'activeScope' => [
+                'kub_id' => $request->session()->get('simulated_kub_id') ?: $authUser?->kub_id,
+                'wilayah_id' => $request->session()->get('simulated_wilayah_id') ?: $userWilayahId,
+                'kapela_id' => $request->session()->get('simulated_kapela_id') ?: $userKapelaId,
+                'pastor_id' => $request->session()->get('simulated_pastor_id'),
             ],
             'fitur_chat_aktif' => (bool) ($pengaturanAplikasi?->fitur_chat_aktif ?? true),
         ];

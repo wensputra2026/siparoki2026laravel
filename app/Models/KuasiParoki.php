@@ -37,6 +37,14 @@ class KuasiParoki extends Model
         'kabupaten_id',
         'kecamatan_id',
         'desa_id',
+        'dekenat_id',
+        'nama_kuasi',
+        'kode_kuasi',
+        'pastor_administrator',
+        'lokasi',
+        'status',
+        'pelindung',
+        'keterangan',
     ];
     protected $appends = [
         'nama_kuasi',

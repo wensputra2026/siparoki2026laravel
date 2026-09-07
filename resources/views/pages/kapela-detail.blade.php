@@ -129,9 +129,9 @@
                             </span>
                         @endif
                         @if($pj)
-                            <span style="display: inline-flex; align-items: center; gap: 7px;">
+                            <span style="display: inline-flex; align-items: center; gap: 7px;" title="Penanggung Jawab / Ketua">
                                 <i class="fas fa-user-tie" style="color: #ff9800; font-size: 1rem;"></i> 
-                                PJ: <strong style="color: #1e293b;">{{ $pj }}</strong>
+                                <strong style="color: #1e293b;">{{ $pj }}</strong>
                             </span>
                         @endif
                         @if($wilayahStr || $alamat)

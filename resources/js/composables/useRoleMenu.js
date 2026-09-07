@@ -159,9 +159,11 @@ const kubList = computed(() => _page?.props.scopeOptions?.kub || []);
 // Current authenticated user role or active preview role
 const userActualRole = computed(() => {
     const roleVal = _page?.props.auth?.user?.role;
-    if (typeof roleVal === 'string') return roleVal;
-    return roleVal?.nama_role || roleVal?.slug || 'Super Admin';
+    let r = typeof roleVal === 'string' ? roleVal : (roleVal?.nama_role || roleVal?.slug || 'Super Admin');
+    if (r === 'Ketua KUB') return 'Admin KUB';
+    return r;
 });
+
 
 const isSuperAdmin = computed(() => {
     if (Boolean(_page?.props.auth?.user?.is_super_admin)) return true;
@@ -172,14 +174,24 @@ const isSuperAdmin = computed(() => {
 
 const onScopeChange = (type, val) => {
     if (typeof window === 'undefined') return;
-    const currentPath = _page?.url?.split('?')[0] || window.location.pathname;
-    const url = new URL(window.location.origin + currentPath);
-    if (val) {
-        url.searchParams.set(type, val);
-    } else {
-        url.searchParams.delete(type);
-    }
-    router.visit(url.pathname + url.search, { preserveState: true, preserveScroll: true });
+    router.post('/api/set-active-scope', { scope_type: type, scope_id: val }, {
+        preserveScroll: true,
+        preserveState: false,
+        onSuccess: () => {
+            const currentPath = _page?.url?.split('?')[0] || window.location.pathname;
+            const url = new URL(window.location.origin + currentPath);
+            if (val) {
+                url.searchParams.set(type, val);
+            } else {
+                url.searchParams.delete(type);
+            }
+            router.visit(url.pathname + url.search, { preserveState: false, preserveScroll: true });
+        },
+    });
+};
+
+const leaveImpersonation = () => {
+    router.post('/impersonate/leave');
 };
 
 const resolveRoleFromPath = () => {
@@ -187,7 +199,7 @@ const resolveRoleFromPath = () => {
     const path = rawUrl.toLowerCase();
     if (path.startsWith('/wilayah')) return 'Admin Wilayah';
     if (path.startsWith('/kapela') || path.startsWith('/stasi')) return 'Admin Kapela / Stasi';
-    if (path.startsWith('/kub')) return 'Ketua KUB';
+    if (path.startsWith('/kub')) return 'Admin KUB';
     if (path.startsWith('/bendahara')) return 'Bendahara';
     if (path.startsWith('/penulis')) return 'Penulis';
     if (path.startsWith('/umat')) return 'Umat';
@@ -202,14 +214,18 @@ const resolveActiveRole = () => {
     if (fromPath && roleMenus[fromPath]) {
         return fromPath;
     }
-    if (_page?.props.role && roleMenus[_page.props.role]) {
-        return _page.props.role;
+    if (_page?.props.role) {
+        if (_page.props.role === 'Ketua KUB') return 'Admin KUB';
+        if (roleMenus[_page.props.role]) return _page.props.role;
     }
     const userRole = _page?.props.auth?.user?.role;
-    if (userRole && roleMenus[userRole]) {
-        return userRole;
+    const r = typeof userRole === 'string' ? userRole : (userRole?.nama_role || userRole?.slug || '');
+    if (r === 'Ketua KUB' || r === 'Admin KUB') return 'Admin KUB';
+    if (r && roleMenus[r]) {
+        return r;
     }
     return 'Super Admin';
+
 };
 
 const onRoleChange = () => {
@@ -363,6 +379,19 @@ const init = (page) => {
         { immediate: true }
     );
 
+    watch(
+        () => page.props.activeScope,
+        (scope) => {
+            if (scope) {
+                if (scope.kub_id) selectedKubId.value = scope.kub_id;
+                if (scope.wilayah_id) selectedWilayahId.value = scope.wilayah_id;
+                if (scope.kapela_id) selectedKapelaId.value = scope.kapela_id;
+                if (scope.pastor_id) selectedPastorId.value = scope.pastor_id;
+            }
+        },
+        { immediate: true, deep: true }
+    );
+
     onMounted(() => {
         // Tunda satu frame agar transisi lebar tidak animasi saat paint pertama.
         requestAnimationFrame(() => {
@@ -424,6 +453,7 @@ export function useRoleMenu(props) {
         kubList,
         selectedKubId,
         onScopeChange,
+        leaveImpersonation,
         isSuperAdmin,
         activeRole,
         onRoleChange,

@@ -54,7 +54,7 @@ class MasterReferensiController extends Controller
 
     private const META_COLUMNS = [
         'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by',
-        'deleted_by', 'delete_reason', 'is_deleted',
+        'deleted_by', 'delete_reason', 'is_deleted', 'uuid',
     ];
 
     private const LONG_TEXT = [
@@ -634,7 +634,7 @@ class MasterReferensiController extends Controller
             if (in_array($col, self::META_COLUMNS, true)) {
                 continue;
             }
-            if ($col === 'id' || $col === 'status' || $col === 'foto') {
+            if ($col === 'id' || $col === 'status' || $col === 'foto' || $col === 'uuid') {
                 continue;
             }
             // Skip redundant text column when relational FK exists or when already combined in nama_pastor
@@ -676,21 +676,37 @@ class MasterReferensiController extends Controller
         $isPastorParoki = str_contains(strtolower($pastor->jabatan ?? ''), 'pastor paroki') || str_contains(strtolower((string)($pastor->status ?? '')), 'aktif') || (string)$pastor->status === '1';
 
         if ($isPastorParoki) {
-            if (\Illuminate\Support\Facades\Schema::hasTable('profil_paroki')) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('profil_paroki') && \Illuminate\Support\Facades\Schema::hasColumn('profil_paroki', 'foto_pastor')) {
                 DB::table('profil_paroki')->update(['foto_pastor' => $photoPath]);
             }
-            if (\Illuminate\Support\Facades\Schema::hasTable('paroki') && !empty($pastor->paroki_id)) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('paroki') && !empty($pastor->paroki_id) && \Illuminate\Support\Facades\Schema::hasColumn('paroki', 'foto_pastor')) {
                 DB::table('paroki')->where('id_paroki', $pastor->paroki_id)->update(['foto_pastor' => $photoPath]);
             }
-            if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_pastor_paroki')) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('riwayat_pastor_paroki') && \Illuminate\Support\Facades\Schema::hasColumn('riwayat_pastor_paroki', 'foto')) {
                 DB::table('riwayat_pastor_paroki')
                     ->where(function($q) use ($pastor) {
                         $q->where('pastor_id', $pastor->id)
                           ->orWhere('nama_pastor', 'like', '%' . $pastor->nama_pastor . '%')
                           ->orWhere('status', 'like', '%aktif%')
-                          ->orWhere('periode_selesai', 'Sekarang');
+                          ->orWhere('status_pelayanan', 'like', '%aktif%')
+                          ->orWhere('tahun_selesai', 'Sekarang')
+                          ->orWhereNull('periode_selesai');
                     })
                     ->update(['foto' => $photoPath]);
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('sambutan_pastor')) {
+                $sambutanCols = \Illuminate\Support\Facades\Schema::getColumnListing('sambutan_pastor');
+                $sambutanData = [];
+                if (in_array('foto_pastor', $sambutanCols, true)) $sambutanData['foto_pastor'] = $photoPath;
+                if (in_array('foto', $sambutanCols, true)) $sambutanData['foto'] = $photoPath;
+                if (!empty($sambutanData)) {
+                    DB::table('sambutan_pastor')
+                        ->where(function($q) use ($pastor) {
+                            if (!empty($pastor->id)) $q->where('pastor_id', $pastor->id);
+                            if (!empty($pastor->nama_pastor)) $q->orWhere('nama_pastor', 'like', '%' . $pastor->nama_pastor . '%');
+                        })
+                        ->update($sambutanData);
+                }
             }
         }
     }
@@ -790,7 +806,7 @@ class MasterReferensiController extends Controller
             'ketua_wilayah' => 'Ketua Wilayah', 'kode_lingkungan' => 'Kode', 'nama_lingkungan' => 'Nama Lingkungan',
             'ketua_lingkungan' => 'Ketua Lingkungan', 'kode_kapela' => 'Kode', 'nama_kapela' => 'Nama Kapela',
             'penanggung_jawab' => 'Penanggung Jawab', 'kode_kub' => 'Kode', 'nama_kub' => 'Nama KUB',
-            'nama_pelindung' => 'Nama Pelindung', 'ketua_kub' => 'Ketua KUB', 'kode_provinsi' => 'Kode',
+            'nama_pelindung' => 'Nama Pelindung', 'ketua_kub' => 'Admin KUB', 'kode_provinsi' => 'Kode',
             'nama_provinsi' => 'Nama Provinsi', 'kode_kabupaten' => 'Kode', 'nama_kabupaten' => 'Nama Kabupaten',
             'kode_kecamatan' => 'Kode', 'nama_kecamatan' => 'Nama Kecamatan', 'kode_desa' => 'Kode',
             'nama_desa' => 'Nama Desa', 'kode_pos' => 'Kode Pos', 'nama_pastor' => 'Nama Pastor',

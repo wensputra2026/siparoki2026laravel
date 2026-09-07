@@ -24,7 +24,7 @@ export const roleMenus = {
                         { name: 'Kuasi Paroki', href: '/superadmin/kuasi-paroki', icon: 'fa-cross' },
                         { name: 'Stasi / Kapela', href: '/superadmin/kapela', icon: 'fa-map-location-dot' },
                         { name: 'Wilayah', href: '/superadmin/wilayah', icon: 'fa-compass' },
-                        { name: 'Komunitas Umat Basis (KUB)', href: '/superadmin/kub', icon: 'fa-people-group' },
+                        { name: 'KUB', href: '/superadmin/kub', icon: 'fa-people-group' },
                     ],
                 },
                 {
@@ -513,7 +513,7 @@ export const roleMenus = {
             ],
         },
     ],
-    'Ketua KUB': [
+    'Admin KUB': [
         {
             section: 'Dashboard',
             menus: [
@@ -549,6 +549,7 @@ export const roleMenus = {
         },
     ],
     'Penulis': [
+
         {
             section: 'Dashboard',
             menus: [
@@ -611,8 +612,9 @@ export const rolePrefixMap = {
     'Pastor': '/pastor',
     'Admin Wilayah': '/wilayah',
     'Admin Kapela / Stasi': '/kapela',
-    'Ketua KUB': '/kub',
+    'Admin KUB': '/kub',
     'Bendahara': '/bendahara',
+
     'Penulis': '/penulis',
     'Umat': '/umat',
 };

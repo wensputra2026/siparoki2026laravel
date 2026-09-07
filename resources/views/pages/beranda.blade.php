@@ -35,7 +35,7 @@
             @if($youtubeId)
                 <iframe
                     class="hero-video-element"
-                    src="https://www.youtube.com/embed/{{ $youtubeId }}?autoplay=1&mute=1&loop=1&playlist={{ $youtubeId }}&controls=0&showinfo=0&rel=0&modestbranding=1"
+                    src="https://www.youtube.com/embed/{{ $youtubeId }}?autoplay=1&mute=1&loop=1&playlist={{ $youtubeId }}&controls=0&showinfo=0&rel=0&modestbranding=1&cc_load_policy=0&iv_load_policy=3"
                     title="Video profil {{ $globalNamaParoki ?? 'SIPAROKI' }}"
                     loading="lazy"
                     allow="autoplay; encrypted-media; picture-in-picture"
@@ -60,12 +60,13 @@
                         }
                     }
                 }
+                $videoVersion = \Illuminate\Support\Facades\Cache::get('global_view_data_version', 1);
             @endphp
-            <video class="hero-video-element" autoplay loop muted playsinline @if(!empty($posterUrl)) poster="{{ $posterUrl }}" @endif>
-                <source src="{{ asset('assets/uploads/video/' . basename($cleanVideoPath)) }}" type="video/mp4">
-                <source src="{{ asset('assets/uploads/' . $cleanVideoPath) }}" type="video/mp4">
-                <source src="{{ asset('uploads/' . $cleanVideoPath) }}" type="video/mp4">
-                <source src="{{ asset($heroVideoFile) }}" type="video/mp4">
+            <video class="hero-video-element" autoplay loop muted playsinline @if(!empty($posterUrl)) poster="{{ $posterUrl }}?v={{ $videoVersion }}" @endif>
+                <source src="{{ asset('assets/uploads/video/' . basename($cleanVideoPath)) }}?v={{ $videoVersion }}" type="video/mp4">
+                <source src="{{ asset('assets/uploads/' . $cleanVideoPath) }}?v={{ $videoVersion }}" type="video/mp4">
+                <source src="{{ asset('uploads/' . $cleanVideoPath) }}?v={{ $videoVersion }}" type="video/mp4">
+                <source src="{{ asset($heroVideoFile) }}?v={{ $videoVersion }}" type="video/mp4">
             </video>
         @endif
         <div class="hero-video-overlay" style="opacity: {{ $overlayOpacity }};"></div>
@@ -103,40 +104,6 @@
                 <span class="hero-quote-item">
                     <span>&bull; Tarde te amavi, pulchritudo tam antiqua et tam nova : Terlambat aku mencintai-Mu, ya Keindahan yang begitu purba namun selalu baru - Santo Agustinus</span>
                 </span>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ===== COUNTER ===== -->
-<section class="counter-section" aria-label="Statistik paroki">
-    <div class="counter-grid">
-        <div class="counter-card">
-            <div class="cc-icon"><i class="fas fa-graduation-cap" aria-hidden="true"></i></div>
-            <div class="cc-content">
-                <h3><span>{{ $stats['total_kk'] ?? 0 }}</span>+</h3>
-                <p>KK Katolik</p>
-            </div>
-        </div>
-        <div class="counter-card">
-            <div class="cc-icon"><i class="fas fa-id-card" aria-hidden="true"></i></div>
-            <div class="cc-content">
-                <h3><span>{{ $stats['total_umat'] ?? 0 }}</span>+</h3>
-                <p>Umat</p>
-            </div>
-        </div>
-        <div class="counter-card">
-            <div class="cc-icon"><i class="fas fa-trophy" aria-hidden="true"></i></div>
-            <div class="cc-content">
-                <h3><span>{{ $stats['total_kapela'] ?? 0 }}</span>+</h3>
-                <p>Kapela</p>
-            </div>
-        </div>
-        <div class="counter-card">
-            <div class="cc-icon"><i class="fas fa-book-bookmark" aria-hidden="true"></i></div>
-            <div class="cc-content">
-                <h3><span>{{ $stats['total_kub'] ?? 0 }}</span>+</h3>
-                <p>KUB</p>
             </div>
         </div>
     </div>
@@ -586,12 +553,36 @@
             </a>
         </div>
 
-        <!-- Share Website Buttons -->
-        <div style="margin-top: 50px; padding: 25px; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
-            @include('partials.share-buttons', ['title' => 'Portal Resmi ' . ($globalNamaParoki ?? 'Paroki')])
-        </div>
     </div>
 </section>
+
+<!-- ===== BANNER CEK DATA UMAT VIA NIK ===== -->
+<div class="container my-5">
+    <div class="cek-umat-banner-section py-4 px-3 px-md-4" style="background: linear-gradient(135deg, #004d40 0%, #00695c 50%, #004d40 100%); border-radius: 20px; border: 1.5px solid rgba(255, 255, 255, 0.25); box-shadow: 0 12px 32px rgba(0, 40, 30, 0.3);">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 64px; height: 64px; border-radius: 16px; background: rgba(255, 255, 255, 0.18); border: 2px solid rgba(255, 255, 255, 0.35); display: flex; align-items: center; justify-content: center; font-size: 2rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.18);">
+                        <i class="fa-solid fa-id-card" style="color: #ffc107 !important; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold" style="color: #ffffff !important; font-size: 1.45rem; margin-bottom: 0.35rem; text-shadow: 0 2px 6px rgba(0,0,0,0.35); letter-spacing: -0.01em;">
+                            Cek Data Sensus &amp; Sakramen Umat Mandiri
+                        </h3>
+                        <p class="mb-0" style="color: #f0fdfa !important; font-size: 0.95rem; line-height: 1.55; opacity: 0.95; font-weight: 400; text-shadow: 0 1px 3px rgba(0,0,0,0.25);">
+                            Cukup masukkan NIK Anda untuk memeriksa data kependudukan gerejani, KUB, dan status sakramen inisiasi secara mandiri tanpa perlu login.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{{ route('cek-data-umat') }}" class="btn btn-warning fw-bold px-4 py-2.5 rounded-pill shadow" style="color: #00332c !important; background-color: #ffc107 !important; border: 2px solid #ffffff !important; font-size: 1rem; font-weight: 800 !important; box-shadow: 0 6px 18px rgba(0,0,0,0.2) !important;">
+                    <i class="fa-solid fa-magnifying-glass me-1.5"></i> Cek Data Sekarang
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
 @include('partials.pastor-detail-modal')
 

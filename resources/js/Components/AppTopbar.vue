@@ -1,10 +1,11 @@
 <script setup>
-import { ref, inject, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, inject, onMounted, onUnmounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { RoleMenuKey } from '../composables/useRoleMenu.js';
 import { roleMenus } from '../menu/roleMenus.js';
 import AppNotificationBell from './AppNotificationBell.vue';
 import AppChatWidget from './AppChatWidget.vue';
+import SearchableSelect from './SearchableSelect.vue';
 
 defineProps({
     title: { type: String, default: 'Dashboard' },
@@ -36,6 +37,91 @@ const {
 
 const isUserMenuOpen = ref(false);
 
+// Induk Wilayah & Stasi untuk simulasi Admin KUB
+const selectedKubParentId = ref(''); // e.g. 'w_17' or 'k_1'
+
+const kubParentOptions = computed(() => {
+    const list = [];
+    if (wilayahList?.value && wilayahList.value.length > 0) {
+        wilayahList.value.forEach(w => {
+            list.push({
+                id: 'w_' + w.id,
+                rawId: w.id,
+                type: 'wilayah',
+                name: 'Wilayah: ' + (w.nama_wilayah || w.nama),
+            });
+        });
+    }
+    if (kapelaList?.value && kapelaList.value.length > 0) {
+        kapelaList.value.forEach(k => {
+            list.push({
+                id: 'k_' + k.id,
+                rawId: k.id,
+                type: 'kapela',
+                name: 'Stasi: ' + (k.nama_kapela || k.nama),
+            });
+        });
+    }
+    return list;
+});
+
+// Sinkronisasi otomatis: Jika KUB sudah terpilih sebelumnya, sesuaikan pilihan Wilayah / Stasi induknya
+watch(
+    () => [selectedKubId?.value, kubList?.value],
+    () => {
+        const kubId = selectedKubId?.value;
+        if (!kubId) return;
+        const kub = (kubList?.value || []).find(k => String(k.id) === String(kubId));
+        if (kub) {
+            if (kub.wilayah_id) {
+                selectedKubParentId.value = 'w_' + kub.wilayah_id;
+            } else if (kub.kapela_id) {
+                selectedKubParentId.value = 'k_' + kub.kapela_id;
+            }
+        }
+    },
+    { immediate: true, deep: true }
+);
+
+// Filter KUB: Hanya tampilkan KUB di bawah Wilayah atau Stasi yang dipilih
+const filteredKubsForAdminKub = computed(() => {
+    const list = kubList?.value || [];
+    if (!selectedKubParentId.value) {
+        return [];
+    }
+    const [type, rawId] = selectedKubParentId.value.split('_');
+    if (type === 'w') {
+        return list.filter(k => String(k.wilayah_id) === String(rawId));
+    }
+    if (type === 'k') {
+        return list.filter(k => String(k.kapela_id) === String(rawId));
+    }
+    return list;
+});
+
+const onKubParentChange = (val) => {
+    selectedKubParentId.value = val || '';
+    if (!val) {
+        onScopeChange('kub_id', null);
+    } else {
+        const [type, rawId] = val.split('_');
+        if (type === 'w') {
+            onScopeChange('wilayah_id', rawId);
+        } else if (type === 'k') {
+            onScopeChange('kapela_id', rawId);
+        }
+        // Jika KUB saat ini tidak cocok dengan parent yang baru dipilih, kosongkan KUB
+        const currentKub = (kubList?.value || []).find(k => String(k.id) === String(selectedKubId?.value));
+        if (currentKub) {
+            const matches = (type === 'w' && String(currentKub.wilayah_id) === String(rawId))
+                         || (type === 'k' && String(currentKub.kapela_id) === String(rawId));
+            if (!matches) {
+                onScopeChange('kub_id', null);
+            }
+        }
+    }
+};
+
 const returnToSuperAdmin = () => {
     activeRole.value = 'Super Admin';
     onRoleChange();
@@ -55,6 +141,7 @@ onUnmounted(() => {
     document.removeEventListener('click', closeUserMenu);
 });
 </script>
+
 
 <template>
     <!-- 1. FIXED TOPBAR / HEADER (FULLY RESPONSIVE) -->
@@ -117,61 +204,91 @@ onUnmounted(() => {
                     </option>
                 </select>
 
-                <!-- Dynamic Pastor Selector (Ultrawide Desktop only) -->
+                <!-- Dynamic Pastor Selector -->
                 <template v-if="activeRole === 'Pastor' && pastorsList.length > 0">
-                    <select
-                        v-model="selectedPastorId"
-                        @change="onScopeChange('pastor_id', selectedPastorId)"
-                        class="hidden 2xl:block bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[120px] truncate"
-                    >
-                        <option value="">-- Semua Pastor --</option>
-                        <option v-for="p in pastorsList" :key="p.id" :value="p.id">
-                            {{ p.nama_pastor }}
-                        </option>
-                    </select>
+                    <div class="hidden xl:block w-36 2xl:w-44">
+                        <SearchableSelect
+                            v-model="selectedPastorId"
+                            :options="pastorsList"
+                            valueKey="id"
+                            labelKey="nama_pastor"
+                            placeholder="-- Semua Pastor --"
+                            searchPlaceholder="Cari pastor..."
+                            compact
+                            dropdownMinWidth="min-w-[240px]"
+                            @change="(val) => onScopeChange('pastor_id', val)"
+                        />
+                    </div>
                 </template>
 
-                <!-- Dynamic Wilayah Selector (Ultrawide Desktop only) -->
+                <!-- Dynamic Wilayah Selector -->
                 <template v-if="activeRole === 'Admin Wilayah' && wilayahList.length > 0">
-                    <select
-                        v-model="selectedWilayahId"
-                        @change="onScopeChange('wilayah_id', selectedWilayahId)"
-                        class="hidden 2xl:block bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[120px] truncate"
-                    >
-                        <option value="">-- Semua Wilayah --</option>
-                        <option v-for="w in wilayahList" :key="w.id" :value="w.id">
-                            {{ w.nama_wilayah }}
-                        </option>
-                    </select>
+                    <div class="hidden xl:block w-36 2xl:w-44">
+                        <SearchableSelect
+                            v-model="selectedWilayahId"
+                            :options="wilayahList"
+                            valueKey="id"
+                            labelKey="nama_wilayah"
+                            placeholder="-- Semua Wilayah --"
+                            searchPlaceholder="Cari wilayah..."
+                            compact
+                            dropdownMinWidth="min-w-[240px]"
+                            @change="(val) => onScopeChange('wilayah_id', val)"
+                        />
+                    </div>
                 </template>
 
-                <!-- Dynamic Kapela Selector (Ultrawide Desktop only) -->
+                <!-- Dynamic Kapela Selector -->
                 <template v-if="activeRole === 'Admin Kapela / Stasi' && kapelaList.length > 0">
-                    <select
-                        v-model="selectedKapelaId"
-                        @change="onScopeChange('kapela_id', selectedKapelaId)"
-                        class="hidden 2xl:block bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[120px] truncate"
-                    >
-                        <option value="">-- Semua Stasi / Kapela --</option>
-                        <option v-for="k in kapelaList" :key="k.id" :value="k.id">
-                            {{ k.nama_kapela }}
-                        </option>
-                    </select>
+                    <div class="hidden xl:block w-40 2xl:w-48">
+                        <SearchableSelect
+                            v-model="selectedKapelaId"
+                            :options="kapelaList"
+                            valueKey="id"
+                            labelKey="nama_kapela"
+                            placeholder="-- Semua Stasi / Kapela --"
+                            searchPlaceholder="Cari stasi / kapela..."
+                            compact
+                            dropdownMinWidth="min-w-[250px]"
+                            @change="(val) => onScopeChange('kapela_id', val)"
+                        />
+                    </div>
                 </template>
 
-                <!-- Dynamic KUB Selector (Ultrawide Desktop only) -->
-                <template v-if="activeRole === 'Ketua KUB' && kubList.length > 0">
-                    <select
-                        v-model="selectedKubId"
-                        @change="onScopeChange('kub_id', selectedKubId)"
-                        class="hidden 2xl:block bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer shadow-2xs max-w-[120px] truncate"
-                    >
-                        <option value="">-- Semua KUB --</option>
-                        <option v-for="kb in kubList" :key="kb.id" :value="kb.id">
-                            {{ kb.nama_kub }}
-                        </option>
-                    </select>
+                <!-- Dynamic KUB Selector: Pilih Wilayah / Stasi Terlebih Dahulu, kemudian Pilih KUB -->
+                <template v-if="(activeRole === 'Admin KUB' || activeRole === 'Ketua KUB') && (kubParentOptions.length > 0 || kubList.length > 0)">
+                    <!-- 1. Dropdown Induk: Wilayah / Stasi -->
+                    <div class="hidden xl:block w-40 2xl:w-48">
+                        <SearchableSelect
+                            v-model="selectedKubParentId"
+                            :options="kubParentOptions"
+                            valueKey="id"
+                            labelKey="name"
+                            placeholder="-- 1. Wilayah / Stasi --"
+                            searchPlaceholder="Cari wilayah / stasi..."
+                            compact
+                            dropdownMinWidth="min-w-[260px]"
+                            @change="onKubParentChange"
+                        />
+                    </div>
+
+                    <!-- 2. Dropdown KUB: Hanya KUB di bawah Wilayah / Stasi yang dipilih -->
+                    <div class="hidden xl:block w-44 2xl:w-56">
+                        <SearchableSelect
+                            v-model="selectedKubId"
+                            :options="filteredKubsForAdminKub"
+                            valueKey="id"
+                            labelKey="nama_kub"
+                            :placeholder="selectedKubParentId ? (filteredKubsForAdminKub.length > 0 ? '-- 2. Pilih KUB --' : 'Tidak ada KUB') : '-- Pilih Wilayah Dulu --'"
+                            searchPlaceholder="Cari nama KUB..."
+                            compact
+                            dropdownMinWidth="min-w-[270px]"
+                            :disabled="!selectedKubParentId"
+                            @change="(val) => onScopeChange('kub_id', val)"
+                        />
+                    </div>
                 </template>
+
 
                 <!-- Quick Button: Return To Super Admin -->
                 <button

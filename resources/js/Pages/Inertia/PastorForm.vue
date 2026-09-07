@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import DateInput from '@/Components/DateInput.vue';
 
 const props = defineProps({
     role: { type: String, default: 'Super Admin' },
@@ -100,11 +101,29 @@ const form = useForm({
     email: props.pastorItem?.email || '',
     pendidikan_terakhir: props.pastorItem?.pendidikan_terakhir || props.pastorItem?.pendidikan || '',
     seminari_tinggi: props.pastorItem?.seminari_tinggi || '',
-    status: props.pastorItem?.status || 'Aktif',
+    status: props.pastorItem?.status === '1' || props.pastorItem?.status === 1 || !props.pastorItem?.status || props.pastorItem?.status === 'Aktif' ? 'Aktif' : (props.pastorItem?.status === '0' || props.pastorItem?.status === 0 ? 'Nonaktif' : props.pastorItem?.status),
     foto: props.pastorItem?.foto || '',
     foto_file: null,
     riwayat_tambahan: [],
 });
+
+// Auto-resolve keuskupan_id if missing but keuskupan name is known
+if (!form.keuskupan_id && form.keuskupan) {
+    const kMatch = (props.keuskupanList || []).find(k => k.nama_keuskupan && k.nama_keuskupan.toLowerCase() === form.keuskupan.toLowerCase());
+    if (kMatch) {
+        form.keuskupan_id = kMatch.id_keuskupan;
+    }
+}
+
+// Auto-resolve paroki_id if missing but paroki_tugas is known
+if (!form.paroki_id && form.paroki_tugas) {
+    const pMatch = (props.parokiList || []).find(p => p.nama_paroki && (p.nama_paroki.toLowerCase().includes(form.paroki_tugas.toLowerCase()) || form.paroki_tugas.toLowerCase().includes(p.nama_paroki.toLowerCase())));
+    if (pMatch) {
+        form.paroki_id = pMatch.id_paroki;
+        if (pMatch.dekenat_id && !form.dekenat_id) form.dekenat_id = pMatch.dekenat_id;
+        if (pMatch.keuskupan_id && !form.keuskupan_id) form.keuskupan_id = pMatch.keuskupan_id;
+    }
+}
 
 // Live image preview
 const imagePreview = ref(props.pastorItem?.foto ? (props.pastorItem.foto.startsWith('http') || props.pastorItem.foto.startsWith('/') ? props.pastorItem.foto : `/${props.pastorItem.foto}`) : null);
@@ -278,11 +297,16 @@ const dekenatOptions = computed(() => {
     return list.filter(d => String(d.keuskupan_id) === String(form.keuskupan_id));
 });
 
-// Filtered Paroki by dekenat_id
+// Filtered Paroki by dekenat_id OR keuskupan_id
 const filteredParokiById = computed(() => {
     const list = props.parokiList || [];
-    if (!form.dekenat_id) return list;
-    return list.filter(p => String(p.dekenat_id) === String(form.dekenat_id));
+    if (form.dekenat_id) {
+        return list.filter(p => String(p.dekenat_id) === String(form.dekenat_id));
+    }
+    if (form.keuskupan_id) {
+        return list.filter(p => String(p.keuskupan_id) === String(form.keuskupan_id));
+    }
+    return list;
 });
 
 // Keuskupan options with id as id_keuskupan (for cascading)
@@ -293,12 +317,32 @@ const keuskupanById = computed(() => {
     }));
 });
 
+// When keuskupan_id changes, auto-fill keuskupan name and filter
+const onKeuskupanIdChange = (val) => {
+    const k = (props.keuskupanList || []).find(item => String(item.id_keuskupan) === String(val));
+    if (k) {
+        form.keuskupan = k.nama_keuskupan;
+    }
+    // reset dekenat and paroki if not matching
+    if (form.dekenat_id) {
+        const dek = (props.dekenatList || []).find(d => String(d.id_dekenat) === String(form.dekenat_id));
+        if (dek && String(dek.keuskupan_id) !== String(val)) {
+            form.dekenat_id = '';
+            form.paroki_id = '';
+        }
+    }
+};
+
 // When paroki_id changes, auto-fill dekenat_id and keuskupan_id
 const onParokiIdChange = (val) => {
     const paroki = (props.parokiList || []).find(p => String(p.id_paroki) === String(val));
     if (paroki) {
         if (paroki.dekenat_id) form.dekenat_id = paroki.dekenat_id;
-        if (paroki.keuskupan_id) form.keuskupan_id = paroki.keuskupan_id;
+        if (paroki.keuskupan_id) {
+            form.keuskupan_id = paroki.keuskupan_id;
+            const k = (props.keuskupanList || []).find(item => String(item.id_keuskupan) === String(paroki.keuskupan_id));
+            if (k) form.keuskupan = k.nama_keuskupan;
+        }
         form.paroki_tugas = paroki.nama_paroki || form.paroki_tugas;
     }
 };
@@ -308,6 +352,8 @@ const onDekenatIdChange = (val) => {
     const dekenat = (props.dekenatList || []).find(d => String(d.id_dekenat) === String(val));
     if (dekenat?.keuskupan_id) {
         form.keuskupan_id = dekenat.keuskupan_id;
+        const k = (props.keuskupanList || []).find(item => String(item.id_keuskupan) === String(dekenat.keuskupan_id));
+        if (k) form.keuskupan = k.nama_keuskupan;
     }
     // reset paroki_id if the paroki does not belong to this dekenat
     if (form.paroki_id) {
@@ -363,6 +409,25 @@ const backUrl = computed(() => {
 // Form submission
 const submit = () => {
     form.riwayat_tambahan = riwayatTambahan.value;
+
+    // Ensure paroki_tugas is synced from selected paroki
+    if (form.paroki_id) {
+        const pObj = (props.parokiList || []).find(p => String(p.id_paroki) === String(form.paroki_id));
+        if (pObj) {
+            form.paroki_tugas = pObj.nama_paroki;
+        }
+    }
+    // Ensure keuskupan is synced from selected keuskupan
+    if (form.keuskupan_id) {
+        const kObj = (props.keuskupanList || []).find(k => String(k.id_keuskupan) === String(form.keuskupan_id));
+        if (kObj) {
+            form.keuskupan = kObj.nama_keuskupan;
+        }
+    }
+    // Ensure status is valid string
+    if (form.status === '1' || form.status === 1) {
+        form.status = 'Aktif';
+    }
 
     const isRefer = typeof window !== 'undefined' && window.location.pathname.includes('/master-referensi');
     const pastorId = props.pastorItem?.id || props.pastorItem?.id_pastor;
@@ -571,6 +636,7 @@ const submit = () => {
                                         searchPlaceholder="Cari keuskupan..."
                                         icon="fa-church"
                                         iconColor="text-amber-600"
+                                        @update:modelValue="onKeuskupanIdChange"
                                     />
                                 </div>
 
@@ -647,10 +713,9 @@ const submit = () => {
                                             {{ calculatedAge }} Tahun
                                         </span>
                                     </div>
-                                    <input
+                                    <DateInput
                                         v-model="form.tanggal_lahir"
-                                        type="date"
-                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
+                                        placeholder="dd/mm/yyyy"
                                     />
                                 </div>
 
@@ -662,10 +727,10 @@ const submit = () => {
                                             {{ calculatedOrdinationYears }} Thn Imamat
                                         </span>
                                     </div>
-                                    <input
+                                    <DateInput
                                         v-model="form.tgl_tahbisan"
-                                        type="date"
-                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
+                                        placeholder="dd/mm/yyyy"
+                                        iconColor="text-emerald-600"
                                     />
                                 </div>
 

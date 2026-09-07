@@ -38,7 +38,7 @@ abstract class BaseAdminController extends Controller
             'pastor' => 'Pastor',
             'wilayah' => 'Admin Wilayah',
             'kapela' => 'Admin Kapela / Stasi',
-            'kub' => 'Ketua KUB',
+            'kub' => 'Admin KUB',
             'bendahara' => 'Bendahara',
             'penulis' => 'Penulis',
             'umat' => 'Umat',
@@ -139,7 +139,10 @@ abstract class BaseAdminController extends Controller
                 'wilayahList' => Wilayah::select('id_wilayah as id', 'nama_wilayah as name', 'paroki_id')->get(),
                 'kapelaList' => Kapela::select('id_kapela as id', 'nama_kapela as name', 'paroki_id')->get(),
                 'kubList' => Kub::select('id_kub as id', 'nama_kub as name', 'wilayah_id', 'kapela_id', 'paroki_id')->get(),
-                'roleList' => Role::select('id', 'nama_role as name', 'slug')->get(),
+                'roleList' => Role::whereNotIn('slug', ['umat'])
+                    ->where('nama_role', 'not like', '%umat%')
+                    ->select('id', 'nama_role as name', 'nama_role', 'slug')
+                    ->get(),
             ];
         });
     }

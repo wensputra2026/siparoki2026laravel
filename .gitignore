@@ -30,6 +30,12 @@ powershell.bat
 scratch/
 nul
 *.zip
+!database/siparoki_starter_template.zip
 parokibenlutu_cpanel.zip
-true]))
 public_complete_updated.zip
+*.sql
+!database/siparoki.sql
+!database/data/siparoki.sql
+!database/siparoki_starter_template.sql
+
+

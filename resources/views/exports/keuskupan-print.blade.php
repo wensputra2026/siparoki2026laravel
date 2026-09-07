@@ -16,8 +16,8 @@
             return asset(ltrim($path, '/'));
         };
 
-        $parokiLogoUrl = $formatLogo($rawParokiLogo, 'assets/uploads/profil/logo_paroki_1787370466.jpeg');
-        $keuskupanLogoUrl = $formatLogo($rawKeuskupanLogo, 'uploads/keuskupan/logo_keuskupan_kupang.svg');
+        $parokiLogoUrl = $formatLogo($rawParokiLogo, 'uploads/paroki/1787494152_6a8aff08b47a5.webp');
+        $keuskupanLogoUrl = $formatLogo($rawKeuskupanLogo, 'images/logo-keuskupan.png');
     @endphp
 
     <link rel="icon" type="image/jpeg" href="{{ $parokiLogoUrl }}">
@@ -400,7 +400,21 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php $lastCategory = null; @endphp
                     @forelse ($rows as $index => $row)
+                        @php
+                            $rowArr = is_array($row) ? $row : (array) $row;
+                            $currentCategory = $rowArr[0] ?? '';
+                            $isNewCategory = ($currentCategory !== $lastCategory);
+                            $lastCategory = $currentCategory;
+                        @endphp
+                        @if ($isStatistik && $isNewCategory)
+                            <tr class="category-header-row" style="background: #e2e8f0; border-top: 2px solid #94a3b8; page-break-after: avoid;">
+                                <td colspan="{{ count($headings) + 1 }}" style="font-weight: 900; font-size: 11px; text-transform: uppercase; color: #0f172a; padding: 8px 12px; letter-spacing: 0.04em; background: #e2e8f0;">
+                                    &#9656; {{ $currentCategory }}
+                                </td>
+                            </tr>
+                        @endif
                         <tr>
                             <td class="no">{{ $index + 1 }}</td>
                             @foreach ($row as $value)
@@ -417,8 +431,7 @@
                 <tfoot>
                     @if ($isStatistik)
                     <tr class="total-row">
-                        <th style="text-align: center; font-weight: 900; background: #0f172a; color: #fff;">&sum;</th>
-                        <th style="font-weight: 900; text-transform: uppercase; color: #0f172a; background: #e2e8f0;">
+                        <th colspan="2" style="font-weight: 900; text-transform: uppercase; color: #0f172a; background: #e2e8f0; text-align: left; padding-left: 12px;">
                             TOTAL POPULASI UMAT
                         </th>
                         <th style="font-weight: 800; color: #334155; background: #e2e8f0;">
@@ -436,8 +449,7 @@
                     </tr>
                     @else
                     <tr class="total-row">
-                        <th style="text-align: center; font-weight: 900; background: #0f172a; color: #fff;">&sum;</th>
-                        <th style="font-weight: 900; text-transform: uppercase; color: #0f172a; background: #e2e8f0;">
+                        <th colspan="2" style="font-weight: 900; text-transform: uppercase; color: #0f172a; background: #e2e8f0; text-align: left; padding-left: 12px;">
                             JUMLAH TOTAL KESELURUHAN
                         </th>
                         <th colspan="{{ max(1, count($headings) - 1) }}" style="font-weight: 900; color: #0f172a; background: #e2e8f0; font-size: 11px;">
