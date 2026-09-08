@@ -96,6 +96,14 @@ class PengaturanAplikasi extends Model
                     }
                 });
             }
+
+            // Pastikan is_setup_completed selalu bernilai true (1) agar aplikasi langsung aktif dari instalasi GitHub
+            if (\Illuminate\Support\Facades\Schema::hasTable('pengaturan_aplikasi') && \Illuminate\Support\Facades\Schema::hasColumn('pengaturan_aplikasi', 'is_setup_completed')) {
+                \Illuminate\Support\Facades\DB::table('pengaturan_aplikasi')
+                    ->where('is_setup_completed', 0)
+                    ->orWhereNull('is_setup_completed')
+                    ->update(['is_setup_completed' => 1]);
+            }
         } catch (\Throwable $e) {
             // Silently continue
         }

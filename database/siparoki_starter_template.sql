@@ -96294,8 +96294,8 @@ CREATE TABLE `pengaturan_aplikasi` (
   PRIMARY KEY (`id_pengaturan`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Default Application Setup (Uncompleted so new parish enters setup wizard)
-INSERT INTO `pengaturan_aplikasi` (`id_pengaturan`, `nama_aplikasi`, `is_setup_completed`, `created_at`, `updated_at`) VALUES (1, 'SIPAROKI 2026', 0, NOW(), NOW());
+-- Default Application Setup (Preconfigured so GitHub clone runs immediately without wizard)
+INSERT INTO `pengaturan_aplikasi` (`id_pengaturan`, `nama_aplikasi`, `is_setup_completed`, `created_at`, `updated_at`) VALUES (1, 'SIPAROKI 2026', 1, NOW(), NOW());
 
 -- -----------------------------------------------------
 -- Table structure for `pengaturan_midtrans`

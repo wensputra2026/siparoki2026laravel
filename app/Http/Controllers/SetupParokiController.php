@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,36 +24,51 @@ class SetupParokiController extends Controller
      */
     public function index(Request $request): Response
     {
-        PengaturanAplikasi::ensureSetupColumns();
+        try {
+            PengaturanAplikasi::ensureSetupColumns();
+        } catch (\Throwable $e) {}
 
-        // Load all Keuskupans in Indonesia with their Dekenats and Parokis
-        $keuskupanList = Keuskupan::with([
-            'dekenats' => function ($q) {
-                $q->orderBy('nama_dekenat')->with([
-                    'parokis' => function ($pq) {
-                        $pq->orderBy('nama_paroki');
-                    }
-                ]);
-            },
-            'parokis' => function ($pq) {
-                $pq->orderBy('nama_paroki');
-            }
-        ])
-        ->orderBy('nama_keuskupan')
-        ->get();
+        // Load all Keuskupans in Indonesia with their Dekenats and Parokis safely & optimized
+        try {
+            $keuskupanList = Keuskupan::with([
+                'dekenats' => function ($q) {
+                    $q->select('id_dekenat', 'keuskupan_id', 'nama_dekenat', 'kode_dekenat')
+                        ->orderBy('nama_dekenat')
+                        ->with([
+                            'parokis' => function ($pq) {
+                                $pq->select('id_paroki', 'keuskupan_id', 'dekenat_id', 'nama_paroki', 'kode_paroki', 'pelindung_paroki', 'nama_pastor_paroki_aktif', 'alamat', 'telepon', 'whatsapp', 'email', 'website', 'logo', 'banner')
+                                    ->orderBy('nama_paroki');
+                            }
+                        ]);
+                },
+                'parokis' => function ($pq) {
+                    $pq->select('id_paroki', 'keuskupan_id', 'dekenat_id', 'nama_paroki', 'kode_paroki', 'pelindung_paroki', 'nama_pastor_paroki_aktif', 'alamat', 'telepon', 'whatsapp', 'email', 'website', 'logo', 'banner')
+                        ->orderBy('nama_paroki');
+                }
+            ])
+            ->select('id_keuskupan', 'nama_keuskupan', 'nama_latin', 'uskup', 'alamat', 'kota', 'provinsi')
+            ->orderBy('nama_keuskupan')
+            ->get();
+        } catch (\Throwable $e) {
+            $keuskupanList = collect();
+        }
 
         // Current active settings
-        $currentPengaturan = DB::table('pengaturan_aplikasi')->first();
-        $currentProfil = DB::table('profil_paroki')->first();
-        
+        $currentPengaturan = null;
+        $currentProfil = null;
         $currentParoki = null;
-        if (!empty($currentPengaturan?->paroki_id)) {
-            $currentParoki = Paroki::find($currentPengaturan->paroki_id);
-        } elseif (!empty($currentProfil?->paroki_id)) {
-            $currentParoki = Paroki::find($currentProfil->paroki_id);
-        } elseif (!empty($currentPengaturan?->nama_paroki)) {
-            $currentParoki = Paroki::where('nama_paroki', $currentPengaturan->nama_paroki)->first();
-        }
+        try {
+            $currentPengaturan = Schema::hasTable('pengaturan_aplikasi') ? DB::table('pengaturan_aplikasi')->first() : null;
+            $currentProfil = Schema::hasTable('profil_paroki') ? DB::table('profil_paroki')->first() : null;
+            
+            if (!empty($currentPengaturan?->paroki_id)) {
+                $currentParoki = Paroki::find($currentPengaturan->paroki_id);
+            } elseif (!empty($currentProfil?->paroki_id)) {
+                $currentParoki = Paroki::find($currentProfil->paroki_id);
+            } elseif (!empty($currentPengaturan?->nama_paroki)) {
+                $currentParoki = Paroki::where('nama_paroki', $currentPengaturan->nama_paroki)->first();
+            }
+        } catch (\Throwable $e) {}
 
         $isSetupCompleted = (bool) ($currentPengaturan->is_setup_completed ?? ($currentProfil ? true : false));
 
@@ -128,6 +144,7 @@ class SetupParokiController extends Controller
         $bannerPath = null;
 
         if ($request->hasFile('logo')) {
+            File::ensureDirectoryExists(public_path('uploads/paroki'));
             $file = $request->file('logo');
             $filename = 'paroki_logo_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/paroki'), $filename);
@@ -135,6 +152,7 @@ class SetupParokiController extends Controller
         }
 
         if ($request->hasFile('banner')) {
+            File::ensureDirectoryExists(public_path('uploads/paroki'));
             $file = $request->file('banner');
             $filename = 'paroki_banner_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/paroki'), $filename);

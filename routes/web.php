@@ -732,12 +732,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/set-active-scope', [\App\Http\Controllers\InertiaPanelController::class, 'setActiveScope'])->name('api.set-active-scope');
 });
 
-// ==========================================
-// WIZARD SETUP PAROKI MULTI-PAROKI
-// ==========================================
-Route::get('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'index'])->name('setup-paroki');
-Route::post('/setup-paroki', [\App\Http\Controllers\SetupParokiController::class, 'save'])->name('setup-paroki.save');
-Route::get('/api/setup/hierarchy', [\App\Http\Controllers\SetupParokiController::class, 'getHierarchy'])->name('setup-paroki.hierarchy');
 
 // ==========================================
 // MAINTENANCE / SYSTEM OPTIMIZE & MIGRATE
