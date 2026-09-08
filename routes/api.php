@@ -37,6 +37,7 @@ Route::match(['GET', 'POST'], '/deploy-webhook', function (Request $request) {
     $basePath = base_path();
     $commands = [
         'git pull origin main 2>&1',
+        'php artisan migrate --force 2>&1',
         'php artisan view:clear 2>&1',
         'php artisan optimize:clear 2>&1',
     ];
