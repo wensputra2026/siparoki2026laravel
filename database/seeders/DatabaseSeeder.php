@@ -214,6 +214,33 @@ class DatabaseSeeder extends Seeder
             $this->call(JenisIuranSeeder::class);
         }
 
+                // 8b. Seed Default Security Settings (Captcha & Proteksi Keamanan Langsung Aktif Saat Instalasi Baru)
+        if (Schema::hasTable('security_settings')) {
+            $defaultSecuritySettings = [
+                'captcha_enabled' => '1',
+                'captcha_provider' => 'Simple CAPTCHA',
+                'captcha_site_key' => '',
+                'captcha_secret_key' => '',
+                'captcha_show_after_failed_attempts' => '0',
+                'captcha_required_backend_login' => '1',
+                'captcha_required_umat_login' => '1',
+                'captcha_required_forgot_password' => '1',
+                'captcha_required_public_forms' => '1',
+                'max_login_attempts' => '5',
+                'lockout_minutes' => '60',
+                'session_timeout_minutes' => '120',
+                'force_strong_password' => '1',
+                'enable_brute_force_protection' => '1',
+            ];
+
+            foreach ($defaultSecuritySettings as $k => $v) {
+                DB::table('security_settings')->updateOrInsert(
+                    ['setting_key' => $k],
+                    ['setting_value' => $v, 'updated_at' => now()]
+                );
+            }
+        }
+
         // 9. Pastikan tabel teritori pastoral, umat, konten, media & operasional paroki 100% bersih/kosong saat instalasi awal
         $localTables = [
             'riwayat_mutasi_umat',

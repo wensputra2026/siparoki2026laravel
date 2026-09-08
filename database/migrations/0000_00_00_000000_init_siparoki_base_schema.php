@@ -17,6 +17,18 @@ return new class extends Migration
         // 1. Cek jika tabel inti sudah ada, daftarkan baseline migration dan lewati impor
         if (Schema::hasTable('roles') && Schema::hasTable('konten') && Schema::hasTable('umat')) {
             $this->registerBaselineMigrations();
+
+            // Pastikan setelan keamanan awal (Captcha langsung aktif sejak awal instalasi)
+            if (Schema::hasTable('security_settings')) {
+                DB::table('security_settings')->updateOrInsert(
+                    ['setting_key' => 'captcha_enabled'],
+                    ['setting_value' => '1', 'updated_at' => now()]
+                );
+                DB::table('security_settings')->updateOrInsert(
+                    ['setting_key' => 'captcha_show_after_failed_attempts'],
+                    ['setting_value' => '0', 'updated_at' => now()]
+                );
+            }
             return;
         }
 
@@ -113,6 +125,18 @@ return new class extends Migration
 
             // 4. Daftarkan seluruh migrasi bawaan skema master agar tidak dijalankan ulang
             $this->registerBaselineMigrations();
+
+            // Pastikan setelan keamanan awal (Captcha langsung aktif sejak awal instalasi)
+            if (Schema::hasTable('security_settings')) {
+                DB::table('security_settings')->updateOrInsert(
+                    ['setting_key' => 'captcha_enabled'],
+                    ['setting_value' => '1', 'updated_at' => now()]
+                );
+                DB::table('security_settings')->updateOrInsert(
+                    ['setting_key' => 'captcha_show_after_failed_attempts'],
+                    ['setting_value' => '0', 'updated_at' => now()]
+                );
+            }
 
             // 5. Bersihkan data dummy teritori, jemaat, dan konten operasional agar repo bersih saat clone dari GitHub
             $cleanTables = [

@@ -4241,7 +4241,7 @@ CREATE TABLE `pengaturan_aplikasi` (
   `captcha_provider` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Simple CAPTCHA',
   `captcha_site_key` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `captcha_secret_key` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `captcha_show_after_failed_attempts` int DEFAULT '3',
+  `captcha_show_after_failed_attempts` int DEFAULT '0',
   `captcha_required_backend_login` tinyint(1) DEFAULT '0',
   `captcha_required_umat_login` tinyint(1) DEFAULT '0',
   `captcha_required_forgot_password` tinyint(1) DEFAULT '0',
