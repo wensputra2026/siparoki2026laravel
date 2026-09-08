@@ -1,9 +1,9 @@
 .hero { position: relative; overflow: hidden; background: #07111f; min-height: calc(100vh - 74px); display: flex; align-items: center; justify-content: center; padding: 60px 0; }
 .hero::before { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(to bottom, rgba(0,0,0,.85), rgba(0,0,0,.08)); }
 .hero-bg-gradient { position: absolute; inset: 0; z-index: 1; background: radial-gradient(circle at center, #1e293b 0%, #090e1a 100%); }
-.hero-video-bg, .hero-video-bg video, .hero-video-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.hero-video-bg { z-index: 0; }
-.hero-video-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,10,20,.42), rgba(5,10,20,.78)), linear-gradient(90deg, rgba(7,17,31,.45), rgba(7,17,31,.12)); }
+.hero-video-bg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0; pointer-events: none; }
+.hero-video-bg video, .hero-video-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero-video-bg::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(5,10,20,.42), rgba(5,10,20,.78)), linear-gradient(90deg, rgba(7,17,31,.45), rgba(7,17,31,.12)); }
 .hero-video-text { position: relative; z-index: 4; width: min(880px, calc(100% - 48px)); margin: 0 auto; text-align: center; color: #fff; text-shadow: 0 4px 24px rgba(0,0,0,.45); }
 .hero-logo-intro { width: 88px; height: 88px; margin: 0 auto 20px; padding: 12px; border-radius: 999px; background: rgba(255,255,255,.95); box-shadow: 0 20px 40px rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; color: #0284c7; font-size: 2.2rem; }
 .hero-video-text h1 { margin: 0 0 16px; color: #fff; font-size: clamp(1.8rem, 3.4vw, 2.8rem); font-weight: 800; line-height: 1.2; }
@@ -99,12 +99,74 @@
     background:
         linear-gradient(180deg, rgba(5,10,20,.06), rgba(5,10,20,.18)),
         linear-gradient(90deg, rgba(7,17,31,.12), rgba(7,17,31,.03)) !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 1 !important;
     pointer-events: none !important;
 }
 
 .hero-video-element {
     filter: none !important;
     opacity: 1 !important;
+}
+
+/* YouTube Video Background Full-Cover Styling */
+.hero-youtube-wrapper {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+    background-color: #07111f !important;
+    background-position: center !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+}
+
+body.public-portal .hero-youtube-iframe,
+.hero-youtube-iframe {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100vw !important;
+    max-width: none !important;
+    height: 56.25vw !important; /* 16:9 ratio */
+    min-height: 100% !important;
+    min-width: 177.78vh !important;
+    transform: translate(-50%, -50%) scale(1.35) !important;
+    transform-origin: center center !important;
+    pointer-events: none !important;
+    border: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+@media (min-aspect-ratio: 16/9) {
+    body.public-portal .hero-youtube-iframe,
+    .hero-youtube-iframe {
+        height: 56.25vw !important;
+        width: 100vw !important;
+    }
+}
+
+@media (max-aspect-ratio: 16/9) {
+    body.public-portal .hero-youtube-iframe,
+    .hero-youtube-iframe {
+        width: 177.78vh !important;
+        height: 100vh !important;
+        min-height: 100% !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.public-portal .hero-youtube-iframe,
+    .hero-youtube-iframe {
+        min-height: 120% !important;
+        min-width: 220% !important;
+        transform: translate(-50%, -50%) scale(1.45) !important;
+    }
 }
 
 .hero-video-text {

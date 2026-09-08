@@ -28,19 +28,25 @@
         @if($videoStatus === 'Aktif' && ($heroVideoType === 'youtube' || $heroVideoType === 'url') && !empty($heroVideoYoutube))
             @php
                 $youtubeId = null;
-                if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]+)/', $heroVideoYoutube, $matches)) {
+                if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([A-Za-z0-9_-]{11})/', $heroVideoYoutube, $matches)) {
+                    $youtubeId = $matches[1];
+                } elseif (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]+)/', $heroVideoYoutube, $matches)) {
                     $youtubeId = $matches[1];
                 }
             @endphp
             @if($youtubeId)
-                <iframe
-                    class="hero-video-element"
-                    src="https://www.youtube.com/embed/{{ $youtubeId }}?autoplay=1&mute=1&loop=1&playlist={{ $youtubeId }}&controls=0&showinfo=0&rel=0&modestbranding=1&cc_load_policy=0&iv_load_policy=3"
-                    title="Video profil {{ $globalNamaParoki ?? 'SIPAROKI' }}"
-                    loading="lazy"
-                    allow="autoplay; encrypted-media; picture-in-picture"
-                    allowfullscreen
-                ></iframe>
+                <div class="hero-youtube-wrapper" style="background-image: url('https://img.youtube.com/vi/{{ $youtubeId }}/hqdefault.jpg');">
+                    <iframe
+                        class="hero-video-element hero-youtube-iframe"
+                        src="https://www.youtube.com/embed/{{ $youtubeId }}?autoplay=1&mute=1&loop=1&playlist={{ $youtubeId }}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3&disablekb=1&fs=0"
+                        title="Video profil {{ $globalNamaParoki ?? 'SIPAROKI' }}"
+                        loading="eager"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        tabindex="-1"
+                        aria-hidden="true"
+                        frameborder="0"
+                    ></iframe>
+                </div>
             @endif
         @elseif($videoStatus === 'Aktif' && !empty($heroVideoFile))
             @php

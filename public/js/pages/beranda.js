@@ -12,6 +12,26 @@ document.addEventListener("DOMContentLoaded", function() {
         setTimeout(typeNextChar, 500);
     }
 
+    // Autoplay trigger & keepalive for background YouTube iframe
+    var ytIframe = document.querySelector('.hero-youtube-iframe');
+    if (ytIframe) {
+        function triggerYtPlay() {
+            if (ytIframe && ytIframe.contentWindow) {
+                try {
+                    ytIframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                } catch (e) {}
+            }
+        }
+        ytIframe.addEventListener('load', function() {
+            triggerYtPlay();
+            setTimeout(triggerYtPlay, 800);
+            setTimeout(triggerYtPlay, 2000);
+        });
+        ['click', 'touchstart', 'scroll'].forEach(function(evt) {
+            window.addEventListener(evt, triggerYtPlay, { once: true, passive: true });
+        });
+    }
+
     if (document.getElementById('home-map-kapela') && window.L) {
         var homeMap = L.map('home-map-kapela', {
             center: [-10.1626, 123.5796],
