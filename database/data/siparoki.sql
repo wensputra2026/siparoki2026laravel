@@ -348,7 +348,7 @@ CREATE TABLE `backup_database` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nama_file` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `ukuran` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `dibuat_oleh` int DEFAULT NULL,
+  `dibuat_oleh` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
@@ -5211,7 +5211,6 @@ CREATE TABLE `sakramen` (
 
 LOCK TABLES `sakramen` WRITE;
 /*!40000 ALTER TABLE `sakramen` DISABLE KEYS */;
-INSERT INTO `sakramen` VALUES (1,1,'Baptis','Katolik',NULL,'2026-07-08','St. Maria Dolorosa - Soe','Herman Hilers Penga','','Verifikasi Wilayah','','active','2026-07-09 11:18:43','2026-08-25 11:07:42',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Verified',NULL,NULL,NULL,NULL,'Belum',NULL),(2,1,'Ekrar Iman','Katolik',NULL,'2026-07-18','St. Maria Dolorosa - Soe','Adrianus Dimu','','','','active','2026-07-09 11:19:18','2026-07-09 11:24:43',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Verified',NULL,NULL,NULL,NULL,'Belum',NULL),(3,1,'Komuni Pertama','Katolik',NULL,'2026-07-10','St. Maria Dolorosa - Soe','Adrianus Manek','','','','active','2026-07-09 11:19:44',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Verified',NULL,NULL,NULL,NULL,'Belum',NULL),(6,1,'Perkawinan','Katolik',NULL,'2026-07-17','Airmadidi','Mgr. Mgr. Antonio Guido Filipazzi','','','','active','2026-07-09 11:26:03',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Verified',NULL,NULL,NULL,NULL,'Belum',NULL),(7,5,'Baptis','Katolik',NULL,'2026-08-20','St. Maria Dolorosa - Soe',NULL,'ssssss','sss','ssss','active','2026-08-12 06:47:35','2026-08-27 17:52:59',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Verified',NULL,NULL,NULL,NULL,'Belum',NULL),(23,7,'Baptis','Katolik',NULL,'1982-06-12','Paroki St. Vinsensius a Paulo Benlutu','Rd. Herman Hillers Penga',NULL,'Penerimaan: Baptis Bayi (Infantis)',NULL,'Sah','2026-09-06 19:52:30','2026-09-06 19:52:30','Rd. Herman Hillers Penga',NULL,NULL,NULL,'Fransiskus Xaverius Tefa',NULL,NULL,NULL,NULL,NULL,NULL,'I','45','120','Verified',NULL,NULL,NULL,NULL,'Belum',NULL),(24,7,'Komuni Pertama','Katolik',NULL,'1992-05-24','Paroki St. Vinsensius a Paulo Benlutu',NULL,NULL,NULL,NULL,'Sah','2026-09-06 19:52:30','2026-09-06 19:52:30',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Verified',NULL,NULL,NULL,NULL,'Belum',NULL),(25,7,'Krisma','Katolik',NULL,'1998-08-15','Katedral Kristus Raja Kupang',NULL,NULL,NULL,NULL,'Sah','2026-09-06 19:52:30','2026-09-06 19:52:30',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Verified',NULL,NULL,NULL,NULL,'Belum',NULL),(26,7,'Perkawinan','Sah secara Katolik (Kanonik)',NULL,'2010-09-25','Paroki St. Vinsensius a Paulo Benlutu',NULL,NULL,NULL,NULL,'Sah','2026-09-06 19:52:30','2026-09-06 19:52:30',NULL,NULL,NULL,'Theresia Lisieux Neno',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Verified',NULL,NULL,NULL,NULL,'Belum',NULL);
 /*!40000 ALTER TABLE `sakramen` ENABLE KEYS */;
 UNLOCK TABLES;
 

@@ -116,7 +116,7 @@ return new class extends Migration
 
             // 5. Bersihkan data dummy teritori, jemaat, dan konten operasional agar repo bersih saat clone dari GitHub
             $cleanTables = [
-                'riwayat_mutasi_umat', 'mutasi_umat', 'sakramen_umat', 'sakramen_verifikasi',
+                'riwayat_mutasi_umat', 'mutasi_umat', 'sakramen', 'sakramen_margo', 'sakramen_umat', 'sakramen_verifikasi',
                 'pengajuan_sakramen', 'anggota_keluarga', 'umat', 'umats', 'kk_katolik',
                 'kub', 'kubs', 'lingkungan', 'wilayah', 'wilayahs', 'kapela', 'stasi_kapela',
                 'master_kapela', 'konten', 'artikel', 'berita', 'komentar_artikel',
@@ -124,7 +124,7 @@ return new class extends Migration
                 'iuran', 'transaksi_pembayaran', 'kas_rekening', 'keuangan', 'kolekte', 'kegiatan',
                 'rapat', 'rapat_peserta', 'chat_pesan', 'aset', 'aset_maintenance', 'intensi_misa',
                 'misa_kapela', 'misa_pastor', 'jadwal_misa', 'jadwal_petugas_liturgi',
-                'log_aktivitas', 'login_activity', 'login_attempts', 'security_logs',
+                'log_aktivitas', 'login_activity', 'login_attempts', 'security_logs', 'backup_database',
             ];
             foreach ($cleanTables as $ct) {
                 if (Schema::hasTable($ct)) {

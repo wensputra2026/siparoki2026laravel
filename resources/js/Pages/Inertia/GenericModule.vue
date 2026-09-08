@@ -293,6 +293,8 @@ const maintenanceOptions = [
 const showFormModal = ref(false);
 const showDetailModal = ref(false);
 const showDeleteModal = ref(false);
+const showImpersonateModal = ref(false);
+const impersonateTarget = ref(null);
 const selectedItem = ref(null);
 const modalMode = ref('create'); // 'create' | 'edit'
 const formData = ref({});
@@ -2157,6 +2159,8 @@ onMounted(() => {
 
 const resolveEntityId = (item) => {
     if (!item) return '';
+    if (item.hashid) return item.hashid;
+    if (item.iid) return item.iid;
     if (item.uuid) return item.uuid;
     if (item.id !== undefined && item.id !== null && item.id !== '') return item.id;
     if (item.id_desa !== undefined && item.id_desa !== null && item.id_desa !== '') return item.id_desa;
@@ -2298,10 +2302,15 @@ const toggleUserStatus = (item) => {
 
 const impersonateUser = (item) => {
     if (isSelfUser(item)) return;
-    const name = item.nama_lengkap || item.name || item.username;
-    if (confirm(`Apakah Anda ingin masuk dan melihat sistem langsung sebagai ${name} (${item.role?.nama_role || 'Pengguna'})?`)) {
-        router.post(`${moduleBasePath.value}/${item.id}/impersonate`);
-    }
+    impersonateTarget.value = item;
+    showImpersonateModal.value = true;
+};
+
+const confirmImpersonate = () => {
+    if (!impersonateTarget.value) return;
+    const target = impersonateTarget.value;
+    showImpersonateModal.value = false;
+    router.post(`${moduleBasePath.value}/${target.id}/impersonate`);
 };
 
 // Bulk Selection State
@@ -9772,6 +9781,43 @@ const showKubFilter = computed(() => {
             </div>
         </div>
         <!-- end bulk delete modal -->
+
+        <!-- IMPERSONATE CONFIRMATION MODAL -->
+        <div
+            v-if="showImpersonateModal && impersonateTarget"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs"
+        >
+            <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-4 animate-in fade-in zoom-in-95">
+                <div class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-xl border bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50">
+                    <i class="fa-solid fa-user-secret"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                        Konfirmasi Akses Pengguna
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Apakah Anda ingin masuk dan melihat sistem langsung sebagai <b>{{ impersonateTarget.nama_lengkap || impersonateTarget.name || impersonateTarget.username }}</b> ({{ impersonateTarget.role?.nama_role || 'Pengguna' }})?
+                    </p>
+                </div>
+                <div class="flex items-center justify-center gap-2.5 pt-2">
+                    <button
+                        type="button"
+                        @click="showImpersonateModal = false"
+                        class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        @click="confirmImpersonate"
+                        class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-600/30 transition cursor-pointer"
+                    >
+                        Masuk Sebagai Pengguna
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- end impersonate modal -->
         </div>
         <!-- end flex full-height wrapper -->
     </AppLayout>

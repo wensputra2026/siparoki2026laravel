@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import RemoteSelect from '@/Components/RemoteSelect.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
 
 const props = defineProps({
     type: { type: String, required: true },
@@ -57,6 +58,75 @@ const optionsForField = (field) => {
     return field.options || [];
 };
 
+const isFieldVisible = (f) => {
+    if (!f) return true;
+
+    // Support backend explicit show_if: { field: '...', values: [...] }
+    if (f.show_if && f.show_if.field) {
+        const targetVal = String(formData.value?.[f.show_if.field] ?? '').trim().toLowerCase();
+        if (Array.isArray(f.show_if.values)) {
+            const allowed = f.show_if.values.map((v) => String(v).trim().toLowerCase());
+            return allowed.includes(targetVal);
+        }
+        if (f.show_if.value !== undefined) {
+            return targetVal === String(f.show_if.value).trim().toLowerCase();
+        }
+    }
+
+    // Direct check for Catholic clergy types (Frater / Pastor)
+    const jenisFrater = String(formData.value?.jenis_frater ?? '').toLowerCase();
+    const jenisImam = String(formData.value?.jenis_imam ?? '').toLowerCase();
+    const jenis = (jenisFrater || jenisImam).trim();
+
+    if (f.name === 'keuskupan' || f.name === 'keuskupan_id') {
+        if (jenis.includes('religius')) {
+            return false;
+        }
+        if (jenis.includes('diosesan')) {
+            return true;
+        }
+    }
+
+    if (f.name === 'ordo' || f.name === 'ordo_kongregasi') {
+        if (jenis.includes('diosesan')) {
+            return false;
+        }
+        if (jenis.includes('religius')) {
+            return true;
+        }
+    }
+
+    return true;
+};
+
+watch(
+    () => formData.value?.jenis_frater,
+    (val) => {
+        if (!val) return;
+        const s = String(val).toLowerCase();
+        if (s.includes('diosesan')) {
+            formData.value.ordo_kongregasi = '';
+        } else if (s.includes('religius')) {
+            formData.value.keuskupan = '';
+        }
+    }
+);
+
+watch(
+    () => formData.value?.jenis_imam,
+    (val) => {
+        if (!val) return;
+        const s = String(val).toLowerCase();
+        if (s.includes('diosesan')) {
+            formData.value.ordo = '';
+            formData.value.ordo_kongregasi = '';
+        } else if (s.includes('religius')) {
+            formData.value.keuskupan = '';
+            formData.value.keuskupan_id = '';
+        }
+    }
+);
+
 const formatPaginationLabel = (label) => {
     if (!label) return '';
     const str = String(label).trim();
@@ -100,7 +170,7 @@ const openCreateModal = () => {
     props.fields.forEach((f) => {
         if (f.type === 'select') {
             if (f.relTable) {
-                init[f.name] = '';
+                init[f.name] = (f.name === 'paroki_id' ? 1 : '');
             } else {
                 const opts = optionsForField(f);
                 init[f.name] = opts.length ? opts[0].value : '';
@@ -124,7 +194,7 @@ const openEditModal = (item) => {
     if (props.type === 'pastor' || props.type === 'master_pastor' || props.type === 'master-pastor') {
         const isMasterRef = window.location.pathname.includes('/master-referensi');
         const prefix = window.location.pathname.split('/')[1] || 'superadmin';
-        const pastorId = item._pk || item.id;
+        const pastorId = item.hashid || item.iid || item.uuid || item._pk || item.id;
         if (isMasterRef) {
             router.visit(`/admin/master-referensi/pastor/edit/${pastorId}`);
         } else {
@@ -399,77 +469,96 @@ const displayedColumns = computed(() => {
                 </div>
 
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                    <div v-for="f in fields" :key="f.name" :class="['space-y-1', (f.type === 'textarea' || f.type === 'file') ? 'sm:col-span-2' : '']">
-                        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide">{{ f.label }}</label>
+                    <template v-for="f in fields" :key="f.name">
+                        <div
+                            v-if="isFieldVisible(f)"
+                            :class="['space-y-1', (f.type === 'textarea' || f.type === 'file') ? 'sm:col-span-2' : '']"
+                        >
+                            <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wide">{{ f.label }}</label>
 
-                        <textarea
-                            v-if="f.type === 'textarea'"
-                            v-model="formData[f.name]"
-                            rows="3"
-                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-                        ></textarea>
+                            <textarea
+                                v-if="f.type === 'textarea'"
+                                v-model="formData[f.name]"
+                                rows="3"
+                                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                            ></textarea>
 
-                        <!-- File / Foto Upload -->
-                        <div v-else-if="f.type === 'file'" class="space-y-2">
-                            <div class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 bg-slate-50/50">
-                                <div class="w-14 h-14 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/60 overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
-                                    <img
-                                        v-if="filePreviews[f.name] || (typeof formData[f.name] === 'string' && formData[f.name])"
-                                        :src="filePreviews[f.name] || formData[f.name]"
-                                        class="w-full h-full object-cover"
-                                    />
-                                    <i v-else class="fa-solid fa-camera text-amber-500 text-base"></i>
-                                </div>
-                                <div class="flex-1 min-w-0 space-y-1">
-                                    <div class="flex items-center gap-2">
-                                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition shadow-2xs">
-                                            <i class="fa-solid fa-upload text-[11px]"></i>
-                                            <span>Pilih {{ f.label }}</span>
-                                            <input
-                                                type="file"
-                                                :accept="f.accept || 'image/*'"
-                                                class="hidden"
-                                                @change="handleFileChange(f, $event)"
-                                            />
-                                        </label>
-                                        <button
-                                            v-if="filePreviews[f.name] || formData[f.name]"
-                                            type="button"
-                                            @click="removeFile(f)"
-                                            class="w-7 h-7 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-500 text-xs font-bold transition flex items-center justify-center cursor-pointer"
-                                            title="Hapus / Reset Foto"
-                                        >
-                                            <i class="fa-solid fa-xmark"></i>
-                                        </button>
+                            <!-- File / Foto Upload -->
+                            <div v-else-if="f.type === 'file'" class="space-y-2">
+                                <div class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 bg-slate-50/50">
+                                    <div class="w-14 h-14 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/60 overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
+                                        <img
+                                            v-if="filePreviews[f.name] || (typeof formData[f.name] === 'string' && formData[f.name])"
+                                            :src="filePreviews[f.name] || formData[f.name]"
+                                            class="w-full h-full object-cover"
+                                        />
+                                        <i v-else class="fa-solid fa-camera text-amber-500 text-base"></i>
                                     </div>
-                                    <p class="text-[10px] text-slate-400">Format: JPG, PNG, WEBP (Maksimal 2MB).</p>
+                                    <div class="flex-1 min-w-0 space-y-1">
+                                        <div class="flex items-center gap-2">
+                                            <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition shadow-2xs">
+                                                <i class="fa-solid fa-upload text-[11px]"></i>
+                                                <span>Pilih {{ f.label }}</span>
+                                                <input
+                                                    type="file"
+                                                    :accept="f.accept || 'image/*'"
+                                                    class="hidden"
+                                                    @change="handleFileChange(f, $event)"
+                                                />
+                                            </label>
+                                            <button
+                                                v-if="filePreviews[f.name] || formData[f.name]"
+                                                type="button"
+                                                @click="removeFile(f)"
+                                                class="w-7 h-7 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-500 text-xs font-bold transition flex items-center justify-center cursor-pointer"
+                                                title="Hapus / Reset Foto"
+                                            >
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </div>
+                                        <p class="text-[10px] text-slate-400">Format: JPG, PNG, WEBP (Maksimal 2MB).</p>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- Searchable Select (e.g. Ordo, Keuskupan) -->
+                            <SearchableSelect
+                                v-else-if="f.type === 'select' && f.searchable"
+                                v-model="formData[f.name]"
+                                :options="optionsForField(f)"
+                                value-key="value"
+                                label-key="label"
+                                :placeholder="`Pilih ${f.label}`"
+                                :search-placeholder="`Cari ${f.label}...`"
+                            />
+
+                            <!-- Remote Select (FK table) -->
+                            <RemoteSelect
+                                v-else-if="f.type === 'select' && f.relTable"
+                                v-model="formData[f.name]"
+                                :rel-table="f.relTable"
+                                :label="f.label"
+                                :placeholder="`Pilih ${f.label}`"
+                            />
+
+                            <!-- Standard Select -->
+                            <select
+                                v-else-if="f.type === 'select'"
+                                v-model="formData[f.name]"
+                                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 cursor-pointer"
+                            >
+                                <option value="">— Pilih —</option>
+                                <option v-for="opt in optionsForField(f)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                            </select>
+
+                            <input
+                                v-else
+                                v-model="formData[f.name]"
+                                :type="f.type === 'date' ? 'date' : (f.type === 'number' ? 'number' : 'text')"
+                                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                            />
                         </div>
-
-                        <RemoteSelect
-                            v-else-if="f.type === 'select' && f.relTable"
-                            v-model="formData[f.name]"
-                            :rel-table="f.relTable"
-                            :label="f.label"
-                            :placeholder="`Pilih ${f.label}`"
-                        />
-                        <select
-                            v-else-if="f.type === 'select'"
-                            v-model="formData[f.name]"
-                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 cursor-pointer"
-                        >
-                            <option value="">— Pilih —</option>
-                            <option v-for="opt in optionsForField(f)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                        </select>
-
-                        <input
-                            v-else
-                            v-model="formData[f.name]"
-                            :type="f.type === 'date' ? 'date' : (f.type === 'number' ? 'number' : 'text')"
-                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-                        />
-                    </div>
+                    </template>
                 </div>
 
                 <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/50">

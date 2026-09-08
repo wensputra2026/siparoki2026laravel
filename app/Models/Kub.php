@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
 use App\Models\Concerns\HasUuid;
 
 class Kub extends Model
 {
-    use HasUuid;
+    use HasIndirectId, HasUuid;
 
     protected $table = 'kub';
     protected $fillable = [
@@ -38,6 +39,8 @@ class Kub extends Model
 
     protected $appends = [
         'jumlah_kk',
+        'hashid',
+        'iid',
     ];
 
     public function getJumlahKkAttribute(): int

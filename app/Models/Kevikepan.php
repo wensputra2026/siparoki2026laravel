@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
 
 class Kevikepan extends Model
 {
+    use HasIndirectId;
+
     protected $table = 'kevikepan';
+    protected $appends = ['hashid', 'iid'];
     protected $fillable = [
         'nama_kevikepan',
         'vikep',

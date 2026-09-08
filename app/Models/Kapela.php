@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
 use App\Models\Concerns\HasUuid;
 
 class Kapela extends Model
 {
-    use HasUuid;
+    use HasIndirectId, HasUuid;
 
     protected $table = 'kapela';
+    protected $appends = ['hashid', 'iid'];
 
     protected $fillable = [
         'uuid',

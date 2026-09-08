@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
 use App\Models\Concerns\HasUuid;
 
 class Wilayah extends Model
 {
-    use HasUuid;
+    use HasIndirectId, HasUuid;
 
     protected $table = 'wilayah';
+    protected $appends = ['hashid', 'iid'];
 
     protected $fillable = [
         'uuid',

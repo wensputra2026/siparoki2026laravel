@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 
 const props = defineProps({
     role: { type: String, default: 'Super Admin' },
@@ -80,12 +81,35 @@ const submitPayment = () => {
     });
 };
 
+const confirmModal = ref({
+    show: false,
+    title: '',
+    message: '',
+    confirmText: 'Ya, Lanjutkan',
+    type: 'danger',
+    action: null,
+    loading: false,
+});
+
 const deletePayment = (item) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus metode pembayaran "${item.nama_bank}"?`)) {
-        router.post(`/${props.prefix}/pengaturan/pembayaran/${item.id}/delete`, {}, {
-            preserveScroll: true,
-        });
-    }
+    confirmModal.value = {
+        show: true,
+        title: 'Hapus Metode Pembayaran',
+        message: `Apakah Anda yakin ingin menghapus metode pembayaran <strong>"${item.nama_bank}"</strong>? Rekening ini tidak akan lagi ditampilkan ke umat.`,
+        confirmText: 'Ya, Hapus',
+        type: 'danger',
+        loading: false,
+        action: () => {
+            confirmModal.value.loading = true;
+            router.post(`/${props.prefix}/pengaturan/pembayaran/${item.id}/delete`, {}, {
+                preserveScroll: true,
+                onFinish: () => {
+                    confirmModal.value.loading = false;
+                    confirmModal.value.show = false;
+                },
+            });
+        },
+    };
 };
 
 // Midtrans Payment Gateway Form & Logic
@@ -327,11 +351,24 @@ const submitSlider = () => {
 };
 
 const deleteSlider = (item) => {
-    if (confirm(`Hapus slide banner "${item.judul}"?`)) {
-        router.post(`/${props.prefix}/pengaturan/slider/${item.id}/delete`, {}, {
-            preserveScroll: true,
-        });
-    }
+    confirmModal.value = {
+        show: true,
+        title: 'Hapus Slide Banner',
+        message: `Apakah Anda yakin ingin menghapus slide banner <strong>"${item.judul}"</strong>? Slide ini tidak akan ditampilkan lagi di beranda website.`,
+        confirmText: 'Ya, Hapus Slide',
+        type: 'danger',
+        loading: false,
+        action: () => {
+            confirmModal.value.loading = true;
+            router.post(`/${props.prefix}/pengaturan/slider/${item.id}/delete`, {}, {
+                preserveScroll: true,
+                onFinish: () => {
+                    confirmModal.value.loading = false;
+                    confirmModal.value.show = false;
+                },
+            });
+        },
+    };
 };
 
 // SEO Form
@@ -1691,5 +1728,16 @@ const getYoutubeEmbed = (url) => {
             </div>
         </div>
 
+        <!-- Uniform Confirmation Modal -->
+        <ConfirmationModal
+            :show="confirmModal.show"
+            :title="confirmModal.title"
+            :message="confirmModal.message"
+            :confirm-text="confirmModal.confirmText"
+            :type="confirmModal.type"
+            :loading="confirmModal.loading"
+            @confirm="confirmModal.action && confirmModal.action()"
+            @cancel="confirmModal.show = false"
+        />
     </AppLayout>
 </template>

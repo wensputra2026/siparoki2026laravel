@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
 
 class KuasiParoki extends Model
 {
+    use HasIndirectId;
+
     protected $table = 'kuasi_paroki';
     protected $fillable = [
         'paroki_id',
@@ -53,6 +56,8 @@ class KuasiParoki extends Model
         'pastor_administrator',
         'status',
         'dekenat_nama',
+        'hashid',
+        'iid',
     ];
 
     const CREATED_AT = 'CreatedAt';

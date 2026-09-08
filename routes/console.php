@@ -365,7 +365,7 @@ Artisan::command('siparoki:clean-data', function () {
     $this->info('Membersihkan data teritori pastoral, sensus umat, konten, dan akun selain Super Admin...');
 
     $tables = [
-        'riwayat_mutasi_umat', 'mutasi_umat', 'sakramen_umat', 'sakramen_verifikasi',
+        'riwayat_mutasi_umat', 'mutasi_umat', 'sakramen', 'sakramen_margo', 'sakramen_umat', 'sakramen_verifikasi',
         'pengajuan_sakramen', 'anggota_keluarga', 'umat', 'umats', 'kk_katolik',
         'kub', 'kubs', 'lingkungan', 'wilayah', 'wilayahs', 'kapela', 'stasi_kapela',
         'master_kapela', 'konten', 'artikel', 'berita', 'komentar_artikel',
@@ -373,7 +373,7 @@ Artisan::command('siparoki:clean-data', function () {
         'iuran', 'transaksi_pembayaran', 'kas_rekening', 'keuangan', 'kolekte', 'kegiatan',
         'rapat', 'rapat_peserta', 'chat_pesan', 'aset', 'aset_maintenance', 'intensi_misa',
         'misa_kapela', 'misa_pastor', 'jadwal_misa', 'jadwal_petugas_liturgi',
-        'log_aktivitas', 'login_activity', 'login_attempts', 'security_logs',
+        'log_aktivitas', 'login_activity', 'login_attempts', 'security_logs', 'backup_database',
     ];
 
     try {

@@ -1,1 +1,0 @@
-import e from"./Error-DiXLPx_u.js";import{o as a,y as r}from"./vendor-vue-DKPcl_V5.js";import"./vendor-DX-d4_2r.js";const c={__name:"Error",props:{status:{type:[Number,String],default:404},message:{type:String,default:""}},setup(t){const s=t;return(o,m)=>(a(),r(e,{status:s.status,message:s.message},null,8,["status","message"]))}};export{c as default};

@@ -139,53 +139,122 @@
                     </div>
                 </div>
 
-                <!-- Simple Math CAPTCHA -->
-                <div class="rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-[#263a55] p-3.5 space-y-2.5 shadow-2xs">
-                    <div class="flex items-center justify-between">
-                        <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <i class="fa-solid fa-shield-halved text-amber-500 text-xs"></i>
-                            <span>Verifikasi Keamanan (CAPTCHA)</span>
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <span class="text-[10px] text-slate-400 font-medium">Anti-Bot</span>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <!-- Tantangan Penjumlahan -->
-                        <div class="flex-1 flex items-center justify-center py-2 px-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono font-bold text-sm tracking-wider select-none shadow-inner">
-                            <span id="captcha-question">{{ !empty($captchaQuestion) ? $captchaQuestion : '5 + 4 = ?' }}</span>
+                <!-- CAPTCHA Section -->
+                @if(!empty($showCaptcha))
+                    @if(!empty($captchaProvider) && $captchaProvider === 'Google reCAPTCHA v2 Checkbox' && !empty($captchaSiteKey))
+                        <!-- Google reCAPTCHA v2 -->
+                        <div class="rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-[#263a55] p-3.5 space-y-2.5 shadow-2xs">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield-halved text-amber-500 text-xs"></i>
+                                    <span>Verifikasi Keamanan (reCAPTCHA)</span>
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <span class="text-[10px] text-slate-400 font-medium">Google v2</span>
+                            </div>
+                            <div class="flex justify-center overflow-x-auto py-1">
+                                <div class="g-recaptcha" data-sitekey="{{ $captchaSiteKey }}"></div>
+                            </div>
+                            @error('captcha')
+                                <p class="text-xs text-red-500 font-medium mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
-
-                        <!-- Tombol Reload Tantangan -->
-                        <button
-                            type="button"
-                            id="btn-refresh-captcha"
-                            class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 hover:border-amber-400 transition flex items-center justify-center shadow-xs cursor-pointer shrink-0"
-                            title="Ganti Soal CAPTCHA"
-                        >
-                            <i class="fa-solid fa-arrows-rotate text-xs" id="icon-refresh-captcha"></i>
-                        </button>
-                    </div>
-
-                    <!-- Input Jawaban -->
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-calculator text-xs"></i>
+                        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+                    @elseif(!empty($captchaProvider) && $captchaProvider === 'Google reCAPTCHA v3 Invisible' && !empty($captchaSiteKey))
+                        <!-- Google reCAPTCHA v3 -->
+                        <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+                        @error('captcha')
+                            <p class="text-xs text-red-500 font-medium mt-1">{{ $message }}</p>
+                        @enderror
+                        <script src="https://www.google.com/recaptcha/api.js?render={{ $captchaSiteKey }}"></script>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const loginForm = document.querySelector('form');
+                                if (loginForm) {
+                                    loginForm.addEventListener('submit', function (e) {
+                                        const tokenInput = document.getElementById('g-recaptcha-response');
+                                        if (tokenInput && !tokenInput.value) {
+                                            e.preventDefault();
+                                            grecaptcha.ready(function () {
+                                                grecaptcha.execute('{{ $captchaSiteKey }}', { action: 'login' }).then(function (token) {
+                                                    tokenInput.value = token;
+                                                    loginForm.submit();
+                                                });
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        </script>
+                    @elseif(!empty($captchaProvider) && $captchaProvider === 'Cloudflare Turnstile' && !empty($captchaSiteKey))
+                        <!-- Cloudflare Turnstile -->
+                        <div class="rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-[#263a55] p-3.5 space-y-2.5 shadow-2xs">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield-halved text-amber-500 text-xs"></i>
+                                    <span>Verifikasi Keamanan (Turnstile)</span>
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <span class="text-[10px] text-slate-400 font-medium">Cloudflare</span>
+                            </div>
+                            <div class="flex justify-center overflow-x-auto py-1">
+                                <div class="cf-turnstile" data-sitekey="{{ $captchaSiteKey }}" data-theme="auto"></div>
+                            </div>
+                            @error('captcha')
+                                <p class="text-xs text-red-500 font-medium mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
-                        <input
-                            type="number"
-                            name="captcha"
-                            id="input_captcha"
-                            required
-                            autocomplete="off"
-                            placeholder="Ketik hasil perhitungan angka..."
-                            class="w-full pl-10 pr-3.5 py-2 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
-                        >
-                    </div>
-                    @error('captcha')
-                        <p class="text-xs text-red-500 font-medium mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
+                        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                    @else
+                        <!-- Simple Math CAPTCHA (Lokal) -->
+                        <div class="rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-[#263a55] p-3.5 space-y-2.5 shadow-2xs">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield-halved text-amber-500 text-xs"></i>
+                                    <span>Verifikasi Keamanan (CAPTCHA)</span>
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <span class="text-[10px] text-slate-400 font-medium">Anti-Bot</span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <!-- Tantangan Penjumlahan -->
+                                <div class="flex-1 flex items-center justify-center py-2 px-3 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono font-bold text-sm tracking-wider select-none shadow-inner">
+                                    <span id="captcha-question">{{ !empty($captchaQuestion) ? $captchaQuestion : '5 + 4 = ?' }}</span>
+                                </div>
+
+                                <!-- Tombol Reload Tantangan -->
+                                <button
+                                    type="button"
+                                    id="btn-refresh-captcha"
+                                    class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-amber-500 dark:hover:text-amber-400 hover:border-amber-400 transition flex items-center justify-center shadow-xs cursor-pointer shrink-0"
+                                    title="Ganti Soal CAPTCHA"
+                                >
+                                    <i class="fa-solid fa-arrows-rotate text-xs" id="icon-refresh-captcha"></i>
+                                </button>
+                            </div>
+
+                            <!-- Input Jawaban -->
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-calculator text-xs"></i>
+                                </div>
+                                <input
+                                    type="number"
+                                    name="captcha"
+                                    id="input_captcha"
+                                    required
+                                    autocomplete="off"
+                                    placeholder="Ketik hasil perhitungan angka..."
+                                    class="w-full pl-10 pr-3.5 py-2 rounded-xl border border-slate-300 dark:border-[#263a55] bg-white dark:bg-[#07111f] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+                                >
+                            </div>
+                            @error('captcha')
+                                <p class="text-xs text-red-500 font-medium mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
+                @endif
 
                 <div class="flex items-center">
                     <input type="checkbox" name="remember" id="remember" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">

@@ -250,16 +250,34 @@ trait GenericModuleTrait
             }
         }
 
-        $keuskupanFilter = $request->input('keuskupan_id');
-        $dekenatFilter = $request->input('dekenat_id');
-        $provinsiFilter = $request->input('provinsi_id');
-        $kabupatenFilter = $request->input('kabupaten_id');
-        $kecamatanFilter = $request->input('kecamatan_id');
+        $rawKeuskupan = $request->input('keuskupan_id');
+        $keuskupanFilter = $rawKeuskupan ? (decode_id($rawKeuskupan) ?: $rawKeuskupan) : null;
+
+        $rawDekenat = $request->input('dekenat_id');
+        $dekenatFilter = $rawDekenat ? (decode_id($rawDekenat) ?: $rawDekenat) : null;
+
+        $rawProvinsi = $request->input('provinsi_id');
+        $provinsiFilter = $rawProvinsi ? (decode_id($rawProvinsi) ?: $rawProvinsi) : null;
+
+        $rawKabupaten = $request->input('kabupaten_id');
+        $kabupatenFilter = $rawKabupaten ? (decode_id($rawKabupaten) ?: $rawKabupaten) : null;
+
+        $rawKecamatan = $request->input('kecamatan_id');
+        $kecamatanFilter = $rawKecamatan ? (decode_id($rawKecamatan) ?: $rawKecamatan) : null;
+
         $tipeFilter = $request->input('tipe');
-        $roleIdFilter = $request->input('role_id');
-        $wilayahIdFilter = $targetKub ? $targetKub->wilayah_id : $request->input('wilayah_id');
-        $kapelaIdFilter = $targetKub ? $targetKub->kapela_id : $request->input('kapela_id');
-        $kubIdFilter = $targetKub ? $targetKub->id : $request->input('kub_id');
+        $rawRoleId = $request->input('role_id');
+        $roleIdFilter = $rawRoleId ? (decode_id($rawRoleId) ?: $rawRoleId) : null;
+
+        $rawWilayah = $request->input('wilayah_id');
+        $wilayahIdFilter = $targetKub ? $targetKub->wilayah_id : ($rawWilayah ? (decode_id($rawWilayah) ?: $rawWilayah) : null);
+
+        $rawKapela = $request->input('kapela_id');
+        $kapelaIdFilter = $targetKub ? $targetKub->kapela_id : ($rawKapela ? (decode_id($rawKapela) ?: $rawKapela) : null);
+
+        $rawKub = $request->input('kub_id');
+        $kubIdFilter = $targetKub ? $targetKub->id : ($rawKub ? (decode_id($rawKub) ?: $rawKub) : null);
+
         $statusFilter = $request->input('status');
 
         if ($keuskupanFilter && in_array('keuskupan_id', $tableColumns)) {
@@ -343,7 +361,8 @@ trait GenericModuleTrait
             }
             $value = $request->input($relationFilter);
             if ($value && in_array($relationFilter, $tableColumns, true)) {
-                $query->where($relationFilter, $value);
+                $decodedVal = (str_ends_with($relationFilter, '_id') || $relationFilter === 'id') ? (decode_id($value) ?: $value) : $value;
+                $query->where($relationFilter, $decodedVal);
             }
         }
 
@@ -910,6 +929,11 @@ trait GenericModuleTrait
         foreach ($nullableFks as $fk) {
             if (isset($data[$fk]) && ($data[$fk] === '' || $data[$fk] === 'null' || $data[$fk] === null)) {
                 $data[$fk] = null;
+            } elseif (isset($data[$fk])) {
+                $decodedFk = decode_id($data[$fk]);
+                if ($decodedFk) {
+                    $data[$fk] = $decodedFk;
+                }
             }
         }
 
@@ -1268,6 +1292,11 @@ trait GenericModuleTrait
         foreach ($nullableFks as $fk) {
             if (isset($data[$fk]) && ($data[$fk] === '' || $data[$fk] === 'null' || $data[$fk] === null)) {
                 $data[$fk] = null;
+            } elseif (isset($data[$fk])) {
+                $decodedFk = decode_id($data[$fk]);
+                if ($decodedFk) {
+                    $data[$fk] = $decodedFk;
+                }
             }
         }
 

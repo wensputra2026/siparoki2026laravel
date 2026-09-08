@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
 
 class Keuskupan extends Model
 {
+    use HasIndirectId;
+
     protected $table = 'keuskupan';
     protected $primaryKey = 'id_keuskupan';
-    protected $appends = ['logo_url', 'uskup', 'no_telp'];
+    protected $appends = ['logo_url', 'uskup', 'no_telp', 'hashid', 'iid'];
     protected $fillable = [
         'kode_keuskupan',
         'nama_keuskupan',

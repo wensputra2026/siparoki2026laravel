@@ -211,21 +211,38 @@ class PageController extends Controller
                     }
 
                     if (!$fraterObj && Schema::hasTable('master_frater')) {
-                        $fraterObj = DB::table('master_frater')
+                        $fraterQuery = DB::table('master_frater')
                             ->where(function($q) {
                                 $q->where('status', '1')
                                   ->orWhere('status', 'like', '%aktif%')
                                   ->orWhere('status', 1);
-                            })
-                            ->where(function($q) use ($namaParoki, $activeParokiId) {
-                                if (Schema::hasColumn('master_frater', 'paroki_id')) {
-                                    $q->where('paroki_id', $activeParokiId);
-                                }
-                                if (Schema::hasColumn('master_frater', 'paroki_tugas')) {
-                                    $q->orWhere('paroki_tugas', 'like', '%' . $namaParoki . '%');
-                                }
-                            })
-                            ->first();
+                            });
+
+                        // 1. Cocokkan paroki_id dengan paroki yang sedang aktif
+                        if (!empty($activeParokiId) && Schema::hasColumn('master_frater', 'paroki_id')) {
+                            $fraterObj = (clone $fraterQuery)->where('paroki_id', $activeParokiId)->first();
+                        }
+
+                        // 2. Cocokkan paroki_tugas dengan nama paroki
+                        if (!$fraterObj && !empty($namaParoki) && Schema::hasColumn('master_frater', 'paroki_tugas')) {
+                            $cleanNama = trim(preg_replace('/^(Paroki|St\.|Santo|Santa)\s+/i', '', $namaParoki));
+                            $fraterObj = (clone $fraterQuery)->where(function($q) use ($namaParoki, $cleanNama) {
+                                $q->where('paroki_tugas', 'like', '%' . $namaParoki . '%')
+                                  ->orWhere('paroki_tugas', 'like', '%' . $cleanNama . '%');
+                            })->first();
+                        }
+
+                        // 3. Fallback: jika belum di-assign paroki_id tertentu (umum)
+                        if (!$fraterObj) {
+                            $fraterObj = (clone $fraterQuery)->where(function($q) {
+                                $q->whereNull('paroki_id')->orWhere('paroki_id', 0);
+                            })->first();
+                        }
+
+                        // 4. Fallback: frater aktif manapun
+                        if (!$fraterObj) {
+                            $fraterObj = (clone $fraterQuery)->first();
+                        }
                     }
                 } catch (\Throwable $e) {
                     Log::warning('Gagal query pastor paroki: ' . $e->getMessage());
@@ -247,9 +264,27 @@ class PageController extends Controller
                 ? \App\Models\MasterPastor::formatNama($pastorRekanObj)
                 : ($activeParoki?->nama_pastor_rekan ?? $profil?->pastor_rekan ?? null);
 
-            $frater = $fraterObj
-                ? (isset($fraterObj->nama_pastor) ? \App\Models\MasterPastor::formatNama($fraterObj) : ($fraterObj->nama_frater ?? $fraterObj->nama_lengkap ?? null))
-                : (!empty($profil?->frater) ? $profil->frater : null);
+            $frater = null;
+            if ($fraterObj) {
+                if (isset($fraterObj->nama_pastor)) {
+                    $frater = \App\Models\MasterPastor::formatNama($fraterObj);
+                } else {
+                    $gDepan = !empty($fraterObj->gelar_depan) ? trim($fraterObj->gelar_depan) . ' ' : 'Fr. ';
+                    $gBelakang = !empty($fraterObj->gelar_belakang) ? ', ' . trim($fraterObj->gelar_belakang) : '';
+                    $frater = $gDepan . ($fraterObj->nama_frater ?? $fraterObj->nama_lengkap ?? '') . $gBelakang;
+                }
+                if (empty($fraterObj->jabatan)) {
+                    $fraterObj->jabatan = 'Frater TOP';
+                }
+                if (empty($fraterObj->nama_pastor)) {
+                    $fraterObj->nama_pastor = $frater;
+                }
+                if (empty($fraterObj->nama_formatted)) {
+                    $fraterObj->nama_formatted = $frater;
+                }
+            } else {
+                $frater = !empty($profil?->frater) ? $profil->frater : null;
+            }
 
             // Resolve dynamic pastor photo (priority: Master Pastor DB > Admin uploaded photo > Riwayat Pastor Aktif > default fallback)
             if (empty($rawPastorFoto)) {
@@ -952,42 +987,51 @@ class PageController extends Controller
         $hasTglKrisma = Schema::hasColumn('umat', 'tgl_krisma');
         $hasTglPerkawinan = Schema::hasColumn('umat', 'tgl_perkawinan');
 
-        $baptisTable = Schema::hasTable('sakramen') ? \App\Models\Sakramen::where('tipe_sakramen', 'like', '%Baptis%')->count() : 0;
-        $baptisUmat = 0;
-        if ($hasTglBaptis || $hasStatusBaptis) {
-            $baptisUmat = (clone $umatQuery)->where(function($q) use ($hasTglBaptis, $hasStatusBaptis) {
-                if ($hasTglBaptis) {
-                    $q->whereNotNull('tgl_baptis');
-                }
-                if ($hasStatusBaptis) {
+        if ($totalUmat === 0) {
+            $sakramenCount = [
+                'baptis' => 0,
+                'komuni' => 0,
+                'krisma' => 0,
+                'perkawinan' => 0,
+            ];
+        } else {
+            $baptisTable = Schema::hasTable('sakramen') ? \App\Models\Sakramen::where('tipe_sakramen', 'like', '%Baptis%')->whereHas('umat')->count() : 0;
+            $baptisUmat = 0;
+            if ($hasTglBaptis || $hasStatusBaptis) {
+                $baptisUmat = (clone $umatQuery)->where(function($q) use ($hasTglBaptis, $hasStatusBaptis) {
                     if ($hasTglBaptis) {
-                        $q->orWhere('status_baptis', 'Sudah');
-                    } else {
-                        $q->where('status_baptis', 'Sudah');
+                        $q->whereNotNull('tgl_baptis');
                     }
-                }
-            })->count();
+                    if ($hasStatusBaptis) {
+                        if ($hasTglBaptis) {
+                            $q->orWhere('status_baptis', 'Sudah');
+                        } else {
+                            $q->where('status_baptis', 'Sudah');
+                        }
+                    }
+                })->count();
+            }
+
+            $komuniTable = Schema::hasTable('sakramen') ? \App\Models\Sakramen::where('tipe_sakramen', 'like', '%Komuni%')->whereHas('umat')->count() : 0;
+            $komuniUmat = $hasTglKomuni ? (clone $umatQuery)->whereNotNull('tgl_komuni_1')->count() : 0;
+
+            $krismaTable = Schema::hasTable('sakramen') ? \App\Models\Sakramen::where('tipe_sakramen', 'like', '%Krisma%')->whereHas('umat')->count() : 0;
+            $krismaUmat = $hasTglKrisma ? (clone $umatQuery)->whereNotNull('tgl_krisma')->count() : 0;
+
+            $nikahTable = Schema::hasTable('sakramen') ? \App\Models\Sakramen::where(function($q) {
+                $q->where('tipe_sakramen', 'like', '%Nikah%')
+                  ->orWhere('tipe_sakramen', 'like', '%Kawin%')
+                  ->orWhere('tipe_sakramen', 'like', '%Perkawinan%');
+            })->whereHas('umat')->count() : 0;
+            $nikahUmat = $hasTglPerkawinan ? (clone $umatQuery)->whereNotNull('tgl_perkawinan')->count() : 0;
+
+            $sakramenCount = [
+                'baptis' => max($baptisTable, $baptisUmat),
+                'komuni' => max($komuniTable, $komuniUmat),
+                'krisma' => max($krismaTable, $krismaUmat),
+                'perkawinan' => max($nikahTable, $nikahUmat),
+            ];
         }
-
-        $komuniTable = Schema::hasTable('sakramen') ? \App\Models\Sakramen::where('tipe_sakramen', 'like', '%Komuni%')->count() : 0;
-        $komuniUmat = $hasTglKomuni ? (clone $umatQuery)->whereNotNull('tgl_komuni_1')->count() : 0;
-
-        $krismaTable = Schema::hasTable('sakramen') ? \App\Models\Sakramen::where('tipe_sakramen', 'like', '%Krisma%')->count() : 0;
-        $krismaUmat = $hasTglKrisma ? (clone $umatQuery)->whereNotNull('tgl_krisma')->count() : 0;
-
-        $nikahTable = Schema::hasTable('sakramen') ? \App\Models\Sakramen::where(function($q) {
-            $q->where('tipe_sakramen', 'like', '%Nikah%')
-              ->orWhere('tipe_sakramen', 'like', '%Kawin%')
-              ->orWhere('tipe_sakramen', 'like', '%Perkawinan%');
-        })->count() : 0;
-        $nikahUmat = $hasTglPerkawinan ? (clone $umatQuery)->whereNotNull('tgl_perkawinan')->count() : 0;
-
-        $sakramenCount = [
-            'baptis' => max($baptisTable, $baptisUmat),
-            'komuni' => max($komuniTable, $komuniUmat),
-            'krisma' => max($krismaTable, $krismaUmat),
-            'perkawinan' => max($nikahTable, $nikahUmat),
-        ];
 
         // 1. Wilayah Rohani & Lingkungan Pastoral Stats
         $wilayahStats = [];

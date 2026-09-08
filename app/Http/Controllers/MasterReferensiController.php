@@ -28,6 +28,8 @@ class MasterReferensiController extends Controller
         'desa_kelurahan' => ['table' => 'desa_kelurahan', 'label' => 'Desa / Kelurahan', 'icon' => 'fa-tree-city', 'section' => 'special', 'pk' => 'id_desa'],
         'pastor' => ['table' => 'master_pastor', 'label' => 'Pastor / Imam', 'icon' => 'fa-user-tie', 'section' => 'special', 'pk' => 'id'],
         'master_pastor' => ['table' => 'master_pastor', 'label' => 'Pastor / Imam', 'icon' => 'fa-user-tie', 'section' => 'special', 'pk' => 'id'],
+        'frater' => ['table' => 'master_frater', 'label' => 'Frater TOP', 'icon' => 'fa-user-graduate', 'section' => 'special', 'pk' => 'id'],
+        'master_frater' => ['table' => 'master_frater', 'label' => 'Frater TOP', 'icon' => 'fa-user-graduate', 'section' => 'special', 'pk' => 'id'],
         'uskup' => ['table' => 'master_uskup', 'label' => 'Uskup', 'icon' => 'fa-crown', 'section' => 'special', 'pk' => 'id'],
         'master_uskup' => ['table' => 'master_uskup', 'label' => 'Uskup', 'icon' => 'fa-crown', 'section' => 'special', 'pk' => 'id'],
         'master_ordo' => ['table' => 'master_ordo', 'label' => 'Ordo / Kongregasi', 'icon' => 'fa-cross', 'section' => 'special', 'pk' => 'id'],
@@ -73,55 +75,50 @@ class MasterReferensiController extends Controller
     {
         $this->ensureDefaultMasterReferensi();
 
+        $prefix = request()->segment(1) ?: 'admin';
+
         $specialModules = [
             [
                 'slug' => 'pastor',
                 'label' => 'Pastor',
                 'count' => Schema::hasTable('master_pastor') ? DB::table('master_pastor')->count() : 137,
-                'url' => '/admin/master-referensi/pastor',
+                'url' => "/{$prefix}/master-referensi/pastor",
                 'icon' => 'fa-user-tie'
             ],
             [
                 'slug' => 'frater',
                 'label' => 'Frater TOP',
-                'count' => Schema::hasTable('master_frater_top') ? DB::table('master_frater_top')->count() : 0,
-                'url' => '/admin/master-referensi/pastor',
+                'count' => Schema::hasTable('master_frater') ? DB::table('master_frater')->count() : 0,
+                'url' => "/{$prefix}/master-referensi/frater",
                 'icon' => 'fa-user-graduate'
             ],
             [
                 'slug' => 'uskup',
                 'label' => 'Uskup',
                 'count' => Schema::hasTable('master_uskup') ? DB::table('master_uskup')->count() : 14,
-                'url' => '/admin/master-referensi/uskup',
+                'url' => "/{$prefix}/master-referensi/uskup",
                 'icon' => 'fa-crown'
             ],
             [
                 'slug' => 'master_gereja_protestan',
                 'label' => 'Gereja Protestan',
                 'count' => Schema::hasTable('master_gereja_protestan') ? DB::table('master_gereja_protestan')->count() : 10,
-                'url' => '/admin/master-referensi/master_gereja_protestan',
+                'url' => "/{$prefix}/master-referensi/master_gereja_protestan",
                 'icon' => 'fa-church'
             ],
             [
                 'slug' => 'master_ordo',
                 'label' => 'Ordo / Kongregasi',
                 'count' => Schema::hasTable('master_ordo') ? DB::table('master_ordo')->count() : 259,
-                'url' => '/admin/master-referensi/master_ordo',
+                'url' => "/{$prefix}/master-referensi/master_ordo",
                 'icon' => 'fa-cross'
             ],
             [
                 'slug' => 'kategori_aset',
                 'label' => 'Kategori Aset',
                 'count' => Schema::hasTable('kategori_aset') ? DB::table('kategori_aset')->count() : 8,
-                'url' => '/admin/master-referensi/kategori_aset',
+                'url' => "/{$prefix}/master-referensi/kategori_aset",
                 'icon' => 'fa-boxes-stacked'
-            ],
-            [
-                'slug' => 'wilayah_sipil',
-                'label' => 'Wilayah Sipil (Provinsi s/d Desa)',
-                'count' => '4 Tingkat',
-                'url' => '/superadmin/provinsi',
-                'icon' => 'fa-map'
             ],
         ];
 
@@ -247,13 +244,22 @@ class MasterReferensiController extends Controller
             if ($slug === 'pastor' || $slug === 'master_pastor') {
                 $arr['nama_pastor'] = \App\Models\MasterPastor::formatNama((object) $arr);
             }
+            if ($slug === 'frater' || $slug === 'master_frater') {
+                $gDepan = !empty($arr['gelar_depan']) ? trim($arr['gelar_depan']) . ' ' : 'Fr. ';
+                $gBelakang = !empty($arr['gelar_belakang']) ? ', ' . trim($arr['gelar_belakang']) : '';
+                $arr['nama_frater'] = $gDepan . ($arr['nama_frater'] ?? '') . $gBelakang;
+            }
             if (!empty($arr['foto'])) {
                 $rawFoto = $arr['foto'];
                 if (!str_starts_with($rawFoto, 'http://') && !str_starts_with($rawFoto, 'https://') && !str_starts_with($rawFoto, '/')) {
                     $arr['foto'] = '/' . $rawFoto;
                 }
             }
-            $arr['_pk'] = $arr[$pk];
+            $rawId = $arr[$pk] ?? null;
+            $hashid = encode_id($rawId);
+            $arr['hashid'] = $hashid;
+            $arr['iid'] = $hashid;
+            $arr['_pk'] = $hashid ?: $rawId;
             return $arr;
         });
 
@@ -283,6 +289,32 @@ class MasterReferensiController extends Controller
         if (in_array('updated_at', $cols, true) && !isset($data['updated_at'])) {
             $data['updated_at'] = now();
         }
+        if ($slug === 'frater' || $slug === 'master_frater') {
+            if (!empty($data['paroki_id']) && empty($data['paroki_tugas'])) {
+                $pName = DB::table('paroki')->where('id_paroki', $data['paroki_id'])->value('nama_paroki');
+                if ($pName) {
+                    $data['paroki_tugas'] = $pName;
+                }
+            }
+            $jenisFrater = strtolower((string)($data['jenis_frater'] ?? ''));
+            if (str_contains($jenisFrater, 'diosesan')) {
+                $data['ordo_kongregasi'] = null;
+            } elseif (str_contains($jenisFrater, 'religius')) {
+                $data['keuskupan'] = null;
+            }
+        }
+        if ($slug === 'pastor' || $slug === 'master_pastor') {
+            $jenisImam = strtolower((string)($data['jenis_imam'] ?? ''));
+            if (str_contains($jenisImam, 'diosesan')) {
+                $data['ordo'] = null;
+                $data['ordo_kongregasi'] = null;
+            } elseif (str_contains($jenisImam, 'religius')) {
+                $data['keuskupan'] = null;
+                if (array_key_exists('keuskupan_id', $data)) {
+                    $data['keuskupan_id'] = null;
+                }
+            }
+        }
         $insertedId = DB::table($table)->insertGetId($data);
         if ($slug === 'pastor' || $slug === 'master_pastor') {
             $this->syncActivePastorPhoto((int) $insertedId, $data['foto'] ?? null);
@@ -299,15 +331,43 @@ class MasterReferensiController extends Controller
 
         $table = $cfg['table'];
         $pk = $cfg['pk'];
+        $decodedId = decode_id($id) ?: $id;
         $data = $this->collectData($request, $table);
 
         if (in_array('updated_at', $this->schemaColumns($table), true)) {
             $data['updated_at'] = now();
         }
 
-        DB::table($table)->where($pk, $id)->update($data);
+        if ($slug === 'frater' || $slug === 'master_frater') {
+            if (!empty($data['paroki_id']) && empty($data['paroki_tugas'])) {
+                $pName = DB::table('paroki')->where('id_paroki', $data['paroki_id'])->value('nama_paroki');
+                if ($pName) {
+                    $data['paroki_tugas'] = $pName;
+                }
+            }
+            $jenisFrater = strtolower((string)($data['jenis_frater'] ?? ''));
+            if (str_contains($jenisFrater, 'diosesan')) {
+                $data['ordo_kongregasi'] = null;
+            } elseif (str_contains($jenisFrater, 'religius')) {
+                $data['keuskupan'] = null;
+            }
+        }
         if ($slug === 'pastor' || $slug === 'master_pastor') {
-            $this->syncActivePastorPhoto((int) $id, $data['foto'] ?? null);
+            $jenisImam = strtolower((string)($data['jenis_imam'] ?? ''));
+            if (str_contains($jenisImam, 'diosesan')) {
+                $data['ordo'] = null;
+                $data['ordo_kongregasi'] = null;
+            } elseif (str_contains($jenisImam, 'religius')) {
+                $data['keuskupan'] = null;
+                if (array_key_exists('keuskupan_id', $data)) {
+                    $data['keuskupan_id'] = null;
+                }
+            }
+        }
+
+        DB::table($table)->where($pk, $decodedId)->update($data);
+        if ($slug === 'pastor' || $slug === 'master_pastor') {
+            $this->syncActivePastorPhoto((int) $decodedId, $data['foto'] ?? null);
         }
         $this->clearFastAccessCache();
 
@@ -321,15 +381,16 @@ class MasterReferensiController extends Controller
 
         $table = $cfg['table'];
         $pk = $cfg['pk'];
+        $decodedId = decode_id($id) ?: $id;
         $columns = $this->schemaColumns($table);
 
         if (in_array('is_deleted', $columns, true)) {
-            DB::table($table)->where($pk, $id)->update([
+            DB::table($table)->where($pk, $decodedId)->update([
                 'is_deleted' => 1,
                 'deleted_at' => now(),
             ]);
         } else {
-            DB::table($table)->where($pk, $id)->delete();
+            DB::table($table)->where($pk, $decodedId)->delete();
         }
         $this->clearFastAccessCache();
 
@@ -453,7 +514,7 @@ class MasterReferensiController extends Controller
                     if ($rel) {
                         $fields[] = [
                             'name' => $col,
-                            'label' => $col === 'keuskupan_id' ? 'Keuskupan' : $this->label($col),
+                            'label' => $col === 'keuskupan_id' ? 'Keuskupan' : ($col === 'paroki_id' ? 'Paroki Tugas' : $this->label($col)),
                             'type' => 'select',
                             'relTable' => $rel,
                         ];
@@ -497,25 +558,31 @@ class MasterReferensiController extends Controller
                     continue;
                 }
 
+                if ($col === 'keuskupan' || $col === 'keuskupan_id') {
+                    $fields[] = [
+                        'name' => $col,
+                        'label' => 'Keuskupan Asal',
+                        'type' => 'select',
+                        'searchable' => true,
+                        'options' => $this->getKeuskupanOptions($col === 'keuskupan_id'),
+                        'show_if' => [
+                            'field' => 'jenis_imam',
+                            'values' => ['Diosesan', 'Diosesan / Projo'],
+                        ],
+                    ];
+                    continue;
+                }
+
                 if ($col === 'ordo' || $col === 'ordo_kongregasi') {
                     $fields[] = [
                         'name' => $col,
                         'label' => 'Ordo / Kongregasi',
                         'type' => 'select',
-                        'options' => [
-                            ['value' => 'CM', 'label' => 'CM - Congregatio Missionis (Misionaris Vinsensian)'],
-                            ['value' => 'SVD', 'label' => 'SVD - Serikat Sabda Allah'],
-                            ['value' => 'OFM', 'label' => 'OFM - Ordo Saudara Dina (Fransiskan)'],
-                            ['value' => 'OCD', 'label' => 'OCD - Karmel Tak Berkasut'],
-                            ['value' => 'SJ', 'label' => 'SJ - Serikat Yesus (Yesuit)'],
-                            ['value' => 'CSsR', 'label' => 'CSsR - Kongregasi Sang Penebus Mahakudus'],
-                            ['value' => 'MSF', 'label' => 'MSF - Misionaris Keluarga Kudus'],
-                            ['value' => 'SX', 'label' => 'SX - Serikat Misi Xaverian'],
-                            ['value' => 'SCJ', 'label' => 'SCJ - Imam-Imam Hati Kudus Yesus'],
-                            ['value' => 'O.Carm', 'label' => 'O.Carm - Ordo Karmel'],
-                            ['value' => 'OSB', 'label' => 'OSB - Ordo Santo Benediktus'],
-                            ['value' => 'Pr', 'label' => 'Pr - Diosesan / Projo (Tanpa Ordo)'],
-                            ['value' => 'Lainnya', 'label' => 'Lainnya'],
+                        'searchable' => true,
+                        'options' => $this->getOrdoOptions(),
+                        'show_if' => [
+                            'field' => 'jenis_imam',
+                            'values' => ['Religius', 'Religius / Kongregasi / Ordo'],
                         ],
                     ];
                     continue;
@@ -561,6 +628,88 @@ class MasterReferensiController extends Controller
                         'name' => $col,
                         'label' => 'Riwayat Tugas & Pelayanan Pastoral',
                         'type' => 'textarea',
+                    ];
+                    continue;
+                }
+            }
+
+            // Custom dropdowns for master_frater
+            if ($table === 'master_frater') {
+                if ($col === 'paroki_tugas' && in_array('paroki_id', $columns, true)) {
+                    continue; // Disinkronkan otomatis dari pilihan paroki_id
+                }
+
+                if ($col === 'gelar_depan') {
+                    $fields[] = [
+                        'name' => $col,
+                        'label' => 'Gelar Depan',
+                        'type' => 'select',
+                        'options' => [
+                            ['value' => 'Fr.', 'label' => 'Fr. (Frater)'],
+                            ['value' => 'Frater', 'label' => 'Frater'],
+                            ['value' => 'Bhk.', 'label' => 'Bhk. (Biarawan / Bruder)'],
+                            ['value' => 'Br.', 'label' => 'Br. (Brother)'],
+                        ],
+                    ];
+                    continue;
+                }
+
+                if ($col === 'jenis_frater') {
+                    $fields[] = [
+                        'name' => $col,
+                        'label' => 'Jenis Frater',
+                        'type' => 'select',
+                        'options' => [
+                            ['value' => 'Diosesan', 'label' => 'Diosesan / Projo'],
+                            ['value' => 'Religius', 'label' => 'Religius / Kongregasi / Ordo'],
+                        ],
+                    ];
+                    continue;
+                }
+
+                if ($col === 'keuskupan') {
+                    $fields[] = [
+                        'name' => $col,
+                        'label' => 'Keuskupan Asal',
+                        'type' => 'select',
+                        'searchable' => true,
+                        'options' => $this->getKeuskupanOptions(false),
+                        'show_if' => [
+                            'field' => 'jenis_frater',
+                            'values' => ['Diosesan', 'Diosesan / Projo'],
+                        ],
+                    ];
+                    continue;
+                }
+
+                if ($col === 'ordo_kongregasi') {
+                    $fields[] = [
+                        'name' => $col,
+                        'label' => 'Ordo / Kongregasi',
+                        'type' => 'select',
+                        'searchable' => true,
+                        'options' => $this->getOrdoOptions(),
+                        'show_if' => [
+                            'field' => 'jenis_frater',
+                            'values' => ['Religius', 'Religius / Kongregasi / Ordo'],
+                        ],
+                    ];
+                    continue;
+                }
+
+                if ($col === 'jabatan') {
+                    $fields[] = [
+                        'name' => $col,
+                        'label' => 'Jabatan / Penugasan',
+                        'type' => 'select',
+                        'options' => [
+                            ['value' => 'Frater TOP', 'label' => 'Frater TOP (Tahun Orientasi Pastoral)'],
+                            ['value' => 'Frater Diakon', 'label' => 'Frater Diakon'],
+                            ['value' => 'Frater Praktikan', 'label' => 'Frater Praktikan'],
+                            ['value' => 'Katekis Paroki', 'label' => 'Katekis Paroki'],
+                            ['value' => 'Pendamping Pastoral', 'label' => 'Pendamping Pastoral'],
+                            ['value' => 'Lainnya', 'label' => 'Lainnya'],
+                        ],
                     ];
                     continue;
                 }
@@ -627,7 +776,7 @@ class MasterReferensiController extends Controller
     private function buildTableColumns(string $table, array $columns): array
     {
         $out = [];
-        if (in_array('foto', $columns, true) && ($table === 'master_pastor' || $table === 'master_uskup')) {
+        if (in_array('foto', $columns, true) && in_array($table, ['master_pastor', 'master_uskup', 'master_frater'], true)) {
             $out[] = ['name' => 'foto', 'label' => 'Foto'];
         }
         foreach ($columns as $col) {
@@ -646,10 +795,18 @@ class MasterReferensiController extends Controller
                     continue;
                 }
             }
+            if ($table === 'master_frater') {
+                if ($col === 'paroki_tugas' && in_array('paroki_id', $columns, true)) {
+                    continue;
+                }
+                if ($col === 'gelar_depan' || $col === 'gelar_belakang') {
+                    continue;
+                }
+            }
             if (str_ends_with($col, '_id')) {
                 $rel = self::FK_MAP[$col] ?? null;
                 if ($rel) {
-                    $out[] = ['name' => $col, 'label' => $col === 'keuskupan_id' ? 'Keuskupan' : $this->label($col), 'fk' => true];
+                    $out[] = ['name' => $col, 'label' => $col === 'keuskupan_id' ? 'Keuskupan' : ($col === 'paroki_id' ? 'Paroki Tugas' : $this->label($col)), 'fk' => true];
                 } else {
                     $out[] = ['name' => $col, 'label' => $this->label($col)];
                 }
@@ -729,6 +886,59 @@ class MasterReferensiController extends Controller
             $map[$r->$pk] = $r->$labelCol;
         }
         return $map;
+    }
+
+    private function getKeuskupanOptions(bool $useId = false): array
+    {
+        $options = [
+            ['value' => '', 'label' => '— Pilih Keuskupan —'],
+        ];
+        if (Schema::hasTable('keuskupan')) {
+            $query = DB::table('keuskupan');
+            if (Schema::hasColumn('keuskupan', 'is_deleted')) {
+                $query->where('is_deleted', 0);
+            }
+            $rows = $query->orderBy('nama_keuskupan')->get(['id_keuskupan', 'nama_keuskupan']);
+            foreach ($rows as $r) {
+                $options[] = [
+                    'value' => $useId ? $r->id_keuskupan : $r->nama_keuskupan,
+                    'label' => $r->nama_keuskupan,
+                ];
+            }
+        }
+        return $options;
+    }
+
+    private function getOrdoOptions(): array
+    {
+        $options = [
+            ['value' => '', 'label' => '— Pilih Ordo / Kongregasi —'],
+        ];
+        if (Schema::hasTable('master_ordo')) {
+            $query = DB::table('master_ordo');
+            if (Schema::hasColumn('master_ordo', 'status')) {
+                $query->where(function ($q) {
+                    $q->where('status', 1)->orWhere('status', '1')->orWhereNull('status');
+                });
+            }
+            if (Schema::hasColumn('master_ordo', 'deleted_at')) {
+                $query->whereNull('deleted_at');
+            }
+            $rows = $query->orderBy('urutan')->orderBy('singkatan')->orderBy('nama_ordo')->get(['id', 'singkatan', 'nama_ordo']);
+            foreach ($rows as $r) {
+                $kode = trim($r->singkatan ?? '');
+                $nama = trim($r->nama_ordo ?? '');
+                $val = $kode ?: $nama;
+                $label = (!empty($kode) && !empty($nama) && !str_starts_with($nama, $kode))
+                    ? "{$kode} - {$nama}"
+                    : ($nama ?: $kode);
+                $options[] = [
+                    'value' => $val,
+                    'label' => $label,
+                ];
+            }
+        }
+        return $options;
     }
 
     private function relPk(string $table): string

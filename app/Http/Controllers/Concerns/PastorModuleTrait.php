@@ -111,8 +111,24 @@ trait PastorModuleTrait
     }
 
 
-    public function editPastor(Request $request, string|int $id): Response
+    public function editPastor(Request $request, string|int $id): \Symfony\Component\HttpFoundation\Response
     {
+        // If accessed via numeric ID, redirect to obfuscated Hash ID URL so browser address bar displays the Hash ID
+        if (is_numeric($id) && (int)$id > 0) {
+            $hash = encode_id((int)$id);
+            if ($hash && $hash !== (string)$id) {
+                $path = $request->path();
+                if (preg_match('/\/edit\/' . $id . '$/', $path)) {
+                    $newUrl = preg_replace('/\/edit\/' . $id . '$/', '/edit/' . $hash, $path);
+                    return redirect('/' . ltrim($newUrl, '/'));
+                }
+                if (preg_match('/\/' . $id . '\/edit$/', $path)) {
+                    $newUrl = preg_replace('/\/' . $id . '\/edit$/', '/' . $hash . '/edit', $path);
+                    return redirect('/' . ltrim($newUrl, '/'));
+                }
+            }
+        }
+
         $firstSegment = explode('/', trim($request->path(), '/'))[0] ?? 'superadmin';
         $roleMap = [
             'superadmin' => 'Super Admin',

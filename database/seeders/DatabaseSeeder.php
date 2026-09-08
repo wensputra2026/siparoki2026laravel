@@ -218,6 +218,8 @@ class DatabaseSeeder extends Seeder
         $localTables = [
             'riwayat_mutasi_umat',
             'mutasi_umat',
+            'sakramen',
+            'sakramen_margo',
             'sakramen_umat',
             'sakramen_verifikasi',
             'pengajuan_sakramen',
@@ -263,6 +265,7 @@ class DatabaseSeeder extends Seeder
             'login_activity',
             'login_attempts',
             'security_logs',
+            'backup_database',
         ];
 
         try {

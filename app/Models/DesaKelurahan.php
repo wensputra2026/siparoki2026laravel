@@ -3,11 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
 
 class DesaKelurahan extends Model
 {
+    use HasIndirectId;
+
     protected $table = 'desa_kelurahan';
     protected $primaryKey = 'id_desa';
+    protected $appends = ['hashid', 'iid'];
     protected $fillable = [
         'id_desa',
         'kecamatan_id',

@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\HasIndirectId;
+
 class Paroki extends Model
 {
+    use HasIndirectId;
 
     protected $table = 'paroki';
     protected $primaryKey = 'id_paroki';
-    protected $appends = ['logo_url'];
+    protected $appends = ['logo_url', 'hashid', 'iid'];
 
     protected $fillable = [
         'keuskupan_id',

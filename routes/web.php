@@ -383,7 +383,10 @@ foreach ($rolePrefixes as $prefix => $roleTitle) {
         Route::get('/galeri/tambah', [\App\Http\Controllers\InertiaPanelController::class, 'createGaleri'])->name("panel.{$prefix}.galeri.tambah");
         Route::get('/galeri/{id}/edit', [\App\Http\Controllers\InertiaPanelController::class, 'editGaleri'])->name("panel.{$prefix}.galeri.edit");
         Route::get('/backup-database', [\App\Http\Controllers\InertiaPanelController::class, 'backupDatabase'])->name("panel.{$prefix}.backup-database");
+        Route::get('/backup-database/download-direct', [\App\Http\Controllers\InertiaPanelController::class, 'downloadDirectDatabaseBackup'])->name("panel.{$prefix}.backup-database.download-direct");
+        Route::post('/backup-database/clear-server-backups', [\App\Http\Controllers\InertiaPanelController::class, 'clearServerBackups'])->name("panel.{$prefix}.backup-database.clear-server");
         Route::post('/backup-database/generate', [\App\Http\Controllers\InertiaPanelController::class, 'generateDatabaseBackup'])->name("panel.{$prefix}.backup-database.generate");
+        Route::post('/backup-database/generate-media', [\App\Http\Controllers\InertiaPanelController::class, 'generateMediaBackup'])->name("panel.{$prefix}.backup-database.generate-media");
         Route::get('/backup-database/{id}/download', [\App\Http\Controllers\InertiaPanelController::class, 'downloadDatabaseBackup'])->name("panel.{$prefix}.backup-database.download");
         Route::post('/backup-database/{id}/restore', [\App\Http\Controllers\InertiaPanelController::class, 'restoreDatabaseBackup'])->name("panel.{$prefix}.backup-database.restore");
         Route::post('/backup-database/upload-restore', [\App\Http\Controllers\InertiaPanelController::class, 'uploadRestoreDatabaseBackup'])->name("panel.{$prefix}.backup-database.upload-restore");
@@ -537,7 +540,10 @@ Route::middleware([\App\Http\Middleware\PanelAccess::class])->prefix('admin')->g
     Route::get('/galeri/tambah', [\App\Http\Controllers\InertiaPanelController::class, 'createGaleri'])->name('admin.galeri.tambah');
     Route::get('/galeri/{id}/edit', [\App\Http\Controllers\InertiaPanelController::class, 'editGaleri'])->name('admin.galeri.edit');
     Route::get('/backup-database', [\App\Http\Controllers\InertiaPanelController::class, 'backupDatabase'])->name('admin.backup-database');
+    Route::get('/backup-database/download-direct', [\App\Http\Controllers\InertiaPanelController::class, 'downloadDirectDatabaseBackup'])->name('admin.backup-database.download-direct');
+    Route::post('/backup-database/clear-server-backups', [\App\Http\Controllers\InertiaPanelController::class, 'clearServerBackups'])->name('admin.backup-database.clear-server');
     Route::post('/backup-database/generate', [\App\Http\Controllers\InertiaPanelController::class, 'generateDatabaseBackup'])->name('admin.backup-database.generate');
+    Route::post('/backup-database/generate-media', [\App\Http\Controllers\InertiaPanelController::class, 'generateMediaBackup'])->name('admin.backup-database.generate-media');
     Route::get('/backup-database/{id}/download', [\App\Http\Controllers\InertiaPanelController::class, 'downloadDatabaseBackup'])->name('admin.backup-database.download');
     Route::post('/backup-database/{id}/restore', [\App\Http\Controllers\InertiaPanelController::class, 'restoreDatabaseBackup'])->name('admin.backup-database.restore');
     Route::post('/backup-database/upload-restore', [\App\Http\Controllers\InertiaPanelController::class, 'uploadRestoreDatabaseBackup'])->name('admin.backup-database.upload-restore');

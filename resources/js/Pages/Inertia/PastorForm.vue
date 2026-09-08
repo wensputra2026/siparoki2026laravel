@@ -430,7 +430,7 @@ const submit = () => {
     }
 
     const isRefer = typeof window !== 'undefined' && window.location.pathname.includes('/master-referensi');
-    const pastorId = props.pastorItem?.id || props.pastorItem?.id_pastor;
+    const pastorId = props.pastorItem?.hashid || props.pastorItem?.iid || props.pastorItem?.uuid || props.pastorItem?.id || props.pastorItem?.id_pastor;
     const targetUrl = props.isEdit
         ? (isRefer ? `/admin/master-referensi/pastor/${pastorId}/update` : `/${props.prefix}/master-pastor/${pastorId}/update`)
         : (isRefer ? `/admin/master-referensi/pastor/store` : `/${props.prefix}/master-pastor/store`);

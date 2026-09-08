@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 
 const props = defineProps({
     role: { type: String, default: 'Super Admin' },
@@ -111,12 +112,20 @@ const filteredLogs = computed(() => {
     return list;
 });
 
+// Confirm Modal State
+const confirmModal = ref({
+    show: false,
+    title: '',
+    message: '',
+    confirmText: 'Ya, Lanjutkan',
+    type: 'danger',
+    action: null,
+    loading: false,
+});
+
 // Actions
 const submitBlockIp = () => {
-    if (!blockIpForm.ip_address) {
-        alert('Silakan masukkan alamat IP.');
-        return;
-    }
+    if (!blockIpForm.ip_address) return;
     isProcessing.value = true;
     blockIpForm.post(`/${props.prefix}/security/block-ip`, {
         preserveScroll: true,
@@ -131,11 +140,24 @@ const submitBlockIp = () => {
 };
 
 const handleUnblock = (item) => {
-    if (confirm(`Lepaskan blokir untuk alamat IP ${item.ip_address}?`)) {
-        router.post(`/${props.prefix}/security/unblock-ip/${item.id}`, {}, {
-            preserveScroll: true,
-        });
-    }
+    confirmModal.value = {
+        show: true,
+        title: 'Buka Blokir Alamat IP',
+        message: `Apakah Anda yakin ingin melepaskan status pemblokiran untuk alamat IP <strong class="text-slate-800 dark:text-slate-100 font-mono">${item.ip_address}</strong>?`,
+        confirmText: 'Lepaskan Blokir',
+        type: 'warning',
+        loading: false,
+        action: () => {
+            confirmModal.value.loading = true;
+            router.post(`/${props.prefix}/security/unblock-ip/${item.id}`, {}, {
+                preserveScroll: true,
+                onFinish: () => {
+                    confirmModal.value.loading = false;
+                    confirmModal.value.show = false;
+                },
+            });
+        },
+    };
 };
 
 const submitPolicies = () => {
@@ -169,19 +191,45 @@ const submitTwoFactor = () => {
 };
 
 const handleClearLogs = () => {
-    if (confirm('PERINGATAN: Apakah Anda yakin ingin membersihkan seluruh riwayat log keamanan?')) {
-        router.post(`/${props.prefix}/security/clear-logs`, {}, {
-            preserveScroll: true,
-        });
-    }
+    confirmModal.value = {
+        show: true,
+        title: 'Bersihkan Log Keamanan',
+        message: 'Apakah Anda yakin ingin membersihkan seluruh rekaman audit trail dan log keamanan dari server? Tindakan ini permanen dan tidak dapat dikembalikan.',
+        confirmText: 'Ya, Bersihkan Log',
+        type: 'danger',
+        loading: false,
+        action: () => {
+            confirmModal.value.loading = true;
+            router.post(`/${props.prefix}/security/clear-logs`, {}, {
+                preserveScroll: true,
+                onFinish: () => {
+                    confirmModal.value.loading = false;
+                    confirmModal.value.show = false;
+                },
+            });
+        },
+    };
 };
 
 const handleClearCache = () => {
-    if (confirm('Reload seluruh cache sistem, konfigurasi, dan sesi keamanan?')) {
-        router.post(`/${props.prefix}/security/clear-cache`, {}, {
-            preserveScroll: true,
-        });
-    }
+    confirmModal.value = {
+        show: true,
+        title: 'Muat Ulang Cache & Sesi',
+        message: 'Sistem akan mereset seluruh cache aplikasi, cache rute, dan menyinkronkan ulang konfigurasi keamanan. Lanjutkan?',
+        confirmText: 'Ya, Reload Cache',
+        type: 'info',
+        loading: false,
+        action: () => {
+            confirmModal.value.loading = true;
+            router.post(`/${props.prefix}/security/clear-cache`, {}, {
+                preserveScroll: true,
+                onFinish: () => {
+                    confirmModal.value.loading = false;
+                    confirmModal.value.show = false;
+                },
+            });
+        },
+    };
 };
 
 const formatDate = (dateStr) => {
@@ -1262,5 +1310,16 @@ const formatDate = (dateStr) => {
             </div>
         </div>
 
+        <!-- Uniform Confirmation Modal -->
+        <ConfirmationModal
+            :show="confirmModal.show"
+            :title="confirmModal.title"
+            :message="confirmModal.message"
+            :confirm-text="confirmModal.confirmText"
+            :type="confirmModal.type"
+            :loading="confirmModal.loading"
+            @confirm="confirmModal.action && confirmModal.action()"
+            @cancel="confirmModal.show = false"
+        />
     </AppLayout>
 </template>

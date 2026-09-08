@@ -50,6 +50,35 @@ class AuthController extends Controller
     }
 
     /**
+     * Get CAPTCHA configuration from security_settings.
+     */
+    protected function getCaptchaConfig(): array
+    {
+        $provider = 'Simple CAPTCHA';
+        $siteKey = '';
+        $secretKey = '';
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('security_settings')) {
+                $settings = DB::table('security_settings')
+                    ->whereIn('setting_key', ['captcha_provider', 'captcha_site_key', 'captcha_secret_key'])
+                    ->pluck('setting_value', 'setting_key')
+                    ->toArray();
+
+                $provider = $settings['captcha_provider'] ?? 'Simple CAPTCHA';
+                $siteKey = $settings['captcha_site_key'] ?? '';
+                $secretKey = $settings['captcha_secret_key'] ?? '';
+            }
+        } catch (\Throwable $e) {}
+
+        return [
+            'provider' => $provider,
+            'site_key' => $siteKey,
+            'secret_key' => $secretKey,
+        ];
+    }
+
+    /**
      * Check if CAPTCHA is required for login.
      */
     protected function isCaptchaRequired(Request $request): bool
@@ -69,6 +98,14 @@ class AuthController extends Controller
                 if (isset($settings['captcha_required_backend_login']) && $settings['captcha_required_backend_login'] === '0') {
                     return false;
                 }
+
+                $threshold = (int) ($settings['captcha_show_after_failed_attempts'] ?? 0);
+                if ($threshold > 0) {
+                    $sessionFails = (int) session('login_failed_attempts', 0);
+                    if ($sessionFails < $threshold) {
+                        return false;
+                    }
+                }
             }
 
             // Active by default
@@ -76,6 +113,67 @@ class AuthController extends Controller
         } catch (\Throwable $e) {
             return true;
         }
+    }
+
+    /**
+     * Verify CAPTCHA response based on active provider.
+     */
+    protected function verifyCaptchaResponse(Request $request): bool
+    {
+        $cfg = $this->getCaptchaConfig();
+        $provider = $cfg['provider'];
+        $secretKey = $cfg['secret_key'];
+
+        // Google reCAPTCHA v2 / v3
+        if (($provider === 'Google reCAPTCHA v2 Checkbox' || $provider === 'Google reCAPTCHA v3 Invisible') && !empty($cfg['site_key'])) {
+            $recaptchaToken = $request->input('g-recaptcha-response');
+            if (empty($recaptchaToken)) {
+                return false;
+            }
+            if (empty($secretKey)) {
+                return true;
+            }
+            try {
+                $response = \Illuminate\Support\Facades\Http::asForm()->timeout(5)->post('https://www.google.com/recaptcha/api/siteverify', [
+                    'secret' => $secretKey,
+                    'response' => $recaptchaToken,
+                    'remoteip' => $request->ip(),
+                ]);
+                $data = $response->json();
+                return (bool) ($data['success'] ?? false);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Google reCAPTCHA verification failed: ' . $e->getMessage());
+                return false;
+            }
+        }
+
+        // Cloudflare Turnstile
+        if ($provider === 'Cloudflare Turnstile' && !empty($cfg['site_key'])) {
+            $turnstileToken = $request->input('cf-turnstile-response');
+            if (empty($turnstileToken)) {
+                return false;
+            }
+            if (empty($secretKey)) {
+                return true;
+            }
+            try {
+                $response = \Illuminate\Support\Facades\Http::asForm()->timeout(5)->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => $secretKey,
+                    'response' => $turnstileToken,
+                    'remoteip' => $request->ip(),
+                ]);
+                $data = $response->json();
+                return (bool) ($data['success'] ?? false);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Cloudflare Turnstile verification failed: ' . $e->getMessage());
+                return false;
+            }
+        }
+
+        // Default / Fallback: Simple CAPTCHA (Math challenge)
+        $captchaInput = trim((string) $request->input('captcha', ''));
+        $expectedAnswer = (string) session('simple_captcha_answer', '');
+        return ($captchaInput !== '' && $captchaInput === $expectedAnswer);
     }
 
     /**
@@ -148,6 +246,7 @@ class AuthController extends Controller
         $showCaptcha = $this->isCaptchaRequired($request);
         $captchaData = $this->generateSimpleCaptcha();
         $captchaQuestion = $captchaData['question'];
+        $captchaConfig = $this->getCaptchaConfig();
 
         return response()
             ->view('pages.auth.login', [
@@ -155,6 +254,8 @@ class AuthController extends Controller
                 'error_message' => $kickedMsg ?: session('error'),
                 'showCaptcha' => $showCaptcha,
                 'captchaQuestion' => $captchaQuestion,
+                'captchaProvider' => $captchaConfig['provider'],
+                'captchaSiteKey' => $captchaConfig['site_key'],
                 'errors' => session('errors') ?? new \Illuminate\Support\ViewErrorBag(),
             ])
             ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
@@ -198,17 +299,14 @@ class AuthController extends Controller
 
         // 2. Validate CAPTCHA if required
         if ($this->isCaptchaRequired($request)) {
-            $captchaInput = trim((string) $request->input('captcha', ''));
-            $expectedAnswer = (string) session('simple_captcha_answer', '');
-
-            if ($captchaInput === '' || $captchaInput !== $expectedAnswer) {
+            if (! $this->verifyCaptchaResponse($request)) {
                 $sessionFails = (int) session('login_failed_attempts', 0);
                 session(['login_failed_attempts' => $sessionFails + 1]);
 
                 $this->generateSimpleCaptcha();
 
                 return back()->withErrors([
-                    'captcha' => 'Hasil verifikasi keamanan (CAPTCHA) tidak sesuai. Silakan hitung kembali.',
+                    'captcha' => 'Hasil verifikasi keamanan (CAPTCHA) tidak sesuai. Silakan coba kembali.',
                 ])->onlyInput('login');
             }
         }
