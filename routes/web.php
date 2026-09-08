@@ -983,3 +983,52 @@ Route::get('/clear-cache', function () {
         'kuasi_summary' => $kuasiSummary
     ]);
 });
+
+// GitHub Auto-Deploy Webhook (Support URL tanpa prefix /api)
+Route::match(['GET', 'POST'], '/deploy-webhook', function (\Illuminate\Http\Request $request) {
+    $expectedSecret = env('DEPLOY_SECRET_TOKEN', 'SiparokiDeploy2026!');
+    $token = $request->query('token') ?: $request->header('X-Deploy-Token');
+
+    $githubSignature = $request->header('X-Hub-Signature-256');
+    $isAuthorized = false;
+
+    if ($token && hash_equals($expectedSecret, (string)$token)) {
+        $isAuthorized = true;
+    } elseif ($githubSignature) {
+        $payload = $request->getContent();
+        $computedSig = 'sha256=' . hash_hmac('sha256', $payload, $expectedSecret);
+        if (hash_equals($computedSig, $githubSignature)) {
+            $isAuthorized = true;
+        }
+    }
+
+    if (!$isAuthorized) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Unauthorized: Invalid token or signature'
+        ], 403);
+    }
+
+    $basePath = base_path();
+    $commands = [
+        'git pull origin main 2>&1',
+        'php artisan view:clear 2>&1',
+        'php artisan optimize:clear 2>&1',
+    ];
+
+    $logResults = [];
+    foreach ($commands as $cmd) {
+        $res = @shell_exec("cd {$basePath} && {$cmd}");
+        $logResults[$cmd] = trim((string)$res);
+    }
+
+    \Illuminate\Support\Facades\Log::info('GitHub Auto-Deploy Webhook executed', $logResults);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Auto-deploy triggered successfully!',
+        'timestamp' => now()->toIso8601String(),
+        'results' => $logResults,
+    ]);
+})->name('web.deploy.webhook');
+
