@@ -1,7 +1,7 @@
 # SIPAROKI &bull; Sistem Informasi &amp; Manajemen Pastoral Paroki Terpadu
 
 <p align="center">
-  <img src="public/assets/frontend/siparoki/images/logo-benlutu.png" alt="SIPAROKI Logo" width="120" onerror="this.src='public/favicon.ico'" />
+  <img src="docs/images/logo-siparoki.png" alt="SIPAROKI Logo" width="180" />
 </p>
 
 <p align="center">
