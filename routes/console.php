@@ -361,3 +361,50 @@ Artisan::command('paroki:set {keyword : Nama Paroki atau ID Paroki yang ingin di
     $this->info('====================================================');
 })->purpose('Ganti atau konfigurasi identitas paroki aktif dari master data paroki nasional');
 
+Artisan::command('siparoki:clean-data', function () {
+    $this->info('Membersihkan data teritori pastoral, sensus umat, konten, dan akun selain Super Admin...');
+
+    $tables = [
+        'riwayat_mutasi_umat', 'mutasi_umat', 'sakramen_umat', 'sakramen_verifikasi',
+        'pengajuan_sakramen', 'anggota_keluarga', 'umat', 'umats', 'kk_katolik',
+        'kub', 'kubs', 'lingkungan', 'wilayah', 'wilayahs', 'kapela', 'stasi_kapela',
+        'master_kapela', 'konten', 'artikel', 'berita', 'komentar_artikel',
+        'galeri', 'galeri_album', 'galeri_item', 'video', 'pengumuman', 'arsip_digital',
+        'iuran', 'transaksi_pembayaran', 'kas_rekening', 'keuangan', 'kolekte', 'kegiatan',
+        'rapat', 'rapat_peserta', 'chat_pesan', 'aset', 'aset_maintenance', 'intensi_misa',
+        'misa_kapela', 'misa_pastor', 'jadwal_misa', 'jadwal_petugas_liturgi',
+        'log_aktivitas', 'login_activity', 'login_attempts', 'security_logs',
+    ];
+
+    try {
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
+    } catch (\Throwable $e) {}
+
+    foreach ($tables as $t) {
+        if (Schema::hasTable($t)) {
+            try {
+                DB::table($t)->truncate();
+                $this->line(" [x] Tabel {$t} berhasil dikosongkan.");
+            } catch (\Throwable $e) {
+                try {
+                    DB::table($t)->delete();
+                    $this->line(" [x] Data {$t} berhasil dihapus.");
+                } catch (\Throwable $ex) {}
+            }
+        }
+    }
+
+    if (Schema::hasTable('users')) {
+        $deleted = DB::table('users')->where('role_id', '!=', 1)->delete();
+        $this->line(" [x] {$deleted} akun non-superadmin berhasil dibersihkan (hanya Super Admin yang dipertahankan).");
+    }
+
+    try {
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
+    } catch (\Throwable $e) {}
+
+    $this->call('optimize:clear');
+    $this->info('Sukses: Seluruh data operasional lokal paroki telah dalam kondisi bersih/kosong!');
+})->purpose('Bersihkan seluruh data dummy lokal operasional paroki (kecuali akun Super Admin dan master data hierarki)');
+
+

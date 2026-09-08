@@ -59,11 +59,19 @@
 
         </div>
 
-        <div style="text-align: center; margin-top: 45px;">
-            <a href="/sakramen" class="btn-program" style="display: inline-flex; align-items: center; gap: 8px; background: var(--primary-teal, #00897b); color: white; padding: 12px 32px; border-radius: 25px; font-weight: 700; text-decoration: none; font-size: 0.95rem; box-shadow: 0 5px 15px rgba(0,137,123,0.3);">
-                <i class="fas fa-file-signature"></i>
-                <span>Pengajuan Formulir Sakramen Online</span>
-            </a>
+        <div style="text-align: center; margin-top: 45px; max-width: 720px; margin-left: auto; margin-right: auto;">
+            <div style="background: rgba(0, 137, 123, 0.06); border: 1.5px dashed var(--primary-teal, #00897b); border-radius: 16px; padding: 24px 28px;">
+                <h5 style="font-weight: 700; color: #1e293b; margin-bottom: 8px;">
+                    <i class="fas fa-church text-teal-600 me-2"></i> Pendaftaran &amp; Administrasi Sakramen
+                </h5>
+                <p style="font-size: 0.92rem; color: #64748b; margin-bottom: 18px; line-height: 1.6;">
+                    Pendaftaran dan pemberkasan sakramen dilayani langsung melalui <strong>Ketua / Pengurus Komunitas Umat Basis (KUB)</strong> di wilayah rohani Anda masing-masing, atau dapat dikonsultasikan melalui Sekretariat Paroki.
+                </p>
+                <a href="/kontak" class="btn-program" style="display: inline-flex; align-items: center; gap: 8px; background: var(--primary-teal, #00897b); color: white; padding: 12px 30px; border-radius: 25px; font-weight: 700; text-decoration: none; font-size: 0.92rem; box-shadow: 0 4px 14px rgba(0,137,123,0.25);">
+                    <i class="fas fa-headset"></i>
+                    <span>Hubungi Sekretariat Paroki</span>
+                </a>
+            </div>
         </div>
 
         <!-- Share Buttons -->

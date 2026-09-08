@@ -214,64 +214,85 @@ class DatabaseSeeder extends Seeder
             $this->call(JenisIuranSeeder::class);
         }
 
-        // 9. Pastikan tabel teritori pastoral spesifik paroki (wilayah, kapela, kub) serta data jemaat lokal bersih HANYA saat instal awal (jika belum ada data umat)
-        $hasExistingUmat = Schema::hasTable('umat') && DB::table('umat')->count() > 0;
-        if (!$hasExistingUmat) {
-            $localTables = [
-                'umat',
-                'kk_katolik',
-                'kub',
-                'kubs',
-                'wilayah',
-                'wilayahs',
-                'kapela',
-                'stasi_kapela',
-                'master_kapela',
-                'lingkungan',
-                'riwayat_mutasi_umat',
-                'sakramen_umat',
-                'sakramen_verifikasi',
-                'pengajuan_sakramen',
-                'iuran',
-                'transaksi_pembayaran',
-                'kas_rekening',
-                'keuangan',
-                'kolekte',
-                'konten',
-                'artikel',
-                'galeri',
-                'galeri_album',
-                'galeri_item',
-                'kegiatan',
-                'pengumuman',
-                'rapat',
-                'rapat_peserta',
-                'arsip_digital',
-                'chat_pesan',
-                'aset',
-                'aset_maintenance',
-                'intensi_misa',
-                'misa_kapela',
-                'misa_pastor',
-                'jadwal_misa',
-                'jadwal_petugas_liturgi',
-                'log_aktivitas',
-                'login_activity',
-                'login_attempts',
-                'security_logs',
-            ];
-            foreach ($localTables as $lt) {
-                if (Schema::hasTable($lt)) {
+        // 9. Pastikan tabel teritori pastoral, umat, konten, media & operasional paroki 100% bersih/kosong saat instalasi awal
+        $localTables = [
+            'riwayat_mutasi_umat',
+            'mutasi_umat',
+            'sakramen_umat',
+            'sakramen_verifikasi',
+            'pengajuan_sakramen',
+            'anggota_keluarga',
+            'umat',
+            'umats',
+            'kk_katolik',
+            'kub',
+            'kubs',
+            'lingkungan',
+            'wilayah',
+            'wilayahs',
+            'kapela',
+            'stasi_kapela',
+            'master_kapela',
+            'konten',
+            'artikel',
+            'berita',
+            'komentar_artikel',
+            'galeri',
+            'galeri_album',
+            'galeri_item',
+            'video',
+            'pengumuman',
+            'arsip_digital',
+            'iuran',
+            'transaksi_pembayaran',
+            'kas_rekening',
+            'keuangan',
+            'kolekte',
+            'kegiatan',
+            'rapat',
+            'rapat_peserta',
+            'chat_pesan',
+            'aset',
+            'aset_maintenance',
+            'intensi_misa',
+            'misa_kapela',
+            'misa_pastor',
+            'jadwal_misa',
+            'jadwal_petugas_liturgi',
+            'log_aktivitas',
+            'login_activity',
+            'login_attempts',
+            'security_logs',
+        ];
+
+        try {
+            DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
+        } catch (\Throwable $e) {}
+
+        foreach ($localTables as $lt) {
+            if (Schema::hasTable($lt)) {
+                try {
+                    DB::table($lt)->truncate();
+                } catch (\Throwable $e) {
                     try {
-                        DB::table($lt)->truncate();
-                    } catch (\Throwable $e) {
-                        try {
-                            DB::table($lt)->delete();
-                        } catch (\Throwable $ex) {}
-                    }
+                        DB::table($lt)->delete();
+                    } catch (\Throwable $ex) {}
                 }
             }
         }
+
+        // Bersihkan seluruh user selain Super Admin (role_id = 1)
+        if (Schema::hasTable('users')) {
+            try {
+                DB::table('users')
+                    ->where('role_id', '!=', 1)
+                    ->delete();
+            } catch (\Throwable $e) {}
+        }
+
+        try {
+            DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
+        } catch (\Throwable $e) {}
 
         // 10. Create installed lock to mark ready
         @file_put_contents(storage_path('installed.lock'), date('Y-m-d H:i:s'));

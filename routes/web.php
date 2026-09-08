@@ -78,10 +78,10 @@ Route::get('/downloads', [PageController::class, 'downloads'])->name('downloads'
 Route::get('/downloads/{download}/unduh', [PageController::class, 'downloadFile'])->name('downloads.file');
 Route::get('/downloads/arsip/{arsip}/unduh', [PageController::class, 'downloadArsipFile'])->name('downloads.arsip.file');
 
-// Pelayanan & Sakramen
+// Pelayanan & Sakramen (Administrasi sakramen ditangani internal via Admin KUB)
 Route::get('/pelayanan', [PageController::class, 'pelayanan'])->name('pelayanan');
-Route::get('/pengajuan-sakramen', [PageController::class, 'sakramen'])->name('pengajuan-sakramen');
-Route::get('/sakramen', [PageController::class, 'sakramen'])->name('sakramen');
+Route::get('/pengajuan-sakramen', fn () => redirect('/'))->name('pengajuan-sakramen');
+Route::get('/sakramen', fn () => redirect('/'))->name('sakramen');
 
 // Layanan Publik Mandiri: Cek Data Umat via NIK
 Route::match(['get', 'post'], '/cek-data-umat', [PageController::class, 'cekDataUmat'])->name('cek-data-umat')->middleware('throttle:40,1');

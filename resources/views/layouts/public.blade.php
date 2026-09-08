@@ -389,7 +389,6 @@
                     <ul>
                         <li><a href="/cek-data-umat">Cek Data Umat</a></li>
                         <li><a href="/pelayanan">Daftar Pelayanan</a></li>
-                        <li><a href="/sakramen">Pengajuan Sakramen</a></li>
                         <li><a href="/profil-kapela">Kapela &amp; Stasi</a></li>
                         <li><a href="/downloads">Pusat Unduhan</a></li>
                         <li><a href="/statistik">Statistik Paroki</a></li>

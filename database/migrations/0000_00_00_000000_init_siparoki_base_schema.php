@@ -113,6 +113,37 @@ return new class extends Migration
 
             // 4. Daftarkan seluruh migrasi bawaan skema master agar tidak dijalankan ulang
             $this->registerBaselineMigrations();
+
+            // 5. Bersihkan data dummy teritori, jemaat, dan konten operasional agar repo bersih saat clone dari GitHub
+            $cleanTables = [
+                'riwayat_mutasi_umat', 'mutasi_umat', 'sakramen_umat', 'sakramen_verifikasi',
+                'pengajuan_sakramen', 'anggota_keluarga', 'umat', 'umats', 'kk_katolik',
+                'kub', 'kubs', 'lingkungan', 'wilayah', 'wilayahs', 'kapela', 'stasi_kapela',
+                'master_kapela', 'konten', 'artikel', 'berita', 'komentar_artikel',
+                'galeri', 'galeri_album', 'galeri_item', 'video', 'pengumuman', 'arsip_digital',
+                'iuran', 'transaksi_pembayaran', 'kas_rekening', 'keuangan', 'kolekte', 'kegiatan',
+                'rapat', 'rapat_peserta', 'chat_pesan', 'aset', 'aset_maintenance', 'intensi_misa',
+                'misa_kapela', 'misa_pastor', 'jadwal_misa', 'jadwal_petugas_liturgi',
+                'log_aktivitas', 'login_activity', 'login_attempts', 'security_logs',
+            ];
+            foreach ($cleanTables as $ct) {
+                if (Schema::hasTable($ct)) {
+                    try {
+                        DB::table($ct)->truncate();
+                    } catch (\Throwable $e) {
+                        try {
+                            DB::table($ct)->delete();
+                        } catch (\Throwable $ex) {}
+                    }
+                }
+            }
+
+            // Hapus user selain Super Admin
+            if (Schema::hasTable('users')) {
+                try {
+                    DB::table('users')->where('role_id', '!=', 1)->delete();
+                } catch (\Throwable $e) {}
+            }
         }
 
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
