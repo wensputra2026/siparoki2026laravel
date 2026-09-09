@@ -41,27 +41,27 @@ const formatDate = (d) => {
           <i class="fa-solid fa-arrow-left text-xs"></i>
           <span>Kembali ke Data Umat</span>
         </Link>
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+          <Link
+            :href="createUrl"
+            class="col-span-2 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition flex items-center justify-center gap-2 order-first sm:order-last"
+          >
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>+ Tambah Riwayat Manual</span>
+          </Link>
           <Link
             :href="mutasiUrl"
-            class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition flex items-center gap-1.5"
+            class="px-3.5 py-2.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition flex items-center justify-center gap-1.5"
           >
             <i class="fa-solid fa-arrows-rotate text-xs"></i>
             <span>Mutasi KUB</span>
           </Link>
           <Link
             :href="pisahUrl"
-            class="px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold transition flex items-center gap-1.5"
+            class="px-3.5 py-2.5 sm:py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold transition flex items-center justify-center gap-1.5"
           >
             <i class="fa-solid fa-ring text-xs"></i>
             <span>Pisah KK</span>
-          </Link>
-          <Link
-            :href="createUrl"
-            class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition flex items-center gap-1.5"
-          >
-            <i class="fa-solid fa-plus text-xs"></i>
-            <span>+ Tambah Riwayat Manual</span>
           </Link>
         </div>
       </div>

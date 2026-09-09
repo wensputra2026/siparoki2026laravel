@@ -133,23 +133,23 @@ const parokiAlamat = computed(() => {
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="flex items-center gap-2 shrink-0">
+                    <div class="flex items-stretch sm:items-center gap-2 flex-col sm:flex-row shrink-0 w-full sm:w-auto">
                         <template v-if="!isReadOnlyRole">
-                            <Link
-                                :href="editUrl"
-                                class="px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                            >
-                                <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                <span>Edit Data KK</span>
-                            </Link>
                             <a
                                 :href="printUrl"
                                 target="_blank"
-                                class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition flex items-center gap-1.5 cursor-pointer"
+                                class="px-4 py-2.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition flex items-center justify-center gap-2 cursor-pointer order-first sm:order-last"
                             >
                                 <i class="fa-solid fa-print text-xs"></i>
                                 <span>Cetak KK (PDF / Print)</span>
                             </a>
+                            <Link
+                                :href="editUrl"
+                                class="px-4 py-2.5 sm:py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                <span>Edit Data KK</span>
+                            </Link>
                         </template>
                         <div
                             v-else

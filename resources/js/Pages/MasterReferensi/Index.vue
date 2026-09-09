@@ -121,24 +121,24 @@ const reloadMaster = () => {
                 </div>
 
                 <div class="grid grid-cols-2 sm:flex sm:items-center gap-2">
+                    <Link
+                        href="/admin/master-referensi/master_referensi"
+                        class="col-span-2 sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-bold shadow-xs transition order-first sm:order-last"
+                    >
+                        <i class="fa-solid fa-folder-plus text-xs"></i>
+                        <span>Kelola Grup Referensi</span>
+                    </Link>
+
                     <button
                         type="button"
                         :disabled="isReloading"
                         @click="reloadMaster"
-                        class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-60"
+                        class="col-span-2 sm:col-span-1 sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 sm:py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-60"
                         title="Reload data referensi langsung dari database"
                     >
                         <i :class="['fa-solid fa-arrows-rotate text-amber-600', isReloading ? 'fa-spin' : '']"></i>
                         <span>{{ isReloading ? 'Memuat...' : 'Reload' }}</span>
                     </button>
-
-                    <Link
-                        href="/admin/master-referensi/master_referensi"
-                        class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition"
-                    >
-                        <i class="fa-solid fa-folder-plus text-xs"></i>
-                        <span>Kelola Grup Referensi</span>
-                    </Link>
                 </div>
             </div>
 

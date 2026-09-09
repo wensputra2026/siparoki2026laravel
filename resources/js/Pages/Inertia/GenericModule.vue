@@ -201,25 +201,19 @@ const resolvedKubName = computed(() => {
     return resolvedKub.value?.nama_kub || '-';
 });
 
-const selectedKuasiParokiName = computed(() => {
-    if (!formData.value?.paroki_id) return '';
-    const p = (props.parokiList || []).find(x => String(x.id_paroki || x.id) === String(formData.value.paroki_id));
-    return p?.nama_paroki || '';
+const entityCreateLabel = computed(() => {
+    if (['kk-katolik', 'kk', 'keluarga'].includes(props.moduleKey)) return 'KK';
+    if (['umat', 'data-umat'].includes(props.moduleKey)) return 'Umat';
+    if (props.moduleKey === 'galeri') return 'Album Galeri';
+    if (['riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'mutasi_umat'].includes(props.moduleKey)) return 'Mutasi Umat';
+    if (['role', 'roles'].includes(props.moduleKey)) return 'Role Baru';
+    const cleaned = (props.title || '').replace(/^Data\s+/i, '').trim();
+    return cleaned || (props.title || 'Data');
 });
 
-const selectedKuasiDekenatName = computed(() => {
-    if (!formData.value?.dekenat_id) return '';
-    const d = (props.dekenatList || []).find(x => String(x.id_dekenat || x.id_kevikepan || x.id) === String(formData.value.dekenat_id));
-    return d?.nama_dekenat || d?.nama_kevikepan || d?.name || '';
-});
-
-watch(() => formData.value?.paroki_id, (newParokiId) => {
-    if (props.moduleKey === 'kuasi-paroki' && newParokiId) {
-        const found = (props.parokiList || []).find(p => String(p.id_paroki || p.id) === String(newParokiId));
-        if (found && found.dekenat_id) {
-            formData.value.dekenat_id = found.dekenat_id;
-        }
-    }
+const reloadButtonColSpan = computed(() => {
+    const exportCount = (props.hasExport ? 1 : 0) + (props.hasPdf ? 1 : 0);
+    return (exportCount % 2 === 1) ? 'col-span-1' : 'col-span-2';
 });
 
 const statusOptions = [
@@ -327,6 +321,27 @@ const filteredFormKubs = computed(() => {
             nama_kub_with_asal: asal ? `${k.nama_kub} (${asal})` : k.nama_kub,
         };
     });
+});
+
+const selectedKuasiParokiName = computed(() => {
+    if (!formData.value?.paroki_id) return '';
+    const p = (props.parokiList || []).find(x => String(x.id_paroki || x.id) === String(formData.value.paroki_id));
+    return p?.nama_paroki || '';
+});
+
+const selectedKuasiDekenatName = computed(() => {
+    if (!formData.value?.dekenat_id) return '';
+    const d = (props.dekenatList || []).find(x => String(x.id_dekenat || x.id_kevikepan || x.id) === String(formData.value.dekenat_id));
+    return d?.nama_dekenat || d?.nama_kevikepan || d?.name || '';
+});
+
+watch(() => formData.value?.paroki_id, (newParokiId) => {
+    if (props.moduleKey === 'kuasi-paroki' && newParokiId) {
+        const found = (props.parokiList || []).find(p => String(p.id_paroki || p.id) === String(newParokiId));
+        if (found && found.dekenat_id) {
+            formData.value.dekenat_id = found.dekenat_id;
+        }
+    }
 });
 
 const onMutasiUmatSelected = (umatId) => {
@@ -2761,43 +2776,43 @@ const showKubFilter = computed(() => {
                     <!-- 0. Read-Only Indicator for Wilayah / Kapela on KK & Umat Data -->
                     <div
                         v-if="isKkReadOnlyForRole || isUmatReadOnlyRole"
-                        class="col-span-2 px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
+                        class="col-span-2 px-3.5 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-2 shrink-0 shadow-2xs"
                     >
-                        <i class="fa-solid fa-eye text-blue-600 text-[11px]"></i>
+                        <i class="fa-solid fa-eye text-blue-600 text-xs"></i>
                         <span>{{ isKkReadOnlyForRole ? 'Mode Lihat Saja (Read-Only) - Tidak Dapat Edit & Cetak' : (['wilayah', 'kub', 'sakramen', 'buku-sakramen'].includes(moduleKey) ? 'Mode Lihat Saja (Kelola di Paroki)' : 'Mode Lihat Saja (CRUD di KUB)') }}</span>
                     </div>
 
                     <!-- 0.1 View & Edit Only Indicator for Wilayah / Kapela on Sakramen Data -->
                     <div
                         v-else-if="isViewAndEditOnlyRole"
-                        class="col-span-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-1.5 shrink-0"
+                        class="col-span-2 px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2 shrink-0 shadow-2xs"
                     >
-                        <i class="fa-solid fa-pen-to-square text-amber-600 text-[11px]"></i>
+                        <i class="fa-solid fa-pen-to-square text-amber-600 text-xs"></i>
                         <span>Mode Lihat & Ubah (Tambah/Hapus di Paroki)</span>
                     </div>
 
-                    <!-- 1. Tambah Button (Conditional based on hasCreate & Role) -->
+                    <!-- 1. Tambah Button (Primary CTA: Full width on mobile, natural width on desktop) -->
                     <template v-if="hasCreate && !isKkReadOnlyForRole && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <Link
                             v-if="['role', 'roles', 'konten', 'kk-katolik', 'kk', 'keluarga', 'galeri', 'umat', 'data-umat'].includes(moduleKey)"
                             :href="moduleKey === 'konten' ? `${basePrefix}/konten/create` : (['kk-katolik', 'kk', 'keluarga'].includes(moduleKey) ? `${basePrefix}/kk-katolik/create` : (['umat', 'data-umat'].includes(moduleKey) ? `${basePrefix}/umat/create` : (moduleKey === 'galeri' ? `${basePrefix}/galeri/create` : `${basePrefix}/role/create`)))"
-                            class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                            class="col-span-2 sm:col-span-1 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 whitespace-nowrap"
                         >
-                            <i class="fa-solid fa-plus text-[11px]"></i>
-                            <span>Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : (['umat', 'data-umat'].includes(moduleKey) ? 'Umat' : (moduleKey === 'galeri' ? 'Album Galeri' : title)) }}</span>
+                            <i class="fa-solid fa-plus text-xs"></i>
+                            <span>Tambah {{ entityCreateLabel }}</span>
                         </Link>
                         <button
                             v-else
                             type="button"
                             @click="openCreateModal"
-                            class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                            class="col-span-2 sm:col-span-1 sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold shadow-sm shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 whitespace-nowrap"
                         >
-                            <i class="fa-solid fa-plus text-[11px]"></i>
-                            <span>Tambah {{ (moduleKey === 'kk-katolik' || moduleKey === 'kk' || moduleKey === 'keluarga') ? 'KK' : (['riwayat-mutasi-umat', 'riwayat-mutasi', 'mutasi-umat', 'mutasi_umat'].includes(moduleKey) ? 'Mutasi Umat' : title) }}</span>
+                            <i class="fa-solid fa-plus text-xs"></i>
+                            <span>Tambah {{ entityCreateLabel }}</span>
                         </button>
                     </template>
 
-                    <!-- 2. Import Excel & Template Download Buttons (Only for whitelisted data-master modules) -->
+                    <!-- 2. Import Excel & Template Download Buttons -->
                     <template v-if="hasImportExportActions && hasImport && !isKkReadOnlyForRole && !isUmatReadOnlyRole && !isViewAndEditOnlyRole">
                         <input
                             ref="importFileInput"
@@ -2810,7 +2825,7 @@ const showKubFilter = computed(() => {
                             type="button"
                             :disabled="isImporting"
                             @click="triggerImportFile"
-                            class="px-3.5 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60"
+                            class="col-span-1 sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60 shadow-2xs"
                         >
                             <i v-if="isImporting" class="fa-solid fa-circle-notch fa-spin text-[11px]"></i>
                             <i v-else class="fa-solid fa-arrow-up-from-bracket text-[11px]"></i>
@@ -2819,29 +2834,29 @@ const showKubFilter = computed(() => {
 
                         <a
                             :href="exportModuleUrl('template')"
-                            class="px-3.5 py-2 rounded-lg bg-cyan-50 hover:bg-cyan-100 border border-cyan-300 text-cyan-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
+                            class="col-span-1 sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-300 text-cyan-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap shadow-2xs"
                         >
                             <i class="fa-solid fa-file-excel text-[11px]"></i>
                             <span>Template</span>
                         </a>
                     </template>
 
-                    <!-- 3. Export Excel Button (Only for whitelisted data-master modules) -->
+                    <!-- 3. Export Excel Button -->
                     <a
                         v-if="hasImportExportActions && hasExport && !isKkReadOnlyForRole"
                         :href="exportModuleUrl('excel')"
-                        class="px-3.5 py-2 rounded-lg bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
+                        class="col-span-1 sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap shadow-2xs"
                     >
                         <i class="fa-solid fa-arrow-right-from-bracket text-[11px]"></i>
                         <span>Ekspor Excel</span>
                     </a>
 
-                    <!-- 4. Print / PDF Button (Only active for modules with hasPdf = true) -->
+                    <!-- 4. Print / PDF Button -->
                     <a
                         v-if="hasPdf && !isKkReadOnlyForRole"
                         :href="exportModuleUrl('print')"
                         target="_blank"
-                        class="px-3.5 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
+                        class="col-span-1 sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap shadow-2xs"
                     >
                         <i class="fa-solid fa-print text-[11px]"></i>
                         <span>Cetak / PDF</span>
@@ -2852,7 +2867,10 @@ const showKubFilter = computed(() => {
                         @click="refreshData"
                         :disabled="isReloadingData"
                         title="Reload data tabel dari database (tanpa reload browser)"
-                        class="px-3.5 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-300 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60 shadow-2xs"
+                        :class="[
+                            reloadButtonColSpan,
+                            'sm:col-span-1 sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-300 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap disabled:opacity-60 shadow-2xs'
+                        ]"
                     >
                         <i :class="['fa-solid fa-arrows-rotate text-[11px]', isReloadingData ? 'fa-spin text-blue-600' : 'text-slate-600']"></i>
                         <span>{{ isReloadingData ? 'Memuat...' : 'Reload' }}</span>
@@ -9674,18 +9692,18 @@ const showKubFilter = computed(() => {
                     </template>
 
                     <!-- Form Buttons -->
-                    <div class="pt-3 flex items-center justify-end gap-2.5 sticky bottom-0 bg-white py-2 border-t border-slate-100">
+                    <div class="pt-3 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-2.5 sticky bottom-0 bg-white py-2 border-t border-slate-100">
                         <button
                             type="button"
                             @click="showFormModal = false"
-                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                            class="px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer text-center"
                         >
                             Batal
                         </button>
                         <button
                             type="submit"
                             :disabled="isSubmitting"
-                            class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-sm shadow-amber-500/25 transition cursor-pointer flex items-center gap-2"
+                            class="px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-sm shadow-amber-500/25 transition cursor-pointer flex items-center justify-center gap-2"
                         >
                             <i v-if="isSubmitting" class="fa-solid fa-circle-notch fa-spin text-xs"></i>
                             <span>{{ modalMode === 'create' ? 'Simpan Data' : 'Simpan Perubahan' }}</span>

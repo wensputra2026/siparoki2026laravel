@@ -353,10 +353,10 @@ const displayedColumns = computed(() => {
                     <button
                         type="button"
                         @click="openCreateModal"
-                        class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-sm shadow-amber-500/25 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
+                        class="w-full sm:w-auto px-4 py-2.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:bg-amber-800 text-white text-xs font-bold shadow-sm shadow-amber-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 whitespace-nowrap order-first sm:order-last"
                     >
-                        <i class="fa-solid fa-plus text-[11px]"></i>
-                        <span>Tambah {{ label }}</span>
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Tambah {{ (label || '').replace(/^Data\s+/i, '') }}</span>
                     </button>
                 </div>
             </div>
