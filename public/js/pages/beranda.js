@@ -68,4 +68,51 @@ document.addEventListener("DOMContentLoaded", function() {
                 setTimeout(function() { homeMap.invalidateSize(); }, 300);
             });
     }
+
+    // Inisialisasi Swiper Slider Pelayan Pastoral
+    function initPelayanSwiper() {
+        var sliderEl = document.querySelector('.swiper-pelayan-pastoral');
+        if (!sliderEl) return;
+        if (typeof Swiper === 'undefined') {
+            setTimeout(initPelayanSwiper, 150);
+            return;
+        }
+        var slides = sliderEl.querySelectorAll('.swiper-slide');
+        var slideCount = slides.length;
+        if (slideCount === 0) return;
+
+        new Swiper('.swiper-pelayan-pastoral', {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            speed: 600,
+            grabCursor: true,
+            loop: slideCount > 3,
+            autoplay: slideCount > 1 ? {
+                delay: 4500,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+            } : false,
+            pagination: {
+                el: '.swiper-pagination-pelayan',
+                clickable: true,
+                dynamicBullets: slideCount > 4,
+            },
+            navigation: {
+                prevEl: '.pelayan-slider-prev',
+                nextEl: '.pelayan-slider-next',
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: Math.min(slideCount, 2),
+                    spaceBetween: 24,
+                },
+                1024: {
+                    slidesPerView: Math.min(slideCount, 3),
+                    spaceBetween: 28,
+                }
+            }
+        });
+    }
+    initPelayanSwiper();
 });
+

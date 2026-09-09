@@ -4,6 +4,7 @@
 @section('description', 'Website resmi ' . ($globalNamaParoki ?? 'Paroki') . ' untuk informasi jadwal perayaan Ekaristi, sakramen, warta paroki, dan sensus umat Katolik.')
 
 @push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="/css/pages/beranda.css?v={{ @filemtime(public_path('css/pages/beranda.css')) ?: time() }}">
 @endpush
 
@@ -150,94 +151,190 @@
             <p>Pastor Paroki, Pastor Rekan, dan Frater yang sedang melayani umat di {{ $globalNamaParoki ?? 'St. Vinsensius a Paulo - Benlutu' }}.</p>
         </div>
 
-        <div class="pelayan-pastoral-grid">
-            
-            {{-- Card 1: Pastor Paroki --}}
-            @if(!empty($pastor_paroki) || !empty($pastor_paroki_obj))
-            <div class="pelayan-card pastor-paroki">
-                <div class="pelayan-avatar-wrap">
-                    <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" 
-                         alt="Pastor Paroki" 
-                         class="pelayan-avatar-img">
+        @php
+            $hasBertugas = isset($pastorBertugas) && count($pastorBertugas) > 0;
+            $hasFrater = !empty($frater) || !empty($frater_obj);
+            $fraterName = $frater ?? (isset($frater_obj->nama_pastor) ? \App\Models\MasterPastor::formatNama($frater_obj) : ($frater_obj->nama_frater ?? $frater_obj->nama_lengkap ?? 'Frater'));
+            $fraterJabatan = $frater_obj->jabatan ?? 'Frater / Katekis';
+            $fraterFotoImg = !empty($frater_obj?->foto) 
+                ? (str_starts_with($frater_obj->foto, 'http') || str_starts_with($frater_obj->foto, '/') ? $frater_obj->foto : '/' . $frater_obj->foto) 
+                : null;
+        @endphp
+
+        {{-- Slider Pelayan Pastoral (Swiper) --}}
+        <div class="pelayan-pastoral-slider-wrap position-relative">
+            <div class="swiper swiper-pelayan-pastoral">
+                <div class="swiper-wrapper">
+                    @if($hasBertugas)
+                        @foreach($pastorBertugas as $p)
+                            @php
+                                $isKepala = stripos($p->jabatan ?? '', 'Paroki') !== false && stripos($p->jabatan ?? '', 'Rekan') === false;
+                                $cardTypeClass = $isKepala ? 'pastor-paroki' : 'pastor-rekan';
+                                $badgeClass = $isKepala ? '' : 'rekan';
+                                $avatarClass = $isKepala ? '' : 'rekan';
+                                $pFoto = !empty($p->foto) 
+                                    ? (str_starts_with($p->foto, 'http') || str_starts_with($p->foto, '/') ? $p->foto : '/' . $p->foto) 
+                                    : ($isKepala && !empty($pastor_foto) ? $pastor_foto : $imamImage);
+                                $pJabatan = $p->jabatan ?? ($isKepala ? 'Pastor Paroki' : 'Pastor Rekan');
+                                $pSubrole = $p->catatan_pelayanan ?? $pJabatan;
+                                $pNama = $p->nama_formatted ?? $p->nama_pastor ?? 'Pastor';
+                            @endphp
+                            <div class="swiper-slide">
+                                <div class="pelayan-card {{ $cardTypeClass }}">
+                                    <div class="pelayan-avatar-wrap">
+                                        <img src="{{ $pFoto }}" alt="{{ $pNama }}" class="pelayan-avatar-img {{ $avatarClass }}">
+                                    </div>
+
+                                    <span class="pelayan-role-badge {{ $badgeClass }}">{{ $pJabatan }}</span>
+                                    <h4>{{ $pNama }}</h4>
+                                    <div class="pelayan-subrole">{{ $pSubrole }}</div>
+
+                                    <div style="margin-top: 18px; width: 100%;">
+                                        <button 
+                                            type="button" 
+                                            onclick="openPastorDetailModal({{ json_encode($p) }})"
+                                            class="btn-pelayan-detail"
+                                        >
+                                            <i class="fa-solid fa-circle-info text-xs"></i>
+                                            <span>Selengkapnya</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+
+                        {{-- Slide Frater / Katekis --}}
+                        @if($hasFrater)
+                            <div class="swiper-slide">
+                                <div class="pelayan-card frater-katekis">
+                                    <div class="pelayan-avatar-wrap">
+                                        @if($fraterFotoImg)
+                                            <img src="{{ $fraterFotoImg }}" alt="{{ $fraterName }}" class="pelayan-avatar-img frater">
+                                        @else
+                                            <div class="pelayan-avatar-icon">
+                                                <i class="fa-solid fa-book-bible text-2xl"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <span class="pelayan-role-badge frater">{{ $fraterJabatan }}</span>
+                                    <h4>{{ $fraterName }}</h4>
+                                    <div class="pelayan-subrole">{{ $frater_obj->catatan_pelayanan ?? $fraterJabatan }}</div>
+
+                                    <div style="margin-top: 18px; width: 100%;">
+                                        <button 
+                                            type="button" 
+                                            onclick="openPastorDetailModal({{ json_encode($frater_obj ?? ['nama_pastor' => $fraterName, 'jabatan' => $fraterJabatan]) }})"
+                                            class="btn-pelayan-detail"
+                                        >
+                                            <i class="fa-solid fa-circle-info text-xs"></i>
+                                            <span>Selengkapnya</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @else
+                        {{-- Fallback jika master_pastor belum ada --}}
+                        @if(!empty($pastor_paroki) || !empty($pastor_paroki_obj))
+                        <div class="swiper-slide">
+                            <div class="pelayan-card pastor-paroki">
+                                <div class="pelayan-avatar-wrap">
+                                    <img src="{{ !empty($pastor_foto) ? $pastor_foto : $imamImage }}" alt="Pastor Paroki" class="pelayan-avatar-img">
+                                </div>
+
+                                <span class="pelayan-role-badge">Pastor Paroki</span>
+                                <h4>{{ $pastor_paroki ?? $pastorNameDisplay }}</h4>
+                                <div class="pelayan-subrole">{{ $pastor_paroki_obj->catatan_pelayanan ?? $pastor_paroki_obj->jabatan ?? 'Pastor Paroki' }}</div>
+
+                                <div style="margin-top: 18px; width: 100%;">
+                                    <button 
+                                        type="button" 
+                                        onclick="openPastorDetailModal({{ json_encode($pastor_paroki_obj ?? ['nama_pastor' => $pastor_paroki ?? $pastorNameDisplay, 'jabatan' => 'Pastor Paroki', 'foto' => $pastor_foto ?? null]) }})"
+                                        class="btn-pelayan-detail"
+                                    >
+                                        <i class="fa-solid fa-circle-info text-xs"></i>
+                                        <span>Selengkapnya</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if(!empty($pastor_rekan) || !empty($pastor_rekan_obj))
+                        @php
+                            $rekanFotoImg = !empty($pastor_rekan_obj?->foto) 
+                                ? (str_starts_with($pastor_rekan_obj->foto, 'http') || str_starts_with($pastor_rekan_obj->foto, '/') ? $pastor_rekan_obj->foto : '/' . $pastor_rekan_obj->foto) 
+                                : $imamImage;
+                        @endphp
+                        <div class="swiper-slide">
+                            <div class="pelayan-card pastor-rekan">
+                                <div class="pelayan-avatar-wrap">
+                                    <img src="{{ $rekanFotoImg }}" alt="Pastor Rekan" class="pelayan-avatar-img rekan">
+                                </div>
+
+                                <span class="pelayan-role-badge rekan">Pastor Rekan</span>
+                                <h4>{{ $pastor_rekan }}</h4>
+                                <div class="pelayan-subrole">{{ $pastor_rekan_obj->jabatan ?? 'Pastor Rekan' }}</div>
+
+                                <div style="margin-top: 18px; width: 100%;">
+                                    <button 
+                                        type="button" 
+                                        onclick="openPastorDetailModal({{ json_encode($pastor_rekan_obj ?? ['nama_pastor' => $pastor_rekan, 'jabatan' => 'Pastor Rekan', 'foto' => $rekanFotoImg]) }})"
+                                        class="btn-pelayan-detail"
+                                    >
+                                        <i class="fa-solid fa-circle-info text-xs"></i>
+                                        <span>Selengkapnya</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if(!empty($frater) || !empty($frater_obj))
+                        <div class="swiper-slide">
+                            <div class="pelayan-card frater-katekis">
+                                <div class="pelayan-avatar-wrap">
+                                    @if($fraterFotoImg)
+                                        <img src="{{ $fraterFotoImg }}" alt="Frater" class="pelayan-avatar-img frater">
+                                    @else
+                                        <div class="pelayan-avatar-icon">
+                                            <i class="fa-solid fa-book-bible text-2xl"></i>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <span class="pelayan-role-badge frater">{{ $fraterJabatan }}</span>
+                                <h4>{{ $fraterName }}</h4>
+                                <div class="pelayan-subrole">{{ $frater_obj->catatan_pelayanan ?? $fraterJabatan }}</div>
+
+                                <div style="margin-top: 18px; width: 100%;">
+                                    <button 
+                                        type="button" 
+                                        onclick="openPastorDetailModal({{ json_encode($frater_obj ?? ['nama_pastor' => $fraterName, 'jabatan' => $fraterJabatan]) }})"
+                                        class="btn-pelayan-detail"
+                                    >
+                                        <i class="fa-solid fa-circle-info text-xs"></i>
+                                        <span>Selengkapnya</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    @endif
                 </div>
 
-                <span class="pelayan-role-badge">Pastor Paroki</span>
-                <h4>{{ $pastor_paroki ?? $pastorNameDisplay }}</h4>
-                <div class="pelayan-subrole">{{ $pastor_paroki_obj->catatan_pelayanan ?? $pastor_paroki_obj->jabatan ?? 'Pastor Paroki' }}</div>
-
-                <div style="margin-top: 18px; width: 100%;">
-                    <button 
-                        type="button" 
-                        onclick="openPastorDetailModal({{ json_encode($pastor_paroki_obj ?? ['nama_pastor' => $pastor_paroki ?? $pastorNameDisplay, 'jabatan' => 'Pastor Paroki', 'foto' => $pastor_foto ?? null]) }})"
-                        class="btn-pelayan-detail"
-                    >
-                        <i class="fa-solid fa-circle-info text-xs"></i>
-                        <span>Selengkapnya</span>
-                    </button>
-                </div>
+                <!-- Swiper Pagination -->
+                <div class="swiper-pagination swiper-pagination-pelayan"></div>
             </div>
-            @endif
 
-            {{-- Card 2: Pastor Rekan --}}
-            @if(!empty($pastor_rekan) || !empty($pastor_rekan_obj))
-            @php
-                $rekanFotoImg = !empty($pastor_rekan_obj?->foto) 
-                    ? (str_starts_with($pastor_rekan_obj->foto, 'http') || str_starts_with($pastor_rekan_obj->foto, '/') ? $pastor_rekan_obj->foto : '/' . $pastor_rekan_obj->foto) 
-                    : $imamImage;
-            @endphp
-            <div class="pelayan-card pastor-rekan">
-                <div class="pelayan-avatar-wrap">
-                    <img src="{{ $rekanFotoImg }}" alt="Pastor Rekan" class="pelayan-avatar-img rekan">
-                </div>
-
-                <span class="pelayan-role-badge rekan">Pastor Rekan</span>
-                <h4>{{ $pastor_rekan }}</h4>
-                <div class="pelayan-subrole">{{ $pastor_rekan_obj->jabatan ?? 'Pastor Rekan' }}</div>
-
-                <div style="margin-top: 18px; width: 100%;">
-                    <button 
-                        type="button" 
-                        onclick="openPastorDetailModal({{ json_encode($pastor_rekan_obj ?? ['nama_pastor' => $pastor_rekan, 'jabatan' => 'Pastor Rekan', 'foto' => $rekanFotoImg]) }})"
-                        class="btn-pelayan-detail"
-                    >
-                        <i class="fa-solid fa-circle-info text-xs"></i>
-                        <span>Selengkapnya</span>
-                    </button>
-                </div>
-            </div>
-            @endif
-
-            {{-- Card 3: Frater / Katekis (Hanya tampil jika ada di database) --}}
-            @if(!empty($frater) || !empty($frater_obj))
-            @php
-                $fraterFotoImg = !empty($frater_obj?->foto) 
-                    ? (str_starts_with($frater_obj->foto, 'http') || str_starts_with($frater_obj->foto, '/') ? $frater_obj->foto : '/' . $frater_obj->foto) 
-                    : $imamImage;
-            @endphp
-            <div class="pelayan-card frater-katekis">
-                <div class="pelayan-avatar-wrap">
-                    <img src="{{ $fraterFotoImg }}" alt="Frater / Katekis" class="pelayan-avatar-img frater">
-                </div>
-
-                <span class="pelayan-role-badge frater">{{ $frater_obj->jabatan ?? 'Frater / Katekis' }}</span>
-                <h4>{{ $frater }}</h4>
-                <div class="pelayan-subrole">{{ $frater_obj->catatan_pelayanan ?? $frater_obj->jabatan ?? 'Pendamping Pastoral' }}</div>
-
-                @if(!empty($frater_obj))
-                <div style="margin-top: 18px; width: 100%;">
-                    <button 
-                        type="button" 
-                        onclick="openPastorDetailModal({{ json_encode($frater_obj) }})"
-                        class="btn-pelayan-detail"
-                    >
-                        <i class="fa-solid fa-circle-info text-xs"></i>
-                        <span>Selengkapnya</span>
-                    </button>
-                </div>
-                @endif
-            </div>
-            @endif
-
+            <!-- Navigation Buttons -->
+            <button type="button" class="pelayan-slider-nav pelayan-slider-prev" aria-label="Slide sebelumnya" title="Sebelumnya">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button type="button" class="pelayan-slider-nav pelayan-slider-next" aria-label="Slide berikutnya" title="Berikutnya">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
         </div>
 
         <div class="pelayan-btn-group">
@@ -593,6 +690,7 @@
 @include('partials.pastor-detail-modal')
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="/js/pages/beranda.js?v={{ @filemtime(public_path('js/pages/beranda.js')) ?: time() }}" defer></script>
 @endpush
 @endsection

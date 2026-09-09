@@ -615,3 +615,130 @@ body.public-portal .hero-youtube-iframe,
     text-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
+/* ============================================================
+   SWIPER SLIDER PELAYAN PASTORAL (BERANDA)
+   ============================================================ */
+.pelayan-pastoral-slider-wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    position: relative;
+    padding: 0 46px;
+}
+@media (max-width: 768px) {
+    .pelayan-pastoral-slider-wrap {
+        padding: 0 4px;
+    }
+}
+.swiper-pelayan-pastoral {
+    width: 100%;
+    padding: 16px 8px 52px !important;
+    overflow: hidden;
+}
+.swiper-pelayan-pastoral .swiper-wrapper {
+    align-items: stretch;
+}
+.swiper-pelayan-pastoral .swiper-slide {
+    height: auto !important;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+}
+.swiper-pelayan-pastoral .swiper-slide .pelayan-card {
+    width: 100%;
+    max-width: 360px;
+    height: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Slider Nav Buttons (Prev / Next) */
+.pelayan-slider-nav {
+    position: absolute;
+    top: calc(50% - 24px);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    color: #1e293b;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pelayan-slider-nav:hover {
+    background: var(--primary-orange, #ff9800);
+    border-color: var(--primary-orange, #ff9800);
+    color: #ffffff;
+    transform: scale(1.1);
+    box-shadow: 0 8px 24px rgba(255, 152, 0, 0.35);
+}
+.pelayan-slider-prev {
+    left: -2px;
+}
+.pelayan-slider-next {
+    right: -2px;
+}
+@media (max-width: 768px) {
+    .pelayan-slider-nav {
+        display: none !important;
+    }
+}
+[data-theme="dark"] .pelayan-slider-nav {
+    background: #152238;
+    border-color: #2b3d58;
+    color: #f1f5f9;
+}
+[data-theme="dark"] .pelayan-slider-nav:hover {
+    background: var(--primary-orange, #ff9800);
+    border-color: var(--primary-orange, #ff9800);
+    color: #ffffff;
+}
+
+/* Swiper Pagination */
+.swiper-pagination-pelayan {
+    bottom: 12px !important;
+}
+.swiper-pagination-pelayan .swiper-pagination-bullet {
+    width: 10px;
+    height: 10px;
+    background: #cbd5e1;
+    opacity: 0.85;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0 4px !important;
+}
+.swiper-pagination-pelayan .swiper-pagination-bullet-active {
+    width: 28px;
+    border-radius: 8px;
+    background: var(--primary-orange, #ff9800);
+    opacity: 1;
+}
+[data-theme="dark"] .swiper-pagination-pelayan .swiper-pagination-bullet {
+    background: #475569;
+}
+[data-theme="dark"] .swiper-pagination-pelayan .swiper-pagination-bullet-active {
+    background: var(--primary-orange, #ff9800);
+}
+
+/* Fallback jika Swiper belum initialized */
+.swiper-pelayan-pastoral:not(.swiper-initialized) .swiper-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+}
+.swiper-pelayan-pastoral:not(.swiper-initialized) .swiper-slide {
+    flex: 1 1 300px;
+    max-width: 360px;
+}
+.swiper-pelayan-pastoral:not(.swiper-initialized) ~ .pelayan-slider-nav {
+    display: none;
+}
+
+

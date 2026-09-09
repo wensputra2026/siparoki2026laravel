@@ -73,6 +73,7 @@
     @endif
     @yield('article_meta')
     @stack('head')
+    @stack('styles')
 
     <!-- Favicon -->
     @php

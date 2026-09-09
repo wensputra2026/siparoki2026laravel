@@ -106,6 +106,7 @@ class PageController extends Controller
             $pastorParokiObj = null;
             $pastorRekanObj = null;
             $fraterObj = null;
+            $pastorBertugas = collect();
             $activeParokiId = $activeParoki->id_paroki ?? $profil->paroki_id ?? 1;
 
             if (Schema::hasTable('master_pastor')) {
@@ -243,6 +244,54 @@ class PageController extends Controller
                         if (!$fraterObj) {
                             $fraterObj = (clone $fraterQuery)->first();
                         }
+                    }
+
+                    // 4. Resolve List Seluruh Pastor Bertugas (Pastor Paroki + seluruh Pastor Rekan) untuk paroki aktif
+                    try {
+                        $pastorBertugas = DB::table('master_pastor')
+                            ->where(function($q) use ($namaParoki, $activeParokiId) {
+                                $hasCond = false;
+                                if (Schema::hasColumn('master_pastor', 'paroki_id') && !empty($activeParokiId)) {
+                                    $q->where('paroki_id', $activeParokiId);
+                                    $hasCond = true;
+                                }
+                                if (!empty($namaParoki)) {
+                                    $cleanNama = trim(preg_replace('/^(Paroki|St\.|Santo|Santa)\s+/i', '', $namaParoki));
+                                    if ($hasCond) {
+                                        $q->orWhere('paroki_tugas', 'like', '%' . $namaParoki . '%');
+                                        if (!empty($cleanNama)) {
+                                            $q->orWhere('paroki_tugas', 'like', '%' . $cleanNama . '%');
+                                        }
+                                    } else {
+                                        $q->where(function($sub) use ($namaParoki, $cleanNama) {
+                                            $sub->where('paroki_tugas', 'like', '%' . $namaParoki . '%');
+                                            if (!empty($cleanNama)) {
+                                                $sub->orWhere('paroki_tugas', 'like', '%' . $cleanNama . '%');
+                                            }
+                                        });
+                                        $hasCond = true;
+                                    }
+                                }
+                            })
+                            ->where(function($q) {
+                                $q->where('status', '1')
+                                  ->orWhere('status', 'like', '%aktif%')
+                                  ->orWhere('status', 1);
+                            })
+                            ->orderBy('urutan')
+                            ->orderBy('id')
+                            ->get()
+                            ->map(function($p) {
+                                $p->nama_formatted = \App\Models\MasterPastor::formatNama($p);
+                                return $p;
+                            });
+
+                        if ($pastorParokiObj && !$pastorBertugas->contains('id', $pastorParokiObj->id)) {
+                            $pastorParokiObj->nama_formatted = \App\Models\MasterPastor::formatNama($pastorParokiObj);
+                            $pastorBertugas->prepend($pastorParokiObj);
+                        }
+                    } catch (\Throwable $e) {
+                        $pastorBertugas = collect();
                     }
                 } catch (\Throwable $e) {
                     Log::warning('Gagal query pastor paroki: ' . $e->getMessage());
@@ -428,6 +477,7 @@ class PageController extends Controller
                 'pastor_paroki_obj' => $pastorParokiObj,
                 'pastor_rekan_obj' => $pastorRekanObj,
                 'frater_obj' => $fraterObj,
+                'pastorBertugas' => $pastorBertugas,
                 'stats' => $globalStats,
                 'global_stats' => $globalStats,
                 'totalUmat' => $statsUmat,
@@ -801,63 +851,7 @@ class PageController extends Controller
     public function pelayanPastoral()
     {
         $common = $this->getCommonData();
-        $namaParoki = $common['nama_paroki'] ?? null;
-        $activeParoki = $common['activeParoki'] ?? null;
-        $activeParokiId = $common['active_paroki_id'] ?? $activeParoki?->id_paroki ?? null;
-
-        $pastorBertugas = collect();
-        if (Schema::hasTable('master_pastor')) {
-            try {
-                $pastorBertugas = DB::table('master_pastor')
-                    ->where(function($q) use ($namaParoki, $activeParokiId) {
-                        $hasCond = false;
-                        if (Schema::hasColumn('master_pastor', 'paroki_id') && !empty($activeParokiId)) {
-                            $q->where('paroki_id', $activeParokiId);
-                            $hasCond = true;
-                        }
-                        if (!empty($namaParoki)) {
-                            $cleanNama = trim(preg_replace('/^(Paroki|St\.|Santo|Santa)\s+/i', '', $namaParoki));
-                            if ($hasCond) {
-                                $q->orWhere('paroki_tugas', 'like', '%' . $namaParoki . '%');
-                                if (!empty($cleanNama)) {
-                                    $q->orWhere('paroki_tugas', 'like', '%' . $cleanNama . '%');
-                                }
-                            } else {
-                                $q->where(function($sub) use ($namaParoki, $cleanNama) {
-                                    $sub->where('paroki_tugas', 'like', '%' . $namaParoki . '%');
-                                    if (!empty($cleanNama)) {
-                                        $sub->orWhere('paroki_tugas', 'like', '%' . $cleanNama . '%');
-                                    }
-                                });
-                                $hasCond = true;
-                            }
-                        }
-                    })
-                    ->where(function($q) {
-                        $q->where('status', '1')
-                          ->orWhere('status', 'like', '%aktif%')
-                          ->orWhere('status', 1);
-                    })
-                    ->orderBy('urutan')
-                    ->orderBy('id')
-                    ->get()
-                    ->map(function($p) {
-                        $p->nama_formatted = \App\Models\MasterPastor::formatNama($p);
-                        return $p;
-                    });
-
-                // Jika pastor paroki aktif sudah terdeteksi di common tapi belum ada di list pastor bertugas, sertakan di posisi pertama
-                if (!empty($common['pastor_paroki_obj'])) {
-                    $pParokiObj = $common['pastor_paroki_obj'];
-                    if (!$pastorBertugas->contains('id', $pParokiObj->id)) {
-                        $pParokiObj->nama_formatted = \App\Models\MasterPastor::formatNama($pParokiObj);
-                        $pastorBertugas->prepend($pParokiObj);
-                    }
-                }
-            } catch (\Throwable $e) {
-                $pastorBertugas = collect();
-            }
-        }
+        $pastorBertugas = $common['pastorBertugas'] ?? collect();
 
         try {
             $riwayatQuery = \App\Models\RiwayatPastorParoki::query();
