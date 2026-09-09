@@ -408,6 +408,7 @@ class PageController extends Controller
             return [
                 'profil' => $profil,
                 'activeParoki' => $activeParoki,
+                'active_paroki_id' => $activeParokiId,
                 'pengaturan' => $pengaturan,
                 'nama_paroki' => $namaParoki,
                 'nama_keuskupan' => $profil->keuskupan ?? $pengaturan->nama_keuskupan ?? 'Keuskupan Agung Kupang',
@@ -801,19 +802,35 @@ class PageController extends Controller
     {
         $common = $this->getCommonData();
         $namaParoki = $common['nama_paroki'] ?? null;
-        $activeParokiId = $common['active_paroki_id'] ?? 380;
+        $activeParoki = $common['activeParoki'] ?? null;
+        $activeParokiId = $common['active_paroki_id'] ?? $activeParoki?->id_paroki ?? null;
 
         $pastorBertugas = collect();
         if (Schema::hasTable('master_pastor')) {
             try {
                 $pastorBertugas = DB::table('master_pastor')
                     ->where(function($q) use ($namaParoki, $activeParokiId) {
-                        $q->where('paroki_tugas', 'like', '%Benlutu%');
-                        if (!empty($namaParoki)) {
-                            $q->orWhere('paroki_tugas', 'like', '%' . $namaParoki . '%');
-                        }
+                        $hasCond = false;
                         if (Schema::hasColumn('master_pastor', 'paroki_id') && !empty($activeParokiId)) {
-                            $q->orWhere('paroki_id', $activeParokiId);
+                            $q->where('paroki_id', $activeParokiId);
+                            $hasCond = true;
+                        }
+                        if (!empty($namaParoki)) {
+                            $cleanNama = trim(preg_replace('/^(Paroki|St\.|Santo|Santa)\s+/i', '', $namaParoki));
+                            if ($hasCond) {
+                                $q->orWhere('paroki_tugas', 'like', '%' . $namaParoki . '%');
+                                if (!empty($cleanNama)) {
+                                    $q->orWhere('paroki_tugas', 'like', '%' . $cleanNama . '%');
+                                }
+                            } else {
+                                $q->where(function($sub) use ($namaParoki, $cleanNama) {
+                                    $sub->where('paroki_tugas', 'like', '%' . $namaParoki . '%');
+                                    if (!empty($cleanNama)) {
+                                        $sub->orWhere('paroki_tugas', 'like', '%' . $cleanNama . '%');
+                                    }
+                                });
+                                $hasCond = true;
+                            }
                         }
                     })
                     ->where(function($q) {
@@ -828,6 +845,15 @@ class PageController extends Controller
                         $p->nama_formatted = \App\Models\MasterPastor::formatNama($p);
                         return $p;
                     });
+
+                // Jika pastor paroki aktif sudah terdeteksi di common tapi belum ada di list pastor bertugas, sertakan di posisi pertama
+                if (!empty($common['pastor_paroki_obj'])) {
+                    $pParokiObj = $common['pastor_paroki_obj'];
+                    if (!$pastorBertugas->contains('id', $pParokiObj->id)) {
+                        $pParokiObj->nama_formatted = \App\Models\MasterPastor::formatNama($pParokiObj);
+                        $pastorBertugas->prepend($pParokiObj);
+                    }
+                }
             } catch (\Throwable $e) {
                 $pastorBertugas = collect();
             }
