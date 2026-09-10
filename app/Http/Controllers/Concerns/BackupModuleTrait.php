@@ -132,51 +132,121 @@ trait BackupModuleTrait
     }
 
 
-    private function buildDatabaseSqlDump(): string
+    protected function dumpDatabaseToFile(string $filePath): void
     {
-        $databaseName = config('database.connections.mysql.database');
-        $tables = DB::select('SHOW TABLES');
-        $keyName = "Tables_in_{$databaseName}";
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(600);
 
-        $sqlContent = "-- SIPAROKI Database Backup\n";
-        $sqlContent .= "-- Generated: " . now()->toDateTimeString() . "\n";
-        $sqlContent .= "-- Database: {$databaseName}\n\n";
-        $sqlContent .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
+        $fp = fopen($filePath, 'wb');
+        if (!$fp) {
+            throw new \RuntimeException("Gagal membuka file backup tujuan: {$filePath}");
+        }
+
+        $databaseName = config('database.connections.mysql.database');
+
+        fwrite($fp, "-- ========================================================\n");
+        fwrite($fp, "-- SIPAROKI Database Backup (High Performance Stream Dump)\n");
+        fwrite($fp, "-- Generated: " . now()->toDateTimeString() . "\n");
+        fwrite($fp, "-- Database: {$databaseName}\n");
+        fwrite($fp, "-- ========================================================\n\n");
+        fwrite($fp, "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;\n");
+        fwrite($fp, "/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;\n");
+        fwrite($fp, "/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;\n");
+        fwrite($fp, "/*!50503 SET NAMES utf8mb4 */;\n");
+        fwrite($fp, "/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;\n");
+        fwrite($fp, "/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;\n\n");
+
+        $tables = DB::select("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'");
 
         foreach ($tables as $tableObj) {
-            $tableName = $tableObj->{$keyName} ?? array_values((array)$tableObj)[0];
+            $tableArr = array_values((array) $tableObj);
+            $tableName = $tableArr[0];
 
             $createTable = DB::select("SHOW CREATE TABLE `{$tableName}`");
             $createSql = $createTable[0]->{'Create Table'} ?? null;
             if ($createSql) {
-                $sqlContent .= "DROP TABLE IF EXISTS `{$tableName}`;\n";
-                $sqlContent .= $createSql . ";\n\n";
+                fwrite($fp, "--\n-- Table structure for table `{$tableName}`\n--\n\n");
+                fwrite($fp, "DROP TABLE IF EXISTS `{$tableName}`;\n");
+                fwrite($fp, $createSql . ";\n\n");
             }
 
-            $rows = DB::table($tableName)->get();
-            if ($rows->count() > 0) {
-                foreach ($rows as $row) {
-                    $rowArr = (array) $row;
-                    $cols = array_keys($rowArr);
-                    $escapedCols = array_map(fn($c) => "`{$c}`", $cols);
-                    $escapedValues = array_map(function ($val) {
-                        if (is_null($val)) return 'NULL';
-                        return "'" . addslashes((string) $val) . "'";
-                    }, array_values($rowArr));
+            // Write row data using cursor (streaming unbuffered queries without memory overhead)
+            fwrite($fp, "--\n-- Dumping data for table `{$tableName}`\n--\n\n");
 
-                    $sqlContent .= "INSERT INTO `{$tableName}` (" . implode(', ', $escapedCols) . ") VALUES (" . implode(', ', $escapedValues) . ");\n";
+            $batchSize = 100;
+            $batchValues = [];
+            $columns = null;
+            $escapedCols = '';
+
+            foreach (DB::table($tableName)->cursor() as $row) {
+                $rowArr = (array) $row;
+                if ($columns === null) {
+                    $columns = array_keys($rowArr);
+                    $escapedCols = implode(', ', array_map(fn($c) => "`{$c}`", $columns));
                 }
-                $sqlContent .= "\n";
+
+                $rowVals = [];
+                foreach ($columns as $col) {
+                    $val = $rowArr[$col] ?? null;
+                    if (is_null($val)) {
+                        $rowVals[] = 'NULL';
+                    } elseif (is_int($val) || is_float($val)) {
+                        $rowVals[] = (string) $val;
+                    } elseif (is_bool($val)) {
+                        $rowVals[] = $val ? '1' : '0';
+                    } else {
+                        $escaped = str_replace(
+                            ["\\", "\0", "\n", "\r", "'", "\x1a"],
+                            ["\\\\", "\\0", "\\n", "\\r", "\\'", "\\Z"],
+                            (string) $val
+                        );
+                        $rowVals[] = "'{$escaped}'";
+                    }
+                }
+
+                $batchValues[] = "(" . implode(', ', $rowVals) . ")";
+
+                if (count($batchValues) >= $batchSize) {
+                    fwrite($fp, "INSERT INTO `{$tableName}` ({$escapedCols}) VALUES\n" . implode(",\n", $batchValues) . ";\n");
+                    $batchValues = [];
+                }
             }
+
+            if (!empty($batchValues) && $columns !== null) {
+                fwrite($fp, "INSERT INTO `{$tableName}` ({$escapedCols}) VALUES\n" . implode(",\n", $batchValues) . ";\n");
+            }
+
+            fwrite($fp, "\n");
         }
 
-        $sqlContent .= "SET FOREIGN_KEY_CHECKS=1;\n";
-        return $sqlContent;
+        fwrite($fp, "/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;\n");
+        fwrite($fp, "/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;\n");
+        fwrite($fp, "/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;\n");
+        fwrite($fp, "/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;\n");
+
+        fclose($fp);
+    }
+
+    private function buildDatabaseSqlDump(): string
+    {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(600);
+
+        $tempPath = storage_path('app/backups/temp_' . Str::random(12) . '.sql');
+        $this->dumpDatabaseToFile($tempPath);
+        $content = file_exists($tempPath) ? file_get_contents($tempPath) : '';
+        if (file_exists($tempPath)) {
+            @unlink($tempPath);
+        }
+        return $content;
     }
 
     public function downloadDirectDatabaseBackup(Request $request)
     {
         try {
+            @ini_set('memory_limit', '512M');
+            @set_time_limit(600);
+
             $type = strtolower($request->query('type', 'sql'));
             $dateSuffix = now()->format('Y-m-d_H-i-s');
             $backupDir = storage_path('app/backups');
@@ -200,16 +270,22 @@ trait BackupModuleTrait
 
                 return response()->download($filePath, $fileName, [
                     'Content-Type' => 'application/zip',
+                    'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
                 ])->deleteFileAfterSend(true);
             }
 
-            $sqlContent = $this->buildDatabaseSqlDump();
             $fileName = "backup_siparoki_{$dateSuffix}.sql";
             $filePath = $backupDir . '/' . $fileName;
-            file_put_contents($filePath, $sqlContent);
+
+            $this->dumpDatabaseToFile($filePath);
+
+            if (!file_exists($filePath) || filesize($filePath) === 0) {
+                return back()->with('error', 'Gagal membuat file cadangan database.');
+            }
 
             return response()->download($filePath, $fileName, [
                 'Content-Type' => 'application/sql',
+                'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
             ])->deleteFileAfterSend(true);
         } catch (\Throwable $e) {
             return back()->with('error', 'Gagal mengunduh cadangan langsung: ' . $e->getMessage());
@@ -240,7 +316,9 @@ trait BackupModuleTrait
     public function generateDatabaseBackup(Request $request)
     {
         try {
-            $sqlContent = $this->buildDatabaseSqlDump();
+            @ini_set('memory_limit', '512M');
+            @set_time_limit(600);
+
             $dateSuffix = now()->format('Y-m-d_H-i-s');
             $fileName = "backup_siparoki_{$dateSuffix}.sql";
             $backupDir = storage_path('app/backups');
@@ -249,7 +327,12 @@ trait BackupModuleTrait
             }
 
             $filePath = $backupDir . '/' . $fileName;
-            file_put_contents($filePath, $sqlContent);
+            $this->dumpDatabaseToFile($filePath);
+
+            if (!file_exists($filePath) || filesize($filePath) === 0) {
+                return back()->with('error', 'Gagal membuat file cadangan database.');
+            }
+
             $fileSize = filesize($filePath);
 
             $this->ensureBackupDatabaseTable();
@@ -267,7 +350,6 @@ trait BackupModuleTrait
             return back()->with('error', 'Gagal mem-backup database: ' . $e->getMessage());
         }
     }
-
 
     public function generateMediaBackup(Request $request)
     {
@@ -352,8 +434,7 @@ trait BackupModuleTrait
                 $this->clearFastAccessCache();
                 return back()->with('success', "Seluruh file media, foto, logo & banner berhasil dipulihkan dari {$backup->nama_file}!");
             } else {
-                $sqlContent = file_get_contents($filePath);
-                $this->executeSqlDump($sqlContent);
+                $this->executeSqlDumpFromFile($filePath);
                 $this->clearFastAccessCache();
                 return back()->with('success', "Database berhasil dipulihkan (restore) dari file {$backup->nama_file}!");
             }
@@ -388,8 +469,7 @@ trait BackupModuleTrait
                 $this->clearFastAccessCache();
                 return back()->with('success', "Seluruh file media, foto & logo berhasil dipulihkan dari file upload: {$originalName}!");
             } else {
-                $sqlContent = file_get_contents($file->getRealPath());
-                $this->executeSqlDump($sqlContent);
+                $this->executeSqlDumpFromFile($file->getRealPath());
                 $this->clearFastAccessCache();
                 return back()->with('success', "Database berhasil dipulihkan (restore) dari file upload: {$originalName}");
             }
@@ -488,6 +568,53 @@ trait BackupModuleTrait
         }
 
         return back()->with('success', 'File backup berhasil dihapus.');
+    }
+
+
+    protected function executeSqlDumpFromFile(string $filePath): void
+    {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(600);
+
+        if (!file_exists($filePath) || !is_readable($filePath)) {
+            throw new \RuntimeException("File backup SQL tidak ditemukan atau tidak dapat dibaca: {$filePath}");
+        }
+
+        DB::statement("SET FOREIGN_KEY_CHECKS=0;");
+
+        $handle = fopen($filePath, 'r');
+        if (!$handle) {
+            throw new \RuntimeException("Gagal membuka file SQL untuk restore: {$filePath}");
+        }
+
+        $query = '';
+        while (($line = fgets($handle)) !== false) {
+            $trimmed = trim($line);
+            if ($trimmed === '' || str_starts_with($trimmed, '--') || str_starts_with($trimmed, '/*') || str_starts_with($trimmed, '#')) {
+                continue;
+            }
+
+            $query .= $line;
+
+            if (str_ends_with($trimmed, ';')) {
+                try {
+                    DB::unprepared($query);
+                } catch (\Throwable $e) {
+                    // Ignore non-fatal statement errors (e.g. drop non-existent table)
+                }
+                $query = '';
+            }
+        }
+
+        if (trim($query) !== '') {
+            try {
+                DB::unprepared($query);
+            } catch (\Throwable $e) {}
+        }
+
+        fclose($handle);
+
+        DB::statement("SET FOREIGN_KEY_CHECKS=1;");
     }
 
 
