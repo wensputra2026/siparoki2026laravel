@@ -1082,7 +1082,11 @@ class PageController extends Controller
             ->with(['kk', 'kub', 'wilayah', 'kapela'])
             ->whereNotNull('status_panggilan')
             ->where('status_panggilan', '!=', '')
-            ->where('status_panggilan', '!=', 'Awam');
+            ->where('status_panggilan', '!=', 'Awam')
+            ->where(function ($q) {
+                $q->where('nama_lengkap', 'not like', '%PETRONELA NAREK%')
+                  ->orWhereNull('nama_lengkap');
+            });
 
         $panggilanList = $panggilanQuery->get()->map(function ($u) {
             $sp = strtolower($u->status_panggilan ?? '');

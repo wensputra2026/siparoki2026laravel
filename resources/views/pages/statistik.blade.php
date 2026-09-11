@@ -7,7 +7,7 @@
     <div class="container">
         <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; color: #ffffff;">Statistik &amp; Demografi Umat</h1>
         <p style="font-size: 1rem; color: rgba(255,255,255,0.85); margin-bottom: 18px; max-width: 680px; margin-left: auto; margin-right: auto;">
-            Transparansi data demografi, komposisi jemaat, statistik sakramen, dan sebaran wilayah pelayanan pastoral Paroki St. Vinsensius a Paulo Benlutu.
+            Transparansi data demografi, komposisi umat, statistik sakramen, dan sebaran wilayah pelayanan pastoral Paroki St. Vinsensius a Paulo Benlutu.
         </p>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb" style="display: inline-flex; list-style: none; padding: 0; margin: 0 auto; gap: 8px; background: transparent; justify-content: center; align-items: center; flex-wrap: wrap;">
@@ -150,7 +150,7 @@
             <div class="col-6 col-md-4 col-xl">
                 <div style="background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; border-top: 4px solid #a855f7; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                        <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #64748b;" title="Anggota keluarga dari jemaat yang ditahbiskan menjadi Imam">
+                        <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #64748b;" title="Anggota keluarga dari umat yang ditahbiskan menjadi Imam">
                             Imam Asal Umat
                         </span>
                         <div style="width: 38px; height: 38px; border-radius: 12px; background: #faf5ff; color: #9333ea; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
@@ -173,7 +173,7 @@
             <div class="col-6 col-md-4 col-xl">
                 <div style="background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; border-top: 4px solid #14b8a6; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                        <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #64748b;" title="Anggota keluarga jemaat yang menjadi Suster, Bruder, Frater">
+                        <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #64748b;" title="Anggota keluarga umat yang menjadi Suster, Bruder, Frater">
                             Biarawan / wati
                         </span>
                         <div style="width: 38px; height: 38px; border-radius: 12px; background: #f0fdfa; color: #0d9488; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
@@ -619,7 +619,7 @@
                                 </div>
                                 <div>
                                     <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">Biarawan, Biarawati &amp; Frater</h4>
-                                    <span style="font-size: 0.72rem; color: #0f766e; font-weight: 600;">Suster, Bruder, Frater &amp; Novis asal keluarga jemaat</span>
+                                    <span style="font-size: 0.72rem; color: #0f766e; font-weight: 600;">Suster, Bruder, Frater &amp; Novis asal keluarga umat</span>
                                 </div>
                             </div>
                             <span style="background: #ccfbf1; color: #115e59; font-weight: 800; font-size: 0.75rem; padding: 4px 10px; border-radius: 8px;">

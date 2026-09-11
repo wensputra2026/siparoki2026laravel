@@ -709,7 +709,7 @@
                             </div>
                             <h3 class="fw-bold text-dark mb-2" style="font-size: 1.25rem;">Data Umat Tidak Ditemukan</h3>
                             <p class="text-muted mx-auto mb-3 small" style="max-width: 500px;">
-                                NIK <strong class="font-monospace">{{ $nikInput }}</strong> belum terdaftar dalam pangkalan data sensus jemaat Paroki.
+                                NIK <strong class="font-monospace">{{ $nikInput }}</strong> belum terdaftar dalam pangkalan data sensus umat Paroki.
                             </p>
 
                             <div class="card bg-light border-0 p-3 mx-auto text-start mb-4" style="max-width: 480px; border-radius: 12px;">
